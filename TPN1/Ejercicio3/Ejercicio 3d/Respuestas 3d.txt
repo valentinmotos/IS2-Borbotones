@@ -1,0 +1,59 @@
+
+--------------------------------------------------------------------------------
+¿Cuál sentencia de SQL, teniendo en cuenta la base de datos utilizada, el Equipo
+puede tener en cuenta para conocer el costo (tiempo de respuesta) que tiene una
+consulta a la base de datos?
+--------------------------------------------------------------------------------
+
+La base de datos utilizada en el proyecto es H2 (base en memoria).
+
+En H2, la sentencia SQL que permite conocer el plan de ejecución y el costo
+de una consulta es EXPLAIN ANALYZE.
+
+Ejemplo:
+    EXPLAIN ANALYZE SELECT * FROM CLIENTE WHERE dni = 30025000;
+
+Esta sentencia ejecuta la consulta y devuelve el plan de ejecución con
+información de rendimiento, incluyendo:
+  - El tipo de escaneo utilizado
+  - La cantidad de filas analizadas
+  - El tiempo real de ejecución
+
+La diferencia es:
+  - Con índice: se realiza un INDEX SCAN, accediendo directamente a las filas
+    que cumplen la condición.
+  - Sin índice: se realiza un TABLE SCAN (escaneo completo de la tabla),
+    recorriendo todas las filas para encontrar las que coinciden.
+
+--------------------------------------------------------------------------------
+¿Cuál es la configuración en JPA que se puede utilizar para conocer cómo el
+motor de persistencia transforma los JPQL en sentencia SQL? Dar un ejemplo del
+JPAQL para la obtención de Factura y como queda esa sentencia expresada en SQL.
+--------------------------------------------------------------------------------
+
+La configuración en JPA (Hibernate) que permite ver cómo se transforman las
+consultas JPQL a SQL es la propiedad:
+
+    hibernate.show_sql = true
+
+Esta se configura en el archivo persistence.xml de la siguiente manera:
+
+    <property name="hibernate.show_sql" value="true"/>
+
+EJEMPLO CON FACTURA:
+
+  JPQL:
+    SELECT f FROM Factura f WHERE f.numero = :numero
+
+  SQL generado por Hibernate:
+    select
+        f1_0.id,
+        f1_0.cliente_id,
+        f1_0.fecha,
+        f1_0.numero,
+        f1_0.total
+    from
+        factura f1_0
+    where
+        f1_0.numero = ?
+
