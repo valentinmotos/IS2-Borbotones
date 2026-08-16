@@ -1,29 +1,44 @@
 package grupoing2.orm_ing2;
 
+import java.util.List;
+
 import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import java.util.List;
+import jakarta.persistence.Index;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(indexes = {
+    @Index(name = "idx_articulo_denominacion", columnList = "denominacion")
+})
 public class Articulo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     private int cantidad;
     private String denominacion;
     private int precio;
-    
+
     @OneToMany
     private List<Categoria> categorias;
-    
+
     @OneToMany
     private List<DetalleFactura> detallesFacturas;
+
+    public Articulo() {
+    }
+
+    public Articulo(int cantidad, String denominacion, int precio) {
+        this.cantidad = cantidad;
+        this.denominacion = denominacion;
+        this.precio = precio;
+    }
+
     public Long getId() {
         return id;
     }

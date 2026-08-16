@@ -33,7 +33,7 @@
                       value="update"/>
 
             <property name="hibernate.show_sql"
-                      value="true"/>
+                      value="false"/>
 
         </properties>
 
