@@ -1,0 +1,27 @@
+# Maven
+target/
+*.class
+
+# Base de datos H2 (archivos generados en runtime)
+data/
+*.mv.db
+*.trace.db
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Intellij IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# Logs
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
