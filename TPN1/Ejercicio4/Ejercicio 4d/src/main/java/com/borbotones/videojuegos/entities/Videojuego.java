@@ -1,4 +1,4 @@
-package com.colmena.videojuegos.entities;
+package com.borbotones.videojuegos.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
