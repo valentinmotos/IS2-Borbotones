@@ -75,6 +75,9 @@ public class VideojuegoController {
             String extension = "." + archivo.getOriginalFilename().substring(index + 1);
             String nombreFoto = Calendar.getInstance().getTimeInMillis() + extension;
             Path rutaAbsoluta = Paths.get(ruta + "//" + nombreFoto);
+            if (rutaAbsoluta.getParent() != null) {
+                Files.createDirectories(rutaAbsoluta.getParent());
+            }
             Files.write(rutaAbsoluta, archivo.getBytes());
             videojuego.setImagen(nombreFoto);
             videojuegoService.saveOne(videojuego);
@@ -126,6 +129,9 @@ public class VideojuegoController {
                 }
                 String ruta = "C://Videojuegos/imagenes";
                 Path rutaAbsoluta = Paths.get(ruta + "//" + videojuego.getImagen());
+                if (rutaAbsoluta.getParent() != null) {
+                    Files.createDirectories(rutaAbsoluta.getParent());
+                }
                 Files.write(rutaAbsoluta, archivo.getBytes());
             }
             videojuegoService.updateOne(videojuego, videojuego.getId());
