@@ -1,7 +1,7 @@
 package com.borbotones.videojuegos.services;
 
 import com.borbotones.videojuegos.entities.Categoria;
-import com.borbotones.videojuegos.repositories.RepositorioCategoria;
+import com.borbotones.videojuegos.repositories.CategoriaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,9 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class ServicioCategoria implements ServicioBase<Categoria> {
+public class CategoriaService implements BaseService<Categoria> {
+
     @Autowired
-    private RepositorioCategoria repositorio;
+    private CategoriaRepository repositorio;
 
     @Override
     @Transactional

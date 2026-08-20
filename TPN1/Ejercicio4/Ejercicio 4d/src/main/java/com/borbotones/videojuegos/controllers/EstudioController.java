@@ -1,7 +1,7 @@
 package com.borbotones.videojuegos.controllers;
 
 import com.borbotones.videojuegos.entities.Estudio;
-import com.borbotones.videojuegos.services.ServicioEstudio;
+import com.borbotones.videojuegos.services.EstudioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,14 +13,14 @@ import java.util.List;
 public class EstudioController {
 
     @Autowired
-    private ServicioEstudio svcEstudio;
+    private EstudioService estudioService;
 
     /* ---- Listado ---- */
 
     @GetMapping("/estudios")
     public String listarEstudios(Model model) {
         try {
-            List<Estudio> estudios = svcEstudio.findAll();
+            List<Estudio> estudios = estudioService.findAll();
             model.addAttribute("estudios", estudios);
             return "view/estudio/estudioList";
         } catch (Exception e) {
@@ -41,7 +41,7 @@ public class EstudioController {
     @PostMapping("/altaEstudio")
     public String guardarEstudio(@ModelAttribute("estudio") Estudio estudio, Model model) {
         try {
-            svcEstudio.saveOne(estudio);
+            estudioService.saveOne(estudio);
             return "redirect:/estudios";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
@@ -54,7 +54,7 @@ public class EstudioController {
     @GetMapping("/modificarEstudio")
     public String modificarEstudio(@RequestParam("id") long id, Model model) {
         try {
-            Estudio estudio = svcEstudio.findById(id);
+            Estudio estudio = estudioService.findById(id);
             model.addAttribute("estudio", estudio);
             model.addAttribute("modo", "modificar");
             return "view/estudio/estudioEdit";
@@ -67,7 +67,7 @@ public class EstudioController {
     @PostMapping("/estudio/aceptarEditEstudio")
     public String aceptarEditEstudio(@ModelAttribute("estudio") Estudio estudio, Model model) {
         try {
-            svcEstudio.updateOne(estudio, estudio.getId());
+            estudioService.updateOne(estudio, estudio.getId());
             return "redirect:/estudios";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
@@ -80,7 +80,7 @@ public class EstudioController {
     @GetMapping("/consultarEstudio")
     public String consultarEstudio(@RequestParam("id") long id, Model model) {
         try {
-            Estudio estudio = svcEstudio.findById(id);
+            Estudio estudio = estudioService.findById(id);
             model.addAttribute("estudio", estudio);
             model.addAttribute("modo", "consulta");
             return "view/estudio/estudioEdit";
@@ -95,7 +95,7 @@ public class EstudioController {
     @GetMapping("/bajaEstudio")
     public String bajaEstudio(@RequestParam("id") long id, Model model) {
         try {
-            svcEstudio.deleteById(id);
+            estudioService.deleteById(id);
             return "redirect:/estudios";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());

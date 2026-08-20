@@ -1,7 +1,7 @@
 package com.borbotones.videojuegos.services;
 
 import com.borbotones.videojuegos.entities.Videojuego;
-import com.borbotones.videojuegos.repositories.RepositorioVideojuego;
+import com.borbotones.videojuegos.repositories.VideojuegoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,9 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class ServicioVideojuego implements ServicioBase<Videojuego>{
+public class VideojuegoService implements BaseService<Videojuego> {
+
     @Autowired
-    private RepositorioVideojuego repositorio;
+    private VideojuegoRepository repositorio;
 
     @Override
     @Transactional
@@ -81,7 +82,7 @@ public class ServicioVideojuego implements ServicioBase<Videojuego>{
     /*   Metodos nuevos   */
 
     @Transactional
-    public List<Videojuego> findAllByActivo() throws Exception{
+    public List<Videojuego> findAllByActivo() throws Exception {
         try {
             List<Videojuego> entities = this.repositorio.findAllByActivo();
             return entities;
@@ -101,8 +102,8 @@ public class ServicioVideojuego implements ServicioBase<Videojuego>{
     }
 
     @Transactional
-    public List<Videojuego> findByTitle(String q) throws Exception{
-        try{
+    public List<Videojuego> findByTitle(String q) throws Exception {
+        try {
             List<Videojuego> entities = this.repositorio.findByTitle(q);
             return entities;
         } catch (Exception e) {

@@ -1,9 +1,9 @@
 package com.borbotones.videojuegos.controllers;
 
 import com.borbotones.videojuegos.entities.Videojuego;
-import com.borbotones.videojuegos.services.ServicioCategoria;
-import com.borbotones.videojuegos.services.ServicioEstudio;
-import com.borbotones.videojuegos.services.ServicioVideojuego;
+import com.borbotones.videojuegos.services.CategoriaService;
+import com.borbotones.videojuegos.services.EstudioService;
+import com.borbotones.videojuegos.services.VideojuegoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,14 +19,14 @@ import java.nio.file.Paths;
 import java.util.Calendar;
 
 @Controller
-public class controladorVideojuego {
+public class VideojuegoController {
 
     @Autowired
-    private ServicioVideojuego svcVideojuego;
+    private VideojuegoService videojuegoService;
     @Autowired
-    private ServicioCategoria svcCategoria;
+    private CategoriaService categoriaService;
     @Autowired
-    private ServicioEstudio svcEstudio;
+    private EstudioService estudioService;
 
     /* ---- Alta ---- */
 
@@ -34,8 +34,8 @@ public class controladorVideojuego {
     public String altaVideojuego(Model model) {
         try {
             model.addAttribute("videojuego", new Videojuego());
-            model.addAttribute("categorias", svcCategoria.findAll());
-            model.addAttribute("estudios", svcEstudio.findAll());
+            model.addAttribute("categorias", categoriaService.findAll());
+            model.addAttribute("estudios", estudioService.findAll());
             model.addAttribute("modo", "alta");
             return "view/videojuego/editVideojuego";
         } catch (Exception e) {
@@ -52,8 +52,8 @@ public class controladorVideojuego {
             Model model
     ) {
         try {
-            model.addAttribute("categorias", svcCategoria.findAll());
-            model.addAttribute("estudios", svcEstudio.findAll());
+            model.addAttribute("categorias", categoriaService.findAll());
+            model.addAttribute("estudios", estudioService.findAll());
             model.addAttribute("modo", "alta");
             if (result.hasErrors()) {
                 return "view/videojuego/editVideojuego";
@@ -77,7 +77,7 @@ public class controladorVideojuego {
             Path rutaAbsoluta = Paths.get(ruta + "//" + nombreFoto);
             Files.write(rutaAbsoluta, archivo.getBytes());
             videojuego.setImagen(nombreFoto);
-            svcVideojuego.saveOne(videojuego);
+            videojuegoService.saveOne(videojuego);
             return "redirect:/inicio";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
@@ -90,9 +90,9 @@ public class controladorVideojuego {
     @GetMapping("/modificarVideojuego")
     public String modificarVideojuego(@RequestParam("id") long id, Model model) {
         try {
-            model.addAttribute("videojuego", svcVideojuego.findById(id));
-            model.addAttribute("categorias", svcCategoria.findAll());
-            model.addAttribute("estudios", svcEstudio.findAll());
+            model.addAttribute("videojuego", videojuegoService.findById(id));
+            model.addAttribute("categorias", categoriaService.findAll());
+            model.addAttribute("estudios", estudioService.findAll());
             model.addAttribute("modo", "modificar");
             return "view/videojuego/editVideojuego";
         } catch (Exception e) {
@@ -109,8 +109,8 @@ public class controladorVideojuego {
             Model model
     ) {
         try {
-            model.addAttribute("categorias", svcCategoria.findAll());
-            model.addAttribute("estudios", svcEstudio.findAll());
+            model.addAttribute("categorias", categoriaService.findAll());
+            model.addAttribute("estudios", estudioService.findAll());
             model.addAttribute("modo", "modificar");
             if (result.hasErrors()) {
                 return "view/videojuego/editVideojuego";
@@ -128,7 +128,7 @@ public class controladorVideojuego {
                 Path rutaAbsoluta = Paths.get(ruta + "//" + videojuego.getImagen());
                 Files.write(rutaAbsoluta, archivo.getBytes());
             }
-            svcVideojuego.updateOne(videojuego, videojuego.getId());
+            videojuegoService.updateOne(videojuego, videojuego.getId());
             return "redirect:/inicio";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
@@ -141,9 +141,9 @@ public class controladorVideojuego {
     @GetMapping("/consultarVideojuego")
     public String consultarVideojuego(@RequestParam("id") long id, Model model) {
         try {
-            model.addAttribute("videojuego", svcVideojuego.findByIdAndActivo(id));
-            model.addAttribute("categorias", svcCategoria.findAll());
-            model.addAttribute("estudios", svcEstudio.findAll());
+            model.addAttribute("videojuego", videojuegoService.findByIdAndActivo(id));
+            model.addAttribute("categorias", categoriaService.findAll());
+            model.addAttribute("estudios", estudioService.findAll());
             model.addAttribute("modo", "consulta");
             return "view/videojuego/editVideojuego";
         } catch (Exception e) {
@@ -157,7 +157,7 @@ public class controladorVideojuego {
     @GetMapping("/bajaVideojuego")
     public String bajaVideojuego(@RequestParam("id") long id, Model model) {
         try {
-            model.addAttribute("videojuego", svcVideojuego.findById(id));
+            model.addAttribute("videojuego", videojuegoService.findById(id));
             return "view/videojuego/bajaVideojuego";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
@@ -168,7 +168,7 @@ public class controladorVideojuego {
     @PostMapping("/bajaVideojuego")
     public String confirmarBajaVideojuego(@RequestParam("id") long id, Model model) {
         try {
-            svcVideojuego.deleteById(id);
+            videojuegoService.deleteById(id);
             return "redirect:/inicio";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());

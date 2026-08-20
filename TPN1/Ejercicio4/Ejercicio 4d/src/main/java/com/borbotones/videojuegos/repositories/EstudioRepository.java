@@ -1,9 +1,9 @@
 package com.borbotones.videojuegos.repositories;
 
-import com.borbotones.videojuegos.entities.Categoria;
+import com.borbotones.videojuegos.entities.Estudio;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface RepositorioCategoria extends JpaRepository<Categoria, Long> {
+public interface EstudioRepository extends JpaRepository<Estudio, Long> {
 }

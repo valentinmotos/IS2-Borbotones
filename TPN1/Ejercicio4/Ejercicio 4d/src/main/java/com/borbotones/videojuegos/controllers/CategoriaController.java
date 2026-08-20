@@ -1,7 +1,7 @@
 package com.borbotones.videojuegos.controllers;
 
 import com.borbotones.videojuegos.entities.Categoria;
-import com.borbotones.videojuegos.services.ServicioCategoria;
+import com.borbotones.videojuegos.services.CategoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,14 +13,14 @@ import java.util.List;
 public class CategoriaController {
 
     @Autowired
-    private ServicioCategoria svcCategoria;
+    private CategoriaService categoriaService;
 
     /* ---- Listado ---- */
 
     @GetMapping("/categorias")
     public String listarCategorias(Model model) {
         try {
-            List<Categoria> categorias = svcCategoria.findAll();
+            List<Categoria> categorias = categoriaService.findAll();
             model.addAttribute("categorias", categorias);
             return "view/categoria/categoriaList";
         } catch (Exception e) {
@@ -41,7 +41,7 @@ public class CategoriaController {
     @PostMapping("/altaCategoria")
     public String guardarCategoria(@ModelAttribute("categoria") Categoria categoria, Model model) {
         try {
-            svcCategoria.saveOne(categoria);
+            categoriaService.saveOne(categoria);
             return "redirect:/categorias";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
@@ -54,7 +54,7 @@ public class CategoriaController {
     @GetMapping("/modificarCategoria")
     public String modificarCategoria(@RequestParam("id") long id, Model model) {
         try {
-            Categoria categoria = svcCategoria.findById(id);
+            Categoria categoria = categoriaService.findById(id);
             model.addAttribute("categoria", categoria);
             model.addAttribute("modo", "modificar");
             return "view/categoria/categoriaEdit";
@@ -67,7 +67,7 @@ public class CategoriaController {
     @PostMapping("/categoria/aceptarEditCategoria")
     public String aceptarEditCategoria(@ModelAttribute("categoria") Categoria categoria, Model model) {
         try {
-            svcCategoria.updateOne(categoria, categoria.getId());
+            categoriaService.updateOne(categoria, categoria.getId());
             return "redirect:/categorias";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
@@ -80,7 +80,7 @@ public class CategoriaController {
     @GetMapping("/consultarCategoria")
     public String consultarCategoria(@RequestParam("id") long id, Model model) {
         try {
-            Categoria categoria = svcCategoria.findById(id);
+            Categoria categoria = categoriaService.findById(id);
             model.addAttribute("categoria", categoria);
             model.addAttribute("modo", "consulta");
             return "view/categoria/categoriaEdit";
@@ -95,7 +95,7 @@ public class CategoriaController {
     @GetMapping("/bajaCategoria")
     public String bajaCategoria(@RequestParam("id") long id, Model model) {
         try {
-            svcCategoria.deleteById(id);
+            categoriaService.deleteById(id);
             return "redirect:/categorias";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());

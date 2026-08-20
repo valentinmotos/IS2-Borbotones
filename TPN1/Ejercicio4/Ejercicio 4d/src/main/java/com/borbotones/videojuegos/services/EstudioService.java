@@ -1,7 +1,7 @@
 package com.borbotones.videojuegos.services;
 
 import com.borbotones.videojuegos.entities.Estudio;
-import com.borbotones.videojuegos.repositories.RepositorioEstudio;
+import com.borbotones.videojuegos.repositories.EstudioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,9 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class ServicioEstudio implements ServicioBase<Estudio> {
+public class EstudioService implements BaseService<Estudio> {
+
     @Autowired
-    private RepositorioEstudio repositorio;
+    private EstudioRepository repositorio;
 
     @Override
     @Transactional
@@ -65,7 +66,6 @@ public class ServicioEstudio implements ServicioBase<Estudio> {
     public boolean deleteById(long id) throws Exception {
         try {
             Optional<Estudio> opt = this.repositorio.findById(id);
-
             if (!opt.isEmpty()) {
                 Estudio estudio = opt.get();
                 estudio.setActivo(!estudio.isActivo());
