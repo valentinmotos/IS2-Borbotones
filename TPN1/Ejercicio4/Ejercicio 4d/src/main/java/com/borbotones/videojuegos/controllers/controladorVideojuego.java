@@ -4,9 +4,7 @@ import com.borbotones.videojuegos.entities.Videojuego;
 import com.borbotones.videojuegos.services.ServicioCategoria;
 import com.borbotones.videojuegos.services.ServicioEstudio;
 import com.borbotones.videojuegos.services.ServicioVideojuego;
-import org.apache.tomcat.jni.File;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,10 +17,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Calendar;
-import java.util.List;
 
 @Controller
 public class controladorVideojuego {
+
     @Autowired
     private ServicioVideojuego svcVideojuego;
     @Autowired
@@ -30,159 +28,161 @@ public class controladorVideojuego {
     @Autowired
     private ServicioEstudio svcEstudio;
 
-    @GetMapping("/inicio")
-    public String inicio(Model model) {
-        try {
-            List<Videojuego> videojuegos = this.svcVideojuego.findAllByActivo();
-            model.addAttribute("videojuegos", videojuegos);
+    /* ---- Alta ---- */
 
-            return "views/inicio";
+    @GetMapping("/altaVideojuego")
+    public String altaVideojuego(Model model) {
+        try {
+            model.addAttribute("videojuego", new Videojuego());
+            model.addAttribute("categorias", svcCategoria.findAll());
+            model.addAttribute("estudios", svcEstudio.findAll());
+            model.addAttribute("modo", "alta");
+            return "view/videojuego/editVideojuego";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             return "error";
         }
     }
 
-    @GetMapping("/detalle/{id}")
-    public String detalleVideojuego(Model model, @PathVariable("id") long id) {
-        try {
-            Videojuego videojuego = this.svcVideojuego.findByIdAndActivo(id);
-            model.addAttribute("videojuego",videojuego);
-            return "views/detalle";
-        } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-            return "error";
-        }
-    }
-
-    @GetMapping(value = "/busqueda")
-    public String busquedaVideojuego(Model model, @RequestParam(value ="query",required = false)String q){
-        try {
-            List<Videojuego> videojuegos = this.svcVideojuego.findByTitle(q);
-            model.addAttribute("videojuegos", videojuegos);
-            model.addAttribute("resultado",q);
-            return "views/busqueda";
-        } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-            return "error";
-        }
-    }
-
-    @GetMapping("/crud")
-    public String crudVideojuego(Model model){
-        try {
-            List<Videojuego> videojuegos = this.svcVideojuego.findAll();
-            model.addAttribute("videojuegos",videojuegos);
-            return "views/crud";
-        }catch(Exception e){
-            model.addAttribute("error", e.getMessage());
-            return "error";
-        }
-    }
-
-    @GetMapping("/formulario/videojuego/{id}")
-    public String formularioVideojuego(Model model,@PathVariable("id")long id){
-        try {
-            model.addAttribute("categorias",this.svcCategoria.findAll());
-            model.addAttribute("estudios",this.svcEstudio.findAll());
-            if(id==0){
-                model.addAttribute("videojuego",new Videojuego());
-            }else{
-                model.addAttribute("videojuego",this.svcVideojuego.findById(id));
-            }
-            return "views/formulario/videojuego";
-        }catch(Exception e){
-            model.addAttribute("error", e.getMessage());
-            return "error";
-        }
-    }
-
-    @PostMapping("/formulario/videojuego/{id}")
+    @PostMapping("/altaVideojuego")
     public String guardarVideojuego(
             @RequestParam("archivo") MultipartFile archivo,
             @Valid @ModelAttribute("videojuego") Videojuego videojuego,
             BindingResult result,
-            Model model,@PathVariable("id")long id
+            Model model
     ) {
-        
         try {
-            model.addAttribute("categorias",this.svcCategoria.findAll());
-            model.addAttribute("estudios",this.svcEstudio.findAll());
-            if(result.hasErrors()){
-                return "views/formulario/videojuego";
+            model.addAttribute("categorias", svcCategoria.findAll());
+            model.addAttribute("estudios", svcEstudio.findAll());
+            model.addAttribute("modo", "alta");
+            if (result.hasErrors()) {
+                return "view/videojuego/editVideojuego";
+            }
+            if (archivo.isEmpty()) {
+                model.addAttribute("errorImagenMsg", "La imagen es requerida");
+                return "view/videojuego/editVideojuego";
+            }
+            if (!validarExtension(archivo)) {
+                model.addAttribute("errorImagenMsg", "La extension no es valida");
+                return "view/videojuego/editVideojuego";
+            }
+            if (archivo.getSize() >= 15000000) {
+                model.addAttribute("errorImagenMsg", "El peso excede 15MB");
+                return "view/videojuego/editVideojuego";
             }
             String ruta = "C://Videojuegos/imagenes";
             int index = archivo.getOriginalFilename().indexOf(".");
-            String extension = "";
-            extension = "."+archivo.getOriginalFilename().substring(index+1);
-            String nombreFoto = Calendar.getInstance().getTimeInMillis()+extension;
-            Path rutaAbsoluta = id != 0 ? Paths.get(ruta + "//"+videojuego.getImagen()) :
-                    Paths.get(ruta+"//"+nombreFoto);
-            if(id==0){
-                if(archivo.isEmpty()){
-                    model.addAttribute("errorImagenMsg","La imagen es requerida");
-                    return "views/formulario/videojuego";
-                }
-                if(!this.validarExtension(archivo)){
-                    model.addAttribute("errorImagenMsg","La extension no es valida");
-                    return "views/formulario/videojuego";
-                }
-                if(archivo.getSize() >= 15000000){
-                    model.addAttribute("errorImagenMsg","El peso excede 15MB");
-                    return "views/formulario/videojuego";
-                }
-                Files.write(rutaAbsoluta,archivo.getBytes());
-                videojuego.setImagen(nombreFoto);
-                this.svcVideojuego.saveOne(videojuego);
-            }else{
-                if(!archivo.isEmpty()){
-                    if(!this.validarExtension(archivo)){
-                        model.addAttribute("errorImagenMsg","La extension no es valida");
-                        return "views/formulario/videojuego";
-                    }
-                    if(archivo.getSize() >= 15000000){
-                        model.addAttribute("errorImagenMsg","El peso excede 15MB");
-                        return "views/formulario/videojuego";
-                    }
-                    Files.write(rutaAbsoluta,archivo.getBytes());
-                }
-                this.svcVideojuego.updateOne(videojuego,id);
+            String extension = "." + archivo.getOriginalFilename().substring(index + 1);
+            String nombreFoto = Calendar.getInstance().getTimeInMillis() + extension;
+            Path rutaAbsoluta = Paths.get(ruta + "//" + nombreFoto);
+            Files.write(rutaAbsoluta, archivo.getBytes());
+            videojuego.setImagen(nombreFoto);
+            svcVideojuego.saveOne(videojuego);
+            return "redirect:/inicio";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "error";
+        }
+    }
+
+    /* ---- Modificar ---- */
+
+    @GetMapping("/modificarVideojuego")
+    public String modificarVideojuego(@RequestParam("id") long id, Model model) {
+        try {
+            model.addAttribute("videojuego", svcVideojuego.findById(id));
+            model.addAttribute("categorias", svcCategoria.findAll());
+            model.addAttribute("estudios", svcEstudio.findAll());
+            model.addAttribute("modo", "modificar");
+            return "view/videojuego/editVideojuego";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "error";
+        }
+    }
+
+    @PostMapping("/videojuego/aceptarEditVideojuego")
+    public String aceptarEditVideojuego(
+            @RequestParam("archivo") MultipartFile archivo,
+            @Valid @ModelAttribute("videojuego") Videojuego videojuego,
+            BindingResult result,
+            Model model
+    ) {
+        try {
+            model.addAttribute("categorias", svcCategoria.findAll());
+            model.addAttribute("estudios", svcEstudio.findAll());
+            model.addAttribute("modo", "modificar");
+            if (result.hasErrors()) {
+                return "view/videojuego/editVideojuego";
             }
-            return "redirect:/crud";
-        }catch(Exception e){
+            if (!archivo.isEmpty()) {
+                if (!validarExtension(archivo)) {
+                    model.addAttribute("errorImagenMsg", "La extension no es valida");
+                    return "view/videojuego/editVideojuego";
+                }
+                if (archivo.getSize() >= 15000000) {
+                    model.addAttribute("errorImagenMsg", "El peso excede 15MB");
+                    return "view/videojuego/editVideojuego";
+                }
+                String ruta = "C://Videojuegos/imagenes";
+                Path rutaAbsoluta = Paths.get(ruta + "//" + videojuego.getImagen());
+                Files.write(rutaAbsoluta, archivo.getBytes());
+            }
+            svcVideojuego.updateOne(videojuego, videojuego.getId());
+            return "redirect:/inicio";
+        } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             return "error";
         }
     }
 
-    @GetMapping("/eliminar/videojuego/{id}")
-    public String eliminarVideojuego(Model model,@PathVariable("id")long id){
+    /* ---- Consultar ---- */
+
+    @GetMapping("/consultarVideojuego")
+    public String consultarVideojuego(@RequestParam("id") long id, Model model) {
         try {
-            model.addAttribute("videojuego",this.svcVideojuego.findById(id));
-            return "views/formulario/eliminar";
-        }catch(Exception e){
+            model.addAttribute("videojuego", svcVideojuego.findByIdAndActivo(id));
+            model.addAttribute("categorias", svcCategoria.findAll());
+            model.addAttribute("estudios", svcEstudio.findAll());
+            model.addAttribute("modo", "consulta");
+            return "view/videojuego/editVideojuego";
+        } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             return "error";
         }
     }
 
-    @PostMapping("/eliminar/videojuego/{id}")
-    public String desactivarVideojuego(Model model,@PathVariable("id")long id){
+    /* ---- Baja lógica ---- */
+
+    @GetMapping("/bajaVideojuego")
+    public String bajaVideojuego(@RequestParam("id") long id, Model model) {
         try {
-            this.svcVideojuego.deleteById(id);
-            return "redirect:/crud";
-        }catch(Exception e){
+            model.addAttribute("videojuego", svcVideojuego.findById(id));
+            return "view/videojuego/bajaVideojuego";
+        } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            System.out.println(e);
             return "error";
         }
     }
 
-    public boolean validarExtension(MultipartFile archivo){
+    @PostMapping("/bajaVideojuego")
+    public String confirmarBajaVideojuego(@RequestParam("id") long id, Model model) {
+        try {
+            svcVideojuego.deleteById(id);
+            return "redirect:/inicio";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "error";
+        }
+    }
+
+    /* ---- Helpers ---- */
+
+    public boolean validarExtension(MultipartFile archivo) {
         try {
             ImageIO.read(archivo.getInputStream()).toString();
             return true;
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println(e);
             return false;
         }
