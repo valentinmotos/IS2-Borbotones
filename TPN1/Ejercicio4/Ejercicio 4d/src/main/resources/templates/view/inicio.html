@@ -8,7 +8,7 @@
     <title>Inicio - Videojuegos</title>
 </head>
 <body>
-<nav th:replace="components/navbar :: nav_bar"></nav>
+<nav th:replace="~{components/navbar :: nav_bar}"></nav>
 <div class="container">
     <div class="row mt-4 mb-2">
         <div class="col">
@@ -23,7 +23,7 @@
     </div>
     <div class="row">
         <div class="col-12 col-md-3 mb-3" th:each="videojuego : ${videojuegos}">
-            <div th:replace="components/card :: _card"></div>
+            <div th:replace="~{components/card :: _card}"></div>
         </div>
     </div>
 </div>

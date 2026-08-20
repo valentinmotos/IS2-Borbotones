@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;

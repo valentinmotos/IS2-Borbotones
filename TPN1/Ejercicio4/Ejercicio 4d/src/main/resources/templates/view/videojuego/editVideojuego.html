@@ -8,7 +8,7 @@
     <title>Videojuego</title>
 </head>
 <body>
-<nav th:replace="components/navbar :: nav_bar"></nav>
+<nav th:replace="~{components/navbar :: nav_bar}"></nav>
 <div class="container">
     <div class="row mt-4">
         <div class="col-12">
@@ -23,7 +23,7 @@
                     <form th:if="${modo == 'alta'}"
                           th:action="@{/altaVideojuego}" method="post"
                           th:object="${videojuego}" enctype="multipart/form-data">
-                        <div th:replace="view/videojuego/_formFields :: fields"></div>
+                        <div th:replace="~{view/videojuego/_formFields :: fields}"></div>
                         <div class="row m-3">
                             <div class="col-md-6">
                                 <button class="btn btn-outline-secondary" type="reset" style="width:100%">Resetear</button>
@@ -39,7 +39,7 @@
                           th:action="@{/videojuego/aceptarEditVideojuego}" method="post"
                           th:object="${videojuego}" enctype="multipart/form-data">
                         <input type="hidden" th:field="*{id}">
-                        <div th:replace="view/videojuego/_formFields :: fields"></div>
+                        <div th:replace="~{view/videojuego/_formFields :: fields}"></div>
                         <div class="row m-3">
                             <div class="col-md-6">
                                 <a th:href="@{/inicio}" class="btn btn-outline-secondary" style="width:100%">Cancelar</a>
@@ -54,7 +54,7 @@
                     <form th:if="${modo == 'consulta'}"
                           th:object="${videojuego}" enctype="multipart/form-data">
                         <fieldset disabled>
-                            <div th:replace="view/videojuego/_formFields :: fields"></div>
+                            <div th:replace="~{view/videojuego/_formFields :: fields}"></div>
                         </fieldset>
                         <div class="row m-3">
                             <div class="col-md-12">
