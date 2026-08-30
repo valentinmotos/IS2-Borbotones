@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html class="light" lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="utf-8">
+
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>Vanguard - Catálogo de Juegos</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed": "#0b1c30",
+                        "surface": "#f7f9fb",
+                        "inverse-surface": "#2d3133",
+                        "surface-tint": "#494bd6",
+                        "on-primary": "#ffffff",
+                        "background": "#f7f9fb",
+                        "surface-container": "#eceef0",
+                        "primary-container": "#6063ee",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "on-secondary-container": "#5c647a",
+                        "on-secondary-fixed": "#131b2e",
+                        "outline": "#767586",
+                        "surface-variant": "#e0e3e5",
+                        "on-primary-container": "#fffbff",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#e1e0ff",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary": "#4648d4",
+                        "inverse-primary": "#c0c1ff",
+                        "surface-dim": "#d8dadc",
+                        "surface-bright": "#f7f9fb",
+                        "secondary-fixed": "#dae2fd",
+                        "tertiary": "#4f5f76",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-primary-fixed": "#07006c",
+                        "on-secondary": "#ffffff",
+                        "surface-container-low": "#f2f4f6",
+                        "on-surface": "#191c1e",
+                        "outline-variant": "#c7c4d7",
+                        "tertiary-fixed": "#d3e4fe",
+                        "on-surface-variant": "#464554",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-background": "#191c1e",
+                        "tertiary-container": "#68788f",
+                        "on-error": "#ffffff",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "secondary": "#565e74",
+                        "on-tertiary-container": "#000510",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "surface-container-high": "#e6e8ea",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#dae2fd"
+                    },
+
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+
+                    spacing: {
+                        "margin-desktop": "48px",
+                        "gutter": "24px",
+                        "base": "8px",
+                        "container-max": "1280px",
+                        "margin-mobile": "16px"
+                    },
+
+                    fontFamily: {
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display": ["Inter"],
+                        "label-sm": ["Inter"]
+                    },
+
+                    fontSize: {
+                        "headline-lg": [
+                            "32px",
+                            {
+                                lineHeight: "40px",
+                                letterSpacing: "-0.01em",
+                                fontWeight: "700"
+                            }
+                        ],
+
+                        "body-lg": [
+                            "18px",
+                            {
+                                lineHeight: "28px",
+                                fontWeight: "400"
+                            }
+                        ],
+
+                        "headline-md": [
+                            "20px",
+                            {
+                                lineHeight: "28px",
+                                fontWeight: "600"
+                            }
+                        ],
+
+                        "body-md": [
+                            "16px",
+                            {
+                                lineHeight: "24px",
+                                fontWeight: "400"
+                            }
+                        ],
+
+                        "headline-lg-mobile": [
+                            "24px",
+                            {
+                                lineHeight: "32px",
+                                fontWeight: "700"
+                            }
+                        ],
+
+                        "label-md": [
+                            "14px",
+                            {
+                                lineHeight: "20px",
+                                letterSpacing: "0.01em",
+                                fontWeight: "600"
+                            }
+                        ],
+
+                        "display": [
+                            "48px",
+                            {
+                                lineHeight: "56px",
+                                letterSpacing: "-0.02em",
+                                fontWeight: "800"
+                            }
+                        ],
+
+                        "label-sm": [
+                            "12px",
+                            {
+                                lineHeight: "16px",
+                                fontWeight: "500"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .soft-shadow {
+            box-shadow: 0 15px 30px -5px rgba(25, 28, 30, 0.04);
+        }
+
+        .hover-lift {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -5px rgba(25, 28, 30, 0.08);
+        }
+
+    </style>
+
+</head>
+
+
+<body class="antialiased min-h-screen flex flex-col pt-[88px] bg-background text-on-surface">
+
+
+<!-- TopNavBar -->
+<nav class="bg-surface/80 backdrop-blur-md text-primary font-body-md text-body-md shadow-sm fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto left-0 right-0">
+
+    <div class="font-display text-headline-md font-extrabold text-primary">
+        Vanguard
+    </div>
+
+    <div class="flex items-center gap-6 hidden md:flex">
+
+        <a class="text-on-surface-variant hover:text-on-surface transition-colors"
+           href="/exploradorJuegos">
+
+            Explorar
+
+        </a>
+
+    </div>
+
+    <div class="flex items-center gap-4">
+
+        <span class="material-symbols-outlined text-on-surface-variant">
+            shopping_cart
+        </span>
+
+        <span class="material-symbols-outlined text-on-surface-variant hidden md:block">
+            search
+        </span>
+
+    </div>
+
+</nav>
+
+
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-16 md:py-24">
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+
+
+        <!-- ================================================= -->
+        <!-- IMAGEN -->
+        <!-- ================================================= -->
+
+        <div class="md:col-span-7 flex flex-col gap-base">
+
+            <div class="w-full aspect-[4/3] md:aspect-[16/9] bg-surface-container-high rounded-xl overflow-hidden relative soft-shadow">
+
+                <img
+                        class="object-cover w-full h-full absolute inset-0"
+                        th:src="@{'/imagenes/' + ${videojuego.imagen}}"
+                        th:alt="${videojuego.titulo}">
+
+            </div>
+
+
+            <!-- Miniaturas -->
+            <div class="grid grid-cols-4 gap-base mt-4">
+
+                <div class="aspect-video bg-surface-container-highest rounded-lg overflow-hidden relative border-2 border-primary">
+
+                    <img
+                            class="object-cover w-full h-full absolute inset-0"
+                            th:src="@{'/imagenes/' + ${videojuego.imagen}}"
+                            th:alt="${videojuego.titulo}">
+
+                </div>
+
+                <div class="aspect-video bg-surface-container-highest rounded-lg overflow-hidden relative">
+
+                    <img
+                            class="object-cover w-full h-full absolute inset-0"
+                            th:src="@{'/imagenes/' + ${videojuego.imagen}}"
+                            th:alt="${videojuego.titulo}">
+
+                </div>
+
+                <div class="aspect-video bg-surface-container-highest rounded-lg overflow-hidden relative">
+
+                    <img
+                            class="object-cover w-full h-full absolute inset-0"
+                            th:src="@{'/imagenes/' + ${videojuego.imagen}}"
+                            th:alt="${videojuego.titulo}">
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- DETALLES -->
+        <!-- ================================================= -->
+
+        <div class="md:col-span-5 flex flex-col justify-start pt-8 md:pt-0 md:pl-8">
+
+
+            <div class="flex flex-col gap-2 mb-6">
+
+
+                <!-- CATEGORIA -->
+                <div class="flex items-center gap-3">
+
+                    <span
+                            class="bg-surface-container-high text-tertiary font-label-sm text-label-sm px-3 py-1 rounded-full uppercase tracking-wider"
+                            th:text="${videojuego.categoria}">
+
+                        Categoría
+
+                    </span>
+
+
+                    <!-- ESTUDIO -->
+                    <span
+                            class="text-secondary font-label-md text-label-md"
+                            th:text="${videojuego.estudio}">
+
+                        Estudio
+
+                    </span>
+
+                </div>
+
+
+                <!-- TITULO -->
+                <h1
+                        class="font-display text-display text-on-surface mb-2"
+                        th:text="${videojuego.titulo}">
+
+                    Título del videojuego
+
+                </h1>
+
+
+                <!-- PRECIO -->
+                <div class="flex items-center gap-4">
+
+                    <span class="font-headline-lg text-headline-lg text-on-surface font-bold">
+
+                        $
+
+                        <span th:text="${videojuego.precio}">
+                            59.99
+                        </span>
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- STOCK / FECHA / ESTADO / ID -->
+            <!-- ================================================= -->
+
+            <div class="flex flex-wrap items-center gap-2 mb-8">
+
+
+                <!-- STOCK -->
+                <span class="font-label-md text-label-md text-on-surface-variant">
+
+                    En Stock
+
+                    <span th:text="${videojuego.stock}">
+                        24
+                    </span>
+
+                    unidades
+
+                </span>
+
+
+                <span class="mx-2 text-outline-variant">
+                    •
+                </span>
+
+
+                <!-- FECHA DE LANZAMIENTO -->
+                <span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1">
+
+                    <span class="material-symbols-outlined text-[16px]">
+                        calendar_today
+                    </span>
+
+                    Lanzamiento:
+
+                    <span th:text="${videojuego.fechaLanzamiento}">
+                        15 Oct 2024
+                    </span>
+
+                </span>
+
+
+                <span class="mx-2 text-outline-variant">
+                    •
+                </span>
+
+
+                <!-- ESTADO -->
+                <span
+                        class="font-label-sm text-label-sm text-primary flex items-center gap-1 border border-primary px-2 py-0.5 rounded"
+                        th:text="${videojuego.activo ? 'Activo' : 'Inactivo'}">
+
+                    Activo
+
+                </span>
+
+
+                <span class="mx-2 text-outline-variant">
+                    •
+                </span>
+
+
+                <!-- ID -->
+                <span class="font-label-sm text-label-sm text-on-surface-variant">
+
+                    ID:
+
+                    <span th:text="${videojuego.id}">
+                        1
+                    </span>
+
+                </span>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- DESCRIPCION -->
+            <!-- ================================================= -->
+
+            <div
+                    class="font-body-lg text-body-lg text-on-surface-variant mb-10 leading-relaxed"
+                    th:text="${videojuego.descripcion}">
+
+                Descripción del videojuego.
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- BOTONES -->
+            <!-- ================================================= -->
+
+            <div class="flex flex-col gap-4 mt-auto">
+
+
+                <button
+                        class="bg-primary text-on-primary w-full py-4 rounded-xl font-label-md text-label-md uppercase tracking-widest hover-lift flex items-center justify-center gap-2">
+
+                    <span class="material-symbols-outlined">
+                        shopping_bag
+                    </span>
+
+                    Añadir al Carrito
+
+                </button>
+
+
+                <button
+                        class="bg-transparent border border-outline-variant text-on-surface w-full py-4 rounded-xl font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+
+                    Añadir a Lista de Deseos
+
+                </button>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- ESPECIFICACIONES -->
+            <!-- ================================================= -->
+
+            <div class="mt-12 border-t border-surface-container-high pt-6">
+
+                <details class="group">
+
+                    <summary
+                            class="flex justify-between items-center font-headline-md text-headline-md text-on-surface cursor-pointer list-none">
+
+                        Información del Videojuego
+
+                        <span class="material-symbols-outlined transition-transform group-open:rotate-180">
+                            expand_more
+                        </span>
+
+                    </summary>
+
+
+                    <div class="mt-4 font-body-md text-body-md text-on-surface-variant grid grid-cols-2 gap-y-4">
+
+
+                        <!-- ID -->
+                        <div>
+
+                            <strong class="block text-on-surface">
+                                ID
+                            </strong>
+
+                            <span th:text="${videojuego.id}">
+                                1
+                            </span>
+
+                        </div>
+
+
+                        <!-- TITULO -->
+                        <div>
+
+                            <strong class="block text-on-surface">
+                                Título
+                            </strong>
+
+                            <span th:text="${videojuego.titulo}">
+                                Echoes of the Null
+                            </span>
+
+                        </div>
+
+
+                        <!-- DESCRIPCION -->
+                        <div class="col-span-2">
+
+                            <strong class="block text-on-surface">
+                                Descripción
+                            </strong>
+
+                            <span th:text="${videojuego.descripcion}">
+                                Descripción del videojuego.
+                            </span>
+
+                        </div>
+
+
+                        <!-- ESTUDIO -->
+                        <div>
+
+                            <strong class="block text-on-surface">
+                                Estudio
+                            </strong>
+
+                            <span th:text="${videojuego.estudio}">
+                                Vanguard Studios
+                            </span>
+
+                        </div>
+
+
+                        <!-- CATEGORIA -->
+                        <div>
+
+                            <strong class="block text-on-surface">
+                                Categoría
+                            </strong>
+
+                            <span th:text="${videojuego.categoria}">
+                                Aventura
+                            </span>
+
+                        </div>
+
+
+                        <!-- PRECIO -->
+                        <div>
+
+                            <strong class="block text-on-surface">
+                                Precio
+                            </strong>
+
+                            <span>
+
+                                $
+
+                                <span th:text="${videojuego.precio}">
+                                    59.99
+                                </span>
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- STOCK -->
+                        <div>
+
+                            <strong class="block text-on-surface">
+                                Stock
+                            </strong>
+
+                            <span th:text="${videojuego.stock}">
+                                24
+                            </span>
+
+                        </div>
+
+
+                        <!-- FECHA DE LANZAMIENTO -->
+                        <div>
+
+                            <strong class="block text-on-surface">
+                                Fecha de Lanzamiento
+                            </strong>
+
+                            <span th:text="${videojuego.fechaLanzamiento}">
+                                15 Oct 2024
+                            </span>
+
+                        </div>
+
+
+                        <!-- ACTIVO -->
+                        <div>
+
+                            <strong class="block text-on-surface">
+                                Estado
+                            </strong>
+
+                            <span th:text="${videojuego.activo ? 'Activo' : 'Inactivo'}">
+                                Activo
+                            </span>
+
+                        </div>
+
+
+                        <!-- IMAGEN -->
+                        <div class="col-span-2">
+
+                            <strong class="block text-on-surface">
+                                Imagen
+                            </strong>
+
+                            <span th:text="${videojuego.imagen}">
+                                imagen.jpg
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+                </details>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+</body>
+
+</html>
