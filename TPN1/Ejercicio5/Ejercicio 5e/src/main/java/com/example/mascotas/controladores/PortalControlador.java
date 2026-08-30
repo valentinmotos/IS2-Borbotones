@@ -3,13 +3,16 @@ package com.example.mascotas.controladores;
 import com.example.mascotas.dto.UsuarioDTO;
 import com.example.mascotas.dto.ZonaDTO;
 import com.example.mascotas.errores.ErrorServicio;
+import com.example.mascotas.servicios.CookieServicio;
 import com.example.mascotas.servicios.UsuarioServicio;
 import com.example.mascotas.servicios.ZonaServicio;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,13 +30,18 @@ public class PortalControlador {
     @Autowired
     private ZonaServicio zonaServicio;
 
+    @Autowired
+    private CookieServicio cookieServicio;
+
     @GetMapping("/")
     public String index() {
         return "index";
     }
 
     @GetMapping("/login")
-    public String login(@RequestParam(required = false) String logout, HttpSession session, ModelMap modelo) {
+    public String mostrarLogin(@RequestParam(required = false) String logout,
+                               @CookieValue(name = CookieServicio.NOMBRE_COOKIE, required = false) String idUsuario,
+                               HttpSession session, HttpServletResponse response, ModelMap modelo) {
         // Si el usuario ya tiene una sesion activa, lo mandamos directo a inicio
         if (session.getAttribute("usuariosession") != null) {
             return "redirect:/inicio";
@@ -41,6 +49,21 @@ public class PortalControlador {
 
         if (logout != null) {
             modelo.put("logout", "Ha salido correctamente de la plataforma");
+            return "login";
+        }
+
+        // Si existe la cookie, reconstruimos la sesion sin pedir nuevamente las credenciales.
+        if (idUsuario != null && !idUsuario.isBlank()) {
+            try {
+                UsuarioDTO usuario = usuarioServicio.buscarUsuario(idUsuario);
+                if (usuario != null) {
+                    session.setAttribute("usuariosession", usuario);
+                    return "redirect:/inicio";
+                }
+            } catch (ErrorServicio ex) {
+                // La cookie puede apuntar a un usuario eliminado o deshabilitado.
+            }
+            response.addCookie(cookieServicio.eliminar());
         }
 
         return "login";
@@ -63,13 +86,15 @@ public class PortalControlador {
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String email, @RequestParam String clave, HttpSession session, ModelMap modelo) {
+    public String procesarLogin(@RequestParam String email, @RequestParam String clave,
+                                HttpSession session, HttpServletResponse response, ModelMap modelo) {
 
         try {
             UsuarioDTO usuario = usuarioServicio.login(email, clave);
 
             // Guardamos el usuario logueado en la sesion HTTP
             session.setAttribute("usuariosession", usuario);
+            response.addCookie(cookieServicio.crear(usuario.getId()));
 
             return "redirect:/inicio";
         } catch (ErrorServicio ex) {
@@ -80,9 +105,10 @@ public class PortalControlador {
     }
 
     @GetMapping("/logout")
-    public String logout(HttpSession session) {
+    public String logout(HttpSession session, HttpServletResponse response) {
         // Elimina toda la informacion guardada en la sesion (incluido el usuario logueado)
         session.invalidate();
+        response.addCookie(cookieServicio.eliminar());
         return "redirect:/login?logout";
     }
 
