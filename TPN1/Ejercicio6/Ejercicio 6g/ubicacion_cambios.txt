@@ -1,7 +1,7 @@
 EJERCICIO 6g - AUDITORIA DE ENTIDADES
 
 La consigna solicita agregar auditoria a los proyectos Mascotas, Videojuegos y Biblioteca.
-En esta entrega se trabajaron Mascotas y Videojuegos. Biblioteca queda pendiente porque su proyecto todavia no fue desarrollado.
+En esta entrega se trabajaron los tres proyectos solicitados.
 
 Los cambios NO se duplicaron dentro de esta carpeta. Fueron incorporados directamente en los proyectos originales:
 
@@ -11,25 +11,30 @@ Los cambios NO se duplicaron dentro de esta carpeta. Fueron incorporados directa
 2. Videojuegos
    Ruta: TPN1/Ejercicio4/Ejercicio 4d
 
-CAMBIOS REALIZADOS EN AMBOS PROYECTOS
+3. Biblioteca
+   Ruta: TPN1/Ejercicio6/Ejercicio 6c
+
+CAMBIOS REALIZADOS EN LOS TRES PROYECTOS
 
 - Se mantuvo Spring Data JPA y se agregaron las dependencias spring-data-envers y hibernate-envers.
 - Las entidades persistentes fueron marcadas con @Audited.
 - Los repositorios JpaRepository ahora tambien extienden RevisionRepository.
 - Se configuro el sufijo _AUD para las tablas historicas.
 - Se configuro store_data_at_delete=true para conservar los datos en las revisiones de eliminacion.
-- Se agregaron pruebas con una base H2 en memoria que crean y modifican una entidad y luego consultan sus revisiones.
+- En Mascotas y Videojuegos se agregaron pruebas con una base H2 en memoria que crean y modifican una entidad y luego consultan sus revisiones.
+- En Biblioteca no se agregaron ni ejecutaron pruebas, de acuerdo con la indicacion de esta entrega.
 
 ENTIDADES AUDITADAS
 
 Mascotas: Usuario, Mascota, Foto, Zona y Voto.
 Videojuegos: Videojuego, Categoria y Estudio.
+Biblioteca: Autor, Editorial, Imagen, Libro, Prestamo y Usuario.
 
 OBSERVACIONES
 
 - En Foto no se audita el contenido binario de la imagen para evitar duplicar archivos pesados en cada revision; si se auditan sus datos descriptivos.
 - En Categoria y Estudio no se auditan las colecciones inversas de videojuegos. Los cambios de relaciones quedan registrados en la entidad Videojuego.
+- En Imagen no se audita el contenido binario, y en Usuario no se audita la clave.
+- En Autor, Editorial, Imagen y Usuario no se auditan las relaciones inversas. Los cambios de relaciones quedan registrados desde Libro y Prestamo.
 - Envers crea automaticamente la tabla REVINFO y una tabla con sufijo _AUD por cada entidad auditada cuando Hibernate actualiza el esquema.
 - Los metodos findRevisions(id), findRevision(id, revision) y findLastChangeRevision(id) quedan disponibles desde los repositorios.
-
-Biblioteca se incorporara a esta misma estrategia cuando exista el proyecto correspondiente.

@@ -1,9 +1,11 @@
 package com.borbotones.biblioteca.model;
 
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 import java.time.LocalDate;
 
 @Entity
+@Audited
 public class Prestamo {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     private LocalDate fechaPrestamo = LocalDate.now();

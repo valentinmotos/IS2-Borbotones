@@ -2,8 +2,10 @@ package com.borbotones.biblioteca.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import org.hibernate.envers.Audited;
 
 @Entity
+@Audited
 public class Libro {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @NotBlank private String isbn;
