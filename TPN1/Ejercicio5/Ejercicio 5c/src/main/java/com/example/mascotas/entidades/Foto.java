@@ -1,8 +1,11 @@
 package com.example.mascotas.entidades;
 
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 @Entity
+@Audited
 public class Foto {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -13,6 +16,7 @@ public class Foto {
 
     //archivo pesado
     @Lob @Basic(fetch = FetchType.LAZY)
+    @NotAudited
     private byte[] contenido;
 
 

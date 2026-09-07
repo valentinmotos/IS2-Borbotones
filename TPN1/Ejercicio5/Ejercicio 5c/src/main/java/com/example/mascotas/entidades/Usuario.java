@@ -1,9 +1,11 @@
 package com.example.mascotas.entidades;
 
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 import java.util.Date;
 
 @Entity
+@Audited
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
