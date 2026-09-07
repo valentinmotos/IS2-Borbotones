@@ -1,5 +1,6 @@
 # Maven
 target/
+.m2/
 *.class
 
 # Base de datos H2 (archivos generados en runtime)

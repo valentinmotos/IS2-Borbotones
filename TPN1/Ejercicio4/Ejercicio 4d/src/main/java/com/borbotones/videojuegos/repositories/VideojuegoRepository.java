@@ -4,13 +4,14 @@ import com.borbotones.videojuegos.entities.Videojuego;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.repository.history.RevisionRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface VideojuegoRepository extends JpaRepository<Videojuego, Long> {
+public interface VideojuegoRepository extends JpaRepository<Videojuego, Long>, RevisionRepository<Videojuego, Long, Integer> {
 
     @Query(value = "SELECT * FROM videojuegos  WHERE videojuegos.activo = true", nativeQuery = true)
     List<Videojuego> findAllByActivo();

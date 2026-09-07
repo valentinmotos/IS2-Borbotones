@@ -1,9 +1,12 @@
 package com.borbotones.videojuegos.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import java.util.List;
 
 @Entity
+@Audited
 @Table(name = "estudios")
 public class Estudio {
     @Id
@@ -14,6 +17,7 @@ public class Estudio {
     private boolean activo = true;
 
     @OneToMany(mappedBy = "estudio")
+    @NotAudited
     private List<Videojuego> videojuegos;
 
     public Estudio() {
