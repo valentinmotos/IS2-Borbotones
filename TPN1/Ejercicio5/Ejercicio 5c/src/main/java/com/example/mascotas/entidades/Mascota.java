@@ -3,9 +3,11 @@ package com.example.mascotas.entidades;
 import com.example.mascotas.enumeracion.Sexo;
 import com.example.mascotas.enumeracion.Tipo;
 import jakarta.persistence.*;
+import org.hibernate.envers.Audited;
 import java.util.Date;
 
 @Entity
+@Audited
 public class Mascota {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

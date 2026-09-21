@@ -1,0 +1,49 @@
+<nav th:fragment="nav_bar" class="navbar navbar-expand-lg navbar-dark bg-dark"
+     xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/inicio}">Borbotones - Videojuegos</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/inicio}">Inicio</a>
+                </li>
+                <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                    <a class="nav-link dropdown-toggle" href="#" id="navCategorias" data-toggle="dropdown">
+                        Categorías
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" th:href="@{/categorias}">Listar Categorías</a>
+                        <a class="dropdown-item" th:href="@{/altaCategoria}">Nueva Categoría</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                    <a class="nav-link dropdown-toggle" href="#" id="navEstudios" data-toggle="dropdown">
+                        Estudios
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" th:href="@{/estudios}">Listar Estudios</a>
+                        <a class="dropdown-item" th:href="@{/altaEstudio}">Nuevo Estudio</a>
+                    </div>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" th:href="@{/altaVideojuego}">Nuevo Videojuego</a>
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0" th:action="@{/busqueda}">
+                <input class="form-control mr-sm-2" type="search" placeholder="Buscar..." aria-label="Buscar" name="query" maxlength="100">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Buscar</button>
+            </form>
+            <div class="ml-lg-3" sec:authorize="isAnonymous()">
+                <a class="btn btn-outline-light btn-sm" th:href="@{/login}">Ingresar</a>
+                <a class="btn btn-success btn-sm" th:href="@{/registro}">Registrarse</a>
+            </div>
+            <form class="ml-lg-3" sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post">
+                <span class="text-light mr-2" sec:authentication="name"></span>
+                <button class="btn btn-outline-light btn-sm" type="submit">Cerrar sesion</button>
+            </form>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,48 @@
+¿Por qué es importante incorporar formas de auditoría a los software que se desarrollan?
+
+La auditoría de software es importante porque permite registrar y controlar los cambios que se realizan sobre la información del sistema. De esta manera, es posible conocer qué usuario realizó una modificación, cuándo la realizó y qué valores tenía la entidad antes y después del cambio.
+
+Esto permite mejorar la seguridad, trazabilidad e integridad de los datos, además de facilitar la detección de errores, modificaciones no autorizadas y problemas dentro de la aplicación. También resulta útil para cumplir requisitos legales o administrativos que exijan mantener un historial de las operaciones realizadas sobre la información.
+
+¿Cómo se pueden realizar auditorías de entidades con Hibernate Envers y Spring Data JPA?
+
+Una forma de realizar auditorías de entidades en aplicaciones Java es utilizando Hibernate Envers, que permite mantener un historial de las modificaciones realizadas sobre las entidades. Para utilizarlo, se agrega la dependencia de Envers y se utiliza la anotación @Audited sobre las entidades que se desean auditar.
+
+Por ejemplo:
+
+@Entity
+@Audited
+public class Cliente {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String nombre;
+    private String email;
+}
+
+Con esto, Hibernate Envers crea tablas de auditoría donde almacena las diferentes versiones de la entidad. De esta manera se puede conocer cuándo se creó, modificó o eliminó un registro y cuáles eran sus valores en cada momento.
+
+Por otro lado, Spring Data JPA proporciona funcionalidades de auditoría mediante las anotaciones @CreatedDate, @LastModifiedDate, @CreatedBy y @LastModifiedBy. Para utilizarlas se habilita la auditoría mediante @EnableJpaAuditing y se utiliza @EntityListeners(AuditingEntityListener.class) en las entidades.
+
+Por ejemplo:
+
+@Entity
+@EntityListeners(AuditingEntityListener.class)
+public class Cliente {
+
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String nombre;
+
+    @CreatedDate
+    private LocalDateTime fechaCreacion;
+
+    @LastModifiedDate
+    private LocalDateTime fechaModificacion;
+}
+
+De esta forma, Hibernate Envers permite mantener un historial completo de las versiones de una entidad, mientras que Spring Data JPA facilita principalmente el registro de información como las fechas y los usuarios responsables de la creación o modificación de los registros.

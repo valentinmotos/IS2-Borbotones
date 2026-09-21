@@ -1,0 +1,160 @@
+================================================================================
+PATRONES DE DISEÑO Y ARQUITECTURA IDENTIFICADOS - EJERCICIO 4D (MVC CON ORM)
+================================================================================
+
+1. PATRÓN ARQUITECTÓNICO: MVC (MODEL - VIEW - CONTROLLER)
+--------------------------------------------------------------------------------
+Descripción:
+Separa la aplicación en tres componentes principales interconectados: el Modelo
+(datos y lógica), la Vista (interfaz gráfica de usuario) y el Controlador
+(gestor del flujo y mediador entre el Modelo y la Vista).
+
+Implementación en el ejercicio:
+- MODELO (Model):
+  * Entidades del dominio: Categoria, Estudio, Videojuego (paquete entities).
+  * Lógica de acceso a datos y de negocio: CategoriaRepository, EstudioRepository,
+    VideojuegoRepository, CategoriaService, EstudioService, VideojuegoService.
+- VISTA (View):
+  * Plantillas HTML con Thymeleaf ubicadas en 'src/main/resources/templates/'.
+  * Subcarpetas 'templates/view/' (inicio, categoria, estudio, videojuego) y
+    'templates/components/' (navbar, card).
+- CONTROLADOR (Controller):
+  * Clases anotadas con @Controller en el paquete controllers:
+    InicioController, CategoriaController, EstudioController, VideojuegoController.
+  * Reciben solicitudes HTTP (GET/POST), interactúan con los servicios, cargan
+    datos en el objeto 'Model' de Spring y devuelven el nombre de la vista a renderizar.
+
+
+2. PATRÓN REPOSITORIO (REPOSITORY PATTERN)
+--------------------------------------------------------------------------------
+Descripción:
+Mediar entre las capas de dominio y de acceso a datos usando una interfaz similar
+a una colección para acceder a los objetos del dominio. Oculta la complejidad
+del acceso a base de datos (SQL / HQL / persistencia).
+
+Implementación en el ejercicio:
+- Paquete: com.borbotones.videojuegos.repositories
+- Clases/Interfaces:
+  * CategoriaRepository extends JpaRepository<Categoria, Long>
+  * EstudioRepository extends JpaRepository<Estudio, Long>
+  * VideojuegoRepository extends JpaRepository<Videojuego, Long>
+- Spring Data JPA implementa automáticamente en tiempo de ejecución métodos CRUD
+  estándar (findAll, findById, save, deleteById) y permite definir consultas
+  personalizadas mediante @Query con SQL nativo (ej. findAllByActivo(),
+  findByIdAndActivo(), findByTitle()).
+
+
+3. PATRÓN SERVICE LAYER (CAPA DE SERVICIOS / FACHADA DE NEGOCIO)
+--------------------------------------------------------------------------------
+Descripción:
+Define la frontera de la aplicación con una capa de servicios que encapsula la
+lógica de negocio, orquesta las operaciones de los repositorios y controla las
+transacciones.
+
+Implementación en el ejercicio:
+- Paquete: com.borbotones.videojuegos.services
+- Interfaz genérica: BaseService<E> (define contrato findAll, findById, saveOne,
+  updateOne, deleteById).
+- Clases de servicio (@Service):
+  * CategoriaService implements BaseService<Categoria>
+  * EstudioService implements BaseService<Estudio>
+  * VideojuegoService implements BaseService<Videojuego>
+- Cada método está delimitado transaccionalmente con @Transactional de Jakarta.
+- El controlador nunca habla directo con el repositorio; toda petición pasa
+  a través de la capa de servicios.
+
+
+4. INVERSIÓN DE CONTROL (IoC) E INYECCIÓN DE DEPENDENCIAS (DI)
+--------------------------------------------------------------------------------
+Descripción:
+El flujo del programa no está controlado directamente por los objetos, sino por
+un contenedor central (Spring IoC Container) que instancia, configura y conecta
+los componentes entre sí.
+
+Implementación en el ejercicio:
+- Anotaciones de Componentes:
+  * @SpringBootApplication en VideojuegosApplication
+  * @Controller en los controladores
+  * @Service en las clases de servicio
+  * @Repository en las interfaces de persistencia
+  * @Configuration en ImagenConfiguration
+- Inyección de dependencias:
+  * Anotación @Autowired en controladores para inyectar servicios.
+  * Anotación @Autowired en servicios para inyectar repositorios.
+  * Se desacopla la creación de instancias mediante el operador 'new'.
+
+
+5. PATRÓN ORM / DATA MAPPER (OBJECT-RELATIONAL MAPPING)
+--------------------------------------------------------------------------------
+Descripción:
+Mapea el esquema de tablas relacionales de la base de datos a objetos Java y
+viceversa, abstrayendo al desarrollador del manejo directo de SQL.
+
+Implementación en el ejercicio:
+- Paquete: com.borbotones.videojuegos.entities (implementado mediante JPA/Hibernate).
+- Anotaciones:
+  * @Entity y @Table: mapean clases a tablas ('categorias', 'estudios', 'videojuegos').
+  * @Id y @GeneratedValue(strategy = GenerationType.IDENTITY): clave primaria autoincremental.
+  * @ManyToOne y @JoinColumn: mapeo de claves foráneas relacionales (fk_categoria, fk_estudio).
+  * @OneToMany(mappedBy = ...): mapeo inverso de colecciones (1 a N).
+
+
+6. PATRÓN FRONT CONTROLLER (CONTROLADOR FRONTAL)
+--------------------------------------------------------------------------------
+Descripción:
+Proporciona un punto de entrada centralizado para gestionar todas las solicitudes
+entrantes de una aplicación web, delegando a los controladores específicos.
+
+Implementación en el ejercicio:
+- Proporcionado nativamente por la infraestructura de Spring MVC a través de la
+  clase 'DispatcherServlet'.
+- Intercepta todas las peticiones HTTP dirigidas al puerto 9000, resuelve los
+  mapeos de URL definidos en @GetMapping/@PostMapping, ejecuta interceptores,
+  invoca los métodos controladores correspondientes y enruta a la vista de Thymeleaf.
+
+
+7. PATRÓN TEMPLATE VIEW / COMPOSITE VIEW (VISTAS BASADAS EN PLANTILLAS Y COMPOSICIÓN)
+--------------------------------------------------------------------------------
+Descripción:
+Genera código HTML dinámico combinando código estático con marcadores de posición
+evaluados por un motor de plantillas, reutilizando componentes comunes en fragmentos.
+
+Implementación en el ejercicio:
+- Motor de plantillas Thymeleaf con atributos th:*.
+- Composición y reutilización de vistas mediante fragmentos:
+  * Navbar global: th:replace="~{components/navbar :: nav_bar}" en todas las pantallas.
+  * Card de videojuego: th:replace="~{components/card :: _card}" en inicio.html.
+  * Formulario común: th:replace="~{view/videojuego/_formFields :: fields}"
+    compartido entre alta, modificación y consulta en editVideojuego.html.
+
+
+8. PATRÓN FORM BACKING OBJECT / DTO (OBJETO DE RESPALDO DE FORMULARIO)
+--------------------------------------------------------------------------------
+Descripción:
+Enlaza un objeto del modelo a los campos de un formulario HTML para transferencia
+bidireccional de datos y validación de entrada.
+
+Implementación en el ejercicio:
+- Vinculación en formularios mediante 'th:object="${videojuego}"' y 'th:field="*{titulo}"'.
+- Recepción en el controlador con @ModelAttribute y validación con @Valid y BindingResult.
+- Bean Validation (Jakarta Validation):
+  * @NotEmpty, @NotNull, @Size, @Min, @Max, @PastOrPresent en los campos de la entidad.
+  * Mapeo y visualización de errores contextuales en la vista con 'th:errors="*{campo}"'.
+
+
+9. PATRÓN SOFT DELETE (BAJA LÓGICA / PATRÓN DE ESTADO)
+--------------------------------------------------------------------------------
+Descripción:
+En lugar de eliminar físicamente registros de la base de datos (DELETE FROM ...),
+se actualiza una bandera de estado (activo = false) para preservar la integridad
+histórica y referencial de los datos.
+
+Implementación en el ejercicio:
+- Atributo 'private boolean activo = true;' en Categoria, Estudio y Videojuego.
+- Método deleteById() en los servicios: busca la entidad y conmuta su estado:
+    entity.setActivo(!entity.isActivo());
+    repositorio.save(entity);
+- Consultas nativas con filtro:
+    SELECT * FROM videojuegos WHERE videojuegos.activo = true;
+- Vistas: muestran badges "Activo" / "Inactivo" en listados de categorías y estudios.
+================================================================================

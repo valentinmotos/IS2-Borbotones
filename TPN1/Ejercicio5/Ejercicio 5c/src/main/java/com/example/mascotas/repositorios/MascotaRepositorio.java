@@ -6,10 +6,11 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.repository.history.RevisionRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface MascotaRepositorio extends JpaRepository<Mascota, String> {
+public interface MascotaRepositorio extends JpaRepository<Mascota, String>, RevisionRepository<Mascota, String, Integer> {
     @Query("SELECT c FROM Mascota c WHERE c.usuario.id = :id AND c.baja IS NULL")
     public List<Mascota> buscarMascotasPorUsuario(@Param("id") String id);
 }

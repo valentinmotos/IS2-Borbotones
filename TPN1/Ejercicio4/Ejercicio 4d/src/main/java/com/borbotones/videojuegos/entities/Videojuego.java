@@ -3,9 +3,11 @@ package com.borbotones.videojuegos.entities;
 import org.springframework.format.annotation.DateTimeFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import org.hibernate.envers.Audited;
 import java.util.Date;
 
 @Entity
+@Audited
 @Table(name = "videojuegos")
 public class Videojuego {
     @Id

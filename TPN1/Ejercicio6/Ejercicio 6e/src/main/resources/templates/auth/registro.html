@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+          integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+    <title>Registro - Videojuegos</title>
+</head>
+<body>
+<nav th:replace="~{components/navbar :: nav_bar}"></nav>
+<main class="container">
+    <div class="row mt-5 mb-5">
+        <div class="col-12 col-md-6 offset-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header"><h4>Crear cuenta</h4></div>
+                <div class="card-body">
+                    <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}"
+                         th:each="error : ${#fields.globalErrors()}" th:text="${error}"></div>
+                    <form th:action="@{/registro}" th:object="${registro}" method="post">
+                        <div class="form-group">
+                            <label for="nombre">Nombre</label>
+                            <input id="nombre" type="text" class="form-control" th:field="*{nombre}"
+                                   minlength="2" maxlength="60" autocomplete="name" required>
+                            <div class="text-danger" th:errors="*{nombre}"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input id="email" type="email" class="form-control" th:field="*{email}"
+                                   maxlength="254" autocomplete="email" required>
+                            <div class="text-danger" th:errors="*{email}"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Contrasena</label>
+                            <input id="password" type="password" class="form-control" th:field="*{password}"
+                                   minlength="8" maxlength="72" autocomplete="new-password" required>
+                            <small class="form-text text-muted">Minimo 8 caracteres, con mayuscula, minuscula y numero.</small>
+                            <div class="text-danger" th:errors="*{password}"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmarPassword">Repetir contrasena</label>
+                            <input id="confirmarPassword" type="password" class="form-control"
+                                   th:field="*{confirmarPassword}" autocomplete="new-password" required>
+                            <div class="text-danger" th:errors="*{confirmarPassword}"></div>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-block">Registrarme</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
