@@ -4,10 +4,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
+import java.util.List;
+
 @Entity
 public class DetalleCompra {
-
-    @
 
     @Id
     private String id;
@@ -15,7 +15,7 @@ public class DetalleCompra {
     @OneToMany
     private List<Producto> detalles;
 
-    private Int cantidad;
+    private int cantidad;
 
     private Double subtotal;
 

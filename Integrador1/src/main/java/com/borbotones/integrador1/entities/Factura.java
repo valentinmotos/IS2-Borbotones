@@ -33,26 +33,33 @@ public class Factura {
     }
 
     public List<Factura> listarFactura() {
+        return List.of();
     }
 
     public List<Factura> listarFacturaActivo() {
+        return List.of();
     }
 
     public List<Factura> listarFacturaPorEstado(EstadoFactura estado) {
+        return List.of();
     }
 
     public DetalleFactura crearDetalleFactura(String idDetalleCompra) {
+        return null;
     }
 
     public DetalleFactura buscarDetalleFactura(String id) {
+        return null;
     }
 
     public DetalleFactura modificarDetalleFactura( String idDetalleFactura, String idProducto) {
+        return null;
     }
 
     public void eliminarDetalleFactura(String idDetalleFactura) {
     }
 
     public Factura buscarFactura(String id) {
+        return null;
     }
 }
