@@ -3,10 +3,14 @@ target/
 .m2/
 *.class
 
-# Base de datos H2 (archivos generados en runtime)
+# Bases de datos locales (archivos generados en runtime)
 data/
 *.mv.db
 *.trace.db
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
 
 # VS Code
 .vscode/
