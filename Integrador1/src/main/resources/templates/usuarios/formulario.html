@@ -35,7 +35,8 @@
 
                 <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
 
-                <form th:action="@{/usuarios/guardar}" th:object="${usuarioForm}" method="post" novalidate>
+                <form th:action="${usuarioForm.id == null} ? @{/usuarios/crear} : @{/usuarios/modificar}"
+                      th:object="${usuarioForm}" method="post" novalidate>
                     <input type="hidden" th:field="*{id}">
 
                     <div class="mb-4">

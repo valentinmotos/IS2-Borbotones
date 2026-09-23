@@ -1,5 +1,7 @@
 package com.borbotones.integrador1.services;
 
+import com.borbotones.integrador1.dto.CambioClaveForm;
+import com.borbotones.integrador1.dto.UsuarioForm;
 import com.borbotones.integrador1.entities.RolUsuario;
 import com.borbotones.integrador1.entities.Usuario;
 import com.borbotones.integrador1.repositories.UsuarioRepository;
@@ -20,6 +22,28 @@ public class UsuarioService {
     public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    public UsuarioForm crearFormularioUsuario() {
+        return new UsuarioForm();
+    }
+
+    @Transactional(readOnly = true)
+    public UsuarioForm crearFormularioEdicion(String id) {
+        Usuario usuario = buscarUsuario(id);
+        UsuarioForm form = new UsuarioForm();
+        form.setId(usuario.getId());
+        form.setNombreUsuario(usuario.getNombreUsuario());
+        form.setRol(usuario.getRol());
+        return form;
+    }
+
+    public CambioClaveForm crearFormularioCambioClave() {
+        return new CambioClaveForm();
+    }
+
+    public RolUsuario[] listarRoles() {
+        return RolUsuario.values();
     }
 
     @Transactional

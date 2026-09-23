@@ -2,13 +2,10 @@ package com.borbotones.integrador1.controllers;
 
 import com.borbotones.integrador1.dto.CambioClaveForm;
 import com.borbotones.integrador1.dto.UsuarioForm;
-import com.borbotones.integrador1.entities.RolUsuario;
 import com.borbotones.integrador1.entities.Usuario;
 import com.borbotones.integrador1.services.UsuarioService;
-import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,19 +31,16 @@ public class UsuarioController {
 
     @GetMapping("/nuevo")
     public String nuevo(Model model) {
-        prepararFormulario(model, new UsuarioForm());
+        model.addAttribute("usuarioForm", usuarioService.crearFormularioUsuario());
+        model.addAttribute("roles", usuarioService.listarRoles());
         return "usuarios/formulario";
     }
 
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable String id, Model model, RedirectAttributes redirectAttributes) {
         try {
-            Usuario usuario = usuarioService.buscarUsuario(id);
-            UsuarioForm form = new UsuarioForm();
-            form.setId(usuario.getId());
-            form.setNombreUsuario(usuario.getNombreUsuario());
-            form.setRol(usuario.getRol());
-            prepararFormulario(model, form);
+            model.addAttribute("usuarioForm", usuarioService.crearFormularioEdicion(id));
+            model.addAttribute("roles", usuarioService.listarRoles());
             return "usuarios/formulario";
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
@@ -54,26 +48,32 @@ public class UsuarioController {
         }
     }
 
-    @PostMapping("/guardar")
-    public String guardar(@Valid @ModelAttribute("usuarioForm") UsuarioForm form,
-                          BindingResult result,
-                          Model model,
-                          RedirectAttributes redirectAttributes) {
-        if (result.hasErrors()) {
-            prepararFormulario(model, form);
-            return "usuarios/formulario";
-        }
+    @PostMapping("/crear")
+    public String crear(@ModelAttribute("usuarioForm") UsuarioForm form,
+                        Model model,
+                        RedirectAttributes redirectAttributes) {
         try {
-            if (form.getId() == null || form.getId().isBlank()) {
-                usuarioService.crearUsuario(form.getNombreUsuario(), form.getClave(), form.getRol());
-            } else {
-                usuarioService.modificarUsuario(form.getId(), form.getNombreUsuario(), form.getClave(), form.getRol());
-            }
-            redirectAttributes.addFlashAttribute("exito", "La accion fue realizada correctamente");
+            usuarioService.crearUsuario(form.getNombreUsuario(), form.getClave(), form.getRol());
+            redirectAttributes.addFlashAttribute("exito", "El usuario fue creado correctamente");
             return "redirect:/usuarios";
         } catch (IllegalArgumentException ex) {
             model.addAttribute("error", ex.getMessage());
-            prepararFormulario(model, form);
+            model.addAttribute("roles", usuarioService.listarRoles());
+            return "usuarios/formulario";
+        }
+    }
+
+    @PostMapping("/modificar")
+    public String modificar(@ModelAttribute("usuarioForm") UsuarioForm form,
+                            Model model,
+                            RedirectAttributes redirectAttributes) {
+        try {
+            usuarioService.modificarUsuario(form.getId(), form.getNombreUsuario(), form.getClave(), form.getRol());
+            redirectAttributes.addFlashAttribute("exito", "El usuario fue modificado correctamente");
+            return "redirect:/usuarios";
+        } catch (IllegalArgumentException ex) {
+            model.addAttribute("error", ex.getMessage());
+            model.addAttribute("roles", usuarioService.listarRoles());
             return "usuarios/formulario";
         }
     }
@@ -94,7 +94,7 @@ public class UsuarioController {
         try {
             Usuario usuario = usuarioService.buscarUsuario(id);
             model.addAttribute("usuario", usuario);
-            model.addAttribute("cambioClaveForm", new CambioClaveForm());
+            model.addAttribute("cambioClaveForm", usuarioService.crearFormularioCambioClave());
             return "usuarios/clave";
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
@@ -104,14 +104,9 @@ public class UsuarioController {
 
     @PostMapping("/{id}/clave")
     public String modificarClave(@PathVariable String id,
-                                 @Valid @ModelAttribute("cambioClaveForm") CambioClaveForm form,
-                                 BindingResult result,
+                                 @ModelAttribute("cambioClaveForm") CambioClaveForm form,
                                  Model model,
                                  RedirectAttributes redirectAttributes) {
-        if (result.hasErrors()) {
-            model.addAttribute("usuario", usuarioService.buscarUsuario(id));
-            return "usuarios/clave";
-        }
         try {
             usuarioService.modificarClave(id, form.getClaveActual(), form.getNuevaClave(), form.getConfirmarClave());
             redirectAttributes.addFlashAttribute("exito", "La clave fue modificada correctamente");
@@ -123,8 +118,4 @@ public class UsuarioController {
         }
     }
 
-    private void prepararFormulario(Model model, UsuarioForm form) {
-        model.addAttribute("usuarioForm", form);
-        model.addAttribute("roles", RolUsuario.values());
-    }
 }

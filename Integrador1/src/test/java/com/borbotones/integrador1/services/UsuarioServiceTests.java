@@ -1,5 +1,6 @@
 package com.borbotones.integrador1.services;
 
+import com.borbotones.integrador1.dto.UsuarioForm;
 import com.borbotones.integrador1.entities.RolUsuario;
 import com.borbotones.integrador1.entities.Usuario;
 import com.borbotones.integrador1.repositories.UsuarioRepository;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -55,6 +57,18 @@ class UsuarioServiceTests {
 
         assertThrows(IllegalArgumentException.class,
                 () -> usuarioService.crearUsuario("maxi", "otraClave", RolUsuario.CLIENTE));
+    }
+
+    @Test
+    void crearFormularioEdicionMapeaLosDatosDelUsuario() {
+        Usuario usuario = usuario("1", "maxi", "secreto");
+        when(usuarioRepository.findById("1")).thenReturn(Optional.of(usuario));
+
+        UsuarioForm form = usuarioService.crearFormularioEdicion("1");
+
+        assertEquals("1", form.getId());
+        assertEquals("maxi", form.getNombreUsuario());
+        assertEquals(RolUsuario.CLIENTE, form.getRol());
     }
 
     @Test
