@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios</title>
+</head>
+<body>
+<main>
+    <h1>Usuarios</h1>
+    <p th:if="${exito}" th:text="${exito}"></p>
+    <p th:if="${error}" th:text="${error}"></p>
+    <p><a th:href="@{/usuarios/nuevo}">Crear usuario</a></p>
+    <table>
+        <thead>
+        <tr><th>Nombre de usuario</th><th>Rol</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+        <tr th:if="${#lists.isEmpty(usuarios)}"><td colspan="3">No hay usuarios activos.</td></tr>
+        <tr th:each="usuario : ${usuarios}">
+            <td th:text="${usuario.nombreUsuario}"></td>
+            <td th:text="${usuario.rol}"></td>
+            <td>
+                <a th:href="@{/usuarios/editar/{id}(id=${usuario.id})}">Editar</a>
+                <a th:href="@{/usuarios/{id}/clave(id=${usuario.id})}">Cambiar clave</a>
+                <form th:action="@{/usuarios/baja/{id}(id=${usuario.id})}" method="post" style="display:inline">
+                    <button type="submit">Dar de baja</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <p><a th:href="@{/inicio}">Volver al inicio</a></p>
+</main>
+</body>
+</html>

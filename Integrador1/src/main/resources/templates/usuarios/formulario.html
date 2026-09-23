@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${usuarioForm.id == null ? 'Crear usuario' : 'Editar usuario'}">Usuario</title>
+</head>
+<body>
+<main>
+    <h1 th:text="${usuarioForm.id == null ? 'Crear usuario' : 'Editar usuario'}">Usuario</h1>
+    <p th:if="${error}" th:text="${error}"></p>
+    <form th:action="@{/usuarios/guardar}" th:object="${usuarioForm}" method="post">
+        <input type="hidden" th:field="*{id}">
+        <div>
+            <label for="nombreUsuario">Nombre de usuario</label>
+            <input id="nombreUsuario" type="text" th:field="*{nombreUsuario}" maxlength="100">
+            <p th:if="${#fields.hasErrors('nombreUsuario')}" th:errors="*{nombreUsuario}"></p>
+        </div>
+        <div>
+            <label for="clave" th:text="${usuarioForm.id == null ? 'Clave' : 'Nueva clave'}">Clave</label>
+            <input id="clave" type="password" th:field="*{clave}" minlength="6" maxlength="72">
+            <p th:if="${#fields.hasErrors('clave')}" th:errors="*{clave}"></p>
+        </div>
+        <div>
+            <label for="rol">Rol</label>
+            <select id="rol" th:field="*{rol}">
+                <option value="">Seleccione un rol</option>
+                <option th:each="rol : ${roles}" th:value="${rol}" th:text="${rol}"></option>
+            </select>
+            <p th:if="${#fields.hasErrors('rol')}" th:errors="*{rol}"></p>
+        </div>
+        <button type="submit">Guardar</button>
+        <a th:href="@{/usuarios}">Cancelar</a>
+    </form>
+</main>
+</body>
+</html>

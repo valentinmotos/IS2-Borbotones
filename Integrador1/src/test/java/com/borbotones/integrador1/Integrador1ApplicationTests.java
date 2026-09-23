@@ -30,4 +30,20 @@ class Integrador1ApplicationTests {
                 .andExpect(view().name("inicio"))
                 .andExpect(content().string(containsString("TP Integrador 1")));
     }
+
+    @Test
+    void usuariosRenderizaElListadoThymeleaf() throws Exception {
+        mockMvc.perform(get("/usuarios"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("usuarios/lista"))
+                .andExpect(content().string(containsString("Crear usuario")));
+    }
+
+    @Test
+    void usuariosRenderizaElFormularioDeAlta() throws Exception {
+        mockMvc.perform(get("/usuarios/nuevo"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("usuarios/formulario"))
+                .andExpect(content().string(containsString("Nombre de usuario")));
+    }
 }

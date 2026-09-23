@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modificar clave</title>
+</head>
+<body>
+<main>
+    <h1>Modificar clave</h1>
+    <p>Usuario: <span th:text="${usuario.nombreUsuario}"></span></p>
+    <p th:if="${error}" th:text="${error}"></p>
+    <form th:action="@{/usuarios/{id}/clave(id=${usuario.id})}" th:object="${cambioClaveForm}" method="post">
+        <div>
+            <label for="claveActual">Clave actual</label>
+            <input id="claveActual" type="password" th:field="*{claveActual}">
+            <p th:if="${#fields.hasErrors('claveActual')}" th:errors="*{claveActual}"></p>
+        </div>
+        <div>
+            <label for="nuevaClave">Nueva clave</label>
+            <input id="nuevaClave" type="password" th:field="*{nuevaClave}" minlength="6" maxlength="72">
+            <p th:if="${#fields.hasErrors('nuevaClave')}" th:errors="*{nuevaClave}"></p>
+        </div>
+        <div>
+            <label for="confirmarClave">Confirmar nueva clave</label>
+            <input id="confirmarClave" type="password" th:field="*{confirmarClave}">
+            <p th:if="${#fields.hasErrors('confirmarClave')}" th:errors="*{confirmarClave}"></p>
+        </div>
+        <button type="submit">Guardar clave</button>
+        <a th:href="@{/usuarios}">Cancelar</a>
+    </form>
+</main>
+</body>
+</html>
