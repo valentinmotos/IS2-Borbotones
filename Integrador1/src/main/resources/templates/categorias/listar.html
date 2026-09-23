@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo}">Zero | Gestión de Categorías</title>
+    <link rel="icon" type="image/png" href="/cozastore/images/icons/favicon.png"/>
+    <link rel="stylesheet" type="text/css" href="/cozastore/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/cozastore/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .navbar-custom {
+            background-color: #222;
+        }
+        .navbar-custom .navbar-brand, .navbar-custom .nav-link {
+            color: #fff;
+        }
+        .navbar-custom .nav-link:hover {
+            color: #717fe0;
+        }
+        .card-custom {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .badge-activo {
+            background-color: #198754;
+        }
+        .badge-eliminado {
+            background-color: #dc3545;
+        }
+        .table thead th {
+            background-color: #f1f3f5;
+            border-bottom: 2px solid #dee2e6;
+            color: #495057;
+            font-weight: 600;
+        }
+        .btn-zero {
+            background-color: #222;
+            color: #fff;
+            border-radius: 4px;
+        }
+        .btn-zero:hover {
+            background-color: #717fe0;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra de Navegación -->
+    <nav class="navbar navbar-expand-lg navbar-custom mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/inicio">
+                <i class="fa fa-shopping-bag me-2"></i>ZERO <span class="badge bg-secondary ms-2" style="font-size: 0.7rem;">Admin</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/inicio"><i class="fa fa-home me-1"></i> Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/productos"><i class="fa fa-tags me-1"></i> Catálogo</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active fw-bold" href="/categorias"><i class="fa fa-list me-1"></i> Categorías</a>
+                    </li>
+                </ul>
+                <div class="d-flex text-white-50 align-items-center">
+                    <small><i class="fa fa-user-circle me-1"></i> Gestión Administrativa</small>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="container pb-5">
+        
+        <!-- Mensajes Flash de Notificación -->
+        <div th:if="${exito}" class="alert alert-success alert-dismissible fade show card-custom" role="alert">
+            <i class="fa fa-check-circle me-2"></i>
+            <span th:text="${exito}">Operación exitosa</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show card-custom" role="alert">
+            <i class="fa fa-exclamation-triangle me-2"></i>
+            <span th:text="${error}">Ocurrió un error</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Encabezado y Acciones -->
+        <div class="card card-custom p-4 mb-4">
+            <div class="row align-items-center gy-3">
+                <div class="col-md-6">
+                    <h2 class="h4 mb-1 fw-bold text-dark">
+                        <i class="fa fa-folder-open me-2 text-primary"></i>Gestión de Categorías
+                    </h2>
+                    <p class="text-muted mb-0 small">Administración y clasificación general de productos de la tienda Zero.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="/categorias/crear" class="btn btn-zero">
+                        <i class="fa fa-plus me-1"></i> Nueva Categoría
+                    </a>
+                </div>
+            </div>
+
+            <hr class="my-3 text-muted">
+
+            <!-- Filtros y Búsqueda -->
+            <form th:action="@{/categorias}" method="get" class="row g-2 align-items-center">
+                <div class="col-sm-6 col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="fa fa-search text-muted"></i></span>
+                        <input type="text" name="criterio" th:value="${criterio}" class="form-control" placeholder="Buscar por nombre de categoría...">
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <div class="form-check form-switch pt-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="switchEliminadas" name="mostrarEliminadas" value="true"
+                               th:checked="${mostrarEliminadas}" onchange="this.form.submit()">
+                        <label class="form-check-label small" for="switchEliminadas">Mostrar también bajas lógicas</label>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">Filtrar</button>
+                    <a th:if="${criterio != null and !criterio.isEmpty()}" th:href="@{/categorias(mostrarEliminadas=${mostrarEliminadas})}" class="btn btn-link btn-sm text-decoration-none text-muted">Limpiar</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabla de Categorías -->
+        <div class="card card-custom">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;">ID</th>
+                                <th style="width: 35%;">Nombre</th>
+                                <th style="width: 15%;">Estado</th>
+                                <th style="width: 20%;" class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="cat : ${categorias}">
+                                <td>
+                                    <code class="text-muted small" th:text="${cat.id}">id-uuid</code>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold text-dark" th:text="${cat.nombre}">Nombre</span>
+                                </td>
+                                <td>
+                                    <span th:if="${!cat.eliminado}" class="badge badge-activo">
+                                        <i class="fa fa-check me-1"></i>Activa
+                                    </span>
+                                    <span th:if="${cat.eliminado}" class="badge badge-eliminado">
+                                        <i class="fa fa-times me-1"></i>Eliminada
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <!-- Botón Editar -->
+                                        <a th:href="@{/categorias/editar/{id}(id=${cat.id})}" class="btn btn-outline-primary" title="Editar categoría">
+                                            <i class="fa fa-pencil"></i>
+                                        </a>
+
+                                        <!-- Botón Baja Lógica (si está activa) -->
+                                        <form th:if="${!cat.eliminado}" th:action="@{/categorias/eliminar/{id}(id=${cat.id})}" method="post" class="d-inline"
+                                              onsubmit="return confirm('¿Está seguro de dar de baja lógica esta categoría?');">
+                                            <button type="submit" class="btn btn-outline-danger" title="Dar de baja">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </form>
+
+                                        <!-- Botón Reactivar (si está eliminada) -->
+                                        <form th:if="${cat.eliminado}" th:action="@{/categorias/reactivar/{id}(id=${cat.id})}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-success" title="Reactivar categoría">
+                                                <i class="fa fa-undo"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(categorias)}">
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="fa fa-folder-open-o fa-3x mb-3 text-secondary d-block"></i>
+                                    <p class="mb-1 fw-bold">No se encontraron categorías.</p>
+                                    <p class="small text-muted mb-3" th:text="${mostrarEliminadas ? 'No existen registros en la base de datos.' : 'No hay categorías activas registradas.'}"></p>
+                                    <a href="/categorias/crear" class="btn btn-sm btn-zero">
+                                        <i class="fa fa-plus me-1"></i> Crear la primera categoría
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script src="/cozastore/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

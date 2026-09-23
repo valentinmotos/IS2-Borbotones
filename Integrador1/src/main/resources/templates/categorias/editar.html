@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo}">Zero | Editar Categoría</title>
+    <link rel="icon" type="image/png" href="/cozastore/images/icons/favicon.png"/>
+    <link rel="stylesheet" type="text/css" href="/cozastore/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/cozastore/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .navbar-custom {
+            background-color: #222;
+        }
+        .navbar-custom .navbar-brand, .navbar-custom .nav-link {
+            color: #fff;
+        }
+        .navbar-custom .nav-link:hover {
+            color: #717fe0;
+        }
+        .card-custom {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .badge-activo {
+            background-color: #198754;
+        }
+        .badge-eliminado {
+            background-color: #dc3545;
+        }
+        .btn-zero {
+            background-color: #222;
+            color: #fff;
+            border-radius: 4px;
+        }
+        .btn-zero:hover {
+            background-color: #717fe0;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra de Navegación -->
+    <nav class="navbar navbar-expand-lg navbar-custom mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/inicio">
+                <i class="fa fa-shopping-bag me-2"></i>ZERO <span class="badge bg-secondary ms-2" style="font-size: 0.7rem;">Admin</span>
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/inicio"><i class="fa fa-home me-1"></i> Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active fw-bold" href="/categorias"><i class="fa fa-list me-1"></i> Categorías</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="container pb-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+
+                <!-- Breadcrumb -->
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb small">
+                        <li class="breadcrumb-item"><a href="/categorias" class="text-decoration-none">Categorías</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Editar Categoría</li>
+                    </ol>
+                </nav>
+
+                <!-- Mensaje de Error -->
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show card-custom mb-3" role="alert">
+                    <i class="fa fa-exclamation-triangle me-2"></i>
+                    <span th:text="${error}">Error al actualizar</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <!-- Formulario -->
+                <div class="card card-custom p-4">
+                    <div class="card-header bg-white border-0 p-0 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h2 class="h5 fw-bold text-dark mb-1">
+                                    <i class="fa fa-pencil-square-o me-2 text-primary"></i>Editar Categoría
+                                </h2>
+                                <p class="text-muted small mb-0">Modifique los datos de la categoría.</p>
+                            </div>
+                            <div>
+                                <span th:if="${categoria != null and !categoria.eliminado}" class="badge badge-activo">
+                                    <i class="fa fa-check me-1"></i>Activa
+                                </span>
+                                <span th:if="${categoria != null and categoria.eliminado}" class="badge badge-eliminado">
+                                    <i class="fa fa-times me-1"></i>Eliminada
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form th:action="@{/categorias/editar/{id}(id=${categoria.id})}" method="post">
+                        <!-- ID solo lectura -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted small">Identificador Único (ID)</label>
+                            <input type="text" class="form-control bg-light" th:value="${categoria.id}" readonly disabled>
+                        </div>
+
+                        <!-- Nombre -->
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label fw-semibold">Nombre de la Categoría <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" th:value="${categoria.nombre}"
+                                   placeholder="Nombre de la categoría" required autofocus>
+                            <div class="form-text">Debe tener entre 2 y 100 caracteres y ser único en el sistema.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-2 border-top">
+                            <a href="/categorias" class="btn btn-outline-secondary">
+                                <i class="fa fa-arrow-left me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-zero">
+                                <i class="fa fa-save me-1"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script src="/cozastore/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
