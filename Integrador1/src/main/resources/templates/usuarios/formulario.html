@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${#strings.isEmpty(usuarioForm.id) ? 'Zero | Crear usuario' : 'Zero | Editar usuario'}">Zero | Usuario</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="/cozastore/images/icons/favicon.png">
+    <link rel="stylesheet" href="/cozastore/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/cozastore/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/cozastore/vendor/animsition/css/animsition.min.css">
+    <link rel="stylesheet" href="/cozastore/css/util.css">
+    <link rel="stylesheet" href="/cozastore/css/main.css">
+</head>
+<body class="animsition bg-light">
+<header class="bg-white border-bottom fixed-top">
+    <nav class="navbar navbar-expand-lg container py-3">
+        <a class="navbar-brand" th:href="@{/inicio}">
+            <img src="/cozastore/images/icons/logo-01.png" alt="Zero" height="24">
+        </a>
+        <div class="ms-auto">
+            <a class="btn btn-outline-secondary" th:href="@{/usuarios}">
+                <i class="fa fa-arrow-left me-2" aria-hidden="true"></i>Volver a usuarios
+            </a>
+        </div>
+    </nav>
+</header>
+
+<main class="container p-t-120 p-b-80">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-xl-6">
+            <section class="bg-white rounded shadow-sm p-4 p-md-5">
+                <p class="stext-107 cl6 mb-1">Administración</p>
+                <h1 class="mtext-111 cl2 mb-4"
+                    th:text="${#strings.isEmpty(usuarioForm.id) ? 'Crear usuario' : 'Editar usuario'}">Usuario</h1>
+
+                <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+                <form th:action="${#strings.isEmpty(usuarioForm.id)} ? @{/usuarios/crear} : @{/usuarios/modificar}"
+                      th:object="${usuarioForm}" method="post" novalidate>
+                    <input th:if="${!#strings.isEmpty(usuarioForm.id)}" type="hidden" th:field="*{id}">
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" for="nombreUsuario">Nombre de usuario</label>
+                        <input class="form-control" id="nombreUsuario" type="text" th:field="*{nombreUsuario}"
+                               maxlength="100" autocomplete="username"
+                               th:classappend="${#fields.hasErrors('nombreUsuario')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{nombreUsuario}"></div>
+                    </div>
+
+                    <div class="mb-4" th:if="${#strings.isEmpty(usuarioForm.id)}">
+                        <label class="form-label fw-semibold" for="clave">Clave</label>
+                        <input class="form-control" id="clave" type="password" th:field="*{clave}"
+                               minlength="6" maxlength="72" autocomplete="new-password"
+                               th:classappend="${#fields.hasErrors('clave')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{clave}"></div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" for="rol">Rol</label>
+                        <select class="form-select" id="rol" th:field="*{rol}"
+                                th:classappend="${#fields.hasErrors('rol')} ? 'is-invalid'">
+                            <option value="">Seleccione un rol</option>
+                            <option th:each="rol : ${roles}" th:value="${rol}" th:text="${rol}"></option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{rol}"></div>
+                    </div>
+
+                    <div class="d-flex flex-column flex-sm-row gap-2">
+                        <button class="btn text-white bg1 hov-btn1 px-4" type="submit">Guardar usuario</button>
+                        <a class="btn btn-outline-secondary px-4" th:href="@{/usuarios}">Cancelar</a>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer class="bg3 py-4">
+    <div class="container text-center">
+        <p class="stext-107 cl6 mb-0">Zero | Template by
+            <a class="cl6 hov-cl1" href="https://colorlib.com" target="_blank" rel="noopener">Colorlib</a>
+            &amp; distributed by <a class="cl6 hov-cl1" href="https://themewagon.com" target="_blank" rel="noopener">ThemeWagon</a>
+        </p>
+    </div>
+</footer>
+
+<script src="/cozastore/vendor/jquery/jquery-3.2.1.min.js"></script>
+<script src="/cozastore/vendor/animsition/js/animsition.min.js"></script>
+<script src="/cozastore/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/cozastore/js/main.js"></script>
+</body>
+</html>

@@ -2,6 +2,7 @@ package com.borbotones.integrador1;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -64,5 +65,56 @@ class Integrador1ApplicationTests {
         mockMvc.perform(get("/cozastore/vendor/bootstrap/js/bootstrap.bundle.min.js"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Bootstrap v5.3.8")));
+    }
+
+    @Test
+    void usuariosRenderizaElListadoConElTemplate() throws Exception {
+        mockMvc.perform(get("/usuarios"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("usuarios/lista"))
+                .andExpect(content().string(containsString("Crear usuario")))
+                .andExpect(content().string(containsString("/cozastore/css/main.css")));
+    }
+
+    @Test
+    void usuariosRenderizaElFormularioDeAltaConElTemplate() throws Exception {
+        mockMvc.perform(get("/usuarios/nuevo"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("usuarios/formulario"))
+                .andExpect(content().string(containsString("Nombre de usuario")))
+                .andExpect(content().string(containsString("/cozastore/vendor/bootstrap/css/bootstrap.min.css")));
+    }
+
+    @Test
+    void errorEnAltaMantieneElFormularioEnModoCreacion() throws Exception {
+        mockMvc.perform(post("/usuarios/crear")
+                        .param("id", "")
+                        .param("nombreUsuario", "usuario-prueba-error")
+                        .param("clave", "123")
+                        .param("rol", "CLIENTE"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("usuarios/formulario"))
+                .andExpect(content().string(containsString("Crear usuario")))
+                .andExpect(content().string(containsString("action=\"/usuarios/crear\"")))
+                .andExpect(content().string(containsString("id=\"clave\"")));
+    }
+
+    @Test
+    void buscadorFiltraUsuariosPorNombre() throws Exception {
+        mockMvc.perform(post("/usuarios/crear")
+                        .param("nombreUsuario", "usuario-encontrable")
+                        .param("clave", "secreto")
+                        .param("rol", "CLIENTE"))
+                .andExpect(status().is3xxRedirection());
+        mockMvc.perform(post("/usuarios/crear")
+                        .param("nombreUsuario", "usuario-oculto")
+                        .param("clave", "secreto")
+                        .param("rol", "CLIENTE"))
+                .andExpect(status().is3xxRedirection());
+
+        mockMvc.perform(get("/usuarios").param("buscar", "enCONTRABLE"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("usuario-encontrable")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("usuario-oculto"))));
     }
 }
