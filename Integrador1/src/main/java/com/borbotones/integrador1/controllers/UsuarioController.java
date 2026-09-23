@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -24,8 +25,9 @@ public class UsuarioController {
     }
 
     @GetMapping
-    public String listar(Model model) {
-        model.addAttribute("usuarios", usuarioService.listarUsuarioActivo());
+    public String listar(@RequestParam(name = "buscar", required = false) String buscar, Model model) {
+        model.addAttribute("usuarios", usuarioService.buscarUsuariosActivos(buscar));
+        model.addAttribute("buscar", buscar == null ? "" : buscar);
         return "usuarios/lista";
     }
 
@@ -52,6 +54,7 @@ public class UsuarioController {
     public String crear(@ModelAttribute("usuarioForm") UsuarioForm form,
                         Model model,
                         RedirectAttributes redirectAttributes) {
+        form.setId(null);
         try {
             usuarioService.crearUsuario(form.getNombreUsuario(), form.getClave(), form.getRol());
             redirectAttributes.addFlashAttribute("exito", "El usuario fue creado correctamente");
@@ -68,7 +71,7 @@ public class UsuarioController {
                             Model model,
                             RedirectAttributes redirectAttributes) {
         try {
-            usuarioService.modificarUsuario(form.getId(), form.getNombreUsuario(), form.getClave(), form.getRol());
+            usuarioService.modificarUsuario(form.getId(), form.getNombreUsuario(), form.getRol());
             redirectAttributes.addFlashAttribute("exito", "El usuario fue modificado correctamente");
             return "redirect:/usuarios";
         } catch (IllegalArgumentException ex) {

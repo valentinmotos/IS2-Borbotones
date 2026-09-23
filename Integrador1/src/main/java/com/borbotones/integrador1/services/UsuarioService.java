@@ -48,7 +48,8 @@ public class UsuarioService {
 
     @Transactional
     public Usuario crearUsuario(String nombreUsuario, String clave, RolUsuario rol) {
-        validar(nombreUsuario, clave, rol);
+        validarDatosUsuario(nombreUsuario, rol);
+        validarClave(clave);
         String nombreNormalizado = nombreUsuario.trim();
         validarNombreDisponible(nombreNormalizado, null);
 
@@ -62,33 +63,35 @@ public class UsuarioService {
     }
 
     @Transactional
-    public Usuario modificarUsuario(String id, String nombreUsuario, String clave, RolUsuario rol) {
-        validar(nombreUsuario, clave, rol);
+    public Usuario modificarUsuario(String id, String nombreUsuario, RolUsuario rol) {
+        validarDatosUsuario(nombreUsuario, rol);
         Usuario usuario = buscarUsuario(id);
         String nombreNormalizado = nombreUsuario.trim();
         validarNombreDisponible(nombreNormalizado, id);
 
         usuario.setNombreUsuario(nombreNormalizado);
-        usuario.setClave(passwordEncoder.encode(clave));
         usuario.setRol(rol);
         return usuarioRepository.save(usuario);
     }
 
-    public void validar(String nombreUsuario, String clave, RolUsuario rol) {
+    private void validarDatosUsuario(String nombreUsuario, RolUsuario rol) {
         if (nombreUsuario == null || nombreUsuario.isBlank()) {
             throw new IllegalArgumentException("Debe indicar el nombre de usuario");
         }
         if (nombreUsuario.trim().length() > 100) {
             throw new IllegalArgumentException("El nombre de usuario no puede superar los 100 caracteres");
         }
+        if (rol == null) {
+            throw new IllegalArgumentException("Debe indicar el rol");
+        }
+    }
+
+    private void validarClave(String clave) {
         if (clave == null || clave.isBlank()) {
             throw new IllegalArgumentException("Debe indicar la clave");
         }
         if (clave.length() < 6 || clave.length() > 72) {
             throw new IllegalArgumentException("La clave debe tener entre 6 y 72 caracteres");
-        }
-        if (rol == null) {
-            throw new IllegalArgumentException("Debe indicar el rol");
         }
     }
 
@@ -129,6 +132,15 @@ public class UsuarioService {
     @Transactional(readOnly = true)
     public List<Usuario> listarUsuarioActivo() {
         return usuarioRepository.findByEliminadoFalseOrderByNombreUsuarioAsc();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Usuario> buscarUsuariosActivos(String busqueda) {
+        if (busqueda == null || busqueda.isBlank()) {
+            return listarUsuarioActivo();
+        }
+        return usuarioRepository
+                .findByNombreUsuarioContainingIgnoreCaseAndEliminadoFalseOrderByNombreUsuarioAsc(busqueda.trim());
     }
 
     @Transactional

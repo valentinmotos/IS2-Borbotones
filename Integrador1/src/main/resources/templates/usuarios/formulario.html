@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="${usuarioForm.id == null ? 'Zero | Crear usuario' : 'Zero | Editar usuario'}">Zero | Usuario</title>
+    <title th:text="${#strings.isEmpty(usuarioForm.id) ? 'Zero | Crear usuario' : 'Zero | Editar usuario'}">Zero | Usuario</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="/cozastore/images/icons/favicon.png">
@@ -31,13 +31,13 @@
             <section class="bg-white rounded shadow-sm p-4 p-md-5">
                 <p class="stext-107 cl6 mb-1">Administración</p>
                 <h1 class="mtext-111 cl2 mb-4"
-                    th:text="${usuarioForm.id == null ? 'Crear usuario' : 'Editar usuario'}">Usuario</h1>
+                    th:text="${#strings.isEmpty(usuarioForm.id) ? 'Crear usuario' : 'Editar usuario'}">Usuario</h1>
 
                 <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
 
-                <form th:action="${usuarioForm.id == null} ? @{/usuarios/crear} : @{/usuarios/modificar}"
+                <form th:action="${#strings.isEmpty(usuarioForm.id)} ? @{/usuarios/crear} : @{/usuarios/modificar}"
                       th:object="${usuarioForm}" method="post" novalidate>
-                    <input type="hidden" th:field="*{id}">
+                    <input th:if="${!#strings.isEmpty(usuarioForm.id)}" type="hidden" th:field="*{id}">
 
                     <div class="mb-4">
                         <label class="form-label fw-semibold" for="nombreUsuario">Nombre de usuario</label>
@@ -47,13 +47,11 @@
                         <div class="invalid-feedback" th:errors="*{nombreUsuario}"></div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold" for="clave"
-                               th:text="${usuarioForm.id == null ? 'Clave' : 'Nueva clave'}">Clave</label>
+                    <div class="mb-4" th:if="${#strings.isEmpty(usuarioForm.id)}">
+                        <label class="form-label fw-semibold" for="clave">Clave</label>
                         <input class="form-control" id="clave" type="password" th:field="*{clave}"
                                minlength="6" maxlength="72" autocomplete="new-password"
                                th:classappend="${#fields.hasErrors('clave')} ? 'is-invalid'">
-                        <div class="form-text" th:if="${usuarioForm.id != null}">Al guardar se reemplazará la clave actual.</div>
                         <div class="invalid-feedback" th:errors="*{clave}"></div>
                     </div>
 

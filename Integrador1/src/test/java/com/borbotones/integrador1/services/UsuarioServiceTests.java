@@ -72,6 +72,21 @@ class UsuarioServiceTests {
     }
 
     @Test
+    void modificarUsuarioConservaLaClaveActual() {
+        Usuario usuario = usuario("1", "maxi", "secreto");
+        String claveCodificada = usuario.getClave();
+        when(usuarioRepository.findById("1")).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.findByNombreUsuarioIgnoreCase("maxi-editado")).thenReturn(Optional.empty());
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Usuario modificado = usuarioService.modificarUsuario("1", "maxi-editado", RolUsuario.ADMINISTRATIVO);
+
+        assertEquals(claveCodificada, modificado.getClave());
+        assertEquals("maxi-editado", modificado.getNombreUsuario());
+        assertEquals(RolUsuario.ADMINISTRATIVO, modificado.getRol());
+    }
+
+    @Test
     void eliminarUsuarioRealizaBajaLogica() {
         Usuario usuario = usuario("1", "maxi", "secreto");
         when(usuarioRepository.findById("1")).thenReturn(Optional.of(usuario));
@@ -89,6 +104,17 @@ class UsuarioServiceTests {
         usuarioService.listarUsuarioActivo();
 
         verify(usuarioRepository).findByEliminadoFalseOrderByNombreUsuarioAsc();
+    }
+
+    @Test
+    void buscarUsuariosActivosFiltraPorParteDelNombre() {
+        when(usuarioRepository.findByNombreUsuarioContainingIgnoreCaseAndEliminadoFalseOrderByNombreUsuarioAsc("max"))
+                .thenReturn(List.of());
+
+        usuarioService.buscarUsuariosActivos(" max ");
+
+        verify(usuarioRepository)
+                .findByNombreUsuarioContainingIgnoreCaseAndEliminadoFalseOrderByNombreUsuarioAsc("max");
     }
 
     @Test
