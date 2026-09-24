@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <article th:fragment="kpi(titulo, valor, descripcion, icono)" class="zero-kpi">
+        <div class="zero-kpi-icon" th:if="${icono != null}"><i th:class="${icono}" aria-hidden="true"></i></div>
+        <div>
+            <p class="zero-kpi-title" th:text="${titulo}">Indicador</p>
+            <strong class="zero-kpi-value" th:text="${valor}">0</strong>
+            <p class="zero-kpi-description" th:if="${descripcion != null}" th:text="${descripcion}">Información complementaria</p>
+        </div>
+    </article>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="tabla(encabezados, filas, verUrl, editarUrl, eliminarUrl)" class="table-responsive zero-table-wrap">
+        <table class="table table-striped table-bordered mb-0">
+            <thead>
+                <tr>
+                    <th th:each="encabezado : ${encabezados}" th:text="${encabezado}">Columna</th>
+                    <th th:if="${verUrl != null or editarUrl != null or eliminarUrl != null}">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(filas)}">
+                    <td th:colspan="${#lists.size(encabezados) + (verUrl != null or editarUrl != null or eliminarUrl != null ? 1 : 0)}" class="text-center text-muted py-4">No hay registros para mostrar.</td>
+                </tr>
+                <tr th:each="fila : ${filas}">
+                    <td th:each="celda : ${fila}" th:text="${celda}">Dato</td>
+                    <td th:if="${verUrl != null or editarUrl != null or eliminarUrl != null}" class="zero-table-actions">
+                        <a th:if="${verUrl != null}" th:href="${verUrl}" class="btn btn-sm btn-outline-secondary">Ver</a>
+                        <a th:if="${editarUrl != null}" th:href="${editarUrl}" class="btn btn-sm btn-outline-primary">Editar</a>
+                        <a th:if="${eliminarUrl != null}" th:href="${eliminarUrl}" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

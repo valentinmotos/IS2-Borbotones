@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="mensajes" th:if="${error != null or exito != null}" class="mb-4">
+        <div th:if="${error != null and !#strings.isEmpty(error)}" class="alert alert-danger mb-2" role="alert">
+            <span th:text="${error}">Se produjo un error.</span>
+        </div>
+        <div th:if="${exito != null and !#strings.isEmpty(exito)}" class="alert alert-success mb-0" role="alert">
+            <span th:text="${exito}">Operación realizada correctamente.</span>
+        </div>
+    </div>
+</body>
+</html>

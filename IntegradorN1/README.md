@@ -55,6 +55,26 @@ resources/templates: layout/  fragments/  publico/  cliente/  admin/  email/  er
 resources/static:    vendor/template/  css/  js/  img/
 ```
 
+## Kit de componentes E0-03
+
+La página `/dev/componentes` muestra todos los fragments funcionando dentro del layout público de E0-02. Los datos de esa ruta son estáticos y no se guardan en la base.
+
+| Componente | Fragmento y firma | Uso |
+|---|---|---|
+| Mensajes | `fragments/mensajes :: mensajes` | `<div th:replace="~{fragments/mensajes :: mensajes}"></div>` |
+| Tabla | `fragments/tabla :: tabla(encabezados, filas, verUrl, editarUrl, eliminarUrl)` | `<div th:replace="~{fragments/tabla :: tabla(${encabezados}, ${filas}, ${verUrl}, ${editarUrl}, ${eliminarUrl})}"></div>` |
+| Formulario | `fragments/formulario :: formulario(action, method, errorNombre, errorEmail)` | `<form th:replace="~{fragments/formulario :: formulario(${action}, 'post', ${errorNombre}, ${errorEmail})}"></form>` |
+| Modal | `fragments/modal-confirmar :: modal(id, titulo, mensaje, actionUrl)` | `<div th:replace="~{fragments/modal-confirmar :: modal(${id}, ${titulo}, ${mensaje}, ${actionUrl})}"></div>` |
+| Paginación | `fragments/paginacion :: paginacion(actual, total, baseUrl)` | `<nav th:replace="~{fragments/paginacion :: paginacion(${paginaActual}, ${totalPaginas}, ${baseUrl})}"></nav>` |
+| Card de producto | `fragments/card-producto :: card(imagen, nombre, precio, enOferta)` | `<article th:replace="~{fragments/card-producto :: card(${imagen}, ${nombre}, ${precio}, ${enOferta})}"></article>` |
+| Badge de estado | `fragments/badge-estado :: badge(estado)` | `<span th:replace="~{fragments/badge-estado :: badge(${estado})}"></span>` |
+| Filtros | `fragments/filtros :: filtros(action)` | `<form th:replace="~{fragments/filtros :: filtros(${action})}"></form>` |
+| KPI | `fragments/kpi :: kpi(titulo, valor, descripcion, icono)` | `<article th:replace="~{fragments/kpi :: kpi(${titulo}, ${valor}, ${descripcion}, ${icono})}"></article>` |
+
+`mensajes` consume los atributos flash existentes `error` y `exito`; no crea un mecanismo nuevo. `tabla` recibe encabezados y filas como listas, y sus URLs pueden ser `null` para ocultar acciones. La tabla muestra un estado vacío cuando `filas` está vacío. `formulario` recibe errores ya calculados por el backend y no valida reglas de negocio.
+
+El modal usa Bootstrap y recibe una URL de confirmación configurable. La paginación es solamente visual y genera enlaces con `?page=`; no implementa paginación backend. Los estados de `badge-estado` corresponden a `EstadoOrdenCompra` y `EstadoFactura`: `PENDIENTE_COMPLETAR`, `PENDIENTE_PAGO`, `PENDIENTE_ENVIO`, `PENDIENTE_ENTREGA`, `ENTREGADO`, `PAGADA`, `ANULADA` y `SIN_DEFINIR`.
+
 ## Reglas de código (resumen)
 
 El detalle está en la sección "Convenciones técnicas" del plan. El revisor de cada PR rechaza lo que no las cumpla.
