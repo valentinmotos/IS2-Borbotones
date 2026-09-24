@@ -153,12 +153,12 @@ Estas reglas se definen en la Etapa 0 y no se cambian durante el proyecto. El re
 ```
 com.zero.ecommerce
  ├─ config        seguridad, mail, scheduling, DataSeeder
- ├─ entity        entidades JPA
+ ├─ entities      entidades JPA
  │   └─ enums
- ├─ repository    DAO: interfaces Spring Data JPA
- ├─ service       lógica de negocio y validaciones
+ ├─ repositories  DAO: interfaces Spring Data JPA
+ ├─ services      lógica de negocio y validaciones
  ├─ dto           reportes, dashboard, catálogo
- ├─ controller
+ ├─ controllers
  │   ├─ publico
  │   ├─ cliente
  │   └─ admin

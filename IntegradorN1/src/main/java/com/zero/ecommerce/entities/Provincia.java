@@ -1,0 +1,17 @@
+package com.zero.ecommerce.entities;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Getter
+@Setter
+public class Provincia extends BaseEntity {
+
+    private String nombre;
+
+    @ManyToOne
+    private Pais pais;
+}

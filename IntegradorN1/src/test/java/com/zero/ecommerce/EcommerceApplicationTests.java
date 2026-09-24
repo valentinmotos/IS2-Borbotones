@@ -19,8 +19,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import com.zero.ecommerce.exception.ErrorServiceException;
 
-// Base en memoria: los tests no tocan data/zero.db.
-@SpringBootTest(properties = "spring.datasource.url=jdbc:sqlite::memory:?foreign_keys=on")
+// Base en memoria: los tests no tocan data/zero.db. halt_on_error hace fallar el test si
+// Hibernate no puede crear alguna tabla (con ddl-auto=update solo lo loguearía).
+@SpringBootTest(properties = {
+        "spring.datasource.url=jdbc:sqlite::memory:?foreign_keys=on",
+        "spring.jpa.properties.hibernate.hbm2ddl.halt_on_error=true" })
 @AutoConfigureMockMvc
 @Import(EcommerceApplicationTests.ControllerQueFalla.class)
 class EcommerceApplicationTests {

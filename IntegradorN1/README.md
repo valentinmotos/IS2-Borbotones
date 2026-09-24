@@ -39,12 +39,12 @@ Para compilar y correr los tests:
 ```
 com.zero.ecommerce
  ├─ config        seguridad, mail, scheduling, DataSeeder
- ├─ entity        entidades JPA (todas extienden BaseEntity)
+ ├─ entities      entidades JPA (todas extienden BaseEntity)
  │   └─ enums
- ├─ repository    interfaces Spring Data JPA
- ├─ service       lógica de negocio y validaciones
+ ├─ repositories  interfaces Spring Data JPA
+ ├─ services      lógica de negocio y validaciones
  ├─ dto           reportes, dashboard, catálogo
- ├─ controller
+ ├─ controllers
  │   ├─ publico
  │   ├─ cliente
  │   └─ admin
