@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin}">
+<head>
+    <title>Ejemplo admin</title>
+</head>
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Inicio</span>
+        <span class="breadcrumb-separator">/</span>
+        <span>Dashboard</span>
+    </div>
+
+    <div layout:fragment="content">
+        <div class="zero-panel">
+            <h2 style="font-size: 1.8rem; margin-bottom: 1rem;">Panel de ejemplo</h2>
+            <p>Esta es una vista de demostración para verificar que el layout administrativo se integra correctamente con Thymeleaf y el estilo base de la plantilla.</p>
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card p-3 mb-3">
+                        <h4>Ventas</h4>
+                        <p class="mb-0">$1.245.800</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-3 mb-3">
+                        <h4>Pedidos</h4>
+                        <p class="mb-0">324</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-3 mb-3">
+                        <h4>Clientes</h4>
+                        <p class="mb-0">1.987</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

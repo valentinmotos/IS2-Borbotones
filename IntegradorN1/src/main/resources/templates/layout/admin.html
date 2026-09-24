@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><th:block th:text="${pageTitle != null ? pageTitle : 'Panel Zero'}">Panel Zero</th:block></title>
+    <link rel="icon" type="image/png" th:href="@{/img/logo_zero_1.png}">
+
+    <link rel="stylesheet" th:href="@{/vendor/template/vendor/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/template/fonts/font-awesome-4.7.0/css/font-awesome.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/template/fonts/iconic/css/material-design-iconic-font.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/template/fonts/linearicons-v1.0.0/icon-font.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/template/vendor/animate/animate.css}">
+    <link rel="stylesheet" th:href="@{/vendor/template/vendor/css-hamburgers/hamburgers.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/template/vendor/animsition/css/animsition.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/template/vendor/select2/select2.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/template/vendor/daterangepicker/daterangepicker.css}">
+    <link rel="stylesheet" th:href="@{/vendor/template/vendor/slick/slick.css}">
+    <link rel="stylesheet" th:href="@{/vendor/template/vendor/MagnificPopup/magnific-popup.css}">
+    <link rel="stylesheet" th:href="@{/vendor/template/vendor/perfect-scrollbar/perfect-scrollbar.css}">
+    <link rel="stylesheet" th:href="@{/vendor/template/css/util.css}">
+    <link rel="stylesheet" th:href="@{/vendor/template/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/zero.css}">
+</head>
+<body class="admin-body animsition">
+    <div class="admin-shell">
+        <aside class="admin-sidebar">
+            <div class="admin-sidebar-brand">
+                <a th:href="@{/}"><img th:src="@{/img/logo_zero_1.png}" alt="Zero" class="admin-brand-logo"></a>
+            </div>
+
+            <nav class="admin-sidebar-nav">
+                <div class="admin-nav-section">
+                    <a href="#" class="admin-nav-item active">Inicio</a>
+                    <a href="#" class="admin-nav-item">Usuarios</a>
+                    <a href="#" class="admin-nav-item">Productos</a>
+                    <a href="#" class="admin-nav-item">Precios</a>
+                    <a href="#" class="admin-nav-item">Categorías</a>
+                    <a href="#" class="admin-nav-item">Proveedores</a>
+                    <a href="#" class="admin-nav-item">Compras a proveedor</a>
+                    <a href="#" class="admin-nav-item">Pedidos</a>
+                    <a href="#" class="admin-nav-item">Newsletter</a>
+                </div>
+
+                <div class="admin-nav-section">
+                    <div class="admin-nav-label">Reportes</div>
+                    <a href="#" class="admin-nav-item sub">Ventas</a>
+                    <a href="#" class="admin-nav-item sub">Stock</a>
+                    <a href="#" class="admin-nav-item sub">Proveedores</a>
+                </div>
+
+                <div class="admin-nav-section">
+                    <div class="admin-nav-label">Configuración</div>
+                    <a href="#" class="admin-nav-item sub">Empresa</a>
+                    <a href="#" class="admin-nav-item sub">Correo</a>
+                    <a href="#" class="admin-nav-item sub">Formas de pago</a>
+                    <a href="#" class="admin-nav-item sub">Ubicación</a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="admin-main">
+            <header class="admin-topbar">
+                <div class="admin-topbar-left">
+                    <span class="admin-topbar-title">Panel administrativo</span>
+                </div>
+
+                <div class="admin-topbar-right">
+                    <div class="admin-user-pill">
+                        <i class="zmdi zmdi-account-circle"></i>
+                        <span>Valen</span>
+                    </div>
+                    <button type="button" class="admin-logout-btn">Cerrar sesión</button>
+                </div>
+            </header>
+
+            <div class="admin-page-header">
+                <div class="admin-breadcrumb" layout:fragment="breadcrumb">
+                    <span>Inicio</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span>Panel</span>
+                </div>
+                <h1 class="admin-page-title" th:text="${pageTitle != null ? pageTitle : 'Inicio'}">Inicio</h1>
+            </div>
+
+            <section class="admin-content">
+                <div layout:fragment="content"></div>
+            </section>
+        </main>
+    </div>
+
+    <script th:src="@{/vendor/template/vendor/jquery/jquery-3.2.1.min.js}"></script>
+    <script th:src="@{/vendor/template/vendor/bootstrap/js/popper.min.js}"></script>
+    <script th:src="@{/vendor/template/vendor/bootstrap/js/bootstrap.min.js}"></script>
+        <script th:src="@{/vendor/template/vendor/animsition/js/animsition.min.js}"></script>
+    <script th:src="@{/vendor/template/js/main.js}"></script>
+    <th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

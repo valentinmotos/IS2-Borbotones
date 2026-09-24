@@ -1,10 +1,25 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
 <head>
-    <meta charset="UTF-8">
-    <title>Zero</title>
+    <title>Zero | Inicio</title>
 </head>
 <body>
-    <p>Zero – proyecto base</p>
+    <div layout:fragment="content">
+        <section class="zero-section">
+            <div class="container">
+                <div class="zero-banner">
+                    <div class="container zero-banner-content">
+                        <div class="zero-kicker">Zero – proyecto base</div>
+                        <h1>Ropa y accesorios<br>para mover la energía</h1>
+                        <p>Zero – proyecto base con el layout público adaptado al estilo deportivo del template original.</p>
+                        <div>
+                            <a href="#" class="zero-button primary">Ver colección</a>
+                            <a href="#" class="zero-button secondary">Explorar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
 </body>
 </html>
