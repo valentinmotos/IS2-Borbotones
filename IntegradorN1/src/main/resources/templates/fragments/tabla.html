@@ -1,6 +1,26 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body>
+    <!-- Variante para ABM: cada registro expone id y nombre; las acciones son por fila. -->
+    <div th:fragment="tablaNombre(registros, baseUrl)" class="table-responsive zero-table-wrap">
+        <table class="table table-striped table-bordered mb-0">
+            <thead><tr><th scope="col">Nombre</th><th scope="col">Acciones</th></tr></thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(registros)}">
+                    <td colspan="2" class="text-center text-muted py-4">No hay registros para mostrar.</td>
+                </tr>
+                <tr th:each="registro : ${registros}">
+                    <td th:text="${registro.nombre}">Nombre</td>
+                    <td class="zero-table-actions">
+                        <a th:href="@{${baseUrl + '/' + registro.id + '/editar'}}" class="btn btn-sm btn-outline-primary"
+                           th:attr="aria-label=${'Editar ' + registro.nombre}">Editar</a>
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal"
+                                th:attr="data-target=${'#eliminar-' + registro.id},aria-label=${'Eliminar ' + registro.nombre}">Eliminar</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
     <div th:fragment="tabla(encabezados, filas, verUrl, editarUrl, eliminarUrl)" class="table-responsive zero-table-wrap">
         <table class="table table-striped table-bordered mb-0">
             <thead>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Configuración</span><span class="breadcrumb-separator">/</span><span>Nacionalidades</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <div class="mb-3">
+                <a th:href="@{/admin/nacionalidades/nueva}" class="zero-button primary">Nueva nacionalidad</a>
+            </div>
+            <div th:replace="~{fragments/tabla :: tablaNombre(${nacionalidades}, '/admin/nacionalidades')}"></div>
+        </div>
+        <th:block th:each="nacionalidad : ${nacionalidades}">
+            <div th:replace="~{fragments/modal-confirmar :: modal(${'eliminar-' + nacionalidad.id}, 'Eliminar nacionalidad',
+                 ${'¿Querés eliminar la nacionalidad ' + nacionalidad.nombre + '?'}, ${'/admin/nacionalidades/' + nacionalidad.id + '/eliminar'})}"></div>
+        </th:block>
+    </div>
+</body>
+</html>

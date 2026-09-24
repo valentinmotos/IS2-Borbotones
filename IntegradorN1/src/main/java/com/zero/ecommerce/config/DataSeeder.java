@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 
+import com.zero.ecommerce.entities.Nacionalidad;
+
 /**
  * Carga los datos iniciales cuando la base está vacía. Cada grupo de datos tiene su método,
  * que completa el issue indicado. Para volver a cargar todo, borrar data/zero.db.
@@ -61,7 +63,12 @@ public class DataSeeder implements CommandLineRunner {
 
     private void cargarUbicacion() {
         // E1-03: Argentina, provincias, departamentos de Mendoza y localidades de Gran Mendoza.
-        // E0-06: nacionalidades más comunes.
+        for (String nombre : new String[] { "Argentina", "Bolivia", "Brasil", "Chile",
+                "Colombia", "España", "Italia", "Paraguay", "Perú", "Uruguay", "Venezuela" }) {
+            Nacionalidad nacionalidad = new Nacionalidad();
+            nacionalidad.setNombre(nombre);
+            entityManager.persist(nacionalidad);
+        }
     }
 
     private void cargarUsuarios() {

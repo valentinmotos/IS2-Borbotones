@@ -2,6 +2,8 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
     <meta charset="UTF-8">
+    <!-- Materializar CSRF antes de enviar el HTML: los formularios pueden quedar después del buffer de respuesta. -->
+    <meta name="_csrf" th:if="${_csrf != null}" th:content="${_csrf.token}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><th:block th:text="${pageTitle != null ? pageTitle : 'Panel Zero'}">Panel Zero</th:block></title>
     <link rel="icon" type="image/png" th:href="@{/img/logo_zero_1.png}">
@@ -31,7 +33,7 @@
 
             <nav class="admin-sidebar-nav">
                 <div class="admin-nav-section">
-                    <a href="#" class="admin-nav-item active">Inicio</a>
+                    <a href="#" class="admin-nav-item" th:classappend="${menuActivo == 'inicio' ? 'active' : ''}">Inicio</a>
                     <a href="#" class="admin-nav-item">Usuarios</a>
                     <a href="#" class="admin-nav-item">Productos</a>
                     <a href="#" class="admin-nav-item">Precios</a>
@@ -55,6 +57,8 @@
                     <a href="#" class="admin-nav-item sub">Correo</a>
                     <a href="#" class="admin-nav-item sub">Formas de pago</a>
                     <a href="#" class="admin-nav-item sub">Ubicación</a>
+                    <a th:href="@{/admin/nacionalidades}" class="admin-nav-item sub"
+                       th:classappend="${menuActivo == 'nacionalidades' ? 'active' : ''}">Nacionalidades</a>
                 </div>
             </nav>
         </aside>

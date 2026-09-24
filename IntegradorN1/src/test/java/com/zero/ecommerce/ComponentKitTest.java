@@ -11,7 +11,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.datasource.url=jdbc:sqlite::memory:?foreign_keys=on",
+        "spring.jpa.properties.hibernate.hbm2ddl.halt_on_error=true" })
 @AutoConfigureMockMvc
 class ComponentKitTest {
 
