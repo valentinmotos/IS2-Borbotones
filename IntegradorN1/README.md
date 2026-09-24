@@ -91,3 +91,64 @@ El detalle está en la sección "Convenciones técnicas" del plan. El revisor de
 ## Seguridad
 
 Por ahora Spring Security deja todo público (`SecurityConfig`, marcado con `TODO E1-01`). CSRF está activado, así que los formularios POST tienen que usar `th:action` para que Thymeleaf agregue el token. E1-01 agrega el login y las reglas por rol.
+
+## ABM de referencia E0-06: Nacionalidad
+
+Entrar a `/admin/nacionalidades` o a **Configuración → Nacionalidades** en el panel.
+Permite listar las activas, crear, editar y confirmar una baja lógica en un modal.
+Las operaciones exitosas vuelven al listado con `exito`; las validaciones vuelven al
+formulario con `error` y conservan el nombre ingresado (Post/Redirect/Get).
+
+El nombre es obligatorio, se guarda sin espacios en los extremos y se compara sin
+importar mayúsculas, incluidas letras como Ñ. Un nombre ya utilizado, incluso por
+una nacionalidad eliminada, sigue reservado para evitar duplicados históricos.
+Editar el mismo registro sin cambiar su nombre está permitido. La búsqueda por ID
+o nombre devuelve solo registros activos; si no existe, el service lanza
+`ErrorServiceException`. El controller traduce los IDs inexistentes o eliminados a 404.
+`listarNacionalidad()` incluye eliminadas y `listarNacionalidadActiva()` las filtra.
+
+El seeder carga Argentina, Bolivia, Brasil, Chile, Colombia, España,
+Italia, Paraguay, Perú, Uruguay y Venezuela **solo si toda la base está vacía**.
+No modifica una base existente. En una base con datos se pueden dar de alta desde
+el ABM; no hace falta borrar información para probarlo.
+
+### Crear otro ABM a partir de este
+
+1. Usar la entidad y el repository correspondientes. Agregar consultas de listado
+   ordenado, listado activo y búsqueda por ID activo como en `NacionalidadRepository`.
+2. Copiar la estructura de `services/NacionalidadService.java`, respetando los nombres
+   del UML. Inyectar el repository por constructor. Concentrar reglas en `validar`,
+   excluir el ID actual al comprobar duplicados y validar antes de modificar la entidad.
+   Las escrituras usan `@Transactional(rollbackFor = ErrorServiceException.class)`
+   porque la excepción de negocio es checked. La baja cambia `eliminado`, nunca borra.
+3. Tomar `controllers/admin/NacionalidadController.java` como referencia: inyectar
+   únicamente el service, definir GET para vistas y POST para cambios, y manejar
+   validaciones con mensajes flash y destinos explícitos. No recibir una entidad JPA
+   completa desde el formulario: aceptar solo los campos editables.
+4. Copiar `templates/admin/nacionalidades/listado.html` y `formulario.html`, cambiar
+   las rutas y los textos y mantener `layout:decorate="~{layout/admin}"`. Agregar
+   el enlace en el menú del layout.
+5. Reutilizar los fragments del kit. Para catálogos de un nombre están disponibles:
+   - `fragments/tabla :: tablaNombre(registros, baseUrl)`: recibe registros con `id`
+     y `nombre`; genera edición por fila y botones que abren `#eliminar-{id}`.
+   - `fragments/formulario :: formularioNombre(action, nombre, cancelarUrl)`:
+     formulario POST con nombre precargado y token CSRF generado por `th:action`.
+   - `fragments/modal-confirmar :: modal(id, titulo, mensaje, actionUrl)`: incluir
+     un modal por registro con ID `eliminar-{id}` y acción POST de baja.
+   - `fragments/mensajes :: mensajes`: muestra `error` y `exito`.
+   Para campos adicionales, extender primero el kit; las firmas anteriores de
+   `tabla` y `formulario` siguen disponibles para los ejemplos de E0-03.
+6. Agregar datos iniciales al grupo correspondiente del `DataSeeder`, respetando
+   sus dependencias y el control de base vacía.
+7. Adaptar `NacionalidadServiceTest` (JUnit + Mockito) y `NacionalidadIntegrationTest`
+   (MockMvc + SQLite en memoria). Cubrir duplicados en alta y edición, campos
+   obligatorios, baja lógica, IDs inválidos, flashes y CSRF. Ejecutar `./mvnw test`.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/admin/nacionalidades` | Listar activas |
+| GET | `/admin/nacionalidades/nueva` | Formulario de alta |
+| POST | `/admin/nacionalidades` | Crear |
+| GET | `/admin/nacionalidades/{id}/editar` | Formulario de edición |
+| POST | `/admin/nacionalidades/{id}/editar` | Modificar |
+| POST | `/admin/nacionalidades/{id}/eliminar` | Baja lógica |

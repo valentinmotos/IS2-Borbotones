@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <a th:href="@{/admin/nacionalidades}">Nacionalidades</a><span class="breadcrumb-separator">/</span>
+        <span th:text="${id == null ? 'Alta' : 'Edición'}">Alta</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <form th:replace="~{fragments/formulario :: formularioNombre(
+                  ${id == null ? '/admin/nacionalidades' : '/admin/nacionalidades/' + id + '/editar'},
+                  ${nombre}, '/admin/nacionalidades')}"></form>
+        </div>
+    </div>
+</body>
+</html>
