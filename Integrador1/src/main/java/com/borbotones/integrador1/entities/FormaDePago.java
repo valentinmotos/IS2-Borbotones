@@ -2,10 +2,14 @@ package com.borbotones.integrador1.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
 public class FormaDePago {
 
     @Id
@@ -19,17 +23,5 @@ public class FormaDePago {
 
     // Constructores
     public FormaDePago() {
-    }
-
-    // Getters y Setters
-    public void crearFormaDePago(TipoPago tipoPago, String observacion) {}
-    public void modificarFormaDePago(String id, TipoPago tipoPago, String observacion) {}
-    public void eliminarFormaDePago(String id) {}
-    public List<FormaDePago> listarFormaDePago() {
-        return List.of();
-    }
-
-    public List<FormaDePago> listarFormaDePagoActivo() {
-        return List.of();
     }
 }
