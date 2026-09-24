@@ -220,13 +220,32 @@ a, a:hover {
 }
 
 .zero-button.secondary {
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    color: var(--zero-white);
+    background: #f1f1f1;
+    border: 1px solid var(--zero-accent-strong);
+    color: var(--zero-charcoal);
+}
+
+.zero-button.secondary:hover,
+.zero-button.secondary:focus {
+    background: rgba(215, 255, 63, 0.22);
+    border-color: var(--zero-accent-strong);
+    color: var(--zero-charcoal);
 }
 
 .zero-button:hover {
     transform: translateY(-1px);
+}
+
+.zero-banner .zero-button.secondary {
+    background: transparent;
+    border-color: var(--zero-accent);
+    color: var(--zero-accent);
+}
+
+.zero-banner .zero-button.secondary:hover,
+.zero-banner .zero-button.secondary:focus {
+    background: rgba(215, 255, 63, 0.14);
+    color: var(--zero-white);
 }
 
 .zero-feature-grid,
@@ -550,6 +569,39 @@ a, a:hover {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.zero-form .form-group {
+    margin-bottom: 1.35rem;
+}
+
+.zero-form label,
+.zero-form .form-check-label {
+    color: var(--zero-charcoal);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.45rem;
+}
+
+.zero-form .form-control {
+    border: 1px solid rgba(0, 0, 0, 0.16);
+    border-radius: 10px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+    min-height: 44px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.zero-form .form-control:focus {
+    border-color: var(--zero-accent-strong);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 0.15rem rgba(215, 255, 63, 0.24);
+}
+
+.zero-form .form-text {
+    display: block;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    margin-top: 0.5rem;
 }
 
 .zero-modal-content {
