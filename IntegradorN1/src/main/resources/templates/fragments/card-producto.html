@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <article th:fragment="card(imagen, nombre, precio, enOferta)" class="zero-product-card">
+        <div class="image-wrap">
+            <img th:src="${imagen}" th:alt="${nombre}">
+        </div>
+        <div class="zero-product-card-body">
+            <span th:if="${enOferta}" class="badge badge-danger zero-offer-badge">Oferta</span>
+            <h3 th:text="${nombre}">Producto</h3>
+            <span class="price" th:text="${precio}">$0</span>
+        </div>
+    </article>
+</body>
+</html>

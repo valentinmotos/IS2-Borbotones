@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
+<head>
+    <title>Kit de componentes</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <section class="zero-section">
+            <div class="container">
+                <div class="mb-5">
+                    <div class="zero-kicker">E0-03</div>
+                    <h1>Kit de componentes</h1>
+                    <p>Componentes Thymeleaf reutilizables para las vistas públicas y administrativas de Zero.</p>
+                </div>
+
+                <section class="zero-panel mb-4">
+                    <h2>Mensajes</h2>
+                    <p class="zero-component-description">Alertas flash de éxito y error.</p>
+                    <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+                    <code>&lt;div th:replace="~{fragments/mensajes :: mensajes}"&gt;&lt;/div&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
+                    <h2>Tabla</h2>
+                    <p class="zero-component-description">Listado genérico con acciones configurables y estado vacío.</p>
+                    <div th:replace="~{fragments/tabla :: tabla(${encabezados}, ${filas}, '/dev/componentes', '/dev/componentes', '/dev/componentes')}"></div>
+                    <div th:replace="~{fragments/tabla :: tabla(${encabezados}, ${filasVacias}, null, null, null)}" class="mt-3"></div>
+                    <code>&lt;div th:replace="~{fragments/tabla :: tabla(${encabezados}, ${filas}, ${verUrl}, ${editarUrl}, ${eliminarUrl})}"&gt;&lt;/div&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
+                    <h2>Formulario</h2>
+                    <p class="zero-component-description">Campos de texto, selección, checkbox, errores y acciones.</p>
+                    <div th:replace="~{fragments/formulario :: formulario(@{/dev/componentes}, 'post', 'El nombre es obligatorio.', 'Correo de ejemplo inválido.')}"></div>
+                    <code>&lt;form th:replace="~{fragments/formulario :: formulario(${action}, 'post', ${errorNombre}, ${errorEmail})}"&gt;&lt;/form&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
+                    <h2>Modal de confirmación</h2>
+                    <p class="zero-component-description">Confirmación reutilizable para una baja lógica.</p>
+                    <button type="button" class="zero-button primary" data-toggle="modal" data-target="#modal-demo">Abrir modal</button>
+                    <div th:replace="~{fragments/modal-confirmar :: modal('modal-demo', 'Confirmar baja', '¿Querés confirmar la baja de este registro?', @{/dev/componentes})}"></div>
+                    <code>&lt;div th:replace="~{fragments/modal-confirmar :: modal(${id}, ${titulo}, ${mensaje}, ${actionUrl})}"&gt;&lt;/div&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
+                    <h2>Paginación</h2>
+                    <p class="zero-component-description">Navegación visual para listados y reportes.</p>
+                    <div th:replace="~{fragments/paginacion :: paginacion(2, 4, '/dev/componentes')}"></div>
+                    <code>&lt;nav th:replace="~{fragments/paginacion :: paginacion(${paginaActual}, ${totalPaginas}, ${baseUrl})}"&gt;&lt;/nav&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
+                    <h2>Card de producto</h2>
+                    <p class="zero-component-description">Producto responsive con imagen, precio y oferta.</p>
+                    <div class="zero-product-grid zero-component-product-grid">
+                        <div th:replace="~{fragments/card-producto :: card(@{/vendor/template/images/product-01.jpg}, 'Remera Zero Pro', '$12.500', true)}"></div>
+                        <div th:replace="~{fragments/card-producto :: card(@{/vendor/template/images/product-02.jpg}, 'Short Zero Move', '$9.900', false)}"></div>
+                    </div>
+                    <code>&lt;article th:replace="~{fragments/card-producto :: card(${imagen}, ${nombre}, ${precio}, ${enOferta})}"&gt;&lt;/article&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
+                    <h2>Badge de estado</h2>
+                    <p class="zero-component-description">Estados definidos por los enums reales de OrdenCompra y Factura.</p>
+                    <div class="zero-component-badges">
+                        <span th:replace="~{fragments/badge-estado :: badge('PENDIENTE_PAGO')}"></span>
+                        <span th:replace="~{fragments/badge-estado :: badge('ENTREGADO')}"></span>
+                        <span th:replace="~{fragments/badge-estado :: badge('PAGADA')}"></span>
+                        <span th:replace="~{fragments/badge-estado :: badge('ANULADA')}"></span>
+                    </div>
+                    <code>&lt;span th:replace="~{fragments/badge-estado :: badge(${estado})}"&gt;&lt;/span&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
+                    <h2>Filtros</h2>
+                    <p class="zero-component-description">Barra adaptable con rango de fechas, estado y búsqueda.</p>
+                    <div th:replace="~{fragments/filtros :: filtros(@{/dev/componentes})}"></div>
+                    <code>&lt;form th:replace="~{fragments/filtros :: filtros(${action})}"&gt;&lt;/form&gt;</code>
+                </section>
+
+                <section class="zero-panel">
+                    <h2>KPI</h2>
+                    <p class="zero-component-description">Indicador configurable para dashboards.</p>
+                    <div class="zero-kpi-grid">
+                        <div th:replace="~{fragments/kpi :: kpi('Ventas del mes', '$1.245.800', '12% más que el mes anterior', 'fa fa-line-chart')}"></div>
+                        <div th:replace="~{fragments/kpi :: kpi('Pedidos', '324', 'Pedidos procesados', 'fa fa-shopping-bag')}"></div>
+                    </div>
+                    <code>&lt;article th:replace="~{fragments/kpi :: kpi(${titulo}, ${valor}, ${descripcion}, ${icono})}"&gt;&lt;/article&gt;</code>
+                </section>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
