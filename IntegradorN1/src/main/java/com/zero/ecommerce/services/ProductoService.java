@@ -28,20 +28,20 @@ public class ProductoService {
     private static final int LARGO_MAXIMO_TALLE = 20;
     private static final int LARGO_MAXIMO_DESCRIPCION = 2000;
 
-    // Hasta que se mergeen E2-03 (VigenciaPrecioService.buscarPrecioVigente) y
-    // E2-02 (StockService.buscarStockActual), el listado muestra estos valores fijos.
+    // Hasta que se mergee E2-03 (VigenciaPrecioService.buscarPrecioVigente), el listado muestra este valor fijo.
     private static final String SIN_PRECIO = "Sin precio";
-    private static final String SIN_STOCK = "0";
 
     private final ProductoRepository repository;
     private final SubCategoriaService subCategoriaService;
     private final ImagenService imagenService;
+    private final StockService stockService;
 
     public ProductoService(ProductoRepository repository, SubCategoriaService subCategoriaService,
-            ImagenService imagenService) {
+            ImagenService imagenService, StockService stockService) {
         this.repository = repository;
         this.subCategoriaService = subCategoriaService;
         this.imagenService = imagenService;
+        this.stockService = stockService;
     }
 
     /** Alta con una imagen ya guardada (por ejemplo, desde el seeder con ImagenService). */
@@ -243,14 +243,16 @@ public class ProductoService {
      */
     public Page<FilaTablaImagenDTO> listarFilaProductoActivo(String texto, String idCategoria,
             String idSubCategoria, Boolean enOferta, int pagina, int tamanio) {
-        List<FilaTablaImagenDTO> filas = listarProductoActivo(texto, idCategoria, idSubCategoria, enOferta).stream()
-                .map(this::armarFila)
-                .toList();
-        int totalPaginas = Math.max(1, (int) Math.ceil((double) filas.size() / tamanio));
+        List<Producto> productos = listarProductoActivo(texto, idCategoria, idSubCategoria, enOferta);
+        int totalPaginas = Math.max(1, (int) Math.ceil((double) productos.size() / tamanio));
         int actual = Math.min(Math.max(pagina, 1), totalPaginas);
         int desde = (actual - 1) * tamanio;
-        int hasta = Math.min(desde + tamanio, filas.size());
-        return new PageImpl<>(filas.subList(desde, hasta), PageRequest.of(actual - 1, tamanio), filas.size());
+        int hasta = Math.min(desde + tamanio, productos.size());
+        // Las filas (con su stock) se arman solo para la página que se muestra.
+        List<FilaTablaImagenDTO> filas = productos.subList(desde, hasta).stream()
+                .map(this::armarFila)
+                .toList();
+        return new PageImpl<>(filas, PageRequest.of(actual - 1, tamanio), productos.size());
     }
 
     private FilaTablaImagenDTO armarFila(Producto producto) {
@@ -263,7 +265,7 @@ public class ProductoService {
                 subCategoria.getCategoria().getNombre() + " / " + subCategoria.getNombre(),
                 producto.isEnOferta() ? "Sí" : "No",
                 SIN_PRECIO,
-                SIN_STOCK));
+                String.valueOf(stockService.buscarStockActual(producto.getId()))));
     }
 
     private String describirProducto(Producto producto) {
