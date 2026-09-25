@@ -10,21 +10,27 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.zero.ecommerce.dto.DireccionForm;
 import com.zero.ecommerce.dto.FilaTablaDTO;
 import com.zero.ecommerce.entities.Direccion;
+import com.zero.ecommerce.entities.Imagen;
+import com.zero.ecommerce.entities.enums.TipoImagen;
 import com.zero.ecommerce.exception.ErrorServiceException;
 import com.zero.ecommerce.services.DireccionService;
+import com.zero.ecommerce.services.ImagenService;
 
 @Controller
 public class DevController {
 
     private final DireccionService direccionService;
+    private final ImagenService imagenService;
 
-    public DevController(DireccionService direccionService) {
+    public DevController(DireccionService direccionService, ImagenService imagenService) {
         this.direccionService = direccionService;
+        this.imagenService = imagenService;
     }
 
     @GetMapping("/dev/ejemplo-publico")
@@ -105,6 +111,47 @@ public class DevController {
             flash.addFlashAttribute("error", e.getMessage());
             flash.addFlashAttribute("direccionForm", form);
             return alta ? "redirect:/dev/direccion" : "redirect:/dev/direccion?id=" + id;
+        }
+    }
+
+    /** E1-06: prueba del servicio de imágenes. Con ?id= muestra la imagen guardada. */
+    @GetMapping("/dev/imagen")
+    public String imagen(Model model, @RequestParam(value = "id", required = false) String id) {
+        model.addAttribute("tiposImagen", TipoImagen.values());
+        if (id != null && !id.isBlank()) {
+            try {
+                Imagen imagen = imagenService.buscarImagen(id);
+                model.addAttribute("imagenActual", imagen);
+                model.addAttribute("imagenActualUrl", "/imagen/" + imagen.getId());
+            } catch (ErrorServiceException e) {
+                model.addAttribute("error", e.getMessage());
+            }
+        }
+        return "dev/imagen";
+    }
+
+    @PostMapping("/dev/imagen")
+    public String guardarImagen(@RequestParam("archivo") MultipartFile archivo,
+            @RequestParam(value = "tipoImagen", required = false, defaultValue = "PRODUCTO") String tipoImagen,
+            @RequestParam(value = "imagenId", required = false) String imagenId,
+            RedirectAttributes redirectAttributes) {
+        try {
+            TipoImagen tipo = TipoImagen.valueOf(tipoImagen);
+            Imagen imagen;
+            if (imagenId != null && !imagenId.isBlank()) {
+                imagen = imagenService.modificarImagen(imagenId, archivo, tipo);
+                redirectAttributes.addFlashAttribute("exito", "La imagen se actualizó correctamente.");
+            } else {
+                imagen = imagenService.crearImagen(archivo, tipo);
+                redirectAttributes.addFlashAttribute("exito", "La imagen se guardó correctamente.");
+            }
+            return "redirect:/dev/imagen?id=" + imagen.getId();
+        } catch (ErrorServiceException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/dev/imagen";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", "El tipo de imagen no es válido.");
+            return "redirect:/dev/imagen";
         }
     }
 }
