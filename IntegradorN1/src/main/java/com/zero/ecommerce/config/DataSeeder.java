@@ -3,6 +3,7 @@ package com.zero.ecommerce.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,6 +11,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 
 import com.zero.ecommerce.entities.Nacionalidad;
+import com.zero.ecommerce.entities.Empleado;
+import com.zero.ecommerce.entities.Usuario;
+import com.zero.ecommerce.entities.enums.RolUsuario;
+import com.zero.ecommerce.entities.enums.TipoEmpleado;
 
 /**
  * Carga los datos iniciales cuando la base está vacía. Cada grupo de datos tiene su método,
@@ -21,9 +26,11 @@ public class DataSeeder implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
     private final EntityManager entityManager;
+    private final PasswordEncoder passwordEncoder;
 
-    public DataSeeder(EntityManager entityManager) {
+    public DataSeeder(EntityManager entityManager, PasswordEncoder passwordEncoder) {
         this.entityManager = entityManager;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -72,8 +79,26 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void cargarUsuarios() {
-        // E1-01: empleados JEFE y ADMINISTRATIVO con su usuario.
+        cargarEmpleado("Jefa", "Zero", "jefe@zero.com.ar", "Jefe123!", TipoEmpleado.JEFE, RolUsuario.JEFE);
+        cargarEmpleado("Administrativo", "Zero", "admin@zero.com.ar", "Admin123!",
+                TipoEmpleado.ADMINISTRATIVO, RolUsuario.ADMINISTRATIVO);
         // E2-07: cliente de prueba con usuario activo.
+    }
+
+    private void cargarEmpleado(String nombre, String apellido, String correo, String clave,
+            TipoEmpleado tipoEmpleado, RolUsuario rol) {
+        Usuario usuario = new Usuario();
+        usuario.setNombreUsuario(correo);
+        usuario.setClave(passwordEncoder.encode(clave));
+        usuario.setRol(rol);
+        entityManager.persist(usuario);
+
+        Empleado empleado = new Empleado();
+        empleado.setNombre(nombre);
+        empleado.setApellido(apellido);
+        empleado.setTipoEmpleado(tipoEmpleado);
+        empleado.setUsuario(usuario);
+        entityManager.persist(empleado);
     }
 
     private void cargarCategorias() {

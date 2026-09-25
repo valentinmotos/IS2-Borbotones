@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <!-- Materializar CSRF antes de enviar el HTML: los formularios pueden quedar después del buffer de respuesta. -->
@@ -72,9 +72,11 @@
                 <div class="admin-topbar-right">
                     <div class="admin-user-pill">
                         <i class="zmdi zmdi-account-circle"></i>
-                        <span>Valen</span>
+                        <span sec:authentication="name">Usuario</span>
                     </div>
-                    <button type="button" class="admin-logout-btn">Cerrar sesión</button>
+                    <form th:action="@{/logout}" method="post" class="m-0">
+                        <button type="submit" class="admin-logout-btn">Cerrar sesión</button>
+                    </form>
                 </div>
             </header>
 
