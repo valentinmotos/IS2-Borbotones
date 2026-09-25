@@ -61,6 +61,10 @@ class ProductoIntegrationTest {
 
     @BeforeEach
     void iniciarSesion() throws Exception {
+        // Se parte de un catálogo vacío: los productos del seeder (E2-02) se dan de baja y el
+        // @Transactional del test lo revierte al terminar.
+        repository.findAll().forEach(p -> p.setEliminado(true));
+        repository.flush();
         // Productos no es configuración: también entra el ADMINISTRATIVO.
         sesion = login("admin@zero.com.ar", "Admin123!");
     }
