@@ -1,7 +1,8 @@
 package com.zero.ecommerce.controllers.admin;
 
 import com.zero.ecommerce.entities.Localidad;
-import com.zero.ecommerce.services.UbicacionService;
+import com.zero.ecommerce.services.DepartamentoService;
+import com.zero.ecommerce.services.LocalidadService;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,35 +14,31 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-@RequestMapping("/admin/ubicaciones")
+@RequestMapping("/admin/configuracion/ubicaciones")
 public class UbicacionController {
 
-    private final UbicacionService ubicacionService;
+    private final LocalidadService localidadService;
+    private final DepartamentoService departamentoService;
 
-
-    public UbicacionController(UbicacionService ubicacionService) {
-        this.ubicacionService = ubicacionService;
+    public UbicacionController(LocalidadService localidadService, DepartamentoService departamentoService) {
+        this.localidadService = localidadService;
+        this.departamentoService = departamentoService;
     }
 
     @GetMapping
     public String listarLocalidades(Model model) {
-
-        model.addAttribute("localidades", ubicacionService.listarLocalidades() );
-
+        model.addAttribute("localidades", localidadService.listarLocalidades());
         return "admin/ubicacion/ubicacion";
     }
 
     @GetMapping("/nueva")
     public String nuevaLocalidad(Model model) {
-
         model.addAttribute(
                 "departamentos",
-                ubicacionService.listarDepartamentos()
+                departamentoService.listarDepartamentos()
         );
-
         return "admin/ubicacion/form";
     }
-
 
     // =========================================================
     // GUARDAR LOCALIDAD
@@ -55,8 +52,7 @@ public class UbicacionController {
             RedirectAttributes redirectAttributes) {
 
         try {
-
-            ubicacionService.crearLocalidad(
+            localidadService.crearLocalidad(
                     nombre,
                     codigoPostal,
                     departamentoId
@@ -68,16 +64,14 @@ public class UbicacionController {
             );
 
         } catch (Exception e) {
-
             redirectAttributes.addFlashAttribute(
                     "error",
                     e.getMessage()
             );
         }
 
-        return "redirect:/admin/ubicaciones";
+        return "redirect:/admin/configuracion/ubicaciones";
     }
-
 
     // =========================================================
     // FORMULARIO MODIFICAR LOCALIDAD
@@ -90,8 +84,7 @@ public class UbicacionController {
             RedirectAttributes redirectAttributes) {
 
         try {
-
-            Localidad localidad = ubicacionService.buscarLocalidad(id);
+            Localidad localidad = localidadService.buscarLocalidad(id);
 
             model.addAttribute(
                     "localidad",
@@ -100,22 +93,20 @@ public class UbicacionController {
 
             model.addAttribute(
                     "departamentos",
-                    ubicacionService.listarDepartamentos()
+                    departamentoService.listarDepartamentos()
             );
 
             return "admin/ubicacion/form";
 
         } catch (Exception e) {
-
             redirectAttributes.addFlashAttribute(
                     "error",
                     e.getMessage()
             );
 
-            return "redirect:/admin/ubicaciones";
+            return "redirect:/admin/configuracion/ubicaciones";
         }
     }
-
 
     // =========================================================
     // MODIFICAR LOCALIDAD
@@ -130,8 +121,7 @@ public class UbicacionController {
             RedirectAttributes redirectAttributes) {
 
         try {
-
-            ubicacionService.modificarLocalidad(
+            localidadService.modificarLocalidad(
                     id,
                     nombre,
                     codigoPostal,
@@ -144,15 +134,18 @@ public class UbicacionController {
             );
 
         } catch (Exception e) {
-
             redirectAttributes.addFlashAttribute(
                     "error",
                     e.getMessage()
             );
         }
 
-        return "redirect:/admin/ubicaciones";
+        return "redirect:/admin/configuracion/ubicaciones";
     }
+
+    // =========================================================
+    // ELIMINAR LOCALIDAD
+    // =========================================================
 
     @PostMapping("/{id}/eliminar")
     public String eliminarLocalidad(
@@ -160,8 +153,7 @@ public class UbicacionController {
             RedirectAttributes redirectAttributes) {
 
         try {
-
-            ubicacionService.eliminarLocalidad(id);
+            localidadService.eliminarLocalidad(id);
 
             redirectAttributes.addFlashAttribute(
                     "mensaje",
@@ -169,13 +161,12 @@ public class UbicacionController {
             );
 
         } catch (Exception e) {
-
             redirectAttributes.addFlashAttribute(
                     "error",
                     e.getMessage()
             );
         }
 
-        return "redirect:/admin/ubicaciones";
+        return "redirect:/admin/configuracion/ubicaciones";
     }
 }

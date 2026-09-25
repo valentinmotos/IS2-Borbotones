@@ -3,7 +3,10 @@ package com.zero.ecommerce.config;
 import com.zero.ecommerce.entities.Departamento;
 import com.zero.ecommerce.entities.Pais;
 import com.zero.ecommerce.entities.Provincia;
-import com.zero.ecommerce.services.UbicacionService;
+import com.zero.ecommerce.services.DepartamentoService;
+import com.zero.ecommerce.services.LocalidadService;
+import com.zero.ecommerce.services.PaisService;
+import com.zero.ecommerce.services.ProvinciaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,7 +70,16 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     @Autowired
-    private UbicacionService ubicacionService;
+    private PaisService paisService;
+
+    @Autowired
+    private ProvinciaService provinciaService;
+
+    @Autowired
+    private DepartamentoService departamentoService;
+
+    @Autowired
+    private LocalidadService localidadService;
 
     private void cargarUbicacion() {
         // E1-03: Argentina, provincias, departamentos de Mendoza y localidades de Gran Mendoza.
@@ -78,25 +90,25 @@ public class DataSeeder implements CommandLineRunner {
             entityManager.persist(nacionalidad);
         }
 
-        Pais argentina = ubicacionService.crearPais("Argentina");
-        Pais brasil = ubicacionService.crearPais("Brasil");
-        Pais chile = ubicacionService.crearPais("Chile");
-        Pais uruguay = ubicacionService.crearPais("Uruguay");
+        Pais argentina = paisService.crearPais("Argentina");
+        Pais brasil = paisService.crearPais("Brasil");
+        Pais chile = paisService.crearPais("Chile");
+        Pais uruguay = paisService.crearPais("Uruguay");
 
-        Provincia mendoza = ubicacionService.crearProvincia("Mendoza", argentina.getId());
-        Provincia buenosAires = ubicacionService.crearProvincia("Buenos Aires", argentina.getId());
-        Provincia cordoba = ubicacionService.crearProvincia("Córdoba", argentina.getId());
-        Provincia santaFe = ubicacionService.crearProvincia("Santa Fe", argentina.getId());
+        Provincia mendoza = provinciaService.crearProvincia("Mendoza", argentina.getId());
+        Provincia buenosAires = provinciaService.crearProvincia("Buenos Aires", argentina.getId());
+        Provincia cordoba = provinciaService.crearProvincia("Córdoba", argentina.getId());
+        Provincia santaFe = provinciaService.crearProvincia("Santa Fe", argentina.getId());
 
-        Departamento capital = ubicacionService.crearDepartamento("Capital", mendoza.getId());
-        Departamento godoyCruz = ubicacionService.crearDepartamento("Godoy Cruz", mendoza.getId());
-        Departamento guaymallen = ubicacionService.crearDepartamento("Guaymallén", mendoza.getId());
-        Departamento maipu = ubicacionService.crearDepartamento("Maipú", mendoza.getId());
+        Departamento capital = departamentoService.crearDepartamento("Capital", mendoza.getId());
+        Departamento godoyCruz = departamentoService.crearDepartamento("Godoy Cruz", mendoza.getId());
+        Departamento guaymallen = departamentoService.crearDepartamento("Guaymallén", mendoza.getId());
+        Departamento maipu = departamentoService.crearDepartamento("Maipú", mendoza.getId());
 
-        ubicacionService.crearLocalidad("Ciudad de Mendoza", "5500", capital.getId());
-        ubicacionService.crearLocalidad("San Martín", "5500", capital.getId());
-        ubicacionService.crearLocalidad("Sarmiento", "5500", capital.getId());
-        ubicacionService.crearLocalidad("Plaza Independencia", "5500", capital.getId());
+        localidadService.crearLocalidad("Ciudad de Mendoza", "5500", capital.getId());
+        localidadService.crearLocalidad("San Martín", "5500", capital.getId());
+        localidadService.crearLocalidad("Sarmiento", "5500", capital.getId());
+        localidadService.crearLocalidad("Plaza Independencia", "5500", capital.getId());
 
     }
 

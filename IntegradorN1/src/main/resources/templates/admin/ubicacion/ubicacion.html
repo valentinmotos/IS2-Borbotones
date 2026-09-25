@@ -7,11 +7,9 @@
 <body>
 
 <div layout:fragment="breadcrumb">
-
     <span>Configuración</span>
     <span class="breadcrumb-separator">/</span>
     <span>Ubicaciones</span>
-
 </div>
 
 <div layout:fragment="content">
@@ -21,12 +19,11 @@
     <div class="zero-panel">
 
         <div class="mb-3">
-
-            <a th:href="@{/admin/ubicaciones/nueva}"
+            <!-- NAUDRAN TI RUTA ITI NUEVA LOCALIDAD -->
+            <a th:href="@{/admin/configuracion/ubicaciones/nueva}"
                class="zero-button primary">
                 Nueva localidad
             </a>
-
         </div>
 
         <table class="table">
@@ -46,13 +43,9 @@
 
             <tr th:each="localidad : ${localidades}">
 
-                <td th:text="${localidad.nombre}">
-                    Maipú
-                </td>
+                <td th:text="${localidad.nombre}">Maipú</td>
 
-                <td th:text="${localidad.codigoPostal}">
-                    5515
-                </td>
+                <td th:text="${localidad.codigoPostal}">5515</td>
 
                 <td th:text="${localidad.departamento != null
                     ? localidad.departamento.nombre
@@ -76,13 +69,14 @@
                 </td>
 
                 <td>
-
-                    <a th:href="@{/admin/ubicaciones/{id}/editar(id=${localidad.id})}"
+                    <!-- NAUDRAN TI EDITAR -->
+                    <a th:href="@{/admin/configuracion/ubicaciones/{id}/editar(id=${localidad.id})}"
                        class="zero-button">
                         Modificar
                     </a>
 
-                    <form th:action="@{/admin/ubicaciones/{id}/eliminar(id=${localidad.id})}"
+                    <!-- NAUDRAN TI FORMULARIO ITI ELIMINAR -->
+                    <form th:action="@{/admin/configuracion/ubicaciones/{id}/eliminar(id=${localidad.id})}"
                           method="post"
                           style="display: inline;">
 
@@ -93,17 +87,14 @@
                         </button>
 
                     </form>
-
                 </td>
 
             </tr>
 
             <tr th:if="${#lists.isEmpty(localidades)}">
-
                 <td colspan="6">
                     No hay localidades registradas.
                 </td>
-
             </tr>
 
             </tbody>
@@ -114,43 +105,33 @@
 
 
     <!-- MODALES DE ELIMINACIÓN -->
-
     <th:block th:each="localidad : ${localidades}">
-
+        <!-- NAUDRAN TI RUTA ITI MODAL -->
         <div th:replace="~{fragments/modal-confirmar :: modal(
             ${'eliminar-' + localidad.id},
             'Eliminar localidad',
             ${'¿Querés eliminar la localidad ' + localidad.nombre + '?'},
-            ${'/admin/ubicaciones/' + localidad.id + '/eliminar'}
+            ${'/admin/configuracion/ubicaciones/' + localidad.id + '/eliminar'}
         )}">
         </div>
-
     </th:block>
-
 
 </div>
 
 
 <!-- JAVASCRIPT PARA ABRIR LOS MODALES -->
-
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-
         document.querySelectorAll(".btn-eliminar").forEach(function (boton) {
-
             boton.addEventListener("click", function () {
-
                 const modalId = boton.getAttribute("data-modal-id");
                 const modal = document.getElementById(modalId);
 
                 if (modal) {
                     modal.showModal();
                 }
-
             });
-
         });
-
     });
 </script>
 
