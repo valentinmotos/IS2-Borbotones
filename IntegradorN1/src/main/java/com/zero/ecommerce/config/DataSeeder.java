@@ -1,15 +1,11 @@
 package com.zero.ecommerce.config;
 
-import com.zero.ecommerce.entities.Departamento;
-import com.zero.ecommerce.entities.Pais;
-import com.zero.ecommerce.entities.Provincia;
-import com.zero.ecommerce.services.DepartamentoService;
-import com.zero.ecommerce.services.LocalidadService;
-import com.zero.ecommerce.services.PaisService;
-import com.zero.ecommerce.services.ProvinciaService;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -19,14 +15,26 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 
 import com.zero.ecommerce.entities.Categoria;
-import com.zero.ecommerce.entities.Nacionalidad;
+import com.zero.ecommerce.entities.Departamento;
 import com.zero.ecommerce.entities.Empleado;
-import com.zero.ecommerce.entities.SubCategoria;
 import com.zero.ecommerce.entities.FormaDePago;
+import com.zero.ecommerce.entities.Nacionalidad;
+import com.zero.ecommerce.entities.Pais;
+import com.zero.ecommerce.entities.Provincia;
+import com.zero.ecommerce.entities.SubCategoria;
 import com.zero.ecommerce.entities.Usuario;
 import com.zero.ecommerce.entities.enums.RolUsuario;
 import com.zero.ecommerce.entities.enums.TipoEmpleado;
 import com.zero.ecommerce.entities.enums.TipoPago;
+import com.zero.ecommerce.exception.ErrorServiceException;
+import com.zero.ecommerce.dto.DireccionForm;
+import com.zero.ecommerce.entities.enums.TipoEmpresa;
+import com.zero.ecommerce.entities.enums.TipoTelefono;
+import com.zero.ecommerce.services.DepartamentoService;
+import com.zero.ecommerce.services.EmpresaService;
+import com.zero.ecommerce.services.LocalidadService;
+import com.zero.ecommerce.services.PaisService;
+import com.zero.ecommerce.services.ProvinciaService;
 
 /**
  * Carga los datos iniciales cuando la base está vacía. Cada grupo de datos tiene su método,
@@ -37,12 +45,40 @@ public class DataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
+    // E1-03: Argentina con sus 24 jurisdicciones, los 18 departamentos de Mendoza y las
+    // principales localidades de Gran Mendoza. Pasa por los services para aplicar sus validaciones.
+    private static final List<String> PROVINCIAS_ARGENTINA = List.of("Buenos Aires",
+            "Ciudad Autónoma de Buenos Aires", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes",
+            "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones", "Neuquén",
+            "Río Negro", "Salta", "San Juan", "San Luis", "Santa Cruz", "Santa Fe", "Santiago del Estero",
+            "Tierra del Fuego, Antártida e Islas del Atlántico Sur", "Tucumán");
+
+    private static final List<String> DEPARTAMENTOS_MENDOZA = List.of("Capital", "General Alvear",
+            "Godoy Cruz", "Guaymallén", "Junín", "La Paz", "Las Heras", "Lavalle", "Luján de Cuyo", "Maipú",
+            "Malargüe", "Rivadavia", "San Carlos", "San Martín", "San Rafael", "Santa Rosa", "Tunuyán",
+            "Tupungato");
+
+    // Departamento → (localidad → código postal).
+    private static final Map<String, Map<String, String>> LOCALIDADES_GRAN_MENDOZA = localidadesGranMendoza();
+
     private final EntityManager entityManager;
     private final PasswordEncoder passwordEncoder;
+    private final PaisService paisService;
+    private final ProvinciaService provinciaService;
+    private final DepartamentoService departamentoService;
+    private final LocalidadService localidadService;
+    private final EmpresaService empresaService;
 
-    public DataSeeder(EntityManager entityManager, PasswordEncoder passwordEncoder) {
+    public DataSeeder(EntityManager entityManager, PasswordEncoder passwordEncoder, PaisService paisService,
+            ProvinciaService provinciaService, DepartamentoService departamentoService,
+            LocalidadService localidadService, EmpresaService empresaService) {
         this.entityManager = entityManager;
         this.passwordEncoder = passwordEncoder;
+        this.paisService = paisService;
+        this.provinciaService = provinciaService;
+        this.departamentoService = departamentoService;
+        this.localidadService = localidadService;
+        this.empresaService = empresaService;
     }
 
     @Override
@@ -55,6 +91,7 @@ public class DataSeeder implements CommandLineRunner {
         }
         log.info("Base vacía: cargando datos iniciales.");
         // El orden importa: cada grupo puede usar datos de los anteriores.
+        cargarNacionalidades();
         cargarUbicacion();
         cargarUsuarios();
         cargarCategorias();
@@ -88,47 +125,52 @@ public class DataSeeder implements CommandLineRunner {
         return true;
     }
 
-    @Autowired
-    private PaisService paisService;
-
-    @Autowired
-    private ProvinciaService provinciaService;
-
-    @Autowired
-    private DepartamentoService departamentoService;
-
-    @Autowired
-    private LocalidadService localidadService;
-
-    private void cargarUbicacion() {
-        // E1-03: Argentina, provincias, departamentos de Mendoza y localidades de Gran Mendoza.
+    private void cargarNacionalidades() {
         for (String nombre : new String[] { "Argentina", "Bolivia", "Brasil", "Chile",
                 "Colombia", "España", "Italia", "Paraguay", "Perú", "Uruguay", "Venezuela" }) {
             Nacionalidad nacionalidad = new Nacionalidad();
             nacionalidad.setNombre(nombre);
             entityManager.persist(nacionalidad);
         }
+    }
 
-        Pais argentina = paisService.crearPais("Argentina");
-        Pais brasil = paisService.crearPais("Brasil");
-        Pais chile = paisService.crearPais("Chile");
-        Pais uruguay = paisService.crearPais("Uruguay");
+    private static Map<String, Map<String, String>> localidadesGranMendoza() {
+        Map<String, Map<String, String>> localidades = new LinkedHashMap<>();
+        localidades.put("Capital", Map.of("Ciudad de Mendoza", "5500"));
+        localidades.put("Godoy Cruz", Map.of("Godoy Cruz", "5501", "Gobernador Benegas", "5501",
+                "Villa Hipódromo", "5501"));
+        localidades.put("Guaymallén", Map.of("Villa Nueva", "5521", "Dorrego", "5519", "San José", "5519",
+                "Buena Nueva", "5523", "Rodeo de la Cruz", "5525"));
+        localidades.put("Las Heras", Map.of("Las Heras", "5539", "El Challao", "5539", "El Plumerillo", "5541"));
+        localidades.put("Luján de Cuyo", Map.of("Luján de Cuyo", "5507", "Mayor Drummond", "5507",
+                "Chacras de Coria", "5505", "Carrodilla", "5505", "Vistalba", "5509"));
+        localidades.put("Maipú", Map.of("Maipú", "5515", "Coquimbito", "5513", "Luzuriaga", "5513",
+                "Gutiérrez", "5511", "Russell", "5517", "Rodeo del Medio", "5529"));
+        return localidades;
+    }
 
-        Provincia mendoza = provinciaService.crearProvincia("Mendoza", argentina.getId());
-        Provincia buenosAires = provinciaService.crearProvincia("Buenos Aires", argentina.getId());
-        Provincia cordoba = provinciaService.crearProvincia("Córdoba", argentina.getId());
-        Provincia santaFe = provinciaService.crearProvincia("Santa Fe", argentina.getId());
+    private void cargarUbicacion() {
+        try {
+            Pais argentina = paisService.crearPais("Argentina");
+            for (String nombreProvincia : PROVINCIAS_ARGENTINA) {
+                Provincia provincia = provinciaService.crearProvincia(nombreProvincia, argentina.getId());
+                if (nombreProvincia.equals("Mendoza")) {
+                    cargarDepartamentosMendoza(provincia);
+                }
+            }
+        } catch (ErrorServiceException e) {
+            throw new IllegalStateException("Los datos iniciales de ubicación no son válidos: " + e.getMessage(), e);
+        }
+    }
 
-        Departamento capital = departamentoService.crearDepartamento("Capital", mendoza.getId());
-        Departamento godoyCruz = departamentoService.crearDepartamento("Godoy Cruz", mendoza.getId());
-        Departamento guaymallen = departamentoService.crearDepartamento("Guaymallén", mendoza.getId());
-        Departamento maipu = departamentoService.crearDepartamento("Maipú", mendoza.getId());
-
-        localidadService.crearLocalidad("Ciudad de Mendoza", "5500", capital.getId());
-        localidadService.crearLocalidad("San Martín", "5500", capital.getId());
-        localidadService.crearLocalidad("Sarmiento", "5500", capital.getId());
-        localidadService.crearLocalidad("Plaza Independencia", "5500", capital.getId());
-
+    private void cargarDepartamentosMendoza(Provincia mendoza) throws ErrorServiceException {
+        for (String nombreDepartamento : DEPARTAMENTOS_MENDOZA) {
+            Departamento departamento = departamentoService.crearDepartamento(nombreDepartamento, mendoza.getId());
+            Map<String, String> localidades = LOCALIDADES_GRAN_MENDOZA.getOrDefault(nombreDepartamento, Map.of());
+            for (Map.Entry<String, String> localidad : localidades.entrySet()) {
+                localidadService.crearLocalidad(localidad.getKey(), localidad.getValue(), departamento.getId());
+            }
+        }
     }
 
     private void cargarUsuarios() {
@@ -201,8 +243,20 @@ public class DataSeeder implements CommandLineRunner {
         entityManager.persist(formaDePago);
     }
 
+    // E1-07: la empresa Zero como SEDE_CENTRAL. La configuración de correo no se carga porque
+    // lleva credenciales reales: se completa desde Configuración → Correo.
     private void cargarEmpresa() {
-        // E1-07: empresa Zero como SEDE_CENTRAL.
+        try {
+            DireccionForm direccion = new DireccionForm();
+            direccion.setCalle("Av. San Martín");
+            direccion.setNumeracion("1250");
+            direccion.setReferencia("Local a la calle");
+            direccion.setLocalidadId(localidadService.buscarLocalidadPorNombre("Ciudad de Mendoza").getId());
+            empresaService.crearEmpresa("Zero Indumentaria Deportiva S.A.", "30-71567890-6", TipoEmpresa.SEDE_CENTRAL,
+                    direccion, "contacto@zero.com.ar", "+54 261 423-1250", TipoTelefono.FIJO);
+        } catch (ErrorServiceException e) {
+            throw new IllegalStateException("Los datos iniciales de la empresa no son válidos: " + e.getMessage(), e);
+        }
     }
 
     private void cargarCatalogo() {

@@ -53,11 +53,14 @@
 
                 <div class="admin-nav-section" sec:authorize="hasRole('JEFE')">
                     <div class="admin-nav-label">Configuración</div>
-                    <a href="#" class="admin-nav-item sub">Empresa</a>
-                    <a href="#" class="admin-nav-item sub">Correo</a>
+                    <a th:href="@{/admin/configuracion/empresa}" class="admin-nav-item sub"
+                       th:classappend="${menuActivo == 'empresa' ? 'active' : ''}">Empresa</a>
+                    <a th:href="@{/admin/configuracion/correo}" class="admin-nav-item sub"
+                       th:classappend="${menuActivo == 'correo' ? 'active' : ''}">Correo</a>
                     <a th:href="@{/admin/configuracion/formas-pago}" class="admin-nav-item sub"
                        th:classappend="${menuActivo == 'formas-pago' ? 'active' : ''}">Formas de pago</a>
-                    <a href="#" class="admin-nav-item sub">Ubicación</a>
+                    <a th:href="@{/admin/configuracion/ubicacion}" class="admin-nav-item sub"
+                       th:classappend="${menuActivo == 'ubicacion' ? 'active' : ''}">Ubicación</a>
                     <a th:href="@{/admin/nacionalidades}" class="admin-nav-item sub"
                        th:classappend="${menuActivo == 'nacionalidades' ? 'active' : ''}">Nacionalidades</a>
                 </div>

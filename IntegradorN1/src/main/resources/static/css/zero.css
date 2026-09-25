@@ -736,6 +736,32 @@ a, a:hover {
     font-size: 0.78rem;
 }
 
+/* Pestañas del panel: toma .tab01 del template y la alinea a la izquierda con el acento de la marca. */
+.zero-tabs {
+    border-bottom: 1px solid var(--zero-border);
+    margin-bottom: 1.5rem;
+}
+
+.zero-tabs.tab01 .nav-tabs {
+    gap: 1.5rem;
+    justify-content: flex-start;
+}
+
+.zero-tabs.tab01 .nav-tabs .nav-item {
+    margin: 0;
+}
+
+.zero-tabs.tab01 .nav-link {
+    border-bottom-width: 3px;
+    padding-bottom: 0.6rem;
+}
+
+.zero-tabs.tab01 .nav-link.active {
+    border-color: var(--zero-accent-strong);
+    color: var(--zero-charcoal);
+    font-weight: 600;
+}
+
 @media (max-width: 991px) {
     .zero-feature-grid {
         grid-template-columns: 1fr;

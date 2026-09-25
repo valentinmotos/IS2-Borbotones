@@ -24,4 +24,14 @@ public class Direccion extends BaseEntity {
 
     @ManyToOne
     private Localidad localidad;
+
+    /** Experto: la dirección en una línea, por ejemplo "San Martín 1250, Ciudad de Mendoza (5500), Mendoza". */
+    public String describir() {
+        StringBuilder texto = new StringBuilder(calle + " " + numeracion);
+        if (localidad != null) {
+            texto.append(", ").append(localidad.getNombre()).append(" (").append(localidad.getCodigoPostal())
+                    .append("), ").append(localidad.getDepartamento().getProvincia().getNombre());
+        }
+        return texto.toString();
+    }
 }

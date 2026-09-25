@@ -49,7 +49,8 @@ com.zero.ecommerce
  │   ├─ cliente
  │   └─ admin
  ├─ scheduler     newsletter, alertas de precio
- └─ exception     ErrorServiceException y handler global
+ ├─ exception     ErrorServiceException y handler global
+ └─ utils         funciones estáticas reutilizables (ej: TextoUtils.mismoNombre)
 
 resources/templates: layout/  fragments/  publico/  cliente/  admin/  email/  error/
 resources/static:    vendor/template/  css/  js/  img/
@@ -73,6 +74,10 @@ La página `/dev/componentes` muestra todos los fragments funcionando dentro del
 | Card de producto | `fragments/card-producto :: card(imagen, nombre, precio, enOferta)` | `<article th:replace="~{fragments/card-producto :: card(${imagen}, ${nombre}, ${precio}, ${enOferta})}"></article>` |
 | Badge de estado | `fragments/badge-estado :: badge(estado)` | `<span th:replace="~{fragments/badge-estado :: badge(${estado})}"></span>` |
 | Filtros | `fragments/filtros :: filtros(action)` | `<form th:replace="~{fragments/filtros :: filtros(${action})}"></form>` |
+| Filtro por selección | `fragments/filtros :: filtroSelect(action, nombre, etiqueta, opciones, seleccionado)` | `<form th:replace="~{fragments/filtros :: filtroSelect(${baseUrl}, 'pais', 'País', ${paises}, ${pais})}"></form>` |
+| Campo de clave | `fragments/formulario :: campoClave(nombre, etiqueta, requerido, ayuda)` | `<div th:replace="~{fragments/formulario :: campoClave('clave', 'Clave', false, 'Dejala vacía para no cambiarla.')}"></div>` |
+| Checkbox | `fragments/formulario :: campoCheckbox(nombre, etiqueta, marcado)` | `<div th:replace="~{fragments/formulario :: campoCheckbox('tls', 'Usar TLS', ${tls})}"></div>` |
+| Selección agrupada | `fragments/formulario :: campoSelectAgrupado(nombre, etiqueta, grupos, seleccionado, requerido)` | `<div th:replace="~{fragments/formulario :: campoSelectAgrupado('departamentoId', 'Departamento', ${grupos}, ${departamentoId}, true)}"></div>` |
 | KPI | `fragments/kpi :: kpi(titulo, valor, descripcion, icono)` | `<article th:replace="~{fragments/kpi :: kpi(${titulo}, ${valor}, ${descripcion}, ${icono})}"></article>` |
 
 `mensajes` consume los atributos flash existentes `error` y `exito`; no crea un mecanismo nuevo. `tabla` recibe encabezados y filas como listas, y sus URLs pueden ser `null` para ocultar acciones. La tabla muestra un estado vacío cuando `filas` está vacío. `formulario` recibe errores ya calculados por el backend y no valida reglas de negocio.
@@ -120,6 +125,153 @@ La sección `/admin/categorias` permite listar las categorías con subcategoría
 ### Seed inicial
 
 El `DataSeeder` crea 4 categorías y 12 subcategorías en total cuando la base está vacía, sin duplicarlas si la aplicación se reinicia sobre una base ya cargada.
+
+## ABM de ubicación E1-03
+
+Entrar a **Configuración → Ubicación** (`/admin/configuracion/ubicacion`, solo `JEFE`). Hay una
+pestaña por entidad: Países, Provincias, Departamentos y Localidades. Cada listado se filtra por su
+padre (`?pais=`, `?provincia=`, `?departamento=`) y el botón de alta precarga el padre filtrado.
+En Localidades el departamento se elige con los selects en cascada país → provincia → departamento de E1-04.
+
+- El nombre es obligatorio y no puede repetirse dentro del mismo padre. La comparación ignora
+  mayúsculas, tildes y espacios en los extremos: "Guaymallén" y "GUAYMALLEN" son duplicados.
+- El código postal de la localidad es obligatorio: 4 dígitos (`5500`) o CPA (`M5500ABC`).
+- El padre tiene que existir y estar activo.
+- La baja es lógica. No se puede eliminar un país, provincia o departamento con hijos activos.
+- Solo se comparan los registros activos, así que un registro eliminado se puede volver a crear.
+
+El seeder carga Argentina, sus 24 provincias (incluida CABA), los 18 departamentos de Mendoza y las
+principales localidades de Gran Mendoza con su código postal. **Solo corre con la base vacía:** para
+cargar estos datos sobre una base existente hay que borrar `data/zero.db` y volver a levantar la app.
+
+## Fragment de dirección E1-04
+
+Se incluye con una línea dentro de un `<form class="zero-form">`:
+
+```html
+<div th:replace="~{fragments/direccion :: direccion(${direccionForm})}"></div>
+```
+
+- `direccionForm` es un `DireccionForm`: `new DireccionForm()` en el alta, `DireccionForm.desde(direccion)`
+  al editar, o el mismo objeto recibido con `@ModelAttribute` para volver al formulario después de un error.
+- Envía `calle`, `numeracion`, `barrio`, `manzanaPiso`, `casaDepartamento`, `referencia` y `localidadId`
+  (más `paisId`, `provinciaId` y `departamentoId`, que solo sirven para precargar los selects).
+- Los selects se cargan en cascada con `static/js/ubicacion-cascada.js`. El código postal se completa solo
+  al elegir la localidad y no se envía.
+- `DireccionService` tiene `crearDireccion` (devuelve la `Direccion` para asociarla), `modificarDireccion`,
+  `eliminarDireccion` (baja lógica), `buscarDireccion` y `buscarDireccionPorCalleNumeracion`. Calle,
+  numeración y una localidad activa son obligatorias; el resto es opcional y se guarda `null` si viene vacío.
+- Para solo los selects, sin el resto de la dirección:
+  `fragments/ubicacion :: cascada(hasta, paisId, provinciaId, departamentoId, localidadId)`, con `hasta`
+  igual a `'departamento'` o `'localidad'`. Lo usa el formulario de Localidad.
+
+Endpoints JSON públicos (solo registros activos; un id vacío o inexistente devuelve `[]`):
+
+| Endpoint | Devuelve |
+|---|---|
+| `GET /api/ubicacion/paises` | `[{id, nombre}]` |
+| `GET /api/ubicacion/provincias?pais={id}` | `[{id, nombre}]` |
+| `GET /api/ubicacion/departamentos?provincia={id}` | `[{id, nombre}]` |
+| `GET /api/ubicacion/localidades?departamento={id}` | `[{id, nombre, codigoPostal}]` |
+
+La página de prueba `/dev/direccion` guarda una dirección real y, al guardar, se recarga con `?id=` para
+mostrar los selects precargados.
+
+## Empresa, correo y envío E1-07
+
+### Empresa
+
+**Configuración → Empresa** (`/admin/configuracion/empresa`, solo `JEFE`): ABM de la sede central y sus
+sucursales, con razón social, CUIT, tipo, dirección (fragment de E1-04), un correo y un teléfono.
+
+- El CUIT se valida con su dígito verificador (`utils/CuitUtils`), se acepta con o sin guiones y se guarda
+  como `XX-XXXXXXXX-X`. No puede repetirse entre empresas activas. CUITs válidos para probar:
+  `30-71234567-1`, `20-12345678-6`.
+- Hay **una sola `SEDE_CENTRAL`**: no se puede crear otra, pasarla a sucursal ni darla de baja. Es la
+  empresa que envía los correos y a la que pertenece el stock.
+- La baja de una sucursal es lógica e incluye su dirección y sus contactos.
+- Los contactos usan `ContactoService`, que maneja toda la jerarquía `Contacto` (correo y teléfono) y
+  se reutiliza en Proveedores (E3-01).
+- El seeder carga "Zero Indumentaria Deportiva S.A." (CUIT `30-71567890-6`) como sede central.
+
+### Cómo se envían los correos
+
+```
+Zero ──(SMTP, usuario y clave)──► servidor SMTP (Gmail) ──► bandeja del destinatario
+```
+
+La app arma el correo (template Thymeleaf + logo) y lo entrega a un **servidor SMTP externo** con
+Jakarta Mail (`spring-boot-starter-mail`). El servidor es el que lo reparte a la bandeja del destinatario.
+Java no reparte correos por su cuenta: **sin un servidor SMTP configurado no sale ningún correo**.
+
+- El proveedor no está en el código: el servidor, puerto, usuario, clave y TLS se cargan en
+  **Configuración → Correo** (`/admin/configuracion/correo`, solo `JEFE`) y se guardan en la base.
+  Cambiar de Gmail a otro proveedor (Brevo, SendGrid, Mailgun, Amazon SES) es cambiar esos datos.
+- `EmailService` arma el `JavaMailSender` en cada envío con esa configuración: un cambio en la pantalla
+  aplica sin reiniciar.
+- La configuración **no la carga el seeder**, porque lleva credenciales reales. Como cada integrante tiene
+  su propia base (`data/zero.db`), **cada uno la carga una vez en la suya**. Hace falta internet.
+- La clave nunca se muestra en la pantalla; al editar, si se deja vacía se conserva la guardada. Se guarda
+  sin cifrar en la base local (queda para la revisión de seguridad E5-06).
+
+### Configurar Gmail (gratis)
+
+1. Usar una cuenta de Gmail **del proyecto** (por ejemplo `zero.tienda.tp@gmail.com`), no una personal:
+   todos los correos salen con esa cuenta como remitente.
+2. En https://myaccount.google.com/security activar la **Verificación en 2 pasos**.
+3. En https://myaccount.google.com/apppasswords crear una **clave de aplicación** (nombre: "Zero").
+   Google muestra 16 letras una sola vez: copiarlas. **No es la contraseña de la cuenta**: Gmail no deja
+   que una aplicación entre con la contraseña normal.
+4. En **Configuración → Correo** cargar:
+
+| Campo | Valor |
+|---|---|
+| Servidor SMTP | `smtp.gmail.com` |
+| Puerto | `587` |
+| Correo | la cuenta de Gmail |
+| Clave | las 16 letras de la clave de aplicación, sin espacios |
+| Usar TLS | marcado |
+
+5. Guardar y usar **Enviar correo de prueba**. Es sincrónico a propósito: la pantalla muestra si Gmail lo
+   aceptó o el error que devolvió. Si no llega, revisar spam.
+
+Una cuenta de Gmail común permite unos **500 destinatarios por día**, suficiente para el TP. Para una
+tienda real se usaría un proveedor de correo transaccional, sin cambiar código.
+
+| Error en la prueba | Causa probable |
+|---|---|
+| `535 ... Username and Password not accepted` | Se usó la contraseña de la cuenta en lugar de la clave de aplicación, o la clave se revocó |
+| `Connection refused` / `connect timed out` | Sin internet, puerto o servidor mal escrito, o un firewall bloquea el puerto 587 |
+| `Todavía no se configuró el correo de la empresa.` | Falta guardar la cuenta de envío |
+
+### Enviar correos desde otro issue
+
+```java
+// Ejemplo de E4-05: los datos se pasan ya armados (ver la advertencia de abajo).
+emailService.enviar(usuario.getNombreUsuario(), "Tu compra fue confirmada", "compra-confirmada",
+        Map.of("nombre", cliente.getNombre(), "identificador", orden.getIdentificadorCompra(),
+                "total", orden.getTotal()));
+```
+
+- Es `@Async`: vuelve enseguida y, si el envío falla, lo registra en el log sin romper la operación que
+  lo llamó (la compra se confirma igual aunque Gmail no responda).
+- **Pasar valores simples o DTOs, no entidades con relaciones perezosas.** El envío corre en otro hilo,
+  sin la sesión de Hibernate: si el template recorre, por ejemplo, `orden.detalles`, falla con
+  `LazyInitializationException` y el correo no sale (solo queda el error en el log).
+- El template va en `templates/email/{nombre}.html`, decora `email/base.html` y pone su contenido en
+  `layout:fragment="contenido"` (copiar `email/prueba.html`). **Los correos usan estilos inline y tablas**,
+  porque los clientes de correo ignoran el CSS externo: es la única excepción a la regla del template.
+- Todos los templates reciben `asunto` y `empresa` (razón social, dirección, correo y teléfono de la sede
+  central) sin que haya que pasarlos. El logo va embebido como `cid:logo`.
+- **Links dentro del correo** (por ejemplo "Activá tu cuenta" en E2-05): no usar `@{...}`, porque en el
+  envío no hay request. Armar la URL absoluta y pasarla como variable. Un link a `localhost:8080` solo
+  abre en la máquina donde corre la app: para la demo alcanza.
+
+### Probar sin enviar correos reales
+
+Los tests (`mvnw test`) usan **GreenMail**, un servidor SMTP en memoria en el puerto 3025 (dependencia
+solo de test): verifican el envío, el HTML y el logo sin que salga nada de la máquina. Ver
+`CorreoIntegrationTest` y `EmailAsyncIntegrationTest`.
 
 ## ABM de referencia E0-06: Nacionalidad
 

@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -37,6 +38,7 @@ class NacionalidadIntegrationTest {
     private final NacionalidadService service;
     private final NacionalidadRepository repository;
     private final DataSeeder seeder;
+    private MockHttpSession sesion;
 
     NacionalidadIntegrationTest(@Autowired MockMvc mvc, @Autowired NacionalidadService service,
             @Autowired NacionalidadRepository repository, @Autowired DataSeeder seeder) {
@@ -46,6 +48,12 @@ class NacionalidadIntegrationTest {
         this.seeder = seeder;
     }
 
+    // Desde E1-01 el panel exige login: /admin/nacionalidades es para JEFE y ADMINISTRATIVO.
+    @BeforeEach
+    void iniciarSesion() throws Exception {
+        sesion = login("admin@zero.com.ar", "Admin123!");
+    }
+
     @Test
     void recorreAltaEdicionYBajaLogicaConFormulariosReales() throws Exception {
         mvc.perform(postConCsrf(BASE, BASE + "/nueva").param("nombre", " Japonesa "))
@@ -53,14 +61,14 @@ class NacionalidadIntegrationTest {
                 .andExpect(flash().attribute("exito", "Nacionalidad creada correctamente."));
         Nacionalidad creada = service.buscarNacionalidadPorNombre("JAPONESA");
         String id = creada.getId();
-        mvc.perform(get(BASE))
+        mvc.perform(get(BASE).session(sesion))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(BASE + "/" + id + "/editar")))
                 .andExpect(content().string(containsString("data-target=\"#eliminar-" + id + "\"")))
                 .andExpect(content().string(containsString("action=\"" + BASE + "/" + id + "/eliminar\"")))
                 .andExpect(content().string(containsString("name=\"_csrf\"")));
         String editar = BASE + "/" + id + "/editar";
-        mvc.perform(get(editar)).andExpect(content().string(containsString("value=\"Japonesa\"")));
+        mvc.perform(get(editar).session(sesion)).andExpect(content().string(containsString("value=\"Japonesa\"")));
         mvc.perform(postConCsrf(editar, editar).param("nombre", "Coreana"))
                 .andExpect(redirectedUrl(BASE));
         assertThat(service.buscarNacionalidad(id).getNombre()).isEqualTo("Coreana");
@@ -69,7 +77,7 @@ class NacionalidadIntegrationTest {
         assertThat(repository.findById(id).orElseThrow().isEliminado()).isTrue();
         assertThat(service.listarNacionalidadActiva()).extracting(Nacionalidad::getId).doesNotContain(id);
         assertThat(service.listarNacionalidad()).extracting(Nacionalidad::getId).contains(id);
-        mvc.perform(get(editar)).andExpect(status().isNotFound());
+        mvc.perform(get(editar).session(sesion)).andExpect(status().isNotFound());
         mvc.perform(postConCsrf(editar, BASE + "/nueva").param("nombre", "Otra"))
                 .andExpect(status().isNotFound());
     }
@@ -81,7 +89,7 @@ class NacionalidadIntegrationTest {
                 .andExpect(redirectedUrl(BASE + "/nueva"))
                 .andExpect(flash().attribute("error", "Ya existe una nacionalidad con ese nombre."))
                 .andExpect(flash().attribute("nombre", " ESPAÑA ")).andReturn();
-        mvc.perform(get(BASE + "/nueva").flashAttrs(resultado.getFlashMap()))
+        mvc.perform(get(BASE + "/nueva").session(sesion).flashAttrs(resultado.getFlashMap()))
                 .andExpect(content().string(containsString("Ya existe una nacionalidad con ese nombre.")))
                 .andExpect(content().string(containsString("value=\" ESPAÑA \"")));
         assertThat(repository.count()).isEqualTo(cantidad);
@@ -97,13 +105,13 @@ class NacionalidadIntegrationTest {
     @Test
     void rechazaMutacionesSinCsrfYBajaPorGet() throws Exception {
         String id = service.buscarNacionalidadPorNombre("Argentina").getId();
-        mvc.perform(post(BASE).param("nombre", "Otra")).andExpect(status().isForbidden());
-        mvc.perform(post(BASE + "/" + id + "/editar").param("nombre", "Otra"))
+        mvc.perform(post(BASE).session(sesion).param("nombre", "Otra")).andExpect(status().isForbidden());
+        mvc.perform(post(BASE + "/" + id + "/editar").session(sesion).param("nombre", "Otra"))
                 .andExpect(status().isForbidden());
-        mvc.perform(post(BASE + "/" + id + "/eliminar")).andExpect(status().isForbidden());
-        mvc.perform(get(BASE + "/" + id + "/eliminar")).andExpect(status().isMethodNotAllowed());
+        mvc.perform(post(BASE + "/" + id + "/eliminar").session(sesion)).andExpect(status().isForbidden());
+        mvc.perform(get(BASE + "/" + id + "/eliminar").session(sesion)).andExpect(status().isMethodNotAllowed());
         assertThat(service.buscarNacionalidad(id).isEliminado()).isFalse();
-        mvc.perform(get(BASE + "/inexistente/editar")).andExpect(status().isNotFound());
+        mvc.perform(get(BASE + "/inexistente/editar").session(sesion)).andExpect(status().isNotFound());
     }
 
     @Test
@@ -120,16 +128,31 @@ class NacionalidadIntegrationTest {
         for (Nacionalidad nacionalidad : service.listarNacionalidadActiva()) {
             service.eliminarNacionalidad(nacionalidad.getId());
         }
-        mvc.perform(get(BASE)).andExpect(status().isOk())
+        mvc.perform(get(BASE).session(sesion)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("No hay registros para mostrar.")));
+    }
+
+    @Test
+    void sinLoginRedirigeAlLogin() throws Exception {
+        mvc.perform(get(BASE)).andExpect(redirectedUrl("http://localhost/login"));
+    }
+
+    // Login real contra el formulario, con las cuentas que crea el seeder.
+    private MockHttpSession login(String correo, String clave) throws Exception {
+        MvcResult pagina = mvc.perform(get("/login")).andExpect(status().isOk()).andReturn();
+        MockHttpSession nueva = (MockHttpSession) pagina.getRequest().getSession();
+        CsrfToken token = (CsrfToken) pagina.getRequest().getAttribute(CsrfToken.class.getName());
+        mvc.perform(post("/login").session(nueva).param(token.getParameterName(), token.getToken())
+                .param("username", correo).param("password", clave))
+                .andExpect(redirectedUrl("/admin"));
+        return nueva;
     }
 
     // Obtiene el token del formulario renderizado: prueba también la integración Thymeleaf/Security.
     private MockHttpServletRequestBuilder postConCsrf(String destino, String formulario) throws Exception {
-        MvcResult pagina = mvc.perform(get(formulario)).andExpect(status().isOk())
+        MvcResult pagina = mvc.perform(get(formulario).session(sesion)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("name=\"_csrf\""))).andReturn();
         CsrfToken token = (CsrfToken) pagina.getRequest().getAttribute(CsrfToken.class.getName());
-        return post(destino).session((MockHttpSession) pagina.getRequest().getSession())
-                .param(token.getParameterName(), token.getToken());
+        return post(destino).session(sesion).param(token.getParameterName(), token.getToken());
     }
 }

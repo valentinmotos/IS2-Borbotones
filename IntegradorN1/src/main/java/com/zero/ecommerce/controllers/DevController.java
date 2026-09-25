@@ -7,23 +7,29 @@ import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.zero.ecommerce.dto.DireccionForm;
 import com.zero.ecommerce.dto.FilaTablaDTO;
+import com.zero.ecommerce.entities.Direccion;
 import com.zero.ecommerce.entities.Imagen;
 import com.zero.ecommerce.entities.enums.TipoImagen;
 import com.zero.ecommerce.exception.ErrorServiceException;
+import com.zero.ecommerce.services.DireccionService;
 import com.zero.ecommerce.services.ImagenService;
 
 @Controller
 public class DevController {
 
+    private final DireccionService direccionService;
     private final ImagenService imagenService;
 
-    public DevController(ImagenService imagenService) {
+    public DevController(DireccionService direccionService, ImagenService imagenService) {
+        this.direccionService = direccionService;
         this.imagenService = imagenService;
     }
 
@@ -55,9 +61,60 @@ public class DevController {
         opciones.put("TRANSFERENCIA", "Transferencia");
         opciones.put("BILLETERA_VIRTUAL", "Billetera virtual");
         model.addAttribute("opciones", opciones);
+        Map<String, Map<String, String>> grupos = new LinkedHashMap<>();
+        grupos.put("Argentina / Mendoza", Map.of("capital", "Capital", "maipu", "Maipú"));
+        grupos.put("Argentina / San Juan", Map.of("rivadavia", "Rivadavia"));
+        model.addAttribute("grupos", grupos);
         return "dev/componentes";
     }
 
+    /** E1-04: prueba del fragment de dirección. Con ?id= precarga una dirección guardada. */
+    @GetMapping("/dev/direccion")
+    public String direccion(@RequestParam(required = false) String id, Model model) {
+        model.addAttribute("pageTitle", "Prueba de dirección");
+        model.addAttribute("id", id);
+        if (!model.containsAttribute("direccionForm")) {
+            DireccionForm form = new DireccionForm();
+            if (id != null && !id.isBlank()) {
+                try {
+                    Direccion direccion = direccionService.buscarDireccion(id);
+                    form = DireccionForm.desde(direccion);
+                    model.addAttribute("direccion", direccion);
+                } catch (ErrorServiceException e) {
+                    model.addAttribute("error", e.getMessage());
+                    model.addAttribute("id", null);
+                }
+            }
+            model.addAttribute("direccionForm", form);
+        }
+        return "dev/direccion";
+    }
+
+    @PostMapping("/dev/direccion")
+    public String guardarDireccion(@RequestParam(required = false) String id,
+            @ModelAttribute DireccionForm form, RedirectAttributes flash) {
+        boolean alta = id == null || id.isBlank();
+        try {
+            if (alta) {
+                id = direccionService.crearDireccion(form.getCalle(), form.getNumeracion(), form.getBarrio(),
+                        form.getManzanaPiso(), form.getCasaDepartamento(), form.getReferencia(),
+                        form.getLocalidadId()).getId();
+            } else {
+                direccionService.modificarDireccion(id, form.getCalle(), form.getNumeracion(), form.getBarrio(),
+                        form.getManzanaPiso(), form.getCasaDepartamento(), form.getReferencia(),
+                        form.getLocalidadId());
+            }
+            flash.addFlashAttribute("exito", alta ? "Dirección creada correctamente."
+                    : "Dirección modificada correctamente.");
+            return "redirect:/dev/direccion?id=" + id;
+        } catch (ErrorServiceException e) {
+            flash.addFlashAttribute("error", e.getMessage());
+            flash.addFlashAttribute("direccionForm", form);
+            return alta ? "redirect:/dev/direccion" : "redirect:/dev/direccion?id=" + id;
+        }
+    }
+
+    /** E1-06: prueba del servicio de imágenes. Con ?id= muestra la imagen guardada. */
     @GetMapping("/dev/imagen")
     public String imagen(Model model, @RequestParam(value = "id", required = false) String id) {
         model.addAttribute("tiposImagen", TipoImagen.values());

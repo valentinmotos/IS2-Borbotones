@@ -1,172 +1,164 @@
 package com.zero.ecommerce.controllers.admin;
 
-import com.zero.ecommerce.entities.Localidad;
-import com.zero.ecommerce.services.DepartamentoService;
-import com.zero.ecommerce.services.LocalidadService;
+import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.zero.ecommerce.entities.Departamento;
+import com.zero.ecommerce.entities.Localidad;
+import com.zero.ecommerce.exception.ErrorServiceException;
+import com.zero.ecommerce.services.DepartamentoService;
+import com.zero.ecommerce.services.LocalidadService;
+
 @Controller
-@RequestMapping("/admin/configuracion/ubicaciones")
+@RequestMapping("/admin/configuracion/ubicacion/localidades")
 public class LocalidadController {
 
-    private final LocalidadService localidadService;
+    private static final String BASE = "/admin/configuracion/ubicacion/localidades";
+    private final LocalidadService service;
     private final DepartamentoService departamentoService;
 
-    public LocalidadController(LocalidadService localidadService, DepartamentoService departamentoService) {
-        this.localidadService = localidadService;
+    public LocalidadController(LocalidadService service, DepartamentoService departamentoService) {
+        this.service = service;
         this.departamentoService = departamentoService;
     }
 
+    @ModelAttribute("menuActivo")
+    public String menuActivo() {
+        return "ubicacion";
+    }
+
+    @ModelAttribute("pestanaActiva")
+    public String pestanaActiva() {
+        return "localidades";
+    }
+
     @GetMapping
-    public String listarLocalidades(Model model) {
-        model.addAttribute("localidades", localidadService.listarLocalidades());
-        return "admin/ubicacion/ubicacion";
+    public String listar(@RequestParam(required = false) String departamento, Model model) {
+        model.addAttribute("pageTitle", "Localidades");
+        model.addAttribute("encabezados", List.of("Nombre", "Código postal", "Departamento", "Provincia"));
+        model.addAttribute("registros", service.listarFilaLocalidadActivo(departamento));
+        model.addAttribute("baseUrl", BASE);
+        model.addAttribute("urlNuevo", BASE + "/nueva"
+                + (departamento == null || departamento.isBlank() ? "" : "?departamento=" + departamento));
+        model.addAttribute("textoNuevo", "Nueva localidad");
+        model.addAttribute("entidad", "localidad");
+        model.addAttribute("filtroNombre", "departamento");
+        model.addAttribute("filtroEtiqueta", "Departamento");
+        model.addAttribute("filtroOpciones", departamentoService.listarOpcionDepartamentoActivo());
+        model.addAttribute("filtroSeleccionado", departamento);
+        return "admin/ubicacion/listado";
     }
 
     @GetMapping("/nueva")
-    public String nuevaLocalidad(Model model) {
-        model.addAttribute(
-                "departamentos",
-                departamentoService.listarDepartamentos()
-        );
-        return "admin/ubicacion/form";
+    public String nueva(@RequestParam(required = false) String departamento, Model model) {
+        return formulario(model, null, "", "", departamento);
     }
-
-    // =========================================================
-    // GUARDAR LOCALIDAD
-    // =========================================================
-
-    @PostMapping("/guardar")
-    public String guardarLocalidad(
-            @RequestParam("nombre") String nombre,
-            @RequestParam("codigoPostal") String codigoPostal,
-            @RequestParam("departamentoId") String departamentoId,
-            RedirectAttributes redirectAttributes) {
-
-        try {
-            localidadService.crearLocalidad(
-                    nombre,
-                    codigoPostal,
-                    departamentoId
-            );
-
-            redirectAttributes.addFlashAttribute(
-                    "mensaje",
-                    "Localidad creada correctamente"
-            );
-
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute(
-                    "error",
-                    e.getMessage()
-            );
-        }
-
-        return "redirect:/admin/configuracion/ubicaciones";
-    }
-
-    // =========================================================
-    // FORMULARIO MODIFICAR LOCALIDAD
-    // =========================================================
 
     @GetMapping("/{id}/editar")
-    public String editarLocalidad(
-            @PathVariable String id,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-
-        try {
-            Localidad localidad = localidadService.buscarLocalidad(id);
-
-            model.addAttribute(
-                    "localidad",
-                    localidad
-            );
-
-            model.addAttribute(
-                    "departamentos",
-                    departamentoService.listarDepartamentos()
-            );
-
-            return "admin/ubicacion/form";
-
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute(
-                    "error",
-                    e.getMessage()
-            );
-
-            return "redirect:/admin/configuracion/ubicaciones";
-        }
+    public String editar(@PathVariable String id, Model model) {
+        Localidad localidad = buscarO404(id);
+        return formulario(model, id, localidad.getNombre(), localidad.getCodigoPostal(),
+                localidad.getDepartamento().getId());
     }
 
-    // =========================================================
-    // MODIFICAR LOCALIDAD
-    // =========================================================
+    @PostMapping
+    public String crear(@RequestParam(defaultValue = "") String nombre,
+            @RequestParam(defaultValue = "") String codigoPostal,
+            @RequestParam(defaultValue = "") String departamentoId, RedirectAttributes flash) {
+        try {
+            service.crearLocalidad(nombre, codigoPostal, departamentoId);
+            flash.addFlashAttribute("exito", "Localidad creada correctamente.");
+            return "redirect:" + BASE + "?departamento=" + departamentoId;
+        } catch (ErrorServiceException e) {
+            errorFormulario(flash, nombre, codigoPostal, departamentoId, e);
+            return "redirect:" + BASE + "/nueva";
+        }
+    }
 
     @PostMapping("/{id}/editar")
-    public String modificarLocalidad(
-            @PathVariable String id,
-            @RequestParam("nombre") String nombre,
-            @RequestParam("codigoPostal") String codigoPostal,
-            @RequestParam("departamentoId") String departamentoId,
-            RedirectAttributes redirectAttributes) {
-
+    public String modificar(@PathVariable String id, @RequestParam(defaultValue = "") String nombre,
+            @RequestParam(defaultValue = "") String codigoPostal,
+            @RequestParam(defaultValue = "") String departamentoId, RedirectAttributes flash) {
+        buscarO404(id);
         try {
-            localidadService.modificarLocalidad(
-                    id,
-                    nombre,
-                    codigoPostal,
-                    departamentoId
-            );
-
-            redirectAttributes.addFlashAttribute(
-                    "mensaje",
-                    "Localidad modificada correctamente"
-            );
-
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute(
-                    "error",
-                    e.getMessage()
-            );
+            service.modificarLocalidad(id, nombre, codigoPostal, departamentoId);
+            flash.addFlashAttribute("exito", "Localidad modificada correctamente.");
+            return "redirect:" + BASE + "?departamento=" + departamentoId;
+        } catch (ErrorServiceException e) {
+            errorFormulario(flash, nombre, codigoPostal, departamentoId, e);
+            return "redirect:" + BASE + "/" + id + "/editar";
         }
-
-        return "redirect:/admin/configuracion/ubicaciones";
     }
 
-    // =========================================================
-    // ELIMINAR LOCALIDAD
-    // =========================================================
-
     @PostMapping("/{id}/eliminar")
-    public String eliminarLocalidad(
-            @PathVariable String id,
-            RedirectAttributes redirectAttributes) {
-
+    public String eliminar(@PathVariable String id, RedirectAttributes flash) {
+        Localidad localidad = buscarO404(id);
         try {
-            localidadService.eliminarLocalidad(id);
-
-            redirectAttributes.addFlashAttribute(
-                    "mensaje",
-                    "Localidad eliminada correctamente"
-            );
-
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute(
-                    "error",
-                    e.getMessage()
-            );
+            service.eliminarLocalidad(id);
+            flash.addFlashAttribute("exito", "Localidad eliminada correctamente.");
+        } catch (ErrorServiceException e) {
+            flash.addFlashAttribute("error", e.getMessage());
         }
+        return "redirect:" + BASE + "?departamento=" + localidad.getDepartamento().getId();
+    }
 
-        return "redirect:/admin/configuracion/ubicaciones";
+    private String formulario(Model model, String id, String nombre, String codigoPostal, String departamentoId) {
+        model.addAttribute("pageTitle", id == null ? "Nueva localidad" : "Editar localidad");
+        model.addAttribute("seccion", "Localidades");
+        model.addAttribute("action", id == null ? BASE : BASE + "/" + id + "/editar");
+        model.addAttribute("cancelarUrl", BASE);
+        model.addAttribute("id", id);
+        model.addAttribute("conCodigoPostal", true);
+        if (!model.containsAttribute("nombre")) {
+            model.addAttribute("nombre", nombre);
+        }
+        if (!model.containsAttribute("codigoPostal")) {
+            model.addAttribute("codigoPostal", codigoPostal);
+        }
+        if (!model.containsAttribute("padreSeleccionado")) {
+            model.addAttribute("padreSeleccionado", departamentoId);
+        }
+        precargarCascada(model, (String) model.getAttribute("padreSeleccionado"));
+        return "admin/ubicacion/formulario";
+    }
+
+    /** País → provincia → departamento en cascada: se precargan a partir del departamento elegido. */
+    private void precargarCascada(Model model, String departamentoId) {
+        model.addAttribute("conCascada", true);
+        try {
+            Departamento departamento = departamentoService.buscarDepartamento(departamentoId);
+            model.addAttribute("cascadaDepartamentoId", departamento.getId());
+            model.addAttribute("cascadaProvinciaId", departamento.getProvincia().getId());
+            model.addAttribute("cascadaPaisId", departamento.getProvincia().getPais().getId());
+        } catch (ErrorServiceException e) {
+            // Sin departamento válido (alta o id inexistente): los selects arrancan vacíos.
+        }
+    }
+
+    private void errorFormulario(RedirectAttributes flash, String nombre, String codigoPostal,
+            String departamentoId, ErrorServiceException e) {
+        flash.addFlashAttribute("error", e.getMessage());
+        flash.addFlashAttribute("nombre", nombre);
+        flash.addFlashAttribute("codigoPostal", codigoPostal);
+        flash.addFlashAttribute("padreSeleccionado", departamentoId);
+    }
+
+    private Localidad buscarO404(String id) {
+        try {
+            return service.buscarLocalidad(id);
+        } catch (ErrorServiceException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
     }
 }

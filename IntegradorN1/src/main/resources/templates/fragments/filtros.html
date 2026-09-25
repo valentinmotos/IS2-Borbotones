@@ -21,5 +21,18 @@
         </div>
         <button type="submit" class="zero-button primary">Buscar</button>
     </form>
+    <!-- Filtro de listado por un solo select. opciones: Map valor → texto visible; la opción vacía muestra todos. -->
+    <form th:fragment="filtroSelect(action, nombre, etiqueta, opciones, seleccionado)" th:action="@{${action}}"
+          method="get" class="zero-filters">
+        <div class="form-group">
+            <label th:for="${'filtro-' + nombre}" th:text="${etiqueta}">Filtro</label>
+            <select th:id="${'filtro-' + nombre}" th:name="${nombre}" class="form-control">
+                <option value="">Todos</option>
+                <option th:each="opcion : ${opciones}" th:value="${opcion.key}" th:text="${opcion.value}"
+                        th:selected="${opcion.key == seleccionado}">Opción</option>
+            </select>
+        </div>
+        <button type="submit" class="zero-button primary">Filtrar</button>
+    </form>
 </body>
 </html>

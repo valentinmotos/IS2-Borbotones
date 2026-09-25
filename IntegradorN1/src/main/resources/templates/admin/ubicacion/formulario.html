@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Configuración</span><span class="breadcrumb-separator">/</span>
+        <span>Ubicación</span><span class="breadcrumb-separator">/</span>
+        <a th:href="@{${cancelarUrl}}" th:text="${seccion}">Países</a><span class="breadcrumb-separator">/</span>
+        <span th:text="${id == null ? 'Alta' : 'Edición'}">Alta</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <form th:action="@{${action}}" method="post" class="zero-form">
+                <th:block th:if="${padreOpciones != null}">
+                    <div th:replace="~{fragments/formulario :: campoSelect(${padreCampo}, ${padreEtiqueta},
+                         ${padreOpciones}, ${padreSeleccionado}, true)}"></div>
+                </th:block>
+                <th:block th:if="${conCascada}">
+                    <div th:replace="~{fragments/ubicacion :: cascada('departamento', ${cascadaPaisId},
+                         ${cascadaProvinciaId}, ${cascadaDepartamentoId}, null)}"></div>
+                </th:block>
+                <div th:replace="~{fragments/formulario :: campoTexto('nombre', 'Nombre', ${nombre}, true)}"></div>
+                <th:block th:if="${conCodigoPostal}">
+                    <div th:replace="~{fragments/formulario :: campoTexto('codigoPostal', 'Código postal',
+                         ${codigoPostal}, true)}"></div>
+                </th:block>
+                <div th:replace="~{fragments/formulario :: acciones(${cancelarUrl})}"></div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

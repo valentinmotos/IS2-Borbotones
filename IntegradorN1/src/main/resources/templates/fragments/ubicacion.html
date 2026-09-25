@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!--
+      Selects en cascada país → provincia → departamento (→ localidad). Se incluye dentro de un <form class="zero-form">.
+      hasta: 'departamento' o 'localidad'. Los ids precargan los selects al editar; pueden ser null.
+      Envía paisId, provinciaId, departamentoId y localidadId. El JS completa las opciones desde /api/ubicacion.
+    -->
+    <div th:fragment="cascada(hasta, paisId, provinciaId, departamentoId, localidadId)" class="form-row"
+         data-ubicacion-cascada th:attr="data-api=@{/api/ubicacion}"
+         th:with="columna=${hasta == 'localidad' ? 'col-md-6 col-lg-3' : 'col-md-4'}">
+        <div class="form-group" th:classappend="${columna}">
+            <label for="paisId">País</label>
+            <select id="paisId" name="paisId" class="form-control" data-ubicacion="pais" required
+                    th:attr="data-seleccionado=${paisId}">
+                <option value="">Seleccionar país</option>
+            </select>
+        </div>
+        <div class="form-group" th:classappend="${columna}">
+            <label for="provinciaId">Provincia</label>
+            <select id="provinciaId" name="provinciaId" class="form-control" data-ubicacion="provincia" required
+                    th:attr="data-seleccionado=${provinciaId}">
+                <option value="">Seleccionar provincia</option>
+            </select>
+        </div>
+        <div class="form-group" th:classappend="${columna}">
+            <label for="departamentoId">Departamento</label>
+            <select id="departamentoId" name="departamentoId" class="form-control" data-ubicacion="departamento" required
+                    th:attr="data-seleccionado=${departamentoId}">
+                <option value="">Seleccionar departamento</option>
+            </select>
+        </div>
+        <div th:if="${hasta == 'localidad'}" class="form-group" th:classappend="${columna}">
+            <label for="localidadId">Localidad</label>
+            <select id="localidadId" name="localidadId" class="form-control" data-ubicacion="localidad" required
+                    th:attr="data-seleccionado=${localidadId}">
+                <option value="">Seleccionar localidad</option>
+            </select>
+        </div>
+        <script th:src="@{/js/ubicacion-cascada.js}" defer></script>
+    </div>
+</body>
+</html>

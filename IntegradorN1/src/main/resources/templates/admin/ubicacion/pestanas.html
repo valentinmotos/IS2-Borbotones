@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!-- Navegación entre los cuatro ABM de ubicación. activa: paises, provincias, departamentos o localidades. -->
+    <nav th:fragment="pestanas(activa)" class="tab01 zero-tabs" aria-label="Secciones de ubicación">
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a th:href="@{/admin/configuracion/ubicacion/paises}" class="nav-link"
+                   th:classappend="${activa == 'paises' ? 'active' : ''}">Países</a>
+            </li>
+            <li class="nav-item">
+                <a th:href="@{/admin/configuracion/ubicacion/provincias}" class="nav-link"
+                   th:classappend="${activa == 'provincias' ? 'active' : ''}">Provincias</a>
+            </li>
+            <li class="nav-item">
+                <a th:href="@{/admin/configuracion/ubicacion/departamentos}" class="nav-link"
+                   th:classappend="${activa == 'departamentos' ? 'active' : ''}">Departamentos</a>
+            </li>
+            <li class="nav-item">
+                <a th:href="@{/admin/configuracion/ubicacion/localidades}" class="nav-link"
+                   th:classappend="${activa == 'localidades' ? 'active' : ''}">Localidades</a>
+            </li>
+        </ul>
+    </nav>
+</body>
+</html>
