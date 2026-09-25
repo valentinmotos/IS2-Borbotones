@@ -26,6 +26,17 @@
                     th:selected="${opcion.key == seleccionado}">Opción</option>
         </select>
     </div>
+    <!-- grupos: Map etiqueta del grupo → (Map valor → texto visible). Cada grupo se muestra como <optgroup>. -->
+    <div th:fragment="campoSelectAgrupado(nombre, etiqueta, grupos, seleccionado, requerido)" class="form-group">
+        <label th:for="${nombre}" th:text="${etiqueta}">Opción</label>
+        <select th:id="${nombre}" th:name="${nombre}" class="form-control" th:required="${requerido}">
+            <option value="">Seleccionar una opción</option>
+            <optgroup th:each="grupo : ${grupos}" th:label="${grupo.key}">
+                <option th:each="opcion : ${grupo.value}" th:value="${opcion.key}" th:text="${opcion.value}"
+                        th:selected="${opcion.key == seleccionado}">Opción</option>
+            </optgroup>
+        </select>
+    </div>
     <div th:fragment="acciones(cancelarUrl)" class="zero-form-actions">
         <button type="submit" class="zero-button primary">Guardar</button>
         <a th:href="@{${cancelarUrl}}" class="zero-button secondary">Cancelar</a>

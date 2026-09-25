@@ -60,6 +60,15 @@
                 </section>
 
                 <section class="zero-panel mb-4">
+                    <h2>Selección agrupada</h2>
+                    <p class="zero-component-description">Select con opciones agrupadas, para elegir un registro según su padre.</p>
+                    <form th:action="@{/dev/componentes}" method="post" class="zero-form">
+                        <div th:replace="~{fragments/formulario :: campoSelectAgrupado('demo-departamento', 'Departamento', ${grupos}, 'maipu', true)}"></div>
+                    </form>
+                    <code>&lt;div th:replace="~{fragments/formulario :: campoSelectAgrupado(${nombre}, ${etiqueta}, ${grupos}, ${seleccionado}, ${requerido})}"&gt;&lt;/div&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
                     <h2>Modal de confirmación</h2>
                     <p class="zero-component-description">Confirmación reutilizable para una baja lógica.</p>
                     <button type="button" class="zero-button primary" data-toggle="modal" data-target="#modal-demo">Abrir modal</button>
@@ -101,6 +110,13 @@
                     <p class="zero-component-description">Barra adaptable con rango de fechas, estado y búsqueda.</p>
                     <div th:replace="~{fragments/filtros :: filtros(@{/dev/componentes})}"></div>
                     <code>&lt;form th:replace="~{fragments/filtros :: filtros(${action})}"&gt;&lt;/form&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
+                    <h2>Filtro por selección</h2>
+                    <p class="zero-component-description">Filtra un listado por un solo valor, por ejemplo el registro padre.</p>
+                    <div th:replace="~{fragments/filtros :: filtroSelect('/dev/componentes', 'tipo', 'Tipo de pago', ${opciones}, 'EFECTIVO')}"></div>
+                    <code>&lt;form th:replace="~{fragments/filtros :: filtroSelect(${action}, ${nombre}, ${etiqueta}, ${opciones}, ${seleccionado})}"&gt;&lt;/form&gt;</code>
                 </section>
 
                 <section class="zero-panel">

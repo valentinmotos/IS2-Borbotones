@@ -49,7 +49,8 @@ com.zero.ecommerce
  │   ├─ cliente
  │   └─ admin
  ├─ scheduler     newsletter, alertas de precio
- └─ exception     ErrorServiceException y handler global
+ ├─ exception     ErrorServiceException y handler global
+ └─ utils         funciones estáticas reutilizables (ej: TextoUtils.mismoNombre)
 
 resources/templates: layout/  fragments/  publico/  cliente/  admin/  email/  error/
 resources/static:    vendor/template/  css/  js/  img/
@@ -73,6 +74,8 @@ La página `/dev/componentes` muestra todos los fragments funcionando dentro del
 | Card de producto | `fragments/card-producto :: card(imagen, nombre, precio, enOferta)` | `<article th:replace="~{fragments/card-producto :: card(${imagen}, ${nombre}, ${precio}, ${enOferta})}"></article>` |
 | Badge de estado | `fragments/badge-estado :: badge(estado)` | `<span th:replace="~{fragments/badge-estado :: badge(${estado})}"></span>` |
 | Filtros | `fragments/filtros :: filtros(action)` | `<form th:replace="~{fragments/filtros :: filtros(${action})}"></form>` |
+| Filtro por selección | `fragments/filtros :: filtroSelect(action, nombre, etiqueta, opciones, seleccionado)` | `<form th:replace="~{fragments/filtros :: filtroSelect(${baseUrl}, 'pais', 'País', ${paises}, ${pais})}"></form>` |
+| Selección agrupada | `fragments/formulario :: campoSelectAgrupado(nombre, etiqueta, grupos, seleccionado, requerido)` | `<div th:replace="~{fragments/formulario :: campoSelectAgrupado('departamentoId', 'Departamento', ${grupos}, ${departamentoId}, true)}"></div>` |
 | KPI | `fragments/kpi :: kpi(titulo, valor, descripcion, icono)` | `<article th:replace="~{fragments/kpi :: kpi(${titulo}, ${valor}, ${descripcion}, ${icono})}"></article>` |
 
 `mensajes` consume los atributos flash existentes `error` y `exito`; no crea un mecanismo nuevo. `tabla` recibe encabezados y filas como listas, y sus URLs pueden ser `null` para ocultar acciones. La tabla muestra un estado vacío cuando `filas` está vacío. `formulario` recibe errores ya calculados por el backend y no valida reglas de negocio.
@@ -120,6 +123,24 @@ La sección `/admin/categorias` permite listar las categorías con subcategoría
 ### Seed inicial
 
 El `DataSeeder` crea 4 categorías y 12 subcategorías en total cuando la base está vacía, sin duplicarlas si la aplicación se reinicia sobre una base ya cargada.
+
+## ABM de ubicación E1-03
+
+Entrar a **Configuración → Ubicación** (`/admin/configuracion/ubicacion`, solo `JEFE`). Hay una
+pestaña por entidad: Países, Provincias, Departamentos y Localidades. Cada listado se filtra por su
+padre (`?pais=`, `?provincia=`, `?departamento=`) y el botón de alta precarga el padre filtrado.
+En Localidades el departamento se elige en un select agrupado por "País / Provincia".
+
+- El nombre es obligatorio y no puede repetirse dentro del mismo padre. La comparación ignora
+  mayúsculas, tildes y espacios en los extremos: "Guaymallén" y "GUAYMALLEN" son duplicados.
+- El código postal de la localidad es obligatorio: 4 dígitos (`5500`) o CPA (`M5500ABC`).
+- El padre tiene que existir y estar activo.
+- La baja es lógica. No se puede eliminar un país, provincia o departamento con hijos activos.
+- Solo se comparan los registros activos, así que un registro eliminado se puede volver a crear.
+
+El seeder carga Argentina, sus 24 provincias (incluida CABA), los 18 departamentos de Mendoza y las
+principales localidades de Gran Mendoza con su código postal. **Solo corre con la base vacía:** para
+cargar estos datos sobre una base existente hay que borrar `data/zero.db` y volver a levantar la app.
 
 ## ABM de referencia E0-06: Nacionalidad
 

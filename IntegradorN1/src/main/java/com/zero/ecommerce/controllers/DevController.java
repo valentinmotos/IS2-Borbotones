@@ -41,6 +41,10 @@ public class DevController {
         opciones.put("TRANSFERENCIA", "Transferencia");
         opciones.put("BILLETERA_VIRTUAL", "Billetera virtual");
         model.addAttribute("opciones", opciones);
+        Map<String, Map<String, String>> grupos = new LinkedHashMap<>();
+        grupos.put("Argentina / Mendoza", Map.of("capital", "Capital", "maipu", "Maipú"));
+        grupos.put("Argentina / San Juan", Map.of("rivadavia", "Rivadavia"));
+        model.addAttribute("grupos", grupos);
         return "dev/componentes";
     }
 }
