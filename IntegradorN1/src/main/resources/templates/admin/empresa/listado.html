@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Configuración</span><span class="breadcrumb-separator">/</span><span>Empresa</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <div class="mb-3">
+                <a th:href="@{/admin/configuracion/empresa/nueva}" class="zero-button primary">Nueva empresa</a>
+            </div>
+            <div th:replace="~{fragments/tabla :: tablaRegistros(${encabezados}, ${empresas}, '/admin/configuracion/empresa')}"></div>
+        </div>
+        <th:block th:each="empresa : ${empresas}">
+            <div th:replace="~{fragments/modal-confirmar :: modal(${'eliminar-' + empresa.id}, 'Eliminar empresa',
+                 ${'¿Querés eliminar la empresa ' + empresa.nombre + '? También se dan de baja su dirección y sus contactos.'},
+                 ${'/admin/configuracion/empresa/' + empresa.id + '/eliminar'})}"></div>
+        </th:block>
+    </div>
+</body>
+</html>

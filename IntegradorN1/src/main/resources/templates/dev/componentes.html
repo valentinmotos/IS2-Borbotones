@@ -60,6 +60,17 @@
                 </section>
 
                 <section class="zero-panel mb-4">
+                    <h2>Clave y checkbox</h2>
+                    <p class="zero-component-description">La clave nunca se precarga; el checkbox envía "true" si está marcado.</p>
+                    <form th:action="@{/dev/componentes}" method="post" class="zero-form">
+                        <div th:replace="~{fragments/formulario :: campoClave('demo-clave', 'Clave', false, 'Dejala vacía para no cambiarla.')}"></div>
+                        <div th:replace="~{fragments/formulario :: campoCheckbox('demo-tls', 'Usar TLS', true)}"></div>
+                    </form>
+                    <code>&lt;div th:replace="~{fragments/formulario :: campoClave(${nombre}, ${etiqueta}, ${requerido}, ${ayuda})}"&gt;&lt;/div&gt;
+&lt;div th:replace="~{fragments/formulario :: campoCheckbox(${nombre}, ${etiqueta}, ${marcado})}"&gt;&lt;/div&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
                     <h2>Selección agrupada</h2>
                     <p class="zero-component-description">Select con opciones agrupadas, para elegir un registro según su padre.</p>
                     <form th:action="@{/dev/componentes}" method="post" class="zero-form">

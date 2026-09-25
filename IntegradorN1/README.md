@@ -75,6 +75,8 @@ La página `/dev/componentes` muestra todos los fragments funcionando dentro del
 | Badge de estado | `fragments/badge-estado :: badge(estado)` | `<span th:replace="~{fragments/badge-estado :: badge(${estado})}"></span>` |
 | Filtros | `fragments/filtros :: filtros(action)` | `<form th:replace="~{fragments/filtros :: filtros(${action})}"></form>` |
 | Filtro por selección | `fragments/filtros :: filtroSelect(action, nombre, etiqueta, opciones, seleccionado)` | `<form th:replace="~{fragments/filtros :: filtroSelect(${baseUrl}, 'pais', 'País', ${paises}, ${pais})}"></form>` |
+| Campo de clave | `fragments/formulario :: campoClave(nombre, etiqueta, requerido, ayuda)` | `<div th:replace="~{fragments/formulario :: campoClave('clave', 'Clave', false, 'Dejala vacía para no cambiarla.')}"></div>` |
+| Checkbox | `fragments/formulario :: campoCheckbox(nombre, etiqueta, marcado)` | `<div th:replace="~{fragments/formulario :: campoCheckbox('tls', 'Usar TLS', ${tls})}"></div>` |
 | Selección agrupada | `fragments/formulario :: campoSelectAgrupado(nombre, etiqueta, grupos, seleccionado, requerido)` | `<div th:replace="~{fragments/formulario :: campoSelectAgrupado('departamentoId', 'Departamento', ${grupos}, ${departamentoId}, true)}"></div>` |
 | KPI | `fragments/kpi :: kpi(titulo, valor, descripcion, icono)` | `<article th:replace="~{fragments/kpi :: kpi(${titulo}, ${valor}, ${descripcion}, ${icono})}"></article>` |
 
@@ -174,6 +176,49 @@ Endpoints JSON públicos (solo registros activos; un id vacío o inexistente dev
 
 La página de prueba `/dev/direccion` guarda una dirección real y, al guardar, se recarga con `?id=` para
 mostrar los selects precargados.
+
+## Empresa, correo y envío E1-07
+
+**Configuración → Empresa** (`/admin/configuracion/empresa`, solo `JEFE`): ABM de la sede central y sus
+sucursales, con razón social, CUIT, tipo, dirección (fragment de E1-04), un correo y un teléfono.
+
+- El CUIT se valida con su dígito verificador (`utils/CuitUtils`), se acepta con o sin guiones y se guarda
+  como `XX-XXXXXXXX-X`. No puede repetirse entre empresas activas.
+- Hay **una sola `SEDE_CENTRAL`**: no se puede crear otra, pasarla a sucursal ni darla de baja.
+- La baja de una sucursal es lógica e incluye su dirección y sus contactos.
+- Los contactos usan `ContactoService`, que maneja toda la jerarquía `Contacto` (correo y teléfono).
+
+**Configuración → Correo** (`/admin/configuracion/correo`, solo `JEFE`): la cuenta SMTP de la sede central
+(servidor, puerto, correo, clave y TLS). La clave nunca se muestra; al editar, si se deja vacía se conserva.
+La clave se guarda sin cifrar en la base local (queda para la revisión de seguridad E5-06).
+
+El botón **Enviar correo de prueba** envía en el momento y muestra si el servidor lo aceptó o el error que
+devolvió (clave incorrecta, servidor inaccesible, etc.).
+
+### Enviar correos desde otro issue
+
+```java
+emailService.enviar(cliente.getCorreo(), "Tu compra fue confirmada", "compra-confirmada",
+        Map.of("orden", orden));
+```
+
+- Es `@Async`: vuelve enseguida y, si el envío falla, lo registra en el log sin romper la operación.
+- El template va en `templates/email/{nombre}.html`, decora `email/base.html` y pone su contenido en
+  `layout:fragment="contenido"` (ver `email/prueba.html`). **Los correos usan estilos inline y tablas**,
+  porque los clientes de correo ignoran el CSS externo: es la única excepción a la regla del template.
+- Todos los templates reciben `asunto` y `empresa` (razón social, dirección, correo y teléfono de la sede
+  central). No usar `@{...}` para links: en el envío no hay request; armar URLs absolutas.
+- El logo va embebido como `cid:logo`.
+
+### Probar el envío
+
+| Para qué | Configuración |
+|---|---|
+| Tests (`mvnw test`) | GreenMail levanta un SMTP en memoria en el puerto 3025; no sale nada de la máquina |
+| Prueba real / demo | Gmail: `smtp.gmail.com`, puerto `587`, TLS, correo de la cuenta y una **clave de aplicación** (requiere la verificación en 2 pasos) |
+
+El seeder carga "Zero Indumentaria Deportiva S.A." como sede central, pero **no** la configuración de
+correo, porque lleva credenciales reales: se carga desde la pantalla.
 
 ## ABM de referencia E0-06: Nacionalidad
 

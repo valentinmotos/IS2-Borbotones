@@ -27,7 +27,11 @@ import com.zero.ecommerce.entities.enums.RolUsuario;
 import com.zero.ecommerce.entities.enums.TipoEmpleado;
 import com.zero.ecommerce.entities.enums.TipoPago;
 import com.zero.ecommerce.exception.ErrorServiceException;
+import com.zero.ecommerce.dto.DireccionForm;
+import com.zero.ecommerce.entities.enums.TipoEmpresa;
+import com.zero.ecommerce.entities.enums.TipoTelefono;
 import com.zero.ecommerce.services.DepartamentoService;
+import com.zero.ecommerce.services.EmpresaService;
 import com.zero.ecommerce.services.LocalidadService;
 import com.zero.ecommerce.services.PaisService;
 import com.zero.ecommerce.services.ProvinciaService;
@@ -63,16 +67,18 @@ public class DataSeeder implements CommandLineRunner {
     private final ProvinciaService provinciaService;
     private final DepartamentoService departamentoService;
     private final LocalidadService localidadService;
+    private final EmpresaService empresaService;
 
     public DataSeeder(EntityManager entityManager, PasswordEncoder passwordEncoder, PaisService paisService,
             ProvinciaService provinciaService, DepartamentoService departamentoService,
-            LocalidadService localidadService) {
+            LocalidadService localidadService, EmpresaService empresaService) {
         this.entityManager = entityManager;
         this.passwordEncoder = passwordEncoder;
         this.paisService = paisService;
         this.provinciaService = provinciaService;
         this.departamentoService = departamentoService;
         this.localidadService = localidadService;
+        this.empresaService = empresaService;
     }
 
     @Override
@@ -237,8 +243,20 @@ public class DataSeeder implements CommandLineRunner {
         entityManager.persist(formaDePago);
     }
 
+    // E1-07: la empresa Zero como SEDE_CENTRAL. La configuración de correo no se carga porque
+    // lleva credenciales reales: se completa desde Configuración → Correo.
     private void cargarEmpresa() {
-        // E1-07: empresa Zero como SEDE_CENTRAL.
+        try {
+            DireccionForm direccion = new DireccionForm();
+            direccion.setCalle("Av. San Martín");
+            direccion.setNumeracion("1250");
+            direccion.setReferencia("Local a la calle");
+            direccion.setLocalidadId(localidadService.buscarLocalidadPorNombre("Ciudad de Mendoza").getId());
+            empresaService.crearEmpresa("Zero Indumentaria Deportiva S.A.", "30-71567890-6", TipoEmpresa.SEDE_CENTRAL,
+                    direccion, "contacto@zero.com.ar", "+54 261 423-1250", TipoTelefono.FIJO);
+        } catch (ErrorServiceException e) {
+            throw new IllegalStateException("Los datos iniciales de la empresa no son válidos: " + e.getMessage(), e);
+        }
     }
 
     private void cargarCatalogo() {

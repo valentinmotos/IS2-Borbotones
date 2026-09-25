@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!--
+  Layout de todos los correos. Los estilos van inline y la estructura con tablas porque los clientes
+  de correo (Gmail, Outlook) ignoran las hojas de estilo externas. Es la única excepción a la regla
+  "sin estilos inline" del proyecto. Variables que agrega EmailService: asunto y empresa (Map con
+  razonSocial, direccion, correo y telefono de la sede central).
+  Uso: <html layout:decorate="~{email/base}"> y el contenido en layout:fragment="contenido".
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${asunto}">Zero</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #efefef; font-family: Arial, Helvetica, sans-serif; color: #171717;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #efefef;">
+        <tr>
+            <td align="center" style="padding: 24px 12px;">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
+                       style="width: 100%; max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden;">
+                    <tr>
+                        <td align="center" style="background-color: #0b0b0b; padding: 28px 24px;">
+                            <img src="cid:logo" alt="Zero" width="96" style="display: block; width: 96px; height: auto; border: 0;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #d7ff3f; height: 4px; line-height: 4px; font-size: 4px;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 32px 32px 24px 32px; font-size: 15px; line-height: 1.6; color: #171717;">
+                            <div layout:fragment="contenido">Contenido del correo.</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #171717; padding: 20px 32px; font-size: 12px; line-height: 1.6; color: #bdbdbd;">
+                            <strong style="color: #f5f5f5;" th:text="${empresa.razonSocial}">Zero</strong><br>
+                            <span th:if="${empresa.direccion != null}" th:text="${empresa.direccion}">Dirección</span><br th:if="${empresa.direccion != null}">
+                            <span th:if="${empresa.correo != null}" th:text="${empresa.correo}">correo@zero.com.ar</span>
+                            <span th:if="${empresa.correo != null and empresa.telefono != null}"> · </span>
+                            <span th:if="${empresa.telefono != null}" th:text="${empresa.telefono}">261 000-0000</span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

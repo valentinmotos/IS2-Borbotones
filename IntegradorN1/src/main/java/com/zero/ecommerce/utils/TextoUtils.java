@@ -2,13 +2,22 @@ package com.zero.ecommerce.utils;
 
 import java.text.Normalizer;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 /**
  * Funciones de texto reutilizables por los services. No tiene estado: solo métodos estáticos.
  */
 public final class TextoUtils {
 
+    // Formato básico usuario@dominio.ext: la verificación real es que el correo llegue.
+    private static final Pattern CORREO = Pattern.compile("[^@\\s]+@[^@\\s]+\\.[^@\\s]+");
+
     private TextoUtils() {
+    }
+
+    /** true si el texto tiene formato de correo electrónico (usuario@dominio.ext). */
+    public static boolean esCorreoValido(String correo) {
+        return correo != null && CORREO.matcher(correo.strip()).matches();
     }
 
     /**

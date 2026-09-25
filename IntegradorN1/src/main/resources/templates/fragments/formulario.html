@@ -37,6 +37,19 @@
             </optgroup>
         </select>
     </div>
+    <!-- Clave: nunca se precarga. ayuda (puede ser null) se muestra debajo, por ejemplo "Dejala vacía para no cambiarla". -->
+    <div th:fragment="campoClave(nombre, etiqueta, requerido, ayuda)" class="form-group">
+        <label th:for="${nombre}" th:text="${etiqueta}">Clave</label>
+        <input th:id="${nombre}" th:name="${nombre}" type="password" class="form-control" autocomplete="new-password"
+               th:required="${requerido}">
+        <small th:if="${ayuda != null}" class="form-text text-muted" th:text="${ayuda}">Ayuda</small>
+    </div>
+    <!-- Checkbox: envía "true" si está marcado; en el controller usar @RequestParam(defaultValue = "false"). -->
+    <div th:fragment="campoCheckbox(nombre, etiqueta, marcado)" class="form-check mb-3">
+        <input th:id="${nombre}" th:name="${nombre}" type="checkbox" class="form-check-input" value="true"
+               th:checked="${marcado}">
+        <label th:for="${nombre}" class="form-check-label" th:text="${etiqueta}">Opción</label>
+    </div>
     <div th:fragment="acciones(cancelarUrl)" class="zero-form-actions">
         <button type="submit" class="zero-button primary">Guardar</button>
         <a th:href="@{${cancelarUrl}}" class="zero-button secondary">Cancelar</a>
