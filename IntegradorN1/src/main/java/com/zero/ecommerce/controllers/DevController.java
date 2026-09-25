@@ -15,10 +15,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.zero.ecommerce.dto.DireccionForm;
 import com.zero.ecommerce.dto.FilaTablaDTO;
+import com.zero.ecommerce.dto.FilaTablaImagenDTO;
 import com.zero.ecommerce.entities.Direccion;
 import com.zero.ecommerce.entities.Imagen;
 import com.zero.ecommerce.entities.enums.TipoImagen;
 import com.zero.ecommerce.exception.ErrorServiceException;
+import com.zero.ecommerce.services.CategoriaService;
 import com.zero.ecommerce.services.DireccionService;
 import com.zero.ecommerce.services.ImagenService;
 
@@ -27,10 +29,13 @@ public class DevController {
 
     private final DireccionService direccionService;
     private final ImagenService imagenService;
+    private final CategoriaService categoriaService;
 
-    public DevController(DireccionService direccionService, ImagenService imagenService) {
+    public DevController(DireccionService direccionService, ImagenService imagenService,
+            CategoriaService categoriaService) {
         this.direccionService = direccionService;
         this.imagenService = imagenService;
+        this.categoriaService = categoriaService;
     }
 
     @GetMapping("/dev/ejemplo-publico")
@@ -65,6 +70,10 @@ public class DevController {
         grupos.put("Argentina / Mendoza", Map.of("capital", "Capital", "maipu", "Maipú"));
         grupos.put("Argentina / San Juan", Map.of("rivadavia", "Rivadavia"));
         model.addAttribute("grupos", grupos);
+        model.addAttribute("encabezadosImagen", List.of("Código", "Nombre", "Talle"));
+        model.addAttribute("registrosImagen", List.of(
+            new FilaTablaImagenDTO("demo-3", "Remera Zero Pro (talle M)", null, List.of("REM-PRO-M", "Remera Zero Pro", "M"))));
+        model.addAttribute("arbolCategorias", categoriaService.listarArbolActivo());
         return "dev/componentes";
     }
 

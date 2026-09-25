@@ -50,6 +50,26 @@
                th:checked="${marcado}">
         <label th:for="${nombre}" class="form-check-label" th:text="${etiqueta}">Opción</label>
     </div>
+    <!-- Switch: envía "true" si está encendido; en el controller usar @RequestParam(defaultValue = "false"). -->
+    <div th:fragment="campoSwitch(nombre, etiqueta, marcado)" class="form-group">
+        <label th:for="${nombre}" class="zero-switch">
+            <input th:id="${nombre}" th:name="${nombre}" type="checkbox" class="zero-switch-input" value="true"
+                   th:checked="${marcado}">
+            <span class="zero-switch-slider" aria-hidden="true"></span>
+            <span th:text="${etiqueta}">Opción</span>
+        </label>
+    </div>
+    <!-- Texto de varias líneas, por ejemplo una descripción. -->
+    <div th:fragment="campoTextoLargo(nombre, etiqueta, valor, requerido)" class="form-group">
+        <label th:for="${nombre}" th:text="${etiqueta}">Campo</label>
+        <textarea th:id="${nombre}" th:name="${nombre}" class="form-control" rows="4" th:text="${valor}"
+                  th:required="${requerido}"></textarea>
+    </div>
+    <!-- Dato que se muestra pero no se edita ni se envía (no tiene name), por ejemplo un código. -->
+    <div th:fragment="campoSoloLectura(nombre, etiqueta, valor)" class="form-group">
+        <label th:for="${nombre}" th:text="${etiqueta}">Campo</label>
+        <input th:id="${nombre}" type="text" class="form-control" th:value="${valor}" readonly>
+    </div>
     <div th:fragment="acciones(cancelarUrl)" class="zero-form-actions">
         <button type="submit" class="zero-button primary">Guardar</button>
         <a th:href="@{${cancelarUrl}}" class="zero-button secondary">Cancelar</a>

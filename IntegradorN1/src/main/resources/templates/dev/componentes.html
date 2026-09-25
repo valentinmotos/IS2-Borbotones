@@ -80,6 +80,56 @@
                 </section>
 
                 <section class="zero-panel mb-4">
+                    <h2>Switch, texto largo y solo lectura</h2>
+                    <p class="zero-component-description">El switch envía "true" si está encendido; el campo de solo lectura no se envía.</p>
+                    <form th:action="@{/dev/componentes}" method="post" class="zero-form">
+                        <div th:replace="~{fragments/formulario :: campoSoloLectura('demo-codigo', 'Código', 'REM-PRO-M')}"></div>
+                        <div th:replace="~{fragments/formulario :: campoTextoLargo('demo-descripcion', 'Descripción', 'Remera de entrenamiento.', true)}"></div>
+                        <div th:replace="~{fragments/formulario :: campoSwitch('demo-oferta', 'En oferta', true)}"></div>
+                    </form>
+                    <code>&lt;div th:replace="~{fragments/formulario :: campoSoloLectura(${nombre}, ${etiqueta}, ${valor})}"&gt;&lt;/div&gt;
+&lt;div th:replace="~{fragments/formulario :: campoTextoLargo(${nombre}, ${etiqueta}, ${valor}, ${requerido})}"&gt;&lt;/div&gt;
+&lt;div th:replace="~{fragments/formulario :: campoSwitch(${nombre}, ${etiqueta}, ${marcado})}"&gt;&lt;/div&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
+                    <h2>Categoría y subcategoría</h2>
+                    <p class="zero-component-description">Selects en cascada: al elegir la categoría quedan solo sus subcategorías.</p>
+                    <form th:action="@{/dev/componentes}" method="post" class="zero-form">
+                        <div class="form-row">
+                            <th:block th:replace="~{fragments/categoria :: cascada(${arbolCategorias}, 'demo-categoria', 'demo-subcategoria', null, null, false)}"></th:block>
+                        </div>
+                    </form>
+                    <code>&lt;div class="form-row"&gt;
+    &lt;th:block th:replace="~{fragments/categoria :: cascada(${arbol}, 'categoriaId', 'subCategoriaId', ${categoriaId}, ${subCategoriaId}, false)}"&gt;&lt;/th:block&gt;
+&lt;/div&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
+                    <h2>Tabla con imagen</h2>
+                    <p class="zero-component-description">Como la tabla de registros, con una miniatura en la primera columna.</p>
+                    <div th:replace="~{fragments/tabla :: tablaRegistrosImagen(${encabezadosImagen}, ${registrosImagen}, '/dev/componentes')}"></div>
+                    <code>&lt;div th:replace="~{fragments/tabla :: tablaRegistrosImagen(${encabezados}, ${registros}, ${baseUrl})}"&gt;&lt;/div&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
+                    <h2>Barra de filtros</h2>
+                    <p class="zero-component-description">Varios filtros sueltos en una grilla de cuatro columnas, con los botones debajo.</p>
+                    <form th:action="@{/dev/componentes}" method="get" class="zero-filters zero-filters-amplio">
+                        <div th:replace="~{fragments/filtros :: campoFiltroTexto('demo-buscar', 'Buscar', null, 'Código o nombre')}"></div>
+                        <div th:replace="~{fragments/filtros :: campoFiltroSelect('demo-tipo-filtro', 'Tipo de pago', ${opciones}, null)}"></div>
+                        <div class="zero-filters-acciones">
+                            <button type="submit" class="zero-button primary">Buscar</button>
+                        </div>
+                    </form>
+                    <code>&lt;form th:action="@{...}" method="get" class="zero-filters zero-filters-amplio"&gt;
+    &lt;div th:replace="~{fragments/filtros :: campoFiltroTexto(${nombre}, ${etiqueta}, ${valor}, ${ayuda})}"&gt;&lt;/div&gt;
+    &lt;div th:replace="~{fragments/filtros :: campoFiltroSelect(${nombre}, ${etiqueta}, ${opciones}, ${seleccionado})}"&gt;&lt;/div&gt;
+    &lt;div class="zero-filters-acciones"&gt;&lt;button type="submit" class="zero-button primary"&gt;Buscar&lt;/button&gt;&lt;/div&gt;
+&lt;/form&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
                     <h2>Modal de confirmación</h2>
                     <p class="zero-component-description">Confirmación reutilizable para una baja lógica.</p>
                     <button type="button" class="zero-button primary" data-toggle="modal" data-target="#modal-demo">Abrir modal</button>

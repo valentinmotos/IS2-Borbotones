@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Catálogo</span><span class="breadcrumb-separator">/</span><span>Productos</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <form th:action="@{/admin/productos}" method="get" class="zero-filters zero-filters-amplio mb-4">
+                <div th:replace="~{fragments/filtros :: campoFiltroTexto('buscar', 'Buscar', ${buscar}, 'Código o nombre')}"></div>
+                <th:block th:replace="~{fragments/categoria :: cascada(${arbolCategorias}, 'categoria', 'subcategoria',
+                          ${categoria}, ${subcategoria}, true)}"></th:block>
+                <div th:replace="~{fragments/filtros :: campoFiltroSelect('oferta', 'Oferta', ${opcionesOferta}, ${oferta})}"></div>
+                <div class="zero-filters-acciones">
+                    <button type="submit" class="zero-button primary">Buscar</button>
+                    <a th:href="@{/admin/productos}" class="zero-button secondary">Limpiar</a>
+                </div>
+            </form>
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                <a th:href="@{/admin/productos/nuevo}" class="zero-button primary">Nuevo producto</a>
+                <span class="text-muted"
+                      th:text="${totalProductos == 1 ? '1 producto' : totalProductos + ' productos'}">0 productos</span>
+            </div>
+            <div th:replace="~{fragments/tabla :: tablaRegistrosImagen(${encabezados}, ${productos}, '/admin/productos')}"></div>
+            <div th:if="${totalPaginas > 1}" class="mt-4">
+                <nav th:replace="~{fragments/paginacion :: paginacion(${paginaActual}, ${totalPaginas}, ${paginacionUrl})}"></nav>
+            </div>
+        </div>
+        <th:block th:each="producto : ${productos}">
+            <div th:replace="~{fragments/modal-confirmar :: modal(${'eliminar-' + producto.id}, 'Eliminar producto',
+                 ${'¿Querés eliminar el producto ' + producto.nombre + '? Deja de mostrarse en el catálogo.'},
+                 ${'/admin/productos/' + producto.id + '/eliminar'})}"></div>
+        </th:block>
+    </div>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!--
+      Selects en cascada categoría → subcategoría. arbol: List<CategoriaArbolDTO> (CategoriaService.listarArbolActivo()).
+      nombreCategoria y nombreSubCategoria son los name de cada select; los ids precargan la selección y pueden ser null.
+      esFiltro = true: para una barra de filtros (opción "Todas", no obligatorios).
+      esFiltro = false: para un formulario, obligatorios; incluirlo dentro de un div.form-row (cada select ocupa media fila).
+      Sin JavaScript la subcategoría muestra todas las opciones agrupadas por categoría; static/js/categoria-cascada.js
+      deja solo las de la categoría elegida.
+    -->
+    <th:block th:fragment="cascada(arbol, nombreCategoria, nombreSubCategoria, categoriaId, subCategoriaId, esFiltro)">
+        <div class="form-group" th:classappend="${esFiltro ? '' : 'col-md-6'}">
+            <label th:for="${nombreCategoria}">Categoría</label>
+            <select th:id="${nombreCategoria}" th:name="${nombreCategoria}" class="form-control"
+                    th:attr="data-subcategorias=${'#' + nombreSubCategoria}" th:required="${!esFiltro}">
+                <option value="" th:text="${esFiltro ? 'Todas' : 'Seleccionar categoría'}">Todas</option>
+                <option th:each="categoria : ${arbol}" th:value="${categoria.id}" th:text="${categoria.nombre}"
+                        th:selected="${categoria.id == categoriaId}">Categoría</option>
+            </select>
+        </div>
+        <div class="form-group" th:classappend="${esFiltro ? '' : 'col-md-6'}">
+            <label th:for="${nombreSubCategoria}">Subcategoría</label>
+            <select th:id="${nombreSubCategoria}" th:name="${nombreSubCategoria}" class="form-control"
+                    th:required="${!esFiltro}">
+                <option value="" th:text="${esFiltro ? 'Todas' : 'Seleccionar subcategoría'}">Todas</option>
+                <optgroup th:each="categoria : ${arbol}" th:label="${categoria.nombre}"
+                          th:attr="data-categoria=${categoria.id}">
+                    <option th:each="subCategoria : ${categoria.subCategorias}" th:value="${subCategoria.id}" th:selected="${subCategoria.id == subCategoriaId}"
+                            th:text="${subCategoria.nombre}">Subcategoría</option>
+                </optgroup>
+            </select>
+        </div>
+        <script th:src="@{/js/categoria-cascada.js}" defer></script>
+    </th:block>
+</body>
+</html>
