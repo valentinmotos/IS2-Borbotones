@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
+<body>
+        <section layout:fragment="content" class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-7 col-lg-5">
+                    <div class="card shadow-sm">
+                        <div class="card-body p-4 p-md-5">
+                            <h1 class="h3 mb-3 text-center">Activar cuenta</h1>
+                            <p class="text-center text-muted mb-4">Ingresá el código de 6 dígitos que te enviamos por correo.</p>
+                            <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+                            <!-- "Reenviar código" usa el mismo correo: envía el formulario a /registro/reenviar sin exigir el código. -->
+                            <form th:action="@{/registro/activar}" method="post" class="zero-form">
+                                <div th:replace="~{fragments/formulario :: campoTexto('correo', 'Correo electrónico', ${correo}, true)}"></div>
+                                <div th:replace="~{fragments/formulario :: campoTexto('codigo', 'Código de activación', null, true)}"></div>
+                                <button type="submit" class="zero-button primary w-100 mt-2">Activar cuenta</button>
+                                <button type="submit" class="zero-button secondary w-100 mt-3" th:formaction="@{/registro/reenviar}"
+                                        formnovalidate>Reenviar código</button>
+                            </form>
+                            <p class="text-center mt-4 mb-0"><a th:href="@{/login}">Volver a ingresar</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+</body>
+</html>

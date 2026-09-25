@@ -36,6 +36,7 @@
                     <div class="right-top-bar flex-w h-full">
                         <a href="#" class="flex-c-m trans-04 p-lr-25">Ofertas</a>
                         <a th:href="@{/login}" class="flex-c-m trans-04 p-lr-25" sec:authorize="isAnonymous()">Ingresar</a>
+                        <a th:href="@{/registro}" class="flex-c-m trans-04 p-lr-25" sec:authorize="isAnonymous()">Crear cuenta</a>
                         <span class="flex-c-m trans-04 p-lr-25" sec:authorize="isAuthenticated()" th:text="${nombreMostrar}">Usuario</span>
                         <a th:href="@{/admin}" class="flex-c-m trans-04 p-lr-25" sec:authorize="hasAnyRole('JEFE', 'ADMINISTRATIVO')">Ir al panel</a>
                     </div>
@@ -141,6 +142,7 @@
                     <div class="right-top-bar flex-w h-full">
                         <a href="#" class="flex-c-m p-lr-10 trans-04">Ofertas</a>
                         <a th:href="@{/login}" class="flex-c-m p-lr-10 trans-04" sec:authorize="isAnonymous()">Ingresar</a>
+                        <a th:href="@{/registro}" class="flex-c-m p-lr-10 trans-04" sec:authorize="isAnonymous()">Crear cuenta</a>
                         <span class="flex-c-m p-lr-10 trans-04" sec:authorize="isAuthenticated()" th:text="${nombreMostrar}">Usuario</span>
                         <a th:href="@{/admin}" class="flex-c-m p-lr-10 trans-04" sec:authorize="hasAnyRole('JEFE', 'ADMINISTRATIVO')">Ir al panel</a>
                     </div>

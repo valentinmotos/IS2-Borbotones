@@ -9,7 +9,11 @@
                             <h1 class="h3 mb-4 text-center">Ingresar a Zero</h1>
                             <div th:replace="~{fragments/mensajes :: mensajes}"></div>
                             <form th:replace="~{fragments/formulario :: formularioLogin('/login')}"></form>
-                            <p class="text-center mt-4 mb-0"><a th:href="@{/}">Volver al inicio</a></p>
+                            <p th:if="${param.error != null and param.error[0] == 'activacion'}" class="text-center mt-4 mb-0">
+                                <a th:href="@{/registro/activar}">Activar mi cuenta o pedir un código nuevo</a>
+                            </p>
+                            <p class="text-center mt-4 mb-2">¿No tenés cuenta? <a th:href="@{/registro}">Registrate</a></p>
+                            <p class="text-center mb-0"><a th:href="@{/}">Volver al inicio</a></p>
                         </div>
                     </div>
                 </div>
