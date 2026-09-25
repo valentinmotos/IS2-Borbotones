@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.zero.ecommerce.entities.Departamento;
 import com.zero.ecommerce.entities.Localidad;
 import com.zero.ecommerce.exception.ErrorServiceException;
 import com.zero.ecommerce.services.DepartamentoService;
@@ -118,9 +119,6 @@ public class LocalidadController {
         model.addAttribute("action", id == null ? BASE : BASE + "/" + id + "/editar");
         model.addAttribute("cancelarUrl", BASE);
         model.addAttribute("id", id);
-        model.addAttribute("padreCampo", "departamentoId");
-        model.addAttribute("padreEtiqueta", "País / Provincia / Departamento");
-        model.addAttribute("padreGrupos", departamentoService.listarOpcionDepartamentoActivoAgrupado());
         model.addAttribute("conCodigoPostal", true);
         if (!model.containsAttribute("nombre")) {
             model.addAttribute("nombre", nombre);
@@ -131,7 +129,21 @@ public class LocalidadController {
         if (!model.containsAttribute("padreSeleccionado")) {
             model.addAttribute("padreSeleccionado", departamentoId);
         }
+        precargarCascada(model, (String) model.getAttribute("padreSeleccionado"));
         return "admin/ubicacion/formulario";
+    }
+
+    /** País → provincia → departamento en cascada: se precargan a partir del departamento elegido. */
+    private void precargarCascada(Model model, String departamentoId) {
+        model.addAttribute("conCascada", true);
+        try {
+            Departamento departamento = departamentoService.buscarDepartamento(departamentoId);
+            model.addAttribute("cascadaDepartamentoId", departamento.getId());
+            model.addAttribute("cascadaProvinciaId", departamento.getProvincia().getId());
+            model.addAttribute("cascadaPaisId", departamento.getProvincia().getPais().getId());
+        } catch (ErrorServiceException e) {
+            // Sin departamento válido (alta o id inexistente): los selects arrancan vacíos.
+        }
     }
 
     private void errorFormulario(RedirectAttributes flash, String nombre, String codigoPostal,

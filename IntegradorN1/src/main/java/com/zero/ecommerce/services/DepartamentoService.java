@@ -1,6 +1,5 @@
 package com.zero.ecommerce.services;
 
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -137,23 +136,6 @@ public class DepartamentoService {
         listarDepartamentoActivo(null).forEach(d -> opciones.put(d.getId(),
                 d.getNombre() + " (" + d.getProvincia().getNombre() + ")"));
         return opciones;
-    }
-
-    /**
-     * Opciones agrupadas para elegir país → provincia → departamento en un solo select:
-     * "País / Provincia" → (id → nombre del departamento).
-     */
-    public Map<String, Map<String, String>> listarOpcionDepartamentoActivoAgrupado() {
-        Map<String, Map<String, String>> grupos = new LinkedHashMap<>();
-        listarDepartamentoActivo(null).stream()
-                .sorted(Comparator.comparing((Departamento d) -> d.getProvincia().getPais().getNombre())
-                        .thenComparing(d -> d.getProvincia().getNombre())
-                        .thenComparing(Departamento::getNombre))
-                .forEach(d -> grupos
-                        .computeIfAbsent(d.getProvincia().getPais().getNombre() + " / " + d.getProvincia().getNombre(),
-                                k -> new LinkedHashMap<>())
-                        .put(d.getId(), d.getNombre()));
-        return grupos;
     }
 
     private boolean sinFiltro(String id) {

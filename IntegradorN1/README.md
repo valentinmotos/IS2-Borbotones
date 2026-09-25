@@ -129,7 +129,7 @@ El `DataSeeder` crea 4 categorías y 12 subcategorías en total cuando la base e
 Entrar a **Configuración → Ubicación** (`/admin/configuracion/ubicacion`, solo `JEFE`). Hay una
 pestaña por entidad: Países, Provincias, Departamentos y Localidades. Cada listado se filtra por su
 padre (`?pais=`, `?provincia=`, `?departamento=`) y el botón de alta precarga el padre filtrado.
-En Localidades el departamento se elige en un select agrupado por "País / Provincia".
+En Localidades el departamento se elige con los selects en cascada país → provincia → departamento de E1-04.
 
 - El nombre es obligatorio y no puede repetirse dentro del mismo padre. La comparación ignora
   mayúsculas, tildes y espacios en los extremos: "Guaymallén" y "GUAYMALLEN" son duplicados.
@@ -141,6 +141,39 @@ En Localidades el departamento se elige en un select agrupado por "País / Provi
 El seeder carga Argentina, sus 24 provincias (incluida CABA), los 18 departamentos de Mendoza y las
 principales localidades de Gran Mendoza con su código postal. **Solo corre con la base vacía:** para
 cargar estos datos sobre una base existente hay que borrar `data/zero.db` y volver a levantar la app.
+
+## Fragment de dirección E1-04
+
+Se incluye con una línea dentro de un `<form class="zero-form">`:
+
+```html
+<div th:replace="~{fragments/direccion :: direccion(${direccionForm})}"></div>
+```
+
+- `direccionForm` es un `DireccionForm`: `new DireccionForm()` en el alta, `DireccionForm.desde(direccion)`
+  al editar, o el mismo objeto recibido con `@ModelAttribute` para volver al formulario después de un error.
+- Envía `calle`, `numeracion`, `barrio`, `manzanaPiso`, `casaDepartamento`, `referencia` y `localidadId`
+  (más `paisId`, `provinciaId` y `departamentoId`, que solo sirven para precargar los selects).
+- Los selects se cargan en cascada con `static/js/ubicacion-cascada.js`. El código postal se completa solo
+  al elegir la localidad y no se envía.
+- `DireccionService` tiene `crearDireccion` (devuelve la `Direccion` para asociarla), `modificarDireccion`,
+  `eliminarDireccion` (baja lógica), `buscarDireccion` y `buscarDireccionPorCalleNumeracion`. Calle,
+  numeración y una localidad activa son obligatorias; el resto es opcional y se guarda `null` si viene vacío.
+- Para solo los selects, sin el resto de la dirección:
+  `fragments/ubicacion :: cascada(hasta, paisId, provinciaId, departamentoId, localidadId)`, con `hasta`
+  igual a `'departamento'` o `'localidad'`. Lo usa el formulario de Localidad.
+
+Endpoints JSON públicos (solo registros activos; un id vacío o inexistente devuelve `[]`):
+
+| Endpoint | Devuelve |
+|---|---|
+| `GET /api/ubicacion/paises` | `[{id, nombre}]` |
+| `GET /api/ubicacion/provincias?pais={id}` | `[{id, nombre}]` |
+| `GET /api/ubicacion/departamentos?provincia={id}` | `[{id, nombre}]` |
+| `GET /api/ubicacion/localidades?departamento={id}` | `[{id, nombre, codigoPostal}]` |
+
+La página de prueba `/dev/direccion` guarda una dirección real y, al guardar, se recarga con `?id=` para
+mostrar los selects precargados.
 
 ## ABM de referencia E0-06: Nacionalidad
 

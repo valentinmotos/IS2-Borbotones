@@ -16,9 +16,9 @@
                     <div th:replace="~{fragments/formulario :: campoSelect(${padreCampo}, ${padreEtiqueta},
                          ${padreOpciones}, ${padreSeleccionado}, true)}"></div>
                 </th:block>
-                <th:block th:if="${padreGrupos != null}">
-                    <div th:replace="~{fragments/formulario :: campoSelectAgrupado(${padreCampo}, ${padreEtiqueta},
-                         ${padreGrupos}, ${padreSeleccionado}, true)}"></div>
+                <th:block th:if="${conCascada}">
+                    <div th:replace="~{fragments/ubicacion :: cascada('departamento', ${cascadaPaisId},
+                         ${cascadaProvinciaId}, ${cascadaDepartamentoId}, null)}"></div>
                 </th:block>
                 <div th:replace="~{fragments/formulario :: campoTexto('nombre', 'Nombre', ${nombre}, true)}"></div>
                 <th:block th:if="${conCodigoPostal}">

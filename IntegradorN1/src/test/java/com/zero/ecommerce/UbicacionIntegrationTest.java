@@ -82,8 +82,10 @@ class UbicacionIntegrationTest {
         Departamento maipu = departamentoService.buscarDepartamentoPorNombre("Maipú");
         mvc.perform(get(LOCALIDADES + "/nueva").session(sesionJefe))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("<optgroup label=\"Argentina / Mendoza\">")))
-                .andExpect(content().string(containsString("value=\"" + maipu.getId() + "\"")));
+                .andExpect(content().string(containsString("data-ubicacion=\"pais\"")))
+                .andExpect(content().string(containsString("data-ubicacion=\"provincia\"")))
+                .andExpect(content().string(containsString("name=\"departamentoId\"")))
+                .andExpect(content().string(not(containsString("data-ubicacion=\"localidad\""))));
 
         mvc.perform(postConCsrf(LOCALIDADES, LOCALIDADES + "/nueva").param("nombre", " Fray Luis Beltrán ")
                 .param("codigoPostal", "5531").param("departamentoId", maipu.getId()))
@@ -112,7 +114,9 @@ class UbicacionIntegrationTest {
                 .andReturn();
         mvc.perform(get(LOCALIDADES + "/nueva").session(sesionJefe).flashAttrs(resultado.getFlashMap()))
                 .andExpect(content().string(containsString("value=\"GUTIERREZ\"")))
-                .andExpect(content().string(containsString("value=\"" + maipu.getId() + "\" selected")));
+                .andExpect(content().string(containsString("data-seleccionado=\"" + maipu.getId() + "\"")))
+                .andExpect(content().string(containsString(
+                        "data-seleccionado=\"" + maipu.getProvincia().getId() + "\"")));
         assertThat(localidadRepository.count()).isEqualTo(cantidad);
     }
 
@@ -122,7 +126,9 @@ class UbicacionIntegrationTest {
         String editar = LOCALIDADES + "/" + russell.getId() + "/editar";
         mvc.perform(get(editar).session(sesionJefe))
                 .andExpect(content().string(containsString("value=\"Russell\"")))
-                .andExpect(content().string(containsString("value=\"5517\"")));
+                .andExpect(content().string(containsString("value=\"5517\"")))
+                .andExpect(content().string(containsString(
+                        "data-seleccionado=\"" + russell.getDepartamento().getId() + "\"")));
         mvc.perform(postConCsrf(editar, editar).param("nombre", "Russell").param("codigoPostal", "M5517ABC")
                 .param("departamentoId", russell.getDepartamento().getId()))
                 .andExpect(flash().attribute("exito", "Localidad modificada correctamente."));
