@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body>
-    <nav th:fragment="paginacion(actual, total, baseUrl)" class="zero-pagination" aria-label="Paginación">
-        <a th:class="${actual <= 1 ? 'page-link disabled' : 'page-link'}" th:href="${actual <= 1 ? '#' : baseUrl + '?page=' + (actual - 1)}">Anterior</a>
+    <!-- baseUrl puede traer filtros (?categoria=...): en ese caso la página se agrega con &page=. -->
+    <nav th:fragment="paginacion(actual, total, baseUrl)" class="zero-pagination" aria-label="Paginación"
+         th:with="url=${baseUrl + (#strings.contains(baseUrl, '?') ? '&amp;page=' : '?page=')}">
+        <a th:class="${actual <= 1 ? 'page-link disabled' : 'page-link'}" th:href="${actual <= 1 ? '#' : url + (actual - 1)}">Anterior</a>
         <span th:each="pagina : ${#numbers.sequence(1, total)}">
-            <a th:class="${pagina == actual ? 'page-link active' : 'page-link'}" th:href="${baseUrl + '?page=' + pagina}" th:text="${pagina}">1</a>
+            <a th:class="${pagina == actual ? 'page-link active' : 'page-link'}" th:href="${url + pagina}" th:text="${pagina}">1</a>
         </span>
-        <a th:class="${actual >= total ? 'page-link disabled' : 'page-link'}" th:href="${actual >= total ? '#' : baseUrl + '?page=' + (actual + 1)}">Siguiente</a>
+        <a th:class="${actual >= total ? 'page-link disabled' : 'page-link'}" th:href="${actual >= total ? '#' : url + (actual + 1)}">Siguiente</a>
     </nav>
 </body>
 </html>

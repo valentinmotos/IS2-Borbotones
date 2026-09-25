@@ -79,10 +79,18 @@ La página `/dev/componentes` muestra todos los fragments funcionando dentro del
 | Checkbox | `fragments/formulario :: campoCheckbox(nombre, etiqueta, marcado)` | `<div th:replace="~{fragments/formulario :: campoCheckbox('tls', 'Usar TLS', ${tls})}"></div>` |
 | Selección agrupada | `fragments/formulario :: campoSelectAgrupado(nombre, etiqueta, grupos, seleccionado, requerido)` | `<div th:replace="~{fragments/formulario :: campoSelectAgrupado('departamentoId', 'Departamento', ${grupos}, ${departamentoId}, true)}"></div>` |
 | KPI | `fragments/kpi :: kpi(titulo, valor, descripcion, icono)` | `<article th:replace="~{fragments/kpi :: kpi(${titulo}, ${valor}, ${descripcion}, ${icono})}"></article>` |
+| Switch | `fragments/formulario :: campoSwitch(nombre, etiqueta, marcado)` | `<div th:replace="~{fragments/formulario :: campoSwitch('enOferta', 'En oferta', ${enOferta})}"></div>` |
+| Texto largo | `fragments/formulario :: campoTextoLargo(nombre, etiqueta, valor, requerido)` | `<div th:replace="~{fragments/formulario :: campoTextoLargo('descripcion', 'Descripción', ${descripcion}, true)}"></div>` |
+| Solo lectura | `fragments/formulario :: campoSoloLectura(nombre, etiqueta, valor)` | `<div th:replace="~{fragments/formulario :: campoSoloLectura('codigo', 'Código', ${codigo})}"></div>` |
+| Tabla con imagen | `fragments/tabla :: tablaRegistrosImagen(encabezados, registros, baseUrl)` | `<div th:replace="~{fragments/tabla :: tablaRegistrosImagen(${encabezados}, ${productos}, '/admin/productos')}"></div>` |
+| Campo de filtro | `fragments/filtros :: campoFiltroTexto(nombre, etiqueta, valor, ayuda)` y `campoFiltroSelect(nombre, etiqueta, opciones, seleccionado)` | `<div th:replace="~{fragments/filtros :: campoFiltroTexto('buscar', 'Buscar', ${buscar}, 'Código o nombre')}"></div>` |
+| Categoría → subcategoría | `fragments/categoria :: cascada(arbol, nombreCategoria, nombreSubCategoria, categoriaId, subCategoriaId, esFiltro)` | `<th:block th:replace="~{fragments/categoria :: cascada(${arbol}, 'categoriaId', 'subCategoriaId', ${categoriaId}, ${subCategoriaId}, false)}"></th:block>` |
 
 `mensajes` consume los atributos flash existentes `error` y `exito`; no crea un mecanismo nuevo. `tabla` recibe encabezados y filas como listas, y sus URLs pueden ser `null` para ocultar acciones. La tabla muestra un estado vacío cuando `filas` está vacío. `formulario` recibe errores ya calculados por el backend y no valida reglas de negocio.
 
-El modal usa Bootstrap y recibe una URL de confirmación configurable. La paginación es solamente visual y genera enlaces con `?page=`; no implementa paginación backend. Los estados de `badge-estado` corresponden a `EstadoOrdenCompra` y `EstadoFactura`: `PENDIENTE_COMPLETAR`, `PENDIENTE_PAGO`, `PENDIENTE_ENVIO`, `PENDIENTE_ENTREGA`, `ENTREGADO`, `PAGADA`, `ANULADA` y `SIN_DEFINIR`.
+El modal usa Bootstrap y recibe una URL de confirmación configurable. La paginación es solamente visual y genera enlaces con `?page=` (o `&page=` si `baseUrl` ya trae filtros); no implementa paginación backend.
+
+`tablaRegistrosImagen` recibe `dto.FilaTablaImagenDTO(id, nombre, imagenId, celdas)`; con `imagenId` nulo muestra `img/default-image.png`. Los campos de filtro van dentro de un `<form method="get" class="zero-filters zero-filters-amplio">` (cuatro por fila), con los botones en un `<div class="zero-filters-acciones">`. `categoria :: cascada` recibe `CategoriaService.listarArbolActivo()`: con `esFiltro = true` muestra "Todas" y no es obligatorio; con `false` se incluye dentro de un `div.form-row`. Sin JavaScript muestra todas las subcategorías agrupadas por categoría, y `static/js/categoria-cascada.js` deja solo las de la categoría elegida. Los estados de `badge-estado` corresponden a `EstadoOrdenCompra` y `EstadoFactura`: `PENDIENTE_COMPLETAR`, `PENDIENTE_PAGO`, `PENDIENTE_ENVIO`, `PENDIENTE_ENTREGA`, `ENTREGADO`, `PAGADA`, `ANULADA` y `SIN_DEFINIR`.
 
 ## Reglas de código (resumen)
 
@@ -125,6 +133,49 @@ La sección `/admin/categorias` permite listar las categorías con subcategoría
 ### Seed inicial
 
 El `DataSeeder` crea 4 categorías y 12 subcategorías en total cuando la base está vacía, sin duplicarlas si la aplicación se reinicia sobre una base ya cargada.
+
+## ABM de productos E2-01
+
+Entrar a **Productos** en el panel (`/admin/productos`, `JEFE` y `ADMINISTRATIVO`).
+
+- **Listado:** miniatura, código, nombre, talle, subcategoría, oferta, precio vigente y stock actual, de a
+  10 por página. Se filtra por categoría → subcategoría, por oferta y con un buscador por código o nombre
+  (sin importar mayúsculas ni tildes). La paginación conserva los filtros.
+- **Precio y stock:** por ahora se muestran como "Sin precio" y 0. Se conectan en `ProductoService.armarFila`
+  cuando se mergeen E2-03 (`VigenciaPrecioService.buscarPrecioVigente`) y E2-02 (`StockService.buscarStockActual`).
+- **Formulario:** código, nombre, talle, descripción, categoría → subcategoría, switch de oferta e imagen
+  (fragment `input-imagen` de E1-06, con vista previa).
+
+### Validaciones y reglas
+
+- Código, nombre, descripción, talle y subcategoría son obligatorios; la imagen es obligatoria al crear.
+  Al editar, si no se elige un archivo, se conserva la imagen actual.
+- El código no puede repetirse entre productos activos (sin importar mayúsculas). **No se edita:**
+  `modificarProducto` del diagrama no lo recibe, así que en la edición se muestra de solo lectura.
+- La subcategoría y su categoría tienen que estar activas.
+- La baja es lógica. Una vez dado de baja, el código se puede volver a usar.
+- Los datos se validan antes de guardar la imagen y todo corre en una transacción: si algo falla, no queda
+  una imagen suelta. Si falla la validación, el formulario vuelve con los datos cargados (el archivo hay
+  que elegirlo de nuevo).
+
+### Para otros issues
+
+- `crearProducto(codigo, nombre, descripcion, talle, enOferta, idImagen, idSubCategoria)` recibe una imagen ya
+  guardada con `ImagenService.crearImagen`: es la que usa el seeder de E2-02. El formulario usa
+  `crearProductoConImagen` / `modificarProductoConImagen`, que reciben el `MultipartFile`.
+- `listarProductoActivo(texto, idCategoria, idSubCategoria, enOferta)` devuelve los activos filtrados (cada
+  filtro puede ser `null`). `buscarProductoPorCodigo` y `buscarProductoPorNombre` devuelven solo activos;
+  como cada talle es un producto, `buscarProductoPorNombre` devuelve el primero por talle.
+- El seeder no carga productos: los de demostración son de E2-02.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/admin/productos?buscar=&categoria=&subcategoria=&oferta=&page=` | Listar activos con filtros |
+| GET | `/admin/productos/nuevo` | Formulario de alta |
+| POST | `/admin/productos` | Crear (multipart) |
+| GET | `/admin/productos/{id}/editar` | Formulario de edición |
+| POST | `/admin/productos/{id}/editar` | Modificar (multipart) |
+| POST | `/admin/productos/{id}/eliminar` | Baja lógica |
 
 ## ABM de ubicación E1-03
 

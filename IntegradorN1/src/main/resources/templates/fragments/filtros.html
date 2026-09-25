@@ -34,5 +34,21 @@
         </div>
         <button type="submit" class="zero-button primary">Filtrar</button>
     </form>
+    <!-- Campos sueltos para una barra con varios filtros: se incluyen dentro de un
+         <form method="get" class="zero-filters zero-filters-amplio">, con los botones en un div.zero-filters-acciones. -->
+    <div th:fragment="campoFiltroTexto(nombre, etiqueta, valor, ayuda)" class="form-group">
+        <label th:for="${'filtro-' + nombre}" th:text="${etiqueta}">Buscar</label>
+        <input th:id="${'filtro-' + nombre}" th:name="${nombre}" type="search" class="form-control"
+               th:value="${valor}" th:placeholder="${ayuda}">
+    </div>
+    <!-- opciones: Map valor → texto visible; la opción vacía muestra todos. -->
+    <div th:fragment="campoFiltroSelect(nombre, etiqueta, opciones, seleccionado)" class="form-group">
+        <label th:for="${'filtro-' + nombre}" th:text="${etiqueta}">Filtro</label>
+        <select th:id="${'filtro-' + nombre}" th:name="${nombre}" class="form-control">
+            <option value="">Todos</option>
+            <option th:each="opcion : ${opciones}" th:value="${opcion.key}" th:text="${opcion.value}"
+                    th:selected="${opcion.key == seleccionado}">Opción</option>
+        </select>
+    </div>
 </body>
 </html>
