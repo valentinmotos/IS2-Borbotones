@@ -10,8 +10,10 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 
+import com.zero.ecommerce.entities.Categoria;
 import com.zero.ecommerce.entities.Nacionalidad;
 import com.zero.ecommerce.entities.Empleado;
+import com.zero.ecommerce.entities.SubCategoria;
 import com.zero.ecommerce.entities.FormaDePago;
 import com.zero.ecommerce.entities.Usuario;
 import com.zero.ecommerce.entities.enums.RolUsuario;
@@ -39,6 +41,7 @@ public class DataSeeder implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         if (!baseVacia()) {
+            cargarUsuariosFaltantes();
             log.info("La base ya tiene datos: no se ejecuta el seeder.");
             return;
         }
@@ -52,6 +55,13 @@ public class DataSeeder implements CommandLineRunner {
         cargarCatalogo();
         cargarProveedores();
         cargarVentas();
+    }
+
+    private void cargarUsuariosFaltantes() {
+        cargarEmpleadoSiNoExiste("Jefa", "Zero", "jefe@zero.com.ar", "Jefe123!",
+                TipoEmpleado.JEFE, RolUsuario.JEFE);
+        cargarEmpleadoSiNoExiste("Administrativo", "Zero", "admin@zero.com.ar", "Admin123!",
+                TipoEmpleado.ADMINISTRATIVO, RolUsuario.ADMINISTRATIVO);
     }
 
     /**
@@ -103,8 +113,38 @@ public class DataSeeder implements CommandLineRunner {
         entityManager.persist(empleado);
     }
 
+    private void cargarEmpleadoSiNoExiste(String nombre, String apellido, String correo, String clave,
+            TipoEmpleado tipoEmpleado, RolUsuario rol) {
+        boolean existe = entityManager.createQuery(
+                "select count(u) from Usuario u where lower(u.nombreUsuario) = lower(:nombreUsuario)", Long.class)
+                .setParameter("nombreUsuario", correo)
+                .getSingleResult() > 0;
+        if (!existe) {
+            cargarEmpleado(nombre, apellido, correo, clave, tipoEmpleado, rol);
+            log.info("Usuario demo creado: {}", correo);
+        }
+    }
+
     private void cargarCategorias() {
-        // E1-05: 4 categorías con 3 subcategorías cada una.
+        String[][] categorias = {
+                { "Hombres", "Ropa", "Calzado", "Accesorios" },
+                { "Mujeres", "Ropa", "Calzado", "Accesorios" },
+                { "Niños", "Ropa", "Calzado", "Accesorios" },
+                { "Accesorios", "Bolsos", "Joyas", "Marroquinería" }
+        };
+
+        for (String[] datos : categorias) {
+            Categoria categoria = new Categoria();
+            categoria.setNombre(datos[0]);
+            entityManager.persist(categoria);
+
+            for (int i = 1; i < datos.length; i++) {
+                SubCategoria subCategoria = new SubCategoria();
+                subCategoria.setCategoria(categoria);
+                subCategoria.setNombre(datos[i]);
+                entityManager.persist(subCategoria);
+            }
+        }
     }
 
     private void cargarFormasDePago() {
