@@ -40,6 +40,8 @@ class ProductoServiceTest {
     private SubCategoriaService subCategoriaService;
     @Mock
     private ImagenService imagenService;
+    @Mock
+    private VigenciaPrecioService vigenciaPrecioService;
     @InjectMocks
     private ProductoService service;
 

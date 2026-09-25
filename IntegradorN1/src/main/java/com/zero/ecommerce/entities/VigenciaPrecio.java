@@ -23,4 +23,17 @@ public class VigenciaPrecio extends BaseEntity {
 
     @ManyToOne
     private Producto producto;
+
+    public boolean estaVigente(LocalDate fecha) {
+        if (fecha == null || fechaDesde == null) {
+            return false;
+        }
+        if (!fecha.isBefore(fechaDesde)) {
+            if (fechaHasta == null) {
+                return true;
+            }
+            return !fecha.isAfter(fechaHasta);
+        }
+        return false;
+    }
 }

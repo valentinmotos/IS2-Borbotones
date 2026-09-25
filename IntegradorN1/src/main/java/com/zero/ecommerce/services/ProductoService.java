@@ -1,6 +1,8 @@
 package com.zero.ecommerce.services;
 
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -14,6 +16,7 @@ import com.zero.ecommerce.dto.FilaTablaImagenDTO;
 import com.zero.ecommerce.entities.Imagen;
 import com.zero.ecommerce.entities.Producto;
 import com.zero.ecommerce.entities.SubCategoria;
+import com.zero.ecommerce.entities.VigenciaPrecio;
 import com.zero.ecommerce.entities.enums.TipoImagen;
 import com.zero.ecommerce.exception.ErrorServiceException;
 import com.zero.ecommerce.repositories.ProductoRepository;
@@ -28,20 +31,21 @@ public class ProductoService {
     private static final int LARGO_MAXIMO_TALLE = 20;
     private static final int LARGO_MAXIMO_DESCRIPCION = 2000;
 
-    // Hasta que se mergeen E2-03 (VigenciaPrecioService.buscarPrecioVigente) y
-    // E2-02 (StockService.buscarStockActual), el listado muestra estos valores fijos.
+    // Se muestran como respaldo cuando todavía no hay precio vigente o hasta integrar el stock.
     private static final String SIN_PRECIO = "Sin precio";
     private static final String SIN_STOCK = "0";
 
     private final ProductoRepository repository;
     private final SubCategoriaService subCategoriaService;
     private final ImagenService imagenService;
+    private final VigenciaPrecioService vigenciaPrecioService;
 
     public ProductoService(ProductoRepository repository, SubCategoriaService subCategoriaService,
-            ImagenService imagenService) {
+            ImagenService imagenService, VigenciaPrecioService vigenciaPrecioService) {
         this.repository = repository;
         this.subCategoriaService = subCategoriaService;
         this.imagenService = imagenService;
+        this.vigenciaPrecioService = vigenciaPrecioService;
     }
 
     /** Alta con una imagen ya guardada (por ejemplo, desde el seeder con ImagenService). */
@@ -256,14 +260,29 @@ public class ProductoService {
     private FilaTablaImagenDTO armarFila(Producto producto) {
         SubCategoria subCategoria = producto.getSubCategoria();
         String imagenId = producto.getImagen() == null ? null : producto.getImagen().getId();
+        String precioFormateado = SIN_PRECIO;
+        try {
+            VigenciaPrecio vigente = vigenciaPrecioService.buscarVigenciaVigente(producto.getId());
+            if (vigente != null) {
+                precioFormateado = formatearPrecio(vigente.getPrecio());
+            }
+        } catch (ErrorServiceException e) {
+            // Un producto nuevo puede no tener todavía una vigencia de precio.
+        }
         return new FilaTablaImagenDTO(producto.getId(), describirProducto(producto), imagenId, List.of(
                 producto.getCodigo(),
                 producto.getNombre(),
                 producto.getTalle(),
                 subCategoria.getCategoria().getNombre() + " / " + subCategoria.getNombre(),
                 producto.isEnOferta() ? "Sí" : "No",
-                SIN_PRECIO,
+                precioFormateado,
                 SIN_STOCK));
+    }
+
+    private String formatearPrecio(double valor) {
+        NumberFormat formato = NumberFormat.getNumberInstance(new Locale("es", "AR"));
+        formato.setMaximumFractionDigits(0);
+        return "$" + formato.format(valor);
     }
 
     private String describirProducto(Producto producto) {
