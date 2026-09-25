@@ -179,46 +179,99 @@ mostrar los selects precargados.
 
 ## Empresa, correo y envío E1-07
 
+### Empresa
+
 **Configuración → Empresa** (`/admin/configuracion/empresa`, solo `JEFE`): ABM de la sede central y sus
 sucursales, con razón social, CUIT, tipo, dirección (fragment de E1-04), un correo y un teléfono.
 
 - El CUIT se valida con su dígito verificador (`utils/CuitUtils`), se acepta con o sin guiones y se guarda
-  como `XX-XXXXXXXX-X`. No puede repetirse entre empresas activas.
-- Hay **una sola `SEDE_CENTRAL`**: no se puede crear otra, pasarla a sucursal ni darla de baja.
+  como `XX-XXXXXXXX-X`. No puede repetirse entre empresas activas. CUITs válidos para probar:
+  `30-71234567-1`, `20-12345678-6`.
+- Hay **una sola `SEDE_CENTRAL`**: no se puede crear otra, pasarla a sucursal ni darla de baja. Es la
+  empresa que envía los correos y a la que pertenece el stock.
 - La baja de una sucursal es lógica e incluye su dirección y sus contactos.
-- Los contactos usan `ContactoService`, que maneja toda la jerarquía `Contacto` (correo y teléfono).
+- Los contactos usan `ContactoService`, que maneja toda la jerarquía `Contacto` (correo y teléfono) y
+  se reutiliza en Proveedores (E3-01).
+- El seeder carga "Zero Indumentaria Deportiva S.A." (CUIT `30-71567890-6`) como sede central.
 
-**Configuración → Correo** (`/admin/configuracion/correo`, solo `JEFE`): la cuenta SMTP de la sede central
-(servidor, puerto, correo, clave y TLS). La clave nunca se muestra; al editar, si se deja vacía se conserva.
-La clave se guarda sin cifrar en la base local (queda para la revisión de seguridad E5-06).
+### Cómo se envían los correos
 
-El botón **Enviar correo de prueba** envía en el momento y muestra si el servidor lo aceptó o el error que
-devolvió (clave incorrecta, servidor inaccesible, etc.).
+```
+Zero ──(SMTP, usuario y clave)──► servidor SMTP (Gmail) ──► bandeja del destinatario
+```
+
+La app arma el correo (template Thymeleaf + logo) y lo entrega a un **servidor SMTP externo** con
+Jakarta Mail (`spring-boot-starter-mail`). El servidor es el que lo reparte a la bandeja del destinatario.
+Java no reparte correos por su cuenta: **sin un servidor SMTP configurado no sale ningún correo**.
+
+- El proveedor no está en el código: el servidor, puerto, usuario, clave y TLS se cargan en
+  **Configuración → Correo** (`/admin/configuracion/correo`, solo `JEFE`) y se guardan en la base.
+  Cambiar de Gmail a otro proveedor (Brevo, SendGrid, Mailgun, Amazon SES) es cambiar esos datos.
+- `EmailService` arma el `JavaMailSender` en cada envío con esa configuración: un cambio en la pantalla
+  aplica sin reiniciar.
+- La configuración **no la carga el seeder**, porque lleva credenciales reales. Como cada integrante tiene
+  su propia base (`data/zero.db`), **cada uno la carga una vez en la suya**. Hace falta internet.
+- La clave nunca se muestra en la pantalla; al editar, si se deja vacía se conserva la guardada. Se guarda
+  sin cifrar en la base local (queda para la revisión de seguridad E5-06).
+
+### Configurar Gmail (gratis)
+
+1. Usar una cuenta de Gmail **del proyecto** (por ejemplo `zero.tienda.tp@gmail.com`), no una personal:
+   todos los correos salen con esa cuenta como remitente.
+2. En https://myaccount.google.com/security activar la **Verificación en 2 pasos**.
+3. En https://myaccount.google.com/apppasswords crear una **clave de aplicación** (nombre: "Zero").
+   Google muestra 16 letras una sola vez: copiarlas. **No es la contraseña de la cuenta**: Gmail no deja
+   que una aplicación entre con la contraseña normal.
+4. En **Configuración → Correo** cargar:
+
+| Campo | Valor |
+|---|---|
+| Servidor SMTP | `smtp.gmail.com` |
+| Puerto | `587` |
+| Correo | la cuenta de Gmail |
+| Clave | las 16 letras de la clave de aplicación, sin espacios |
+| Usar TLS | marcado |
+
+5. Guardar y usar **Enviar correo de prueba**. Es sincrónico a propósito: la pantalla muestra si Gmail lo
+   aceptó o el error que devolvió. Si no llega, revisar spam.
+
+Una cuenta de Gmail común permite unos **500 destinatarios por día**, suficiente para el TP. Para una
+tienda real se usaría un proveedor de correo transaccional, sin cambiar código.
+
+| Error en la prueba | Causa probable |
+|---|---|
+| `535 ... Username and Password not accepted` | Se usó la contraseña de la cuenta en lugar de la clave de aplicación, o la clave se revocó |
+| `Connection refused` / `connect timed out` | Sin internet, puerto o servidor mal escrito, o un firewall bloquea el puerto 587 |
+| `Todavía no se configuró el correo de la empresa.` | Falta guardar la cuenta de envío |
 
 ### Enviar correos desde otro issue
 
 ```java
-emailService.enviar(cliente.getCorreo(), "Tu compra fue confirmada", "compra-confirmada",
-        Map.of("orden", orden));
+// Ejemplo de E4-05: los datos se pasan ya armados (ver la advertencia de abajo).
+emailService.enviar(usuario.getNombreUsuario(), "Tu compra fue confirmada", "compra-confirmada",
+        Map.of("nombre", cliente.getNombre(), "identificador", orden.getIdentificadorCompra(),
+                "total", orden.getTotal()));
 ```
 
-- Es `@Async`: vuelve enseguida y, si el envío falla, lo registra en el log sin romper la operación.
+- Es `@Async`: vuelve enseguida y, si el envío falla, lo registra en el log sin romper la operación que
+  lo llamó (la compra se confirma igual aunque Gmail no responda).
+- **Pasar valores simples o DTOs, no entidades con relaciones perezosas.** El envío corre en otro hilo,
+  sin la sesión de Hibernate: si el template recorre, por ejemplo, `orden.detalles`, falla con
+  `LazyInitializationException` y el correo no sale (solo queda el error en el log).
 - El template va en `templates/email/{nombre}.html`, decora `email/base.html` y pone su contenido en
-  `layout:fragment="contenido"` (ver `email/prueba.html`). **Los correos usan estilos inline y tablas**,
+  `layout:fragment="contenido"` (copiar `email/prueba.html`). **Los correos usan estilos inline y tablas**,
   porque los clientes de correo ignoran el CSS externo: es la única excepción a la regla del template.
 - Todos los templates reciben `asunto` y `empresa` (razón social, dirección, correo y teléfono de la sede
-  central). No usar `@{...}` para links: en el envío no hay request; armar URLs absolutas.
-- El logo va embebido como `cid:logo`.
+  central) sin que haya que pasarlos. El logo va embebido como `cid:logo`.
+- **Links dentro del correo** (por ejemplo "Activá tu cuenta" en E2-05): no usar `@{...}`, porque en el
+  envío no hay request. Armar la URL absoluta y pasarla como variable. Un link a `localhost:8080` solo
+  abre en la máquina donde corre la app: para la demo alcanza.
 
-### Probar el envío
+### Probar sin enviar correos reales
 
-| Para qué | Configuración |
-|---|---|
-| Tests (`mvnw test`) | GreenMail levanta un SMTP en memoria en el puerto 3025; no sale nada de la máquina |
-| Prueba real / demo | Gmail: `smtp.gmail.com`, puerto `587`, TLS, correo de la cuenta y una **clave de aplicación** (requiere la verificación en 2 pasos) |
-
-El seeder carga "Zero Indumentaria Deportiva S.A." como sede central, pero **no** la configuración de
-correo, porque lleva credenciales reales: se carga desde la pantalla.
+Los tests (`mvnw test`) usan **GreenMail**, un servidor SMTP en memoria en el puerto 3025 (dependencia
+solo de test): verifican el envío, el HTML y el logo sin que salga nada de la máquina. Ver
+`CorreoIntegrationTest` y `EmailAsyncIntegrationTest`.
 
 ## ABM de referencia E0-06: Nacionalidad
 
