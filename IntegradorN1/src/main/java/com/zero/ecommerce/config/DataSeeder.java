@@ -1,7 +1,12 @@
 package com.zero.ecommerce.config;
 
+import com.zero.ecommerce.entities.Departamento;
+import com.zero.ecommerce.entities.Pais;
+import com.zero.ecommerce.entities.Provincia;
+import com.zero.ecommerce.services.UbicacionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,6 +66,9 @@ public class DataSeeder implements CommandLineRunner {
         return true;
     }
 
+    @Autowired
+    private UbicacionService ubicacionService;
+
     private void cargarUbicacion() {
         // E1-03: Argentina, provincias, departamentos de Mendoza y localidades de Gran Mendoza.
         for (String nombre : new String[] { "Argentina", "Bolivia", "Brasil", "Chile",
@@ -69,6 +77,27 @@ public class DataSeeder implements CommandLineRunner {
             nacionalidad.setNombre(nombre);
             entityManager.persist(nacionalidad);
         }
+
+        Pais argentina = ubicacionService.crearPais("Argentina");
+        Pais brasil = ubicacionService.crearPais("Brasil");
+        Pais chile = ubicacionService.crearPais("Chile");
+        Pais uruguay = ubicacionService.crearPais("Uruguay");
+
+        Provincia mendoza = ubicacionService.crearProvincia("Mendoza", argentina.getId());
+        Provincia buenosAires = ubicacionService.crearProvincia("Buenos Aires", argentina.getId());
+        Provincia cordoba = ubicacionService.crearProvincia("Córdoba", argentina.getId());
+        Provincia santaFe = ubicacionService.crearProvincia("Santa Fe", argentina.getId());
+
+        Departamento capital = ubicacionService.crearDepartamento("Capital", mendoza.getId());
+        Departamento godoyCruz = ubicacionService.crearDepartamento("Godoy Cruz", mendoza.getId());
+        Departamento guaymallen = ubicacionService.crearDepartamento("Guaymallén", mendoza.getId());
+        Departamento maipu = ubicacionService.crearDepartamento("Maipú", mendoza.getId());
+
+        ubicacionService.crearLocalidad("Ciudad de Mendoza", "5500", capital.getId());
+        ubicacionService.crearLocalidad("San Martín", "5500", capital.getId());
+        ubicacionService.crearLocalidad("Sarmiento", "5500", capital.getId());
+        ubicacionService.crearLocalidad("Plaza Independencia", "5500", capital.getId());
+
     }
 
     private void cargarUsuarios() {

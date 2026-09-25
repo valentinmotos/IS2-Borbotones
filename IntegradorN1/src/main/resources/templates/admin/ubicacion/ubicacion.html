@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+
+<body>
+
+<div layout:fragment="breadcrumb">
+
+    <span>Configuración</span>
+    <span class="breadcrumb-separator">/</span>
+    <span>Ubicaciones</span>
+
+</div>
+
+<div layout:fragment="content">
+
+    <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+
+    <div class="zero-panel">
+
+        <div class="mb-3">
+
+            <a th:href="@{/admin/ubicaciones/nueva}"
+               class="zero-button primary">
+                Nueva localidad
+            </a>
+
+        </div>
+
+        <table class="table">
+
+            <thead>
+            <tr>
+                <th>Localidad</th>
+                <th>Código Postal</th>
+                <th>Departamento</th>
+                <th>Provincia</th>
+                <th>País</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+
+            <tbody>
+
+            <tr th:each="localidad : ${localidades}">
+
+                <td th:text="${localidad.nombre}">
+                    Maipú
+                </td>
+
+                <td th:text="${localidad.codigoPostal}">
+                    5515
+                </td>
+
+                <td th:text="${localidad.departamento != null
+                    ? localidad.departamento.nombre
+                    : '-'}">
+                    Maipú
+                </td>
+
+                <td th:text="${localidad.departamento != null
+                    and localidad.departamento.provincia != null
+                    ? localidad.departamento.provincia.nombre
+                    : '-'}">
+                    Mendoza
+                </td>
+
+                <td th:text="${localidad.departamento != null
+                    and localidad.departamento.provincia != null
+                    and localidad.departamento.provincia.pais != null
+                    ? localidad.departamento.provincia.pais.nombre
+                    : '-'}">
+                    Argentina
+                </td>
+
+                <td>
+
+                    <a th:href="@{/admin/ubicaciones/{id}/editar(id=${localidad.id})}"
+                       class="zero-button">
+                        Modificar
+                    </a>
+
+                    <form th:action="@{/admin/ubicaciones/{id}/eliminar(id=${localidad.id})}"
+                          method="post"
+                          style="display: inline;">
+
+                        <button type="submit"
+                                class="zero-button"
+                                onclick="return confirm('¿Querés eliminar esta localidad?');">
+                            Eliminar
+                        </button>
+
+                    </form>
+
+                </td>
+
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(localidades)}">
+
+                <td colspan="6">
+                    No hay localidades registradas.
+                </td>
+
+            </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- MODALES DE ELIMINACIÓN -->
+
+    <th:block th:each="localidad : ${localidades}">
+
+        <div th:replace="~{fragments/modal-confirmar :: modal(
+            ${'eliminar-' + localidad.id},
+            'Eliminar localidad',
+            ${'¿Querés eliminar la localidad ' + localidad.nombre + '?'},
+            ${'/admin/ubicaciones/' + localidad.id + '/eliminar'}
+        )}">
+        </div>
+
+    </th:block>
+
+
+</div>
+
+
+<!-- JAVASCRIPT PARA ABRIR LOS MODALES -->
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        document.querySelectorAll(".btn-eliminar").forEach(function (boton) {
+
+            boton.addEventListener("click", function () {
+
+                const modalId = boton.getAttribute("data-modal-id");
+                const modal = document.getElementById(modalId);
+
+                if (modal) {
+                    modal.showModal();
+                }
+
+            });
+
+        });
+
+    });
+</script>
+
+</body>
+</html>
