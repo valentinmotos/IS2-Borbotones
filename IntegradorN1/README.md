@@ -64,6 +64,10 @@ La página `/dev/componentes` muestra todos los fragments funcionando dentro del
 | Mensajes | `fragments/mensajes :: mensajes` | `<div th:replace="~{fragments/mensajes :: mensajes}"></div>` |
 | Tabla | `fragments/tabla :: tabla(encabezados, filas, verUrl, editarUrl, eliminarUrl)` | `<div th:replace="~{fragments/tabla :: tabla(${encabezados}, ${filas}, ${verUrl}, ${editarUrl}, ${eliminarUrl})}"></div>` |
 | Formulario | `fragments/formulario :: formulario(action, method, errorNombre, errorEmail)` | `<form th:replace="~{fragments/formulario :: formulario(${action}, 'post', ${errorNombre}, ${errorEmail})}"></form>` |
+| Tabla de registros | `fragments/tabla :: tablaRegistros(encabezados, registros, baseUrl)` | `<div th:replace="~{fragments/tabla :: tablaRegistros(${encabezados}, ${registros}, ${baseUrl})}"></div>` |
+| Campo de texto | `fragments/formulario :: campoTexto(nombre, etiqueta, valor, requerido)` | `<div th:replace="~{fragments/formulario :: campoTexto('observacion', 'Observación', ${observacion}, true)}"></div>` |
+| Campo de selección | `fragments/formulario :: campoSelect(nombre, etiqueta, opciones, seleccionado, requerido)` | `<div th:replace="~{fragments/formulario :: campoSelect('tipoPago', 'Tipo de pago', ${opciones}, ${tipoPago}, true)}"></div>` |
+| Acciones de formulario | `fragments/formulario :: acciones(cancelarUrl)` | `<div th:replace="~{fragments/formulario :: acciones('/admin/...')}"></div>` |
 | Modal | `fragments/modal-confirmar :: modal(id, titulo, mensaje, actionUrl)` | `<div th:replace="~{fragments/modal-confirmar :: modal(${id}, ${titulo}, ${mensaje}, ${actionUrl})}"></div>` |
 | Paginación | `fragments/paginacion :: paginacion(actual, total, baseUrl)` | `<nav th:replace="~{fragments/paginacion :: paginacion(${paginaActual}, ${totalPaginas}, ${baseUrl})}"></nav>` |
 | Card de producto | `fragments/card-producto :: card(imagen, nombre, precio, enOferta)` | `<article th:replace="~{fragments/card-producto :: card(${imagen}, ${nombre}, ${precio}, ${enOferta})}"></article>` |
@@ -161,6 +165,14 @@ el ABM; no hace falta borrar información para probarlo.
    - `fragments/modal-confirmar :: modal(id, titulo, mensaje, actionUrl)`: incluir
      un modal por registro con ID `eliminar-{id}` y acción POST de baja.
    - `fragments/mensajes :: mensajes`: muestra `error` y `exito`.
+   Para ABM con varios campos (ver Formas de pago, E1-08):
+   - `fragments/tabla :: tablaRegistros(encabezados, registros, baseUrl)`: cada registro
+     es un `dto.FilaTablaDTO(id, nombre, celdas)`, armado en el service. `nombre` se
+     usa en las etiquetas de accesibilidad y en el modal; `celdas` son las columnas.
+   - `fragments/formulario :: campoTexto(...)`, `campoSelect(...)` y `acciones(cancelarUrl)`:
+     se incluyen dentro de un `<form th:action="@{...}" method="post" class="zero-form">`.
+     `campoSelect` recibe las opciones como `Map` valor → texto (usar `LinkedHashMap`
+     para respetar el orden).
    Para campos adicionales, extender primero el kit; las firmas anteriores de
    `tabla` y `formulario` siguen disponibles para los ejemplos de E0-03.
 6. Agregar datos iniciales al grupo correspondiente del `DataSeeder`, respetando

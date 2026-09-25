@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Configuración</span><span class="breadcrumb-separator">/</span><span>Formas de pago</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <div class="mb-3">
+                <a th:href="@{/admin/configuracion/formas-pago/nueva}" class="zero-button primary">Nueva forma de pago</a>
+            </div>
+            <div th:replace="~{fragments/tabla :: tablaRegistros(${encabezados}, ${formasDePago}, '/admin/configuracion/formas-pago')}"></div>
+        </div>
+        <th:block th:each="formaDePago : ${formasDePago}">
+            <div th:replace="~{fragments/modal-confirmar :: modal(${'eliminar-' + formaDePago.id}, 'Eliminar forma de pago',
+                 ${'¿Querés eliminar la forma de pago ' + formaDePago.nombre + '? No se va a ofrecer más en el checkout.'},
+                 ${'/admin/configuracion/formas-pago/' + formaDePago.id + '/eliminar'})}"></div>
+        </th:block>
+    </div>
+</body>
+</html>

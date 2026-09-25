@@ -14,9 +14,11 @@ import com.zero.ecommerce.entities.Categoria;
 import com.zero.ecommerce.entities.Nacionalidad;
 import com.zero.ecommerce.entities.Empleado;
 import com.zero.ecommerce.entities.SubCategoria;
+import com.zero.ecommerce.entities.FormaDePago;
 import com.zero.ecommerce.entities.Usuario;
 import com.zero.ecommerce.entities.enums.RolUsuario;
 import com.zero.ecommerce.entities.enums.TipoEmpleado;
+import com.zero.ecommerce.entities.enums.TipoPago;
 
 /**
  * Carga los datos iniciales cuando la base está vacía. Cada grupo de datos tiene su método,
@@ -146,7 +148,16 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void cargarFormasDePago() {
-        // E1-08: Efectivo, Transferencia y Mercado Pago.
+        cargarFormaDePago(TipoPago.EFECTIVO, "Efectivo");
+        cargarFormaDePago(TipoPago.TRANSFERENCIA, "Transferencia");
+        cargarFormaDePago(TipoPago.BILLETERA_VIRTUAL, "Mercado Pago");
+    }
+
+    private void cargarFormaDePago(TipoPago tipoPago, String observacion) {
+        FormaDePago formaDePago = new FormaDePago();
+        formaDePago.setTipoPago(tipoPago);
+        formaDePago.setObservacion(observacion);
+        entityManager.persist(formaDePago);
     }
 
     private void cargarEmpresa() {
