@@ -90,7 +90,16 @@ El detalle está en la sección "Convenciones técnicas" del plan. El revisor de
 
 ## Seguridad
 
-Por ahora Spring Security deja todo público (`SecurityConfig`, marcado con `TODO E1-01`). CSRF está activado, así que los formularios POST tienen que usar `th:action` para que Thymeleaf agregue el token. E1-01 agrega el login y las reglas por rol.
+El acceso se realiza desde `/login` con el correo de la cuenta. Las contraseñas se guardan con BCrypt. Las rutas `/admin/usuarios/**` y `/admin/configuracion/**` requieren el rol `JEFE`; el resto de `/admin/**` permite `JEFE` y `ADMINISTRATIVO`, y `/cliente/**` requiere `CLIENTE`. El resto del sitio es público.
+
+El seeder crea las siguientes cuentas para desarrollo cuando la base está vacía:
+
+| Rol | Correo | Contraseña |
+|---|---|---|
+| JEFE | `jefe@zero.com.ar` | `Jefe123!` |
+| ADMINISTRATIVO | `admin@zero.com.ar` | `Admin123!` |
+
+CSRF está activado; los formularios POST deben usar `th:action` para que Thymeleaf agregue el token.
 
 ## ABM de referencia E0-06: Nacionalidad
 

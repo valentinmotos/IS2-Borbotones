@@ -40,5 +40,18 @@
             <a th:attr="href=${action}" class="zero-button secondary">Cancelar</a>
         </div>
     </form>
+    <form th:fragment="formularioLogin(action)" th:action="@{${action}}" method="post" class="zero-form">
+        <div class="form-group mb-3">
+            <label for="username">Correo electrónico</label>
+            <input id="username" name="username" type="email" class="form-control"
+                   autocomplete="username" required autofocus>
+        </div>
+        <div class="form-group mb-4">
+            <label for="password">Contraseña</label>
+            <input id="password" name="password" type="password" class="form-control"
+                   autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="zero-button primary w-100">Ingresar</button>
+    </form>
 </body>
 </html>
