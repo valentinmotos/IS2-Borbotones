@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +21,13 @@ public class GlobalExceptionHandler {
     public String manejarErrorService(ErrorServiceException e, HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
         redirectAttributes.addFlashAttribute("error", e.getMessage());
+        return "redirect:" + paginaAnterior(request);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public String manejarUploadExcedido(MaxUploadSizeExceededException e, HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", "La imagen supera el tamaño máximo permitido de 2 MB.");
         return "redirect:" + paginaAnterior(request);
     }
 
