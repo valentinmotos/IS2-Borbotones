@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Configuración</span><span class="breadcrumb-separator">/</span><span>Categorías</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+
+        <div class="zero-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+                <h2 class="mb-0">Categorías</h2>
+                <a th:href="@{/admin/categorias/nueva}" class="zero-button primary">Nueva categoría</a>
+            </div>
+
+            <div th:if="${#lists.isEmpty(categorias)}" class="empty-state">
+                <p>No hay categorías cargadas.</p>
+            </div>
+
+            <div th:if="${!#lists.isEmpty(categorias)}" class="category-list">
+                <div th:each="categoria : ${categorias}" class="category-group">
+                    <div class="category-header">
+                        <div>
+                            <h3 th:text="${categoria.nombre}">Categoría</h3>
+                        </div>
+                        <div class="category-actions">
+                            <a th:href="@{/admin/categorias/{id}/editar(id=${categoria.id})}" class="zero-button secondary small">Editar</a>
+                            <button type="button" class="zero-button danger small" data-toggle="modal"
+                                    th:attr="data-target=${'#eliminar-categoria-' + categoria.id}">Eliminar</button>
+                            <a th:href="@{/admin/categorias/{categoriaId}/subcategorias/nueva(categoriaId=${categoria.id})}" class="zero-button primary small">Nueva subcategoría</a>
+                        </div>
+                    </div>
+
+                    <ul th:if="${!#lists.isEmpty(categoria.subCategorias)}" class="subcategory-list">
+                        <li th:each="subCategoria : ${categoria.subCategorias}">
+                            <span th:text="${subCategoria.nombre}">Subcategoría</span>
+                            <div class="subcategory-actions">
+                                <a th:href="@{/admin/categorias/{categoriaId}/subcategorias/{id}/editar(categoriaId=${categoria.id}, id=${subCategoria.id})}" class="btn btn-sm btn-outline-primary">Editar</a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal"
+                                        th:attr="data-target=${'#eliminar-subcategoria-' + subCategoria.id}">Eliminar</button>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div th:if="${#lists.isEmpty(categoria.subCategorias)}" class="category-empty">
+                        No hay subcategorías cargadas.
+                    </div>
+
+                    <div th:replace="~{fragments/modal-confirmar :: modal('eliminar-categoria-' + ${categoria.id}, 'Eliminar categoría',
+                         ${'¿Querés eliminar la categoría ' + categoria.nombre + '?'} , ${'/admin/categorias/' + categoria.id + '/eliminar'})}"></div>
+                    <th:block th:each="subCategoria : ${categoria.subCategorias}">
+                        <div th:replace="~{fragments/modal-confirmar :: modal('eliminar-subcategoria-' + ${subCategoria.id}, 'Eliminar subcategoría',
+                             ${'¿Querés eliminar la subcategoría ' + subCategoria.nombre + '?'} , ${'/admin/categorias/' + categoria.id + '/subcategorias/' + subCategoria.id + '/eliminar'})}"></div>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

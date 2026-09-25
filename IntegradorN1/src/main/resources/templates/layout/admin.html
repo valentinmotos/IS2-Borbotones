@@ -37,7 +37,7 @@
                     <a href="#" class="admin-nav-item" sec:authorize="hasRole('JEFE')">Usuarios</a>
                     <a href="#" class="admin-nav-item">Productos</a>
                     <a href="#" class="admin-nav-item">Precios</a>
-                    <a href="#" class="admin-nav-item">Categorías</a>
+                    <a th:href="@{/admin/categorias}" class="admin-nav-item" th:classappend="${menuActivo == 'categorias' ? 'active' : ''}">Categorías</a>
                     <a href="#" class="admin-nav-item">Proveedores</a>
                     <a href="#" class="admin-nav-item">Compras a proveedor</a>
                     <a href="#" class="admin-nav-item">Pedidos</a>

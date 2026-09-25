@@ -101,6 +101,22 @@ El seeder crea las siguientes cuentas para desarrollo cuando la base está vací
 
 CSRF está activado; los formularios POST deben usar `th:action` para que Thymeleaf agregue el token.
 
+## ABM de categorías y subcategorías E1-05
+
+La sección `/admin/categorias` permite listar las categorías con subcategorías, crear y editar tanto categorías como subcategorías, y eliminar/desactivar solo cuando no hay productos activos relacionados. El árbol activo se expone por `CategoriaService.listarArbolActivo()` y está listo para consumirlo en el catálogo público.
+
+### Validaciones y reglas
+
+- El nombre es obligatorio y se normaliza quitando espacios en los extremos.
+- No se permiten categorías duplicadas ni subcategorías duplicadas dentro de la misma categoría.
+- La baja de una categoría o subcategoría queda bloqueada si tiene productos activos relacionados.
+- El servicio valida la existencia de la categoría padre antes de guardar una subcategoría.
+- Los errores y los mensajes de éxito se muestran con flash messages y los formularios conservan los datos ingresados al fallar.
+
+### Seed inicial
+
+El `DataSeeder` crea 4 categorías y 12 subcategorías en total cuando la base está vacía, sin duplicarlas si la aplicación se reinicia sobre una base ya cargada.
+
 ## ABM de referencia E0-06: Nacionalidad
 
 Entrar a `/admin/nacionalidades` o a **Configuración → Nacionalidades** en el panel.
