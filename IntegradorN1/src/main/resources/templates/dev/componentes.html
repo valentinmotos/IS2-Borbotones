@@ -36,6 +36,30 @@
                 </section>
 
                 <section class="zero-panel mb-4">
+                    <h2>Tabla de registros</h2>
+                    <p class="zero-component-description">Listado de ABM con varias columnas, edición por fila y baja con modal.</p>
+                    <div th:replace="~{fragments/tabla :: tablaRegistros(${encabezadosRegistros}, ${registros}, '/dev/componentes')}"></div>
+                    <th:block th:each="registro : ${registros}">
+                        <div th:replace="~{fragments/modal-confirmar :: modal(${'eliminar-' + registro.id}, 'Confirmar baja',
+                             ${'¿Querés eliminar ' + registro.nombre + '?'}, @{/dev/componentes})}"></div>
+                    </th:block>
+                    <code>&lt;div th:replace="~{fragments/tabla :: tablaRegistros(${encabezados}, ${registros}, ${baseUrl})}"&gt;&lt;/div&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
+                    <h2>Campos de formulario</h2>
+                    <p class="zero-component-description">Texto, selección y acciones sueltos, para formularios de ABM con varios datos.</p>
+                    <form th:action="@{/dev/componentes}" method="post" class="zero-form">
+                        <div th:replace="~{fragments/formulario :: campoSelect('demo-tipo', 'Tipo de pago', ${opciones}, 'TRANSFERENCIA', true)}"></div>
+                        <div th:replace="~{fragments/formulario :: campoTexto('demo-observacion', 'Observación', 'Banco Nación', true)}"></div>
+                        <div th:replace="~{fragments/formulario :: acciones('/dev/componentes')}"></div>
+                    </form>
+                    <code>&lt;div th:replace="~{fragments/formulario :: campoSelect(${nombre}, ${etiqueta}, ${opciones}, ${seleccionado}, ${requerido})}"&gt;&lt;/div&gt;
+&lt;div th:replace="~{fragments/formulario :: campoTexto(${nombre}, ${etiqueta}, ${valor}, ${requerido})}"&gt;&lt;/div&gt;
+&lt;div th:replace="~{fragments/formulario :: acciones(${cancelarUrl})}"&gt;&lt;/div&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
                     <h2>Modal de confirmación</h2>
                     <p class="zero-component-description">Confirmación reutilizable para una baja lógica.</p>
                     <button type="button" class="zero-button primary" data-toggle="modal" data-target="#modal-demo">Abrir modal</button>
