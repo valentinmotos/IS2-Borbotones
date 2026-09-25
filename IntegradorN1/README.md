@@ -118,6 +118,36 @@ El seeder crea las siguientes cuentas para desarrollo cuando la base está vací
 
 CSRF está activado; los formularios POST deben usar `th:action` para que Thymeleaf agregue el token.
 
+## Registro y activación de cuenta E2-05
+
+Desde **Crear cuenta** (header o login) se entra a `/registro`: correo, contraseña y confirmación.
+
+- **Validaciones (RF01):** correo obligatorio y con formato válido, que no esté registrado (incluidas
+  cuentas dadas de baja o pendientes de activar), clave de al menos 8 caracteres y confirmación igual.
+  Si falla, el formulario vuelve con el correo, pero nunca con la clave.
+- **Alta:** `UsuarioService.registrarCliente(correo, clave, confirmacion)` crea el `Usuario` con rol
+  `CLIENTE`, la clave con BCrypt, el correo en minúsculas y un `codigoActivacion` aleatorio de 6 dígitos.
+- **Correo (RF02):** `email/activacion.html`, con el código y un botón a `/registro/activar?correo=...`.
+  Lo manda `enviarCodigoActivacion(usuario, urlActivacion)`, que es asincrónico.
+- **Activación:** en `/registro/activar` se ingresan correo y código. Si coinciden, `activarCuenta` pone el
+  código en `null` y redirige al login con "¡Tu cuenta quedó activada!". Antes de eso, el login muestra
+  "La cuenta todavía no está activada" con un link a esta página.
+- **Reenviar código:** botón en la misma página. `reenviarCodigoActivacion` genera un código nuevo y el
+  anterior deja de servir.
+- **Sin correo configurado:** el envío falla en el log, pero el código también queda en el log
+  (`Código de activación de ...: 123456`), así se puede activar la cuenta en desarrollo.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/registro` | Formulario de registro |
+| POST | `/registro` | Registrar cliente y mandar el código |
+| GET | `/registro/activar?correo=` | Formulario de activación |
+| POST | `/registro/activar` | Activar la cuenta |
+| POST | `/registro/reenviar` | Generar y mandar un código nuevo |
+
+Para otros issues: `UsuarioService.LARGO_MINIMO_CLAVE` es la regla de clave del registro (E2-06 y E2-08
+aplican la misma).
+
 ## ABM de categorías y subcategorías E1-05
 
 La sección `/admin/categorias` permite listar las categorías con subcategorías, crear y editar tanto categorías como subcategorías, y eliminar/desactivar solo cuando no hay productos activos relacionados. El árbol activo se expone por `CategoriaService.listarArbolActivo()` y está listo para consumirlo en el catálogo público.
