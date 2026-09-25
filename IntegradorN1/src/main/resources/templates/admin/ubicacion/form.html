@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+
+<body>
+
+<div layout:fragment="breadcrumb">
+    <span>Configuración</span>
+    <span class="breadcrumb-separator">/</span>
+    <span>Ubicaciones</span>
+</div>
+
+<div layout:fragment="content">
+
+    <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+
+    <div class="zero-panel">
+
+        <h2 th:text="${localidad != null ? 'Modificar localidad' : 'Nueva localidad'}">
+            Nueva localidad
+        </h2>
+
+        <!-- NAUDRAN TI RUTA ITI /admin/configuracion/ubicaciones -->
+        <form th:action="${localidad != null
+                ? '/admin/configuracion/ubicaciones/' + localidad.id + '/editar'
+                : '/admin/configuracion/ubicaciones/guardar'}"
+              method="post">
+
+            <!-- NOMBRE -->
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Localidad</label>
+                <input type="text"
+                       id="nombre"
+                       name="nombre"
+                       class="form-control"
+                       placeholder="Nombre de la localidad"
+                       required
+                       th:value="${localidad != null ? localidad.nombre : ''}">
+            </div>
+
+            <!-- CÓDIGO POSTAL -->
+            <div class="mb-3">
+                <label for="codigoPostal" class="form-label">Código postal</label>
+                <input type="text"
+                       id="codigoPostal"
+                       name="codigoPostal"
+                       class="form-control"
+                       placeholder="Código postal"
+                       required
+                       th:value="${localidad != null ? localidad.codigoPostal : ''}">
+            </div>
+
+            <!-- DEPARTAMENTO -->
+            <div class="mb-3">
+                <label for="departamentoId" class="form-label">Departamento</label>
+                <select id="departamentoId"
+                        name="departamentoId"
+                        class="form-select"
+                        required>
+                    <option value="">Seleccionar departamento</option>
+                    <option th:each="departamento : ${departamentos}"
+                            th:value="${departamento.id}"
+                            th:text="${departamento.nombre}"
+                            th:selected="${localidad != null
+                                and localidad.departamento != null
+                                and departamento.id == localidad.departamento.id}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- BOTONES -->
+            <div class="mt-4">
+                <button type="submit"
+                        class="zero-button primary"
+                        th:text="${localidad != null ? 'Guardar cambios' : 'Guardar'}">
+                    Guardar
+                </button>
+
+                <!-- NAUDRAN TI CANCELAR ITI /admin/configuracion/ubicaciones -->
+                <a th:href="@{/admin/configuracion/ubicaciones}"
+                   class="zero-button">
+                    Cancelar
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>

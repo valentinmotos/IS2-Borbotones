@@ -1,7 +1,15 @@
 package com.zero.ecommerce.config;
 
+import com.zero.ecommerce.entities.Departamento;
+import com.zero.ecommerce.entities.Pais;
+import com.zero.ecommerce.entities.Provincia;
+import com.zero.ecommerce.services.DepartamentoService;
+import com.zero.ecommerce.services.LocalidadService;
+import com.zero.ecommerce.services.PaisService;
+import com.zero.ecommerce.services.ProvinciaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -80,6 +88,18 @@ public class DataSeeder implements CommandLineRunner {
         return true;
     }
 
+    @Autowired
+    private PaisService paisService;
+
+    @Autowired
+    private ProvinciaService provinciaService;
+
+    @Autowired
+    private DepartamentoService departamentoService;
+
+    @Autowired
+    private LocalidadService localidadService;
+
     private void cargarUbicacion() {
         // E1-03: Argentina, provincias, departamentos de Mendoza y localidades de Gran Mendoza.
         for (String nombre : new String[] { "Argentina", "Bolivia", "Brasil", "Chile",
@@ -88,6 +108,27 @@ public class DataSeeder implements CommandLineRunner {
             nacionalidad.setNombre(nombre);
             entityManager.persist(nacionalidad);
         }
+
+        Pais argentina = paisService.crearPais("Argentina");
+        Pais brasil = paisService.crearPais("Brasil");
+        Pais chile = paisService.crearPais("Chile");
+        Pais uruguay = paisService.crearPais("Uruguay");
+
+        Provincia mendoza = provinciaService.crearProvincia("Mendoza", argentina.getId());
+        Provincia buenosAires = provinciaService.crearProvincia("Buenos Aires", argentina.getId());
+        Provincia cordoba = provinciaService.crearProvincia("Córdoba", argentina.getId());
+        Provincia santaFe = provinciaService.crearProvincia("Santa Fe", argentina.getId());
+
+        Departamento capital = departamentoService.crearDepartamento("Capital", mendoza.getId());
+        Departamento godoyCruz = departamentoService.crearDepartamento("Godoy Cruz", mendoza.getId());
+        Departamento guaymallen = departamentoService.crearDepartamento("Guaymallén", mendoza.getId());
+        Departamento maipu = departamentoService.crearDepartamento("Maipú", mendoza.getId());
+
+        localidadService.crearLocalidad("Ciudad de Mendoza", "5500", capital.getId());
+        localidadService.crearLocalidad("San Martín", "5500", capital.getId());
+        localidadService.crearLocalidad("Sarmiento", "5500", capital.getId());
+        localidadService.crearLocalidad("Plaza Independencia", "5500", capital.getId());
+
     }
 
     private void cargarUsuarios() {
