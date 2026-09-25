@@ -15,12 +15,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/admin/configuracion/ubicaciones")
-public class UbicacionController {
+public class LocalidadController {
 
     private final LocalidadService localidadService;
     private final DepartamentoService departamentoService;
 
-    public UbicacionController(LocalidadService localidadService, DepartamentoService departamentoService) {
+    public LocalidadController(LocalidadService localidadService, DepartamentoService departamentoService) {
         this.localidadService = localidadService;
         this.departamentoService = departamentoService;
     }
