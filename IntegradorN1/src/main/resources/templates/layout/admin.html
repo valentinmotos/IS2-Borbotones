@@ -34,7 +34,7 @@
             <nav class="admin-sidebar-nav">
                 <div class="admin-nav-section">
                     <a href="#" class="admin-nav-item" th:classappend="${menuActivo == 'inicio' ? 'active' : ''}">Inicio</a>
-                    <a href="#" class="admin-nav-item">Usuarios</a>
+                    <a href="#" class="admin-nav-item" sec:authorize="hasRole('JEFE')">Usuarios</a>
                     <a href="#" class="admin-nav-item">Productos</a>
                     <a href="#" class="admin-nav-item">Precios</a>
                     <a href="#" class="admin-nav-item">Categorías</a>
@@ -51,7 +51,7 @@
                     <a href="#" class="admin-nav-item sub">Proveedores</a>
                 </div>
 
-                <div class="admin-nav-section">
+                <div class="admin-nav-section" sec:authorize="hasRole('JEFE')">
                     <div class="admin-nav-label">Configuración</div>
                     <a href="#" class="admin-nav-item sub">Empresa</a>
                     <a href="#" class="admin-nav-item sub">Correo</a>
@@ -72,7 +72,8 @@
                 <div class="admin-topbar-right">
                     <div class="admin-user-pill">
                         <i class="zmdi zmdi-account-circle"></i>
-                        <span sec:authentication="name">Usuario</span>
+                        <span th:text="${nombreMostrar}">Usuario</span>
+                        <small th:text="${rolActual}">ROL</small>
                     </div>
                     <form th:action="@{/logout}" method="post" class="m-0">
                         <button type="submit" class="admin-logout-btn">Cerrar sesión</button>

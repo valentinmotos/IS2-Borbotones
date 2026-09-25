@@ -31,7 +31,8 @@ a, a:hover {
 }
 
 .left-top-bar,
-.right-top-bar a {
+.right-top-bar a,
+.right-top-bar span {
     color: rgba(255, 255, 255, 0.75);
 }
 
@@ -141,6 +142,29 @@ a, a:hover {
 
 .zero-header-link:hover {
     color: var(--zero-accent-strong);
+}
+
+.zero-account-dropdown .dropdown-toggle {
+    background: transparent;
+    border: 0;
+    color: var(--zero-white);
+    font: inherit;
+}
+
+.zero-account-dropdown .dropdown-menu {
+    background: #ffffff;
+    border-top: 3px solid var(--zero-accent);
+    box-shadow: var(--zero-shadow);
+}
+
+.zero-account-dropdown .dropdown-item {
+    color: var(--zero-charcoal);
+}
+
+.zero-account-dropdown .dropdown-item:hover,
+.zero-account-dropdown .dropdown-item:focus {
+    background: var(--zero-soft);
+    color: var(--zero-charcoal);
 }
 
 .zero-main {
