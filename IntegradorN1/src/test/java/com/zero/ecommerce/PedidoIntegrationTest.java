@@ -3,6 +3,9 @@ package com.zero.ecommerce;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -17,13 +20,19 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.zero.ecommerce.entities.FacturaCliente;
 import com.zero.ecommerce.entities.OrdenCompra;
+import com.zero.ecommerce.entities.enums.EstadoFactura;
 import com.zero.ecommerce.entities.enums.EstadoOrdenCompra;
+import com.zero.ecommerce.entities.enums.TipoPago;
 import com.zero.ecommerce.repositories.OrdenCompraRepository;
+import com.zero.ecommerce.services.FormaDePagoService;
+import com.zero.ecommerce.services.NotificacionCompraService;
 import com.zero.ecommerce.services.OrdenCompraService;
 
 /** Panel de pedidos (E4-06) con los pedidos de demostración del seeder: uno por estado y un carrito abierto. */
@@ -38,13 +47,17 @@ class PedidoIntegrationTest {
     private final MockMvc mvc;
     private final OrdenCompraService ordenCompraService;
     private final OrdenCompraRepository ordenCompraRepository;
+    private final FormaDePagoService formaDePagoService;
+    @MockitoBean
+    private NotificacionCompraService notificacionCompraService;
     private MockHttpSession sesion;
 
     PedidoIntegrationTest(@Autowired MockMvc mvc, @Autowired OrdenCompraService ordenCompraService,
-            @Autowired OrdenCompraRepository ordenCompraRepository) {
+            @Autowired OrdenCompraRepository ordenCompraRepository, @Autowired FormaDePagoService formaDePagoService) {
         this.mvc = mvc;
         this.ordenCompraService = ordenCompraService;
         this.ordenCompraRepository = ordenCompraRepository;
+        this.formaDePagoService = formaDePagoService;
     }
 
     // El panel lo usan JEFE y ADMINISTRATIVO: se prueba con el administrativo.
@@ -131,6 +144,74 @@ class PedidoIntegrationTest {
     @Test
     void unClienteNoPuedeEntrarAlPanelDePedidos() throws Exception {
         mvc.perform(get(BASE).with(user("cliente@zero.com.ar").roles("CLIENTE"))).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void unPedidoEnEfectivoRecorreTodoElFlujoDesdeElPanel() throws Exception {
+        String id = idPedido("ORD-DEMO0001");
+        FacturaCliente factura = ordenCompraService.buscarFacturaDePedido(id).orElseThrow();
+        factura.setFormaDePago(formaDePagoService.listarFormaDePagoActivo().stream()
+                .filter(forma -> forma.getTipoPago() == TipoPago.EFECTIVO).findFirst().orElseThrow());
+
+        mvc.perform(get(BASE + "/" + id).session(sesion)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("Confirmar pago")))
+                .andExpect(content().string(not(containsString("Marcar como enviado"))));
+
+        mvc.perform(post(BASE + "/" + id + "/confirmar-pago").with(csrf()).session(sesion))
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl(BASE + "/" + id));
+        assertThat(ordenCompraService.buscarPedido(id).getEstadoOrdenCompra())
+                .isEqualTo(EstadoOrdenCompra.PENDIENTE_ENVIO);
+        assertThat(factura.getEstado()).isEqualTo(EstadoFactura.PAGADA);
+        assertThat(factura.getEmpleado()).isNotNull();
+        assertThat(factura.getEmpleado().getUsuario().getNombreUsuario()).isEqualTo("admin@zero.com.ar");
+
+        mvc.perform(get(BASE + "/" + id).session(sesion)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("Marcar como enviado")));
+        mvc.perform(post(BASE + "/" + id + "/marcar-enviado").with(csrf()).session(sesion))
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl(BASE + "/" + id));
+        assertThat(ordenCompraService.buscarPedido(id).getEstadoOrdenCompra())
+                .isEqualTo(EstadoOrdenCompra.PENDIENTE_ENTREGA);
+
+        mvc.perform(get(BASE + "/" + id).session(sesion)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("Marcar como entregado")));
+        mvc.perform(post(BASE + "/" + id + "/marcar-entregado").with(csrf()).session(sesion))
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl(BASE + "/" + id));
+        assertThat(ordenCompraService.buscarPedido(id).getEstadoOrdenCompra()).isEqualTo(EstadoOrdenCompra.ENTREGADO);
+        verify(notificacionCompraService, times(3)).notificarCambioEstado(org.mockito.ArgumentMatchers.any());
+
+        mvc.perform(get(BASE + "/" + id).session(sesion)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("Entregado")))
+                .andExpect(content().string(not(containsString("Marcar como entregado"))));
+    }
+
+    @Test
+    void mercadoPagoNoPermiteConfirmacionManual() throws Exception {
+        String id = idPedido("ORD-DEMO0007");
+        mvc.perform(get(BASE + "/" + id).session(sesion)).andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("Confirmar pago"))));
+
+        mvc.perform(post(BASE + "/" + id + "/confirmar-pago").with(csrf()).session(sesion))
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl(BASE + "/" + id));
+        assertThat(ordenCompraService.buscarPedido(id).getEstadoOrdenCompra())
+                .isEqualTo(EstadoOrdenCompra.PENDIENTE_PAGO);
+    }
+
+    @Test
+    void anularExigeMotivoYRegistraAlEmpleado() throws Exception {
+        String id = idPedido("ORD-DEMO0002");
+
+        mvc.perform(post(BASE + "/" + id + "/anular").with(csrf()).session(sesion).param("motivo", " "))
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl(BASE + "/" + id));
+        assertThat(ordenCompraService.buscarPedido(id).getEstadoOrdenCompra())
+                .isEqualTo(EstadoOrdenCompra.PENDIENTE_ENVIO);
+
+        mvc.perform(post(BASE + "/" + id + "/anular").with(csrf()).session(sesion)
+                .param("motivo", "El cliente solicitó cancelar la compra."))
+                .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl(BASE + "/" + id));
+        assertThat(ordenCompraService.buscarPedido(id).getEstadoOrdenCompra()).isEqualTo(EstadoOrdenCompra.ANULADA);
+        FacturaCliente factura = ordenCompraService.buscarFacturaDePedido(id).orElseThrow();
+        assertThat(factura.getEstado()).isEqualTo(EstadoFactura.ANULADA);
+        assertThat(factura.getEmpleado().getUsuario().getNombreUsuario()).isEqualTo("admin@zero.com.ar");
     }
 
     private String idPedido(String identificador) {

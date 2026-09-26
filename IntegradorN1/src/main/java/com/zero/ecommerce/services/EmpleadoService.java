@@ -96,6 +96,16 @@ public class EmpleadoService {
                 .orElseThrow(() -> new ErrorServiceException("El empleado no existe o fue eliminado."));
     }
 
+    /** Empleado autenticado en el panel, identificado por el correo que Spring Security usa como username. */
+    public Empleado buscarEmpleadoPorCorreo(String correo) throws ErrorServiceException {
+        if (correo == null || correo.isBlank()) {
+            throw new ErrorServiceException("No se pudo identificar al empleado que realiza la acción.");
+        }
+        return empleadoRepository.findByUsuario_NombreUsuarioIgnoreCaseAndEliminadoFalse(correo.strip())
+                .orElseThrow(() -> new ErrorServiceException(
+                        "No se pudo identificar al empleado que realiza la acción."));
+    }
+
     public List<Empleado> listarEmpleado() {
         return empleadoRepository.findAll();
     }
