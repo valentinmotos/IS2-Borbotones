@@ -59,7 +59,7 @@ public class ClienteController {
 
     @PostMapping
     public String guardar(@ModelAttribute ClienteForm clienteForm, @ModelAttribute DireccionForm direccionForm,
-            @RequestParam(required = false) MultipartFile foto, RedirectAttributes flash) {
+                          @RequestParam(required = false) MultipartFile foto, RedirectAttributes flash) {
         try {
             service.guardarPerfilCliente(usuarioLogueado().getId(), clienteForm.getNombre(),
                     clienteForm.getApellido(), service.convertirSexo(clienteForm.getSexo()),
@@ -73,6 +73,28 @@ public class ClienteController {
             flash.addFlashAttribute("direccionForm", direccionForm);
         }
         return "redirect:" + BASE;
+    }
+
+    @GetMapping("/clave")
+    public String cambiarClave(Model model) {
+        model.addAttribute("pageTitle", "Cambiar contraseña");
+        return "cliente/clave";
+    }
+
+    @PostMapping("/clave")
+    public String modificarClave(@RequestParam String claveActual,
+                                 @RequestParam String nuevaClave,
+                                 @RequestParam String confirmarClave,
+                                 RedirectAttributes flash) {
+        try {
+            Usuario usuario = usuarioLogueado();
+            usuarioService.modificarClave(usuario.getId(), claveActual, nuevaClave, confirmarClave);
+            flash.addFlashAttribute("exito", "Tu contraseña se modificó correctamente.");
+            return "redirect:" + BASE + "/clave";
+        } catch (ErrorServiceException e) {
+            flash.addFlashAttribute("error", e.getMessage());
+            return "redirect:" + BASE + "/clave";
+        }
     }
 
     // /cliente/** exige el rol CLIENTE, así que siempre hay un usuario logueado.

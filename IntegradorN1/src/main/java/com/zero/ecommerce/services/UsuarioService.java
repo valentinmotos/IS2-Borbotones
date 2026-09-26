@@ -207,4 +207,20 @@ public class UsuarioService {
         String nombreCompleto = (nombre + " " + apellido).strip();
         return nombreCompleto.isBlank() ? usuario.getNombreUsuario() : nombreCompleto;
     }
+
+    @Transactional(rollbackFor = ErrorServiceException.class)
+    public void modificarClave(String id, String claveActual, String nuevaClave, String confirmarClave)
+            throws ErrorServiceException {
+        if (claveActual == null || claveActual.isEmpty()) {
+            throw new ErrorServiceException("Ingresá tu contraseña actual.");
+        }
+        Usuario usuario = buscarUsuario(id);
+        if (!passwordEncoder.matches(claveActual, usuario.getClave())) {
+            throw new ErrorServiceException("La contraseña actual no es correcta.");
+        }
+        validarClave(nuevaClave, confirmarClave);
+        usuario.setClave(passwordEncoder.encode(nuevaClave));
+        usuarioRepository.save(usuario);
+    }
+
 }
