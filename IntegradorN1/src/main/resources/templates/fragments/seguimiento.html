@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!-- Línea de tiempo del seguimiento de una compra. pasos: la lista de dto.PasoSeguimientoDTO que arma
+         OrdenCompra.pasosSeguimiento(). Horizontal en escritorio y vertical en celular. -->
+    <ol th:fragment="linea(pasos)" class="zero-timeline">
+        <li th:each="paso : ${pasos}" class="zero-timeline-paso"
+            th:classappend="${(paso.completo ? 'completo ' : '') + (paso.actual ? 'actual' : '')}"
+            th:attr="aria-current=${paso.actual ? 'step' : null}">
+            <span class="zero-timeline-marca" aria-hidden="true">
+                <i th:if="${paso.completo}" class="fa fa-check"></i>
+            </span>
+            <span class="zero-timeline-nombre" th:text="${paso.nombre}">Paso</span>
+            <span class="sr-only" th:if="${paso.completo}"> (completo)</span>
+            <span class="sr-only" th:if="${paso.actual and !paso.completo}"> (actual)</span>
+        </li>
+    </ol>
+</body>
+</html>

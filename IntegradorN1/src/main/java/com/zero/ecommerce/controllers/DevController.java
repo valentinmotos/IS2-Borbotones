@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.zero.ecommerce.dto.DireccionForm;
 import com.zero.ecommerce.dto.FilaTablaDTO;
 import com.zero.ecommerce.dto.FilaTablaImagenDTO;
+import com.zero.ecommerce.dto.PasoSeguimientoDTO;
 import com.zero.ecommerce.entities.Direccion;
 import com.zero.ecommerce.entities.Imagen;
 import com.zero.ecommerce.entities.enums.TipoImagen;
@@ -74,6 +75,12 @@ public class DevController {
         model.addAttribute("registrosImagen", List.of(
             new FilaTablaImagenDTO("demo-3", "Remera Zero Pro (talle M)", null, List.of("REM-PRO-M", "Remera Zero Pro", "M"))));
         model.addAttribute("arbolCategorias", categoriaService.listarArbolActivo());
+        model.addAttribute("pasosDemo", List.of(
+            new PasoSeguimientoDTO("Pendiente de pago", true, false),
+            new PasoSeguimientoDTO("Pago realizado", true, false),
+            new PasoSeguimientoDTO("Pendiente de envío", false, true),
+            new PasoSeguimientoDTO("Pendiente de entrega", false, false),
+            new PasoSeguimientoDTO("Entregado", false, false)));
         return "dev/componentes";
     }
 

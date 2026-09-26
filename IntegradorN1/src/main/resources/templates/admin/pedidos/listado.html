@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Ventas</span><span class="breadcrumb-separator">/</span><span>Pedidos</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <!-- Cantidad de pedidos por estado: al tocar una tarjeta se filtra por ese estado. -->
+        <div class="zero-kpi-grid zero-kpi-grid-estados mb-4">
+            <th:block th:each="opcion : ${opcionesEstado}">
+                <a th:replace="~{fragments/kpi :: kpiEnlace(${opcion.value}, ${cantidadesPorEstado[opcion.key]}, null, null,
+                     ${'/admin/pedidos?estado=' + opcion.key}, ${opcion.key == estado})}"></a>
+            </th:block>
+        </div>
+        <div class="zero-panel">
+            <form th:action="@{/admin/pedidos}" method="get" class="zero-filters zero-filters-amplio mb-4">
+                <div th:replace="~{fragments/filtros :: campoFiltroSelect('estado', 'Estado', ${opcionesEstado}, ${estado})}"></div>
+                <div th:replace="~{fragments/filtros :: campoFiltroSelect('formaPago', 'Forma de pago', ${opcionesFormaPago}, ${formaPago})}"></div>
+                <div th:replace="~{fragments/filtros :: campoFiltroFecha('desde', 'Desde', ${desde})}"></div>
+                <div th:replace="~{fragments/filtros :: campoFiltroFecha('hasta', 'Hasta', ${hasta})}"></div>
+                <div th:replace="~{fragments/filtros :: campoFiltroTexto('cliente', 'Cliente', ${cliente}, 'Nombre o correo')}"></div>
+                <div class="zero-filters-acciones">
+                    <button type="submit" class="zero-button primary">Buscar</button>
+                    <a th:href="@{/admin/pedidos}" class="zero-button secondary">Limpiar</a>
+                </div>
+            </form>
+            <div class="d-flex flex-wrap justify-content-end align-items-center mb-3">
+                <span class="text-muted"
+                      th:text="${totalPedidos == 1 ? '1 pedido' : totalPedidos + ' pedidos'}">0 pedidos</span>
+            </div>
+            <!-- Misma estructura que fragments/tabla :: tablaRegistros, con el badge de estado y el botón "Ver",
+                 que el fragment no soporta (igual que Compras a proveedor). -->
+            <div class="table-responsive zero-table-wrap">
+                <table class="table table-striped table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Número</th>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">Cliente</th>
+                            <th scope="col">Total</th>
+                            <th scope="col">Forma de pago</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(pedidos)}">
+                            <td colspan="7" class="text-center text-muted py-4">No hay registros para mostrar.</td>
+                        </tr>
+                        <tr th:each="pedido : ${pedidos}">
+                            <td th:text="${pedido.numero}">ORD-0001</td>
+                            <td th:text="${pedido.fecha != null ? #temporals.format(pedido.fecha, 'dd/MM/yyyy') : '-'}">01/01/2026</td>
+                            <td th:text="${pedido.cliente}">Cliente</td>
+                            <td class="text-right" th:text="${'$' + #numbers.formatDecimal(pedido.total, 1, 'POINT', 2, 'COMMA')}">$0,00</td>
+                            <td th:text="${pedido.formaDePago != null ? pedido.formaDePago : '-'}">Efectivo</td>
+                            <td><span th:replace="~{fragments/badge-estado :: badge(${pedido.estado})}"></span></td>
+                            <td class="zero-table-actions">
+                                <a th:href="@{'/admin/pedidos/' + ${pedido.id}}" class="btn btn-sm btn-outline-primary"
+                                   th:attr="aria-label=${'Ver pedido ' + pedido.numero}">Ver</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

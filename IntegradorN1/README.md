@@ -79,6 +79,8 @@ La página `/dev/componentes` muestra todos los fragments funcionando dentro del
 | Checkbox | `fragments/formulario :: campoCheckbox(nombre, etiqueta, marcado)` | `<div th:replace="~{fragments/formulario :: campoCheckbox('tls', 'Usar TLS', ${tls})}"></div>` |
 | Selección agrupada | `fragments/formulario :: campoSelectAgrupado(nombre, etiqueta, grupos, seleccionado, requerido)` | `<div th:replace="~{fragments/formulario :: campoSelectAgrupado('departamentoId', 'Departamento', ${grupos}, ${departamentoId}, true)}"></div>` |
 | KPI | `fragments/kpi :: kpi(titulo, valor, descripcion, icono)` | `<article th:replace="~{fragments/kpi :: kpi(${titulo}, ${valor}, ${descripcion}, ${icono})}"></article>` |
+| KPI con enlace | `fragments/kpi :: kpiEnlace(titulo, valor, descripcion, icono, url, activo)` | `<a th:replace="~{fragments/kpi :: kpiEnlace(${titulo}, ${valor}, null, null, ${url}, ${activo})}"></a>` |
+| Línea de tiempo | `fragments/seguimiento :: linea(pasos)` | `<ol th:replace="~{fragments/seguimiento :: linea(${pasos})}"></ol>` |
 | Switch | `fragments/formulario :: campoSwitch(nombre, etiqueta, marcado)` | `<div th:replace="~{fragments/formulario :: campoSwitch('enOferta', 'En oferta', ${enOferta})}"></div>` |
 | Texto largo | `fragments/formulario :: campoTextoLargo(nombre, etiqueta, valor, requerido)` | `<div th:replace="~{fragments/formulario :: campoTextoLargo('descripcion', 'Descripción', ${descripcion}, true)}"></div>` |
 | Solo lectura | `fragments/formulario :: campoSoloLectura(nombre, etiqueta, valor)` | `<div th:replace="~{fragments/formulario :: campoSoloLectura('codigo', 'Código', ${codigo})}"></div>` |
@@ -587,6 +589,52 @@ para probar la recepción.
 | POST | `/admin/compras/{id}/recibir` | Marcar la compra como recibida y sumar el stock |
 | POST | `/admin/compras/{id}/anular` | Anular una compra pedida |
 | GET | `/admin/productos/{id}` | Detalle del producto con stock e historial |
+
+## Panel de pedidos E4-06
+
+**Pedidos** (`/admin/pedidos`, `JEFE` y `ADMINISTRATIVO`). Un pedido es una `OrdenCompra` que ya salió del carrito:
+los carritos abiertos (`PENDIENTE_COMPLETAR`) no aparecen.
+
+- **Listado:** número, fecha, cliente, total, forma de pago y badge de estado, del más nuevo al más viejo. Filtros por
+  estado, forma de pago, rango de fechas y cliente (parte del nombre, apellido o correo, sin importar mayúsculas ni
+  tildes). Arriba, una tarjeta por estado con la cantidad de pedidos (`kpi :: kpiEnlace`): al tocarla se filtra por
+  ese estado.
+- **Detalle** (`/admin/pedidos/{id}`): línea de tiempo con `OrdenCompra.pasosSeguimiento()` (fragment
+  `seguimiento :: linea`), datos del pedido, factura, forma de pago, cliente con correo, documento, teléfono y
+  dirección de entrega, y los productos. Un pedido anulado muestra el aviso en lugar de la línea de tiempo.
+- **"Registrado por":** el diagrama guarda un solo `Empleado` por `FacturaCliente`, así que se muestra ese (el último
+  que registró una acción del panel, E4-07). No hay un empleado por paso.
+- La forma de pago y la factura salen de la `FacturaCliente` del pedido. Si todavía no tiene factura, se muestra "-".
+
+### Para otros issues
+
+- `OrdenCompraService` es el service de `OrdenCompra`: `listarPedidoActivo()`, `listarPedido(estado, idFormaDePago,
+  desde, hasta, cliente)` (devuelve `PedidoDTO`), `contarPedidoPorEstado()`, `buscarPedido(id)` (no encuentra
+  carritos) y `buscarFacturaDePedido(idOrden)`. E4-04 agrega acá `listarComprasCliente`.
+- `FacturaClienteRepository.findFirstByOrdenCompra_IdAndEliminadoFalse(idOrden)`: la relación está solo del lado de
+  la factura.
+
+### Datos de demostración
+
+El seeder carga dos clientes con perfil completo (contraseña `Cliente123!`) y un pedido en cada estado. Los estados
+se alcanzan con las transiciones de la orden (E4-01). Los pedidos pagados descuentan stock de productos que solo
+tienen el stock inicial, así que no cambian los niveles del reporte de stock de E3-04.
+
+| Pedido | Cliente | Estado | Forma de pago | Factura |
+|---|---|---|---|---|
+| ORD-DEMO0001 | Lucía Gómez (`lucia.gomez@mail.com`) | Pendiente de pago | Transferencia | N.º 3, sin definir |
+| ORD-DEMO0002 | Martín Pérez (`martin.perez@mail.com`) | Pendiente de envío | Mercado Pago | N.º 4, pagada |
+| ORD-DEMO0003 | Lucía Gómez | Pendiente de entrega | Efectivo | N.º 5, pagada (Administrativo) |
+| ORD-DEMO0004 | Martín Pérez | Entregado | Transferencia | N.º 6, pagada (Jefa) |
+| ORD-DEMO0005 | Martín Pérez | Anulada | Mercado Pago | N.º 7, anulada |
+| ORD-DEMO0006 | Lucía Gómez | Carrito abierto | - | - (no aparece en el panel) |
+
+**Para verlos en una base que ya existe** hay que borrar `data/zero.db` y volver a levantar la app.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/admin/pedidos?estado=&formaPago=&desde=&hasta=&cliente=` | Listar pedidos con filtros y tarjetas por estado |
+| GET | `/admin/pedidos/{id}` | Detalle del pedido con la línea de tiempo |
 
 ## ABM de referencia E0-06: Nacionalidad
 
