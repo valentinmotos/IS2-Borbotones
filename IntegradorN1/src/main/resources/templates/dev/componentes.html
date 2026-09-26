@@ -71,6 +71,15 @@
                 </section>
 
                 <section class="zero-panel mb-4">
+                    <h2>Fecha</h2>
+                    <p class="zero-component-description">Fecha con el selector del navegador; el valor viaja como aaaa-mm-dd.</p>
+                    <form th:action="@{/dev/componentes}" method="post" class="zero-form">
+                        <div th:replace="~{fragments/formulario :: campoFecha('demo-fecha', 'Fecha de nacimiento', '1995-05-10', true)}"></div>
+                    </form>
+                    <code>&lt;div th:replace="~{fragments/formulario :: campoFecha(${nombre}, ${etiqueta}, ${valor}, ${requerido})}"&gt;&lt;/div&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
                     <h2>Selección agrupada</h2>
                     <p class="zero-component-description">Select con opciones agrupadas, para elegir un registro según su padre.</p>
                     <form th:action="@{/dev/componentes}" method="post" class="zero-form">
