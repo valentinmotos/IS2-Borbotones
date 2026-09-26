@@ -5,9 +5,15 @@
         <div th:if="${error != null and !#strings.isEmpty(error)}" class="alert alert-danger mb-2" role="alert">
             <span th:text="${error}">Se produjo un error.</span>
         </div>
-        <div th:if="${exito != null and !#strings.isEmpty(exito)}" class="alert alert-success mb-0" role="alert">
-            <span th:text="${exito}">Operación realizada correctamente.</span>
+        <div th:if="${exito != null and !#strings.isEmpty(exito)}" class="alert alert-success mb-0 d-flex justify-content-between align-items-center" role="alert">
+            <div>
+                <span th:utext="${exito}">Operación realizada correctamente.</span>
+            </div>
+            <a th:if="${verCarritoLink != null}" th:href="@{/cliente/carrito}" class="btn btn-sm btn-outline-success font-weight-bold ml-3">
+                <i class="fa fa-shopping-cart mr-1"></i> Ver carrito
+            </a>
         </div>
     </div>
 </body>
+
 </html>

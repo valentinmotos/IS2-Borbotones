@@ -26,6 +26,35 @@
                 <span class="price" th:text="${producto.precioFormateado}">$0</span>
             </div>
         </a>
+        <div class="zero-product-card-body pt-0">
+            <div class="mt-2">
+                <!-- Cliente logueado: agrega directamente -->
+                <form th:action="@{/cliente/carrito/agregar}" method="post" sec:authorize="hasRole('CLIENTE')">
+                    <input type="hidden" name="idProducto" th:value="${producto.id}">
+                    <input type="hidden" name="cantidad" value="1">
+                    <input type="hidden" name="returnUrl" th:value="@{/producto/{id}(id=${producto.id})}">
+                    <button type="submit" class="btn btn-sm btn-dark btn-block">
+                        <i class="fa fa-shopping-cart mr-1"></i> Agregar al carrito
+                    </button>
+                </form>
+                <!-- Visitante anónimo: guarda el producto y el retorno al abrir el login. -->
+                <form th:action="@{/login}" method="get" sec:authorize="isAnonymous()">
+                    <input type="hidden" name="idProducto" th:value="${producto.id}">
+                    <input type="hidden" name="cantidad" value="1">
+                    <input type="hidden" name="retorno" th:value="@{/producto/{id}(id=${producto.id})}">
+                    <button type="submit" class="btn btn-sm btn-outline-dark btn-block" title="Ingresá para agregar al carrito">
+                        <i class="fa fa-shopping-cart mr-1"></i> Agregar al carrito
+                    </button>
+                </form>
+                <!-- Empleados: no pueden usar el carrito (E3-08) -->
+                <button type="button" class="btn btn-sm btn-secondary btn-block" disabled
+                        sec:authorize="hasAnyRole('JEFE', 'ADMINISTRATIVO')"
+                        title="Los empleados no pueden utilizar el carrito de compras">
+                    <i class="fa fa-shopping-cart mr-1"></i> Solo clientes
+                </button>
+            </div>
+        </div>
     </article>
 </body>
+
 </html>

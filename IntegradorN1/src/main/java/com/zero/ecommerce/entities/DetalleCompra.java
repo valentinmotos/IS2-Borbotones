@@ -19,4 +19,14 @@ public class DetalleCompra extends BaseEntity {
 
     @ManyToOne
     private Producto producto;
+
+    /** Experto: calcula el subtotal como cantidad * precio unitario vigente. */
+    public void calcularSubtotal(double precioUnitario) {
+        this.subtotal = this.cantidad * precioUnitario;
+    }
+
+    /** Experto: precio unitario del renglón, derivado del subtotal (el diagrama no lo guarda aparte). */
+    public double getPrecioUnitario() {
+        return cantidad == 0 ? 0 : subtotal / cantidad;
+    }
 }

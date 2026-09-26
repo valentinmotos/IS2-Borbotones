@@ -57,7 +57,9 @@ class DetalleProductoOfertasIntegrationTest {
                 .andExpect(content().string(containsString("7 unidades disponibles")))
                 .andExpect(content().string(containsString("max=\"7\"")))
                 .andExpect(content().string(containsString("name=\"idProducto\"")))
-                .andExpect(content().string(containsString("/cliente/carrito/agregar")))
+                .andExpect(content().string(containsString("action=\"/login\"")))
+                .andExpect(content().string(containsString(
+                        "name=\"retorno\" value=\"/producto/" + remeraM.getId() + "\"")))
                 .andExpect(content().string(containsString("/producto/" + remeraL.getId())))
                 .andExpect(content().string(containsString("Short Zero Run Hombre")));
     }

@@ -83,6 +83,7 @@
                             </button>
                             <div class="dropdown-menu dropdown-menu-right">
                                 <a class="dropdown-item" th:href="@{/cliente}">Mi cuenta</a>
+                                <a class="dropdown-item" th:href="@{/cliente/carrito}">Mi carrito</a>
                                 <a class="dropdown-item" th:href="@{/cliente/perfil}">Mi perfil</a>
                                 <a class="dropdown-item" th:href="@{/cliente/perfil/clave}">Cambiar clave</a>
                                 <a class="dropdown-item" th:href="@{/cliente/compras}">Mis compras</a>
@@ -122,6 +123,8 @@
                         <i class="zmdi zmdi-account-o"></i><span th:text="${nombreMostrar}">Mi cuenta</span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item" th:href="@{/cliente}">Mi cuenta</a>
+                        <a class="dropdown-item" th:href="@{/cliente/carrito}">Mi carrito</a>
                         <a class="dropdown-item" th:href="@{/cliente/perfil}">Mi perfil</a>
                         <a class="dropdown-item" th:href="@{/cliente/compras}">Mis compras</a>
                         <div class="dropdown-divider"></div>
@@ -235,8 +238,8 @@
                     </div>
 
                     <div class="header-cart-buttons flex-w w-full">
-                        <a href="#" class="flex-c-m stext-101 cl0 size-107 bg3 bor2 hov-btn3 p-lr-15 trans-04 m-r-8">Ver carrito</a>
-                        <a href="#" class="flex-c-m stext-101 cl0 size-107 bg3 bor2 hov-btn3 p-lr-15 trans-04">Checkout</a>
+                        <a th:href="@{/cliente/carrito}" class="flex-c-m stext-101 cl0 size-107 bg3 bor2 hov-btn3 p-lr-15 trans-04 m-r-8">Ver carrito</a>
+                        <a th:href="@{/cliente/checkout}" class="flex-c-m stext-101 cl0 size-107 bg3 bor2 hov-btn3 p-lr-15 trans-04">Checkout</a>
                     </div>
                 </div>
             </div>
