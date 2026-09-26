@@ -85,6 +85,7 @@ public class DataSeeder implements CommandLineRunner {
     private final ImagenService imagenService;
     private final ProductoService productoService;
     private final VigenciaPrecioService vigenciaPrecioService;
+    private final com.zero.ecommerce.services.ProveedorService proveedorService;
 
     private static final double PRECIO_INICIAL_DEMO = 10000;
 
@@ -92,7 +93,8 @@ public class DataSeeder implements CommandLineRunner {
             ProvinciaService provinciaService, DepartamentoService departamentoService,
             LocalidadService localidadService, EmpresaService empresaService, CategoriaService categoriaService,
             SubCategoriaService subCategoriaService, ImagenService imagenService, ProductoService productoService,
-            VigenciaPrecioService vigenciaPrecioService) {
+            VigenciaPrecioService vigenciaPrecioService,
+            com.zero.ecommerce.services.ProveedorService proveedorService) {
         this.entityManager = entityManager;
         this.passwordEncoder = passwordEncoder;
         this.paisService = paisService;
@@ -105,6 +107,7 @@ public class DataSeeder implements CommandLineRunner {
         this.imagenService = imagenService;
         this.productoService = productoService;
         this.vigenciaPrecioService = vigenciaPrecioService;
+        this.proveedorService = proveedorService;
     }
 
     @Override
@@ -395,8 +398,35 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void cargarProveedores() {
-        // E3-01: 4 proveedores con sus contactos.
-        // E3-04: compras de demostración recibidas (stock inicial).
+        try {
+            // Proveedor 1: Distribuidora Deportiva Cuyo S.A.
+            proveedorService.crearProveedor("Distribuidora Deportiva Cuyo S.A.", List.of(
+                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CORREO", "ventas@deportivacuyo.com.ar", "EMPRESA", "Ventas"),
+                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CELULAR", "5492614123456", "LABORAL", "WhatsApp Ventas"),
+                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "FIJO", "2614239870", "EMPRESA", "Mesa de entrada")
+            ));
+
+            // Proveedor 2: Calzados y Textiles del Plata S.R.L.
+            proveedorService.crearProveedor("Calzados y Textiles del Plata S.R.L.", List.of(
+                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CORREO", "contacto@textilesdelplata.com", "EMPRESA", "Atención general"),
+                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CELULAR", "5491138765432", "LABORAL", "WhatsApp Comercios")
+            ));
+
+            // Proveedor 3: Indumentaria Atlética San Juan
+            proveedorService.crearProveedor("Indumentaria Atlética San Juan", List.of(
+                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CORREO", "pedidos@atleticasanjuan.com.ar", "LABORAL", "Recepción de pedidos"),
+                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CELULAR", "5492644981122", "EMPRESA", "WhatsApp Despacho")
+            ));
+
+            // Proveedor 4: Accesorios Fitness Andina
+            proveedorService.crearProveedor("Accesorios Fitness Andina", List.of(
+                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CORREO", "info@fitnessandina.com.ar", "EMPRESA", "Consultas"),
+                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CORREO", "administracion@fitnessandina.com.ar", "LABORAL", "Administración"),
+                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CELULAR", "5492615558899", "LABORAL", "WhatsApp Guardia")
+            ));
+        } catch (ErrorServiceException e) {
+            throw new IllegalStateException("Los datos iniciales de proveedores no son válidos: " + e.getMessage(), e);
+        }
     }
 
     private void cargarVentas() {
