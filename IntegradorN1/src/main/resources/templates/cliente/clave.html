@@ -1,45 +1,32 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
 <body>
-<div layout:fragment="content">
-    <section class="zero-section">
-        <div class="container">
-            <div class="mb-4">
-                <div class="zero-kicker">Mi cuenta</div>
-                <h1>Cambiar contraseña</h1>
-                <p>Ingresá tu contraseña actual y la nueva contraseña que querés utilizar.</p>
-            </div>
-            <div th:replace="~{fragments/mensajes :: mensajes}"></div>
-            <form th:action="@{/cliente/perfil/clave}" method="post" class="zero-form">
-                <div class="zero-panel mb-4">
-                    <h2>Seguridad</h2>
-                    <div class="form-row">
-                        <div class="col-md-12">
-                            <div class="form-group mb-3">
-                                <label for="claveActual">Contraseña actual</label>
-                                <input type="password" id="claveActual" name="claveActual" class="form-control" required />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="nuevaClave">Nueva contraseña</label>
-                                <input type="password" id="nuevaClave" name="nuevaClave" class="form-control" required />
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="confirmarClave">Confirmar nueva contraseña</label>
-                                <input type="password" id="confirmarClave" name="confirmarClave" class="form-control" required />
-                            </div>
-                        </div>
-                    </div>
-                    <div th:replace="~{fragments/formulario :: acciones('/cliente')}"></div>
+    <div layout:fragment="content">
+        <section class="zero-section">
+            <div class="container">
+                <div class="mb-4">
+                    <div class="zero-kicker">Mi cuenta</div>
+                    <h1>Cambiar clave</h1>
+                    <p>Ingresá tu clave actual y la nueva clave que querés usar.</p>
                 </div>
-            </form>
-        </div>
-    </section>
-</div>
+                <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+                <form th:action="@{/cliente/perfil/clave}" method="post" class="zero-form">
+                    <div class="zero-panel mb-4">
+                        <h2>Seguridad</h2>
+                        <div th:replace="~{fragments/formulario :: campoClave('claveActual', 'Clave actual', true, null)}"></div>
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/formulario :: campoClave('nuevaClave', 'Nueva clave', true, 'Mínimo 8 caracteres.')}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/formulario :: campoClave('confirmarClave', 'Confirmar nueva clave', true, null)}"></div>
+                            </div>
+                        </div>
+                        <div th:replace="~{fragments/formulario :: acciones('/cliente')}"></div>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
 </body>
 </html>

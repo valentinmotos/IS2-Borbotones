@@ -7,6 +7,9 @@
     <div layout:fragment="content">
         <section class="zero-section">
             <div class="container">
+                <div th:if="${perfilIncompleto}" class="alert alert-warning" role="alert">
+                    Tu perfil está incompleto. <a th:href="@{/cliente/perfil}">Completalo</a> para poder confirmar tus compras.
+                </div>
                 <div class="zero-banner">
                     <div class="container zero-banner-content">
                         <div class="zero-kicker">Zero – proyecto base</div>

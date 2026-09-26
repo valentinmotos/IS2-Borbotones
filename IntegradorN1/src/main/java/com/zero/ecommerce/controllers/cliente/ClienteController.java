@@ -59,7 +59,7 @@ public class ClienteController {
 
     @PostMapping
     public String guardar(@ModelAttribute ClienteForm clienteForm, @ModelAttribute DireccionForm direccionForm,
-                          @RequestParam(required = false) MultipartFile foto, RedirectAttributes flash) {
+            @RequestParam(required = false) MultipartFile foto, RedirectAttributes flash) {
         try {
             service.guardarPerfilCliente(usuarioLogueado().getId(), clienteForm.getNombre(),
                     clienteForm.getApellido(), service.convertirSexo(clienteForm.getSexo()),
@@ -77,24 +77,20 @@ public class ClienteController {
 
     @GetMapping("/clave")
     public String cambiarClave(Model model) {
-        model.addAttribute("pageTitle", "Cambiar contraseña");
+        model.addAttribute("pageTitle", "Cambiar clave");
         return "cliente/clave";
     }
 
     @PostMapping("/clave")
-    public String modificarClave(@RequestParam String claveActual,
-                                 @RequestParam String nuevaClave,
-                                 @RequestParam String confirmarClave,
-                                 RedirectAttributes flash) {
+    public String modificarClave(@RequestParam String claveActual, @RequestParam String nuevaClave,
+            @RequestParam String confirmarClave, RedirectAttributes flash) {
         try {
-            Usuario usuario = usuarioLogueado();
-            usuarioService.modificarClave(usuario.getId(), claveActual, nuevaClave, confirmarClave);
-            flash.addFlashAttribute("exito", "Tu contraseña se modificó correctamente.");
-            return "redirect:" + BASE + "/clave";
+            usuarioService.modificarClave(usuarioLogueado().getId(), claveActual, nuevaClave, confirmarClave);
+            flash.addFlashAttribute("exito", "Tu clave se modificó correctamente.");
         } catch (ErrorServiceException e) {
             flash.addFlashAttribute("error", e.getMessage());
-            return "redirect:" + BASE + "/clave";
         }
+        return "redirect:" + BASE + "/clave";
     }
 
     // /cliente/** exige el rol CLIENTE, así que siempre hay un usuario logueado.

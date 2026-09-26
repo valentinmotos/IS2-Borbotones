@@ -134,7 +134,7 @@ public class DataSeeder implements CommandLineRunner {
         cargarEmpleadoSiNoExiste("Administrativo", "Zero", "admin@zero.com.ar", "Admin123!",
                 TipoEmpleado.ADMINISTRATIVO, RolUsuario.ADMINISTRATIVO);
 
-        cargarClienteSiNoExiste("cliente@zero.com.ar", "Cliente123", RolUsuario.CLIENTE);
+        cargarClienteSiNoExiste("cliente@zero.com.ar", "Cliente123!", RolUsuario.CLIENTE);
     }
 
     /**
