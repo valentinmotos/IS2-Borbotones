@@ -437,6 +437,26 @@ Los tests (`mvnw test`) usan **GreenMail**, un servidor SMTP en memoria en el pu
 solo de test): verifican el envío, el HTML y el logo sin que salga nada de la máquina. Ver
 `CorreoIntegrationTest` y `EmailAsyncIntegrationTest`.
 
+## Newsletter de ofertas E4-08
+
+La pantalla **Newsletter** (`/admin/newsletter`, roles `JEFE` y `ADMINISTRATIVO`) muestra las ofertas
+que se incluirán, la cantidad de destinatarios, el último y el próximo envío, y una vista previa del
+HTML real. **Enviar ahora** manda un correo individual a cada cliente activo, con cuenta activada y
+perfil completo; de esa forma nunca se comparten direcciones entre destinatarios.
+
+- Solo se incluyen productos activos marcados como oferta, con stock y precio vigente.
+- Los links y las imágenes usan `APP_URL_BASE` (por defecto `http://localhost:8080`). En un despliegue,
+  configurarla con la URL pública HTTPS, por ejemplo `APP_URL_BASE=https://zero.example.com`.
+- El scheduler evalúa el envío todos los días a las 09:00 de Buenos Aires y envía cuando pasaron
+  diez días. El cron y la zona se pueden cambiar con `newsletter.cron` y `newsletter.zona`.
+- La fecha se guarda en `data/newsletter-ultimo-envio.txt` solo después de que SMTP aceptó todos los
+  mensajes. Si no hay ofertas o destinatarios, no envía ni modifica la fecha.
+- Antes de probarlo, configurar la cuenta SMTP en **Configuración → Correo** y completar el perfil
+  del usuario cliente de demostración (`cliente@zero.com.ar` / `Cliente123!`).
+
+Las pruebas están en `NewsletterServiceTest`, `NewsletterEnvioRepositoryTest` y
+`NewsletterIntegrationTest`.
+
 ## Catálogo público E3-05
 
 La home y las rutas `/catalogo/{categoriaId}` y
