@@ -68,8 +68,8 @@ class PedidoIntegrationTest {
     }
 
     @Test
-    void lasTarjetasCuentanUnPedidoPorEstadoYFiltranAlTocarlas() throws Exception {
-        assertThat(ordenCompraService.contarPedidoPorEstado()).containsEntry("PENDIENTE_PAGO", 1L)
+    void lasTarjetasCuentanLosPedidosPorEstadoYFiltranAlTocarlas() throws Exception {
+        assertThat(ordenCompraService.contarPedidoPorEstado()).containsEntry("PENDIENTE_PAGO", 2L)
                 .containsEntry("PENDIENTE_ENVIO", 1L).containsEntry("PENDIENTE_ENTREGA", 1L)
                 .containsEntry("ENTREGADO", 1L).containsEntry("ANULADA", 1L);
 

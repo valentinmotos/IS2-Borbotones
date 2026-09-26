@@ -136,6 +136,38 @@ class OrdenCompraServiceTest {
     }
 
     @Test
+    void listarComprasClienteNoIncluyeSuCarritoAbierto() {
+        when(repository.findByCliente_IdAndEliminadoFalseOrderByFechaDesc("c-lucia"))
+                .thenReturn(List.of(carrito, pendientePago));
+
+        assertThat(service.listarComprasCliente("c-lucia")).extracting(OrdenCompra::getId).containsExactly("o1");
+        assertThat(service.listarComprasCliente(null)).isEmpty();
+    }
+
+    @Test
+    void listarFilaCompraClienteTraeLaFormaDePagoDeLaFactura() {
+        when(repository.findByCliente_IdAndEliminadoFalseOrderByFechaDesc("c-lucia"))
+                .thenReturn(List.of(pendientePago));
+        when(facturaClienteRepository.findByOrdenCompraIsNotNullAndEliminadoFalse())
+                .thenReturn(List.of(factura(pendientePago, efectivo)));
+
+        assertThat(service.listarFilaCompraCliente("c-lucia")).singleElement()
+                .satisfies(fila -> {
+                    assertThat(fila.formaDePago()).isEqualTo("Efectivo");
+                    assertThat(fila.estado()).isEqualTo("PENDIENTE_PAGO");
+                });
+    }
+
+    @Test
+    void esCompraDelClienteSoloParaSuDuenio() {
+        pendientePago.getCliente().setId("c-lucia");
+
+        assertThat(service.esCompraDelCliente(pendientePago, "c-lucia")).isTrue();
+        assertThat(service.esCompraDelCliente(pendientePago, "c-martin")).isFalse();
+        assertThat(service.esCompraDelCliente(pendientePago, null)).isFalse();
+    }
+
+    @Test
     void convertirEstadoIgnoraElCarritoYLosValoresDesconocidos() {
         assertThat(service.convertirEstado("PENDIENTE_ENVIO")).isEqualTo(EstadoOrdenCompra.PENDIENTE_ENVIO);
         assertThat(service.convertirEstado("PENDIENTE_COMPLETAR")).isNull();
