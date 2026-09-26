@@ -31,22 +31,22 @@ public class ProductoService {
     private static final int LARGO_MAXIMO_TALLE = 20;
     private static final int LARGO_MAXIMO_DESCRIPCION = 2000;
 
-    // Se muestra como respaldo para productos que todavía no tienen una vigencia de precio.
+    // Se muestra cuando el producto todavía no tiene un precio vigente.
     private static final String SIN_PRECIO = "Sin precio";
 
     private final ProductoRepository repository;
     private final SubCategoriaService subCategoriaService;
     private final ImagenService imagenService;
-    private final StockService stockService;
     private final VigenciaPrecioService vigenciaPrecioService;
+    private final StockService stockService;
 
     public ProductoService(ProductoRepository repository, SubCategoriaService subCategoriaService,
-            ImagenService imagenService, StockService stockService, VigenciaPrecioService vigenciaPrecioService) {
+            ImagenService imagenService, VigenciaPrecioService vigenciaPrecioService, StockService stockService) {
         this.repository = repository;
         this.subCategoriaService = subCategoriaService;
         this.imagenService = imagenService;
-        this.stockService = stockService;
         this.vigenciaPrecioService = vigenciaPrecioService;
+        this.stockService = stockService;
     }
 
     /** Alta con una imagen ya guardada (por ejemplo, desde el seeder con ImagenService). */

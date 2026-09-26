@@ -82,6 +82,7 @@ La página `/dev/componentes` muestra todos los fragments funcionando dentro del
 | Switch | `fragments/formulario :: campoSwitch(nombre, etiqueta, marcado)` | `<div th:replace="~{fragments/formulario :: campoSwitch('enOferta', 'En oferta', ${enOferta})}"></div>` |
 | Texto largo | `fragments/formulario :: campoTextoLargo(nombre, etiqueta, valor, requerido)` | `<div th:replace="~{fragments/formulario :: campoTextoLargo('descripcion', 'Descripción', ${descripcion}, true)}"></div>` |
 | Solo lectura | `fragments/formulario :: campoSoloLectura(nombre, etiqueta, valor)` | `<div th:replace="~{fragments/formulario :: campoSoloLectura('codigo', 'Código', ${codigo})}"></div>` |
+| Fecha | `fragments/formulario :: campoFecha(nombre, etiqueta, valor, requerido)` | `<div th:replace="~{fragments/formulario :: campoFecha('fechaNacimiento', 'Fecha de nacimiento', ${fechaNacimiento}, true)}"></div>` |
 | Tabla con imagen | `fragments/tabla :: tablaRegistrosImagen(encabezados, registros, baseUrl)` | `<div th:replace="~{fragments/tabla :: tablaRegistrosImagen(${encabezados}, ${productos}, '/admin/productos')}"></div>` |
 | Campo de filtro | `fragments/filtros :: campoFiltroTexto(nombre, etiqueta, valor, ayuda)` y `campoFiltroSelect(nombre, etiqueta, opciones, seleccionado)` | `<div th:replace="~{fragments/filtros :: campoFiltroTexto('buscar', 'Buscar', ${buscar}, 'Código o nombre')}"></div>` |
 | Categoría → subcategoría | `fragments/categoria :: cascada(arbol, nombreCategoria, nombreSubCategoria, categoriaId, subCategoriaId, esFiltro)` | `<th:block th:replace="~{fragments/categoria :: cascada(${arbol}, 'categoriaId', 'subCategoriaId', ${categoriaId}, ${subCategoriaId}, false)}"></th:block>` |
@@ -115,6 +116,7 @@ El seeder crea las siguientes cuentas para desarrollo cuando la base está vací
 |---|---|---|
 | JEFE | `jefe@zero.com.ar` | `Jefe123!` |
 | ADMINISTRATIVO | `admin@zero.com.ar` | `Admin123!` |
+| CLIENTE | `cliente@zero.com.ar` | `Cliente123!` |
 
 CSRF está activado; los formularios POST deben usar `th:action` para que Thymeleaf agregue el token.
 
@@ -171,8 +173,9 @@ Entrar a **Productos** en el panel (`/admin/productos`, `JEFE` y `ADMINISTRATIVO
 - **Listado:** miniatura, código, nombre, talle, subcategoría, oferta, precio vigente y stock actual, de a
   10 por página. Se filtra por categoría → subcategoría, por oferta y con un buscador por código o nombre
   (sin importar mayúsculas ni tildes). La paginación conserva los filtros.
-- **Precio y stock:** el stock sale de `StockService.buscarStockActual` (E2-02) y el precio de la vigencia
-  activa (`VigenciaPrecioService.buscarPrecioVigente`). Si no hay una vigencia, se muestra "Sin precio".
+- **Precio y stock:** el precio es el de la vigencia actual (`VigenciaPrecioService`, E2-03), o "Sin precio" si
+  el producto todavía no tiene uno; el stock sale de `StockService.buscarStockActual` (E2-02). Los dos se
+  arman en `ProductoService.armarFila`.
 - **Formulario:** código, nombre, talle, descripción, categoría → subcategoría, switch de oferta e imagen
   (fragment `input-imagen` de E1-06, con vista previa).
 
@@ -245,6 +248,42 @@ y cierra las anteriores en una sola transacción. El porcentaje debe ser mayor q
 puede ser anterior a hoy ni igual o anterior al inicio de alguno de los precios vigentes. Si un producto del
 alcance no tiene precio vigente, se informa y no se aplica ninguna actualización. La confirmación también
 comprueba que los precios no hayan cambiado desde la vista previa.
+
+## Perfil del cliente E2-07
+
+Un cliente logueado entra desde **Mi cuenta → Mi perfil** (`/cliente/perfil`, solo `CLIENTE`). Para probar
+sin registrarse está el cliente del seeder: `cliente@zero.com.ar` / `Cliente123!`.
+
+- **Datos (RF03 y RF05):** nombre, apellido, sexo, fecha de nacimiento, tipo y número de documento,
+  nacionalidad y teléfono celular (se guarda como `ContactoTelefonico` `CELULAR`).
+- **Dirección de entrega:** fragment `direccion` de E1-04, con la cascada país → provincia → departamento →
+  localidad.
+- **Foto de perfil opcional:** fragment `input-imagen` de E1-06, guardada con `ImagenService` como `PERSONA`.
+  Al editar, si no se elige un archivo, se conserva la actual.
+- La primera vez se crea el `Cliente` y se asocia al usuario logueado; las siguientes se modifica el mismo
+  cliente, su dirección y su teléfono (no se crean otros).
+- **Sexo** no está en el diagrama, pero lo pide el enunciado: se agregó a `Cliente` como enum `Sexo`.
+
+### Validaciones
+
+- Todos los datos son obligatorios salvo la foto y los campos opcionales de la dirección.
+- Mayor de 18 años, y la fecha no puede ser futura.
+- DNI de 7 u 8 números (se guarda sin puntos) o pasaporte de 6 a 15 letras o números.
+- El documento es único por tipo y número entre todas las personas activas (clientes y empleados).
+- Si algo falla, el formulario vuelve con los datos cargados, incluida la dirección.
+
+### Para otros issues
+
+- `ClienteService.buscarClientePorUsuario(idUsuario)` devuelve un `Optional`: vacío si el cliente todavía no
+  cargó su perfil (lo usa E2-08 en `perfilCompleto`).
+- `crearCliente`, `modificarCliente`, `validar`, `listarCliente`, `listarClienteActivo` y
+  `asociarClienteUsuario(cliente, usuario)` siguen el diagrama. La pantalla usa `guardarPerfilCliente`, que
+  crea o modifica según corresponda.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/cliente/perfil` | Formulario con los datos guardados |
+| POST | `/cliente/perfil` | Crear o modificar el perfil (multipart) |
 
 ## ABM de ubicación E1-03
 

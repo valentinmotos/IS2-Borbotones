@@ -133,6 +133,8 @@ public class DataSeeder implements CommandLineRunner {
                 TipoEmpleado.JEFE, RolUsuario.JEFE);
         cargarEmpleadoSiNoExiste("Administrativo", "Zero", "admin@zero.com.ar", "Admin123!",
                 TipoEmpleado.ADMINISTRATIVO, RolUsuario.ADMINISTRATIVO);
+
+        cargarClienteSiNoExiste("cliente@zero.com.ar", "Cliente123!", RolUsuario.CLIENTE);
     }
 
     /**
@@ -204,6 +206,27 @@ public class DataSeeder implements CommandLineRunner {
         cargarEmpleado("Administrativo", "Zero", "admin@zero.com.ar", "Admin123!",
                 TipoEmpleado.ADMINISTRATIVO, RolUsuario.ADMINISTRATIVO);
         // E2-07: cliente de prueba con usuario activo.
+
+        cargarCliente("cliente@zero.com.ar", "Cliente123!", RolUsuario.CLIENTE);
+    }
+
+    private void cargarCliente(String correo, String clave, RolUsuario rol) {
+        Usuario usuario = new Usuario();
+        usuario.setNombreUsuario(correo);
+        usuario.setClave(passwordEncoder.encode(clave));
+        usuario.setRol(rol);
+        entityManager.persist(usuario);
+    }
+
+    private void cargarClienteSiNoExiste(String correo, String clave, RolUsuario rol) {
+        boolean existe = entityManager.createQuery(
+                        "select count(u) from Usuario u where lower(u.nombreUsuario) = lower(:nombreUsuario)", Long.class)
+                .setParameter("nombreUsuario", correo)
+                .getSingleResult() > 0;
+        if (!existe) {
+            cargarCliente(correo, clave, rol);
+            log.info("Usuario cliente demo creado: {}", correo);
+        }
     }
 
     private void cargarEmpleado(String nombre, String apellido, String correo, String clave,
