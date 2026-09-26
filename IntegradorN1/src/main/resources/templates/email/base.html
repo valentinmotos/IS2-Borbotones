@@ -20,7 +20,7 @@
                        style="width: 100%; max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden;">
                     <tr>
                         <td align="center" style="background-color: #0b0b0b; padding: 28px 24px;">
-                            <img src="cid:logo" alt="Zero" width="96" style="display: block; width: 96px; height: auto; border: 0;">
+                            <img th:src="${logoUrl != null ? logoUrl : 'cid:logo'}" alt="Zero" width="96" style="display: block; width: 96px; height: auto; border: 0;">
                         </td>
                     </tr>
                     <tr>

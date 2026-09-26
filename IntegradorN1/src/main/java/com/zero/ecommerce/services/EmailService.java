@@ -74,6 +74,21 @@ public class EmailService {
         }
     }
 
+    /**
+     * Envío sincrónico para procesos que necesitan saber si el servidor SMTP aceptó el
+     * mensaje antes de registrar su ejecución, como el newsletter.
+     */
+    public void enviarSincronico(String destinatario, String asunto, String template,
+            Map<String, Object> variables) throws ErrorServiceException {
+        try {
+            enviarAhora(destinatario, asunto, template, variables);
+        } catch (MailException | MessagingException | UnsupportedEncodingException e) {
+            log.warn("Falló el correo '{}' a {}: {}", asunto, destinatario, e.getMessage());
+            throw new ErrorServiceException("No se pudo enviar el correo a " + destinatario + ": "
+                    + causaLegible(e));
+        }
+    }
+
     private void enviarAhora(String destinatario, String asunto, String template, Map<String, Object> variables)
             throws ErrorServiceException, MessagingException, UnsupportedEncodingException {
         if (!TextoUtils.esCorreoValido(destinatario)) {
@@ -81,12 +96,7 @@ public class EmailService {
         }
         ConfiguracionCorreoEmpresa configuracion = configuracionService.buscarConfiguracionCorreoEmpresa();
         Map<String, String> empresa = empresaService.listarDatoCorreoSedeCentral();
-
-        Context contexto = new Context(Locale.of("es", "AR"));
-        contexto.setVariables(new HashMap<>(variables == null ? Map.of() : variables));
-        contexto.setVariable("empresa", empresa);
-        contexto.setVariable("asunto", asunto);
-        String html = templateEngine.process("email/" + template, contexto);
+        String html = renderizar(asunto, template, variables, empresa);
 
         JavaMailSenderImpl mailSender = crearMailSender(configuracion);
         MimeMessage mensaje = mailSender.createMimeMessage();
@@ -98,6 +108,22 @@ public class EmailService {
         // El logo va embebido (cid:logo): los clientes de correo no pueden cargar imágenes de localhost.
         helper.addInline("logo", new ClassPathResource(LOGO), "image/png");
         mailSender.send(mensaje);
+    }
+
+    /** Renderiza una plantilla con el mismo contexto usado en el correo. */
+    public String renderizar(String asunto, String template, Map<String, Object> variables)
+            throws ErrorServiceException {
+        Map<String, String> empresa = empresaService.listarDatoCorreoSedeCentral();
+        return renderizar(asunto, template, variables, empresa);
+    }
+
+    private String renderizar(String asunto, String template, Map<String, Object> variables,
+            Map<String, String> empresa) {
+        Context contexto = new Context(Locale.of("es", "AR"));
+        contexto.setVariables(new HashMap<>(variables == null ? Map.of() : variables));
+        contexto.setVariable("empresa", empresa);
+        contexto.setVariable("asunto", asunto);
+        return templateEngine.process("email/" + template, contexto);
     }
 
     private JavaMailSenderImpl crearMailSender(ConfiguracionCorreoEmpresa configuracion) {

@@ -44,7 +44,8 @@
                     <a th:href="@{/admin/proveedores}" class="admin-nav-item" th:classappend="${menuActivo == 'proveedores' ? 'active' : ''}">Proveedores</a>
                     <a th:href="@{/admin/compras}" class="admin-nav-item" th:classappend="${menuActivo == 'compras' ? 'active' : ''}">Compras a proveedor</a>
                     <a href="#" class="admin-nav-item">Pedidos</a>
-                    <a href="#" class="admin-nav-item">Newsletter</a>
+                    <a th:href="@{/admin/newsletter}" class="admin-nav-item"
+                       th:classappend="${menuActivo == 'newsletter' ? 'active' : ''}">Newsletter</a>
                 </div>
 
                 <div class="admin-nav-section">
