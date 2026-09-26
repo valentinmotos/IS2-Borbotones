@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
+<head>
+    <title th:text="${pageTitle}">Zero | Catálogo</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <section class="zero-section">
+            <div class="container">
+                <nav class="zero-breadcrumb" aria-label="Navegación">
+                    <a th:href="@{/}">Inicio</a><span>/</span>
+                    <a th:if="${subCategoriaActual != null}"
+                       th:href="@{/catalogo/{id}(id=${categoriaActual.id})}"
+                       th:text="${categoriaActual.nombre}">Categoría</a>
+                    <span th:if="${subCategoriaActual != null}">/</span>
+                    <strong th:text="${subCategoriaActual != null ? subCategoriaActual.nombre : categoriaActual.nombre}">Catálogo</strong>
+                </nav>
+
+                <div class="zero-section-heading">
+                    <div>
+                        <span class="zero-kicker" th:text="${categoriaActual.nombre}">Categoría</span>
+                        <h1 th:text="${subCategoriaActual != null ? subCategoriaActual.nombre : 'Todos los productos'}">Productos</h1>
+                    </div>
+                    <span class="zero-results-count" th:text="${productos.totalElements + ' productos'}">0 productos</span>
+                </div>
+
+                <div th:if="${productos.empty}" class="zero-empty-state">
+                    No hay productos con stock y precio vigente en esta sección.
+                </div>
+                <div class="zero-product-grid" th:unless="${productos.empty}">
+                    <th:block th:each="producto : ${productos.content}">
+                        <div th:replace="~{fragments/card-producto :: cardCatalogo(${producto})}"></div>
+                    </th:block>
+                </div>
+
+                <div class="mt-5" th:if="${totalPaginas > 1}"
+                     th:replace="~{fragments/paginacion :: paginacion(${paginaActual}, ${totalPaginas}, ${baseUrl})}"></div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
