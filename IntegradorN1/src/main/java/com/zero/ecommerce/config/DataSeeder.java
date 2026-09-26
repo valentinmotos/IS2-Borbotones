@@ -22,6 +22,7 @@ import com.zero.ecommerce.entities.Categoria;
 import com.zero.ecommerce.entities.Departamento;
 import com.zero.ecommerce.entities.Empleado;
 import com.zero.ecommerce.entities.FormaDePago;
+import com.zero.ecommerce.entities.Proveedor;
 import com.zero.ecommerce.entities.Nacionalidad;
 import com.zero.ecommerce.entities.Pais;
 import com.zero.ecommerce.entities.Producto;
@@ -34,12 +35,15 @@ import com.zero.ecommerce.entities.enums.TipoEmpleado;
 import com.zero.ecommerce.entities.enums.TipoPago;
 import com.zero.ecommerce.exception.ErrorServiceException;
 import com.zero.ecommerce.dto.ContactoItemDTO;
+import com.zero.ecommerce.dto.DetalleFacturaItemDTO;
 import com.zero.ecommerce.dto.DireccionForm;
 import com.zero.ecommerce.entities.enums.TipoEmpresa;
 import com.zero.ecommerce.entities.enums.TipoTelefono;
 import com.zero.ecommerce.services.CategoriaService;
 import com.zero.ecommerce.services.DepartamentoService;
 import com.zero.ecommerce.services.EmpresaService;
+import com.zero.ecommerce.services.FacturaProveedorService;
+import com.zero.ecommerce.services.FormaDePagoService;
 import com.zero.ecommerce.services.ImagenService;
 import com.zero.ecommerce.services.LocalidadService;
 import com.zero.ecommerce.services.PaisService;
@@ -88,6 +92,8 @@ public class DataSeeder implements CommandLineRunner {
     private final ProductoService productoService;
     private final VigenciaPrecioService vigenciaPrecioService;
     private final ProveedorService proveedorService;
+    private final FormaDePagoService formaDePagoService;
+    private final FacturaProveedorService facturaProveedorService;
 
     private static final double PRECIO_INICIAL_DEMO = 10000;
 
@@ -96,7 +102,8 @@ public class DataSeeder implements CommandLineRunner {
             LocalidadService localidadService, EmpresaService empresaService, CategoriaService categoriaService,
             SubCategoriaService subCategoriaService, ImagenService imagenService, ProductoService productoService,
             VigenciaPrecioService vigenciaPrecioService,
-            ProveedorService proveedorService) {
+            ProveedorService proveedorService, FormaDePagoService formaDePagoService,
+            FacturaProveedorService facturaProveedorService) {
         this.entityManager = entityManager;
         this.passwordEncoder = passwordEncoder;
         this.paisService = paisService;
@@ -110,6 +117,8 @@ public class DataSeeder implements CommandLineRunner {
         this.productoService = productoService;
         this.vigenciaPrecioService = vigenciaPrecioService;
         this.proveedorService = proveedorService;
+        this.formaDePagoService = formaDePagoService;
+        this.facturaProveedorService = facturaProveedorService;
     }
 
     @Override
@@ -402,11 +411,11 @@ public class DataSeeder implements CommandLineRunner {
     private void cargarProveedores() {
         // E3-01: 4 proveedores con sus contactos. Cada uno tiene al menos un correo y un celular para WhatsApp.
         try {
-            proveedorService.crearProveedor("Distribuidora Deportiva Cuyo S.A.", List.of(
+            Proveedor cuyo = proveedorService.crearProveedor("Distribuidora Deportiva Cuyo S.A.", List.of(
                     contacto(ContactoItemDTO.CORREO, "ventas@deportivacuyo.com.ar", "EMPRESA", "Ventas"),
                     contacto(ContactoItemDTO.CELULAR, "5492614123456", "LABORAL", "WhatsApp ventas"),
                     contacto(ContactoItemDTO.FIJO, "261 423-9870", "EMPRESA", "Mesa de entrada")));
-            proveedorService.crearProveedor("Calzados y Textiles del Plata S.R.L.", List.of(
+            Proveedor delPlata = proveedorService.crearProveedor("Calzados y Textiles del Plata S.R.L.", List.of(
                     contacto(ContactoItemDTO.CORREO, "contacto@textilesdelplata.com", "EMPRESA", "Atención general"),
                     contacto(ContactoItemDTO.CELULAR, "5491138765432", "LABORAL", "WhatsApp comercios")));
             proveedorService.crearProveedor("Indumentaria Atlética San Juan", List.of(
@@ -416,10 +425,37 @@ public class DataSeeder implements CommandLineRunner {
                     contacto(ContactoItemDTO.CORREO, "info@fitnessandina.com.ar", "EMPRESA", "Consultas"),
                     contacto(ContactoItemDTO.CORREO, "administracion@fitnessandina.com.ar", "LABORAL", "Administración"),
                     contacto(ContactoItemDTO.CELULAR, "5492615558899", "LABORAL", "WhatsApp guardia")));
+            cargarComprasPedidas(cuyo, delPlata);
         } catch (ErrorServiceException e) {
             throw new IllegalStateException("Los datos iniciales de proveedores no son válidos: " + e.getMessage(), e);
         }
         // E3-04: compras de demostración recibidas (stock inicial).
+    }
+
+    // E3-03: dos compras pedidas (SIN_DEFINIR), sin recibir: no mueven el stock.
+    private void cargarComprasPedidas(Proveedor cuyo, Proveedor delPlata) {
+        try {
+            String transferencia = formaDePagoService.listarFormaDePagoActivo().stream()
+                    .filter(f -> f.getTipoPago() == TipoPago.TRANSFERENCIA)
+                    .findFirst()
+                    .orElseThrow(() -> new ErrorServiceException("Falta la forma de pago Transferencia."))
+                    .getId();
+            facturaProveedorService.crearFactura(cuyo.getId(), transferencia, List.of(
+                    detalleCompra("REM-DRY-H-M", 20, 4500),
+                    detalleCompra("REM-DRY-H-L", 15, 4500),
+                    detalleCompra("SHO-RUN-H-M", 10, 3800)));
+            facturaProveedorService.crearFactura(delPlata.getId(), transferencia, List.of(
+                    detalleCompra("ZAP-RUN-41", 6, 32000),
+                    detalleCompra("ZAP-RUN-42", 6, 32000)));
+        } catch (ErrorServiceException e) {
+            throw new IllegalStateException("Las compras de demostración no son válidas: " + e.getMessage(), e);
+        }
+    }
+
+    private DetalleFacturaItemDTO detalleCompra(String codigoProducto, int cantidad, double precioCosto)
+            throws ErrorServiceException {
+        return new DetalleFacturaItemDTO(productoService.buscarProductoPorCodigo(codigoProducto).getId(), cantidad,
+                precioCosto);
     }
 
     private ContactoItemDTO contacto(String tipo, String valor, String tipoContacto, String observacion) {

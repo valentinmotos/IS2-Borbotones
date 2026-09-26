@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Abastecimiento</span><span class="breadcrumb-separator">/</span>
+        <a th:href="@{/admin/compras}">Compras a proveedor</a><span class="breadcrumb-separator">/</span>
+        <span>Detalle</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel mb-4">
+            <h2>Datos</h2>
+            <dl>
+                <dt>Número</dt>
+                <dd th:text="${compra.numeroFactura}">1</dd>
+                <dt>Fecha</dt>
+                <dd th:text="${#temporals.format(compra.fechaFactura, 'dd/MM/yyyy')}">01/01/2026</dd>
+                <dt>Proveedor</dt>
+                <dd th:text="${compra.proveedor.razonSocial}">Proveedor</dd>
+                <dt>Forma de pago</dt>
+                <dd th:text="${compra.formaDePago != null ? compra.formaDePago.observacion : '-'}">Transferencia</dd>
+                <dt>Estado</dt>
+                <dd>
+                    <span th:replace="~{fragments/badge-estado :: badge(${compra.estado.name()})}"></span>
+                    <span th:if="${compra.estado.name() == 'SIN_DEFINIR'}" class="text-muted">Pedida: todavía no se recibió la mercadería.</span>
+                    <span th:if="${compra.estado.name() == 'PAGADA'}" class="text-muted">Recibida.</span>
+                </dd>
+            </dl>
+            <div class="zero-form-actions">
+                <a th:if="${celular != null and compra.estado.name() == 'SIN_DEFINIR'}"
+                   th:href="@{'https://wa.me/' + ${celular.telefono}(text=${mensajeWhatsApp})}"
+                   target="_blank" rel="noopener noreferrer" class="btn zero-btn-whatsapp"
+                   th:attr="aria-label=${'Avisar a ' + compra.proveedor.razonSocial + ' por WhatsApp'}">
+                    <i class="fa fa-whatsapp" aria-hidden="true"></i> Avisar al proveedor por WhatsApp
+                </a>
+                <a th:href="@{/admin/compras}" class="zero-button secondary">Volver</a>
+            </div>
+        </div>
+        <div class="zero-panel">
+            <h2>Productos</h2>
+            <div class="table-responsive zero-table-wrap">
+                <table class="table table-striped table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Código</th>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Talle</th>
+                            <th scope="col">Cantidad</th>
+                            <th scope="col">Precio de costo</th>
+                            <th scope="col">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="detalle : ${compra.detalles}" th:unless="${detalle.eliminado}">
+                            <td th:text="${detalle.producto.codigo}">COD</td>
+                            <td th:text="${detalle.producto.nombre}">Producto</td>
+                            <td th:text="${detalle.producto.talle}">M</td>
+                            <td class="text-right" th:text="${detalle.cantidad}">1</td>
+                            <td class="text-right" th:text="${'$' + #numbers.formatDecimal(detalle.precioUnitario, 1, 'POINT', 2, 'COMMA')}">$0,00</td>
+                            <td class="text-right" th:text="${'$' + #numbers.formatDecimal(detalle.subtotal, 1, 'POINT', 2, 'COMMA')}">$0,00</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th scope="row" colspan="5" class="text-right">Total</th>
+                            <th class="text-right" th:text="${'$' + #numbers.formatDecimal(compra.totalPagado, 1, 'POINT', 2, 'COMMA')}">$0,00</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

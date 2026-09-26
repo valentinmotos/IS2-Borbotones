@@ -42,7 +42,7 @@
                        th:classappend="${menuActivo == 'precios-actualizacion' ? 'active' : ''}">Actualización por inflación</a>
                     <a th:href="@{/admin/categorias}" class="admin-nav-item" th:classappend="${menuActivo == 'categorias' ? 'active' : ''}">Categorías</a>
                     <a th:href="@{/admin/proveedores}" class="admin-nav-item" th:classappend="${menuActivo == 'proveedores' ? 'active' : ''}">Proveedores</a>
-                    <a href="#" class="admin-nav-item">Compras a proveedor</a>
+                    <a th:href="@{/admin/compras}" class="admin-nav-item" th:classappend="${menuActivo == 'compras' ? 'active' : ''}">Compras a proveedor</a>
                     <a href="#" class="admin-nav-item">Pedidos</a>
                     <a href="#" class="admin-nav-item">Newsletter</a>
                 </div>

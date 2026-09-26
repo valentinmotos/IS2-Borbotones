@@ -724,6 +724,59 @@ a, a:hover {
     min-width: 10rem;
 }
 
+/* Tabla dinámica de productos del formulario de compra a proveedor: mismo criterio que la de contactos. */
+.zero-tabla-detalles td {
+    vertical-align: middle;
+}
+
+.zero-tabla-detalles .form-control {
+    min-width: 8rem;
+}
+
+.zero-tabla-detalles td:first-child {
+    min-width: 18rem;
+}
+
+/* Como en la tabla con imagen: una celda flex no se estira con filas altas y se desalinea del borde. */
+.zero-tabla-detalles td.zero-table-actions {
+    display: table-cell;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.zero-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Select con buscador (Select2 del template) dentro de un formulario: mismo aspecto que .zero-form .form-control. */
+.zero-form .select2-container--default .select2-selection--single {
+    border: 1px solid rgba(0, 0, 0, 0.16);
+    border-radius: 10px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+    height: 44px;
+}
+
+.zero-form .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #495057;
+    line-height: 42px;
+    padding-left: 0.75rem;
+}
+
+.zero-form .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 42px;
+    right: 0.5rem;
+}
+
+.zero-form .select2-container--default.select2-container--focus .select2-selection--single,
+.zero-form .select2-container--default.select2-container--open .select2-selection--single {
+    border-color: var(--zero-accent-strong);
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background: var(--zero-charcoal);
+}
+
 .zero-form-actions {
     display: flex;
     flex-wrap: wrap;
