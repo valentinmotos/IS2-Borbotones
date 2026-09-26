@@ -443,6 +443,35 @@ responsive y paginación mediante el parámetro `page`.
 La firma compartida con las siguientes issues es
 `CatalogoService.listar(CatalogoFiltro)`, que devuelve objetos `ProductoCatalogoDTO` sin exponer
 entidades JPA a la vista.
+## ABM de proveedores E3-01
+
+**Proveedores** (`/admin/proveedores`, `JEFE` y `ADMINISTRATIVO`): listado con buscador por razón social y
+formulario con una lista dinámica de contactos. Cada fila tiene tipo (correo, celular o fijo), valor, ámbito
+(`TipoContacto`) y observación; "Agregar contacto" suma una fila y "Quitar" la saca
+(`static/js/proveedor-contactos.js`, que clona el `<template id="plantilla-contacto">` de la vista).
+
+### Validaciones y reglas (RF24)
+
+- Razón social obligatoria y única entre los proveedores activos, sin importar mayúsculas.
+- Al menos un correo con formato válido y al menos un **celular para WhatsApp**.
+- El celular se guarda **solo con dígitos**, en formato internacional: se puede escribir
+  `+54 9 261 412-3456` y queda `5492614123456`. Tiene que tener entre 11 y 15 dígitos, sin 0 adelante, y los
+  de Argentina empiezan con `549` y tienen 13 dígitos (sin el 0 del área ni el 15). Así `wa.me` abre el chat
+  correcto.
+- Los contactos se crean, modifican y dan de baja con `ContactoService`, el mismo de Empresa y Cliente.
+- Al editar, cada fila lleva el id de su contacto: se **modifica ese contacto** en lugar de crear otro. Las
+  filas quitadas se dan de baja y las nuevas se crean. Si un correo pasa a ser teléfono (o al revés), se da de
+  baja el anterior y se crea uno nuevo, porque son clases distintas.
+- La baja del proveedor es lógica e incluye sus contactos.
+
+### Para otros issues
+
+- `Proveedor.buscarCelularActivo()`: el celular al que se le escribe por WhatsApp. El botón del listado abre
+  `https://wa.me/{telefono}`; lo pueden usar la compra a proveedor (E3-03) y la reposición (E5-04).
+- `Proveedor.listarCorreoActivo()` y `listarTelefonoActivo()`: los contactos activos del proveedor.
+- `ProveedorService.listarProveedorActivo()` para los selects de proveedor.
+- El seeder carga 4 proveedores con sus contactos: Distribuidora Deportiva Cuyo S.A., Calzados y Textiles del
+  Plata S.R.L., Indumentaria Atlética San Juan y Accesorios Fitness Andina.
 
 ## ABM de referencia E0-06: Nacionalidad
 

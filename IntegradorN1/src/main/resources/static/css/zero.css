@@ -700,6 +700,30 @@ a, a:hover {
     min-width: 185px;
 }
 
+/* Botón de WhatsApp del listado de proveedores, con el verde de WhatsApp. */
+.btn.zero-btn-whatsapp {
+    background: #25d366;
+    border-color: #25d366;
+    color: #ffffff;
+}
+
+.btn.zero-btn-whatsapp:hover,
+.btn.zero-btn-whatsapp:focus {
+    background: #1ebe5b;
+    border-color: #1ebe5b;
+    color: #ffffff;
+}
+
+/* Lista dinámica de contactos del formulario de proveedor: en pantallas chicas la tabla se desplaza en lugar
+   de achicar los campos. */
+.zero-tabla-contactos td {
+    vertical-align: middle;
+}
+
+.zero-tabla-contactos .form-control {
+    min-width: 10rem;
+}
+
 .zero-form-actions {
     display: flex;
     flex-wrap: wrap;
