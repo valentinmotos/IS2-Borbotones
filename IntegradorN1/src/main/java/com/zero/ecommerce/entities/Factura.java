@@ -64,4 +64,7 @@ public abstract class Factura extends BaseEntity {
      * Signo con el que los detalles de esta factura mueven el stock: +1 entra, -1 sale.
      */
     public abstract int getSignoStock();
+
+    /** Polimorfismo: cómo se nombra la factura en los movimientos de stock ("Compra N.º 3", "Venta N.º 1"). */
+    public abstract String describir();
 }

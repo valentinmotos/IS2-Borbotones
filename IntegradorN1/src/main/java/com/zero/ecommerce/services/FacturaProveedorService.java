@@ -22,7 +22,8 @@ import com.zero.ecommerce.repositories.FacturaProveedorRepository;
 
 /**
  * Compras de mercadería a proveedores (RF25). Una compra es una FacturaProveedor: se crea en SIN_DEFINIR, que
- * significa "pedida". La recepción, que la pasa a PAGADA y genera el stock, y la anulación son de E3-04.
+ * significa "pedida". Al recibirla pasa a PAGADA y se genera un movimiento de stock por cada detalle (RF26). Una
+ * compra pedida también se puede anular.
  */
 @Service
 @Transactional(readOnly = true)
@@ -32,13 +33,15 @@ public class FacturaProveedorService {
     private final ProveedorService proveedorService;
     private final FormaDePagoService formaDePagoService;
     private final ProductoService productoService;
+    private final StockService stockService;
 
     public FacturaProveedorService(FacturaProveedorRepository repository, ProveedorService proveedorService,
-            FormaDePagoService formaDePagoService, ProductoService productoService) {
+            FormaDePagoService formaDePagoService, ProductoService productoService, StockService stockService) {
         this.repository = repository;
         this.proveedorService = proveedorService;
         this.formaDePagoService = formaDePagoService;
         this.productoService = productoService;
+        this.stockService = stockService;
     }
 
     /**
@@ -97,6 +100,43 @@ public class FacturaProveedorService {
             if (precio == null || !Double.isFinite(precio) || precio <= 0) {
                 throw new ErrorServiceException("El precio de costo de " + descripcion + " tiene que ser mayor a 0.");
             }
+        }
+    }
+
+    /**
+     * Marca la compra como recibida (RF26): pasa a PAGADA y registra un movimiento de stock por cada detalle. Todo
+     * corre en una transacción: si un movimiento falla, la compra sigue pedida y no queda stock a medias.
+     */
+    @Transactional(rollbackFor = ErrorServiceException.class)
+    public FacturaProveedor recibirFactura(String id) throws ErrorServiceException {
+        FacturaProveedor factura = buscarFactura(id);
+        validarPedida(factura, "recibir");
+        factura.setEstado(EstadoFactura.PAGADA);
+        for (DetalleFactura detalle : factura.getDetalles()) {
+            if (!detalle.isEliminado()) {
+                stockService.registrarMovimiento(detalle);
+            }
+        }
+        return repository.save(factura);
+    }
+
+    /** Anula una compra pedida. Como todavía no se recibió, no hay stock que revertir. */
+    @Transactional(rollbackFor = ErrorServiceException.class)
+    public FacturaProveedor anularFactura(String id) throws ErrorServiceException {
+        FacturaProveedor factura = buscarFactura(id);
+        validarPedida(factura, "anular");
+        factura.setEstado(EstadoFactura.ANULADA);
+        return repository.save(factura);
+    }
+
+    private void validarPedida(FacturaProveedor factura, String accion) throws ErrorServiceException {
+        if (factura.getEstado() == EstadoFactura.PAGADA) {
+            throw new ErrorServiceException("La compra N.º " + factura.getNumeroFactura()
+                    + " ya fue recibida: no se puede " + (accion.equals("recibir") ? "recibir de nuevo" : accion) + ".");
+        }
+        if (factura.getEstado() == EstadoFactura.ANULADA) {
+            throw new ErrorServiceException("La compra N.º " + factura.getNumeroFactura()
+                    + " está anulada: no se puede " + accion + ".");
         }
     }
 
