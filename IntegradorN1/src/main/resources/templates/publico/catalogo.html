@@ -24,17 +24,21 @@
                     <span class="zero-results-count" th:text="${productos.totalElements + ' productos'}">0 productos</span>
                 </div>
 
-                <div th:if="${productos.empty}" class="zero-empty-state">
-                    No hay productos con stock y precio vigente en esta sección.
+                <div class="zero-search-layout">
+                    <div th:replace="~{fragments/filtros :: catalogo(${filtrosAction}, ${filtrosLimpiarUrl}, ${terminoBuscado}, ${precioMin}, ${precioMax}, ${talleSeleccionado}, ${soloOfertas}, ${ordenSeleccionado})}"></div>
+                    <div>
+                        <div th:if="${productos.empty}" class="zero-empty-state">
+                            No hay productos que coincidan con los filtros en esta sección.
+                        </div>
+                        <div class="zero-product-grid" th:unless="${productos.empty}">
+                            <th:block th:each="producto : ${productos.content}">
+                                <div th:replace="~{fragments/card-producto :: cardCatalogo(${producto})}"></div>
+                            </th:block>
+                        </div>
+                        <div th:if="${totalPaginas > 1}"
+                             th:replace="~{fragments/paginacion :: paginacion(${paginaActual}, ${totalPaginas}, ${baseUrl})}"></div>
+                    </div>
                 </div>
-                <div class="zero-product-grid" th:unless="${productos.empty}">
-                    <th:block th:each="producto : ${productos.content}">
-                        <div th:replace="~{fragments/card-producto :: cardCatalogo(${producto})}"></div>
-                    </th:block>
-                </div>
-
-                <div class="mt-5" th:if="${totalPaginas > 1}"
-                     th:replace="~{fragments/paginacion :: paginacion(${paginaActual}, ${totalPaginas}, ${baseUrl})}"></div>
             </div>
         </section>
     </div>

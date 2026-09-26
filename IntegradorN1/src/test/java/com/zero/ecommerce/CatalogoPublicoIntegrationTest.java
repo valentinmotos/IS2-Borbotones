@@ -86,6 +86,34 @@ class CatalogoPublicoIntegrationTest {
                 .andExpect(content().string(containsString("?page=1")));
     }
 
+    @Test
+    void buscaZapatillaPorTalleYOrdenSinMostrarProductosNoCoincidentes() throws Exception {
+        mockMvc.perform(get("/buscar")
+                        .param("q", "zapatilla")
+                        .param("talle", "42")
+                        .param("orden", "precio_asc"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("publico/buscar"))
+                .andExpect(content().string(containsString("Zapatilla Zero Run")))
+                .andExpect(content().string(containsString("Talle 42")))
+                .andExpect(content().string(not(containsString("Talle 41"))))
+                .andExpect(content().string(not(containsString("Zapatilla Zero Flow Mujer"))));
+    }
+
+    @Test
+    void aplicaLosMismosFiltrosEnLaPaginaDeCategoria() throws Exception {
+        Producto zapatilla = productoService.buscarProductoPorCodigo("ZAP-RUN-42");
+        String categoriaId = zapatilla.getSubCategoria().getCategoria().getId();
+
+        mockMvc.perform(get("/catalogo/{categoriaId}", categoriaId)
+                        .param("talle", "42")
+                        .param("orden", "nombre"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("talleSeleccionado", "42"))
+                .andExpect(content().string(containsString("Zapatilla Zero Run")))
+                .andExpect(content().string(not(containsString("Talle 41"))));
+    }
+
     private void registrarStock(Producto producto, int cantidad) {
         Stock stock = new Stock();
         stock.setProducto(producto);

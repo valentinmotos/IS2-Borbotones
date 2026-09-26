@@ -55,5 +55,53 @@
                     th:selected="${opcion.key == seleccionado}">Opción</option>
         </select>
     </div>
+
+    <!-- Filtros compartidos por la búsqueda y las páginas de categoría (E3-02). -->
+    <aside th:fragment="catalogo(action, limpiarUrl, termino, precioMin, precioMax, talle, soloOfertas, orden)"
+           class="zero-catalog-sidebar">
+        <button class="zero-filter-toggle" type="button" data-toggle="collapse"
+                data-target="#catalogo-filtros" aria-expanded="false" aria-controls="catalogo-filtros">
+            <i class="fa fa-filter" aria-hidden="true"></i> Filtros y orden
+        </button>
+        <div id="catalogo-filtros" class="zero-filter-panel collapse d-md-block">
+            <h2>Filtrar por</h2>
+            <form th:action="${action}" method="get">
+                <input th:if="${termino != null}" type="hidden" name="q" th:value="${termino}">
+                <div class="zero-filter-group">
+                    <label for="filtro-precio-min">Precio</label>
+                    <div class="zero-price-range">
+                        <input id="filtro-precio-min" class="form-control" type="number" name="precioMin"
+                               min="0" step="0.01" placeholder="Mín." th:value="${precioMin}">
+                        <input id="filtro-precio-max" class="form-control" type="number" name="precioMax"
+                               min="0" step="0.01" placeholder="Máx." th:value="${precioMax}">
+                    </div>
+                </div>
+                <div class="zero-filter-group">
+                    <label for="filtro-talle">Talle</label>
+                    <input id="filtro-talle" class="form-control" type="text" name="talle"
+                           placeholder="Ej.: 42, M, XL" th:value="${talle}">
+                </div>
+                <div class="zero-filter-group">
+                    <label for="filtro-orden">Ordenar</label>
+                    <select id="filtro-orden" class="form-control" name="orden">
+                        <option value="" th:selected="${orden == null or #strings.isEmpty(orden)}">Relevancia</option>
+                        <option value="precio_asc" th:selected="${orden == 'precio_asc'}">Menor precio</option>
+                        <option value="precio_desc" th:selected="${orden == 'precio_desc'}">Mayor precio</option>
+                        <option value="nombre" th:selected="${orden == 'nombre'}">Nombre A-Z</option>
+                        <option value="novedades" th:selected="${orden == 'novedades'}">Novedades</option>
+                    </select>
+                </div>
+                <div class="custom-control custom-checkbox zero-filter-offers">
+                    <input id="filtro-ofertas" class="custom-control-input" type="checkbox"
+                           name="ofertas" value="true" th:checked="${soloOfertas}">
+                    <label class="custom-control-label" for="filtro-ofertas">Solo ofertas</label>
+                </div>
+                <div class="zero-filter-actions">
+                    <button type="submit" class="zero-button primary">Aplicar</button>
+                    <a class="zero-button secondary" th:href="${limpiarUrl}">Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </aside>
 </body>
 </html>

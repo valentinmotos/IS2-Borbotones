@@ -36,23 +36,32 @@ public class BusquedaController {
             @RequestParam(name = "page", defaultValue = "1") int pagina,
             Model model) {
 
-        CatalogoFiltro filtro = CatalogoFiltro.busqueda(precioMin, precioMax, talle, ofertas, orden);
-        List<ProductoCatalogoDTO> todos = catalogoService.buscar(q, filtro);
+        String termino = q == null ? "" : q.strip();
+        String talleNormalizado = normalizarTexto(talle);
+        String ordenNormalizado = normalizarTexto(orden);
+        Double minimo = normalizarPrecio(precioMin);
+        Double maximo = normalizarPrecio(precioMax);
+
+        CatalogoFiltro filtro = CatalogoFiltro.busqueda(
+                minimo, maximo, talleNormalizado, ofertas, ordenNormalizado);
+        List<ProductoCatalogoDTO> todos = catalogoService.buscar(termino, filtro);
 
         Page<ProductoCatalogoDTO> resultado = paginar(todos, pagina);
-        String baseUrl = construirBaseUrl(q, precioMin, precioMax, talle, ofertas, orden);
+        String baseUrl = construirBaseUrl(termino, minimo, maximo, talleNormalizado, ofertas, ordenNormalizado);
 
         model.addAttribute("productos", resultado);
         model.addAttribute("paginaActual", resultado.getNumber() + 1);
         model.addAttribute("totalPaginas", resultado.getTotalPages());
         model.addAttribute("baseUrl", baseUrl);
-        model.addAttribute("terminoBuscado", q);
-        model.addAttribute("precioMin", precioMin);
-        model.addAttribute("precioMax", precioMax);
-        model.addAttribute("talleSeleccionado", talle);
+        model.addAttribute("terminoBuscado", termino);
+        model.addAttribute("precioMin", minimo);
+        model.addAttribute("precioMax", maximo);
+        model.addAttribute("talleSeleccionado", talleNormalizado);
         model.addAttribute("soloOfertas", Boolean.TRUE.equals(ofertas));
-        model.addAttribute("ordenSeleccionado", orden);
-        model.addAttribute("pageTitle", q.isBlank() ? "Zero | Buscar" : "Zero | Resultados: " + q);
+        model.addAttribute("ordenSeleccionado", ordenNormalizado);
+        model.addAttribute("filtrosAction", "/buscar");
+        model.addAttribute("filtrosLimpiarUrl", "/buscar?q=" + encode(termino));
+        model.addAttribute("pageTitle", termino.isBlank() ? "Zero | Buscar" : "Zero | Resultados: " + termino);
 
         return "publico/buscar";
     }
@@ -73,10 +82,10 @@ public class BusquedaController {
         StringBuilder sb = new StringBuilder("/buscar?q=");
         sb.append(encode(q));
         if (precioMin != null) {
-            sb.append("&precioMin=").append(precioMin.intValue());
+            sb.append("&precioMin=").append(precioMin);
         }
         if (precioMax != null) {
-            sb.append("&precioMax=").append(precioMax.intValue());
+            sb.append("&precioMax=").append(precioMax);
         }
         if (talle != null && !talle.isBlank()) {
             sb.append("&talle=").append(encode(talle));
@@ -94,10 +103,14 @@ public class BusquedaController {
         if (valor == null || valor.isBlank()) {
             return "";
         }
-        try {
-            return java.net.URLEncoder.encode(valor, java.nio.charset.StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            return valor;
-        }
+        return java.net.URLEncoder.encode(valor, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    private Double normalizarPrecio(Double precio) {
+        return precio != null && Double.isFinite(precio) && precio >= 0 ? precio : null;
+    }
+
+    private String normalizarTexto(String valor) {
+        return valor == null || valor.isBlank() ? null : valor.strip();
     }
 }

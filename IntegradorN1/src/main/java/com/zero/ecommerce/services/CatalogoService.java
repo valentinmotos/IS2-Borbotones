@@ -114,7 +114,7 @@ public class CatalogoService {
         String talleNorm =
                 (alcance.talle() == null || alcance.talle().isBlank())
                         ? null
-                        : alcance.talle().strip().toLowerCase();
+                        : alcance.talle().strip().toLowerCase(Locale.ROOT);
 
         List<ProductoCatalogoDTO> resultado = new ArrayList<>();
 
@@ -143,7 +143,7 @@ public class CatalogoService {
                     && (producto.getTalle() == null
                     || !producto.getTalle()
                     .strip()
-                    .toLowerCase()
+                    .toLowerCase(Locale.ROOT)
                     .equals(talleNorm))) {
 
                 continue;
@@ -234,7 +234,7 @@ public class CatalogoService {
         }
 
         Comparator<ProductoCatalogoDTO> comparador =
-                switch (orden.toLowerCase()) {
+                switch (orden.toLowerCase(Locale.ROOT)) {
 
                     case "precio_asc" ->
                             Comparator.comparingDouble(
@@ -250,6 +250,10 @@ public class CatalogoService {
                                     p -> TextoUtils.normalizar(
                                             p.nombre()));
 
+                    // El modelo no guarda fecha de alta. Se conserva la convención
+                    // de la home: los últimos del listado activo son las novedades.
+                    case "novedades" -> (primero, segundo) -> 0;
+
                     default -> null;
                 };
 
@@ -257,9 +261,13 @@ public class CatalogoService {
             return List.copyOf(lista);
         }
 
-        return lista.stream()
-                .sorted(comparador)
-                .toList();
+        if ("novedades".equalsIgnoreCase(orden)) {
+            List<ProductoCatalogoDTO> novedades = new ArrayList<>(lista);
+            java.util.Collections.reverse(novedades);
+            return List.copyOf(novedades);
+        }
+
+        return lista.stream().sorted(comparador).toList();
     }
 
     public Page<ProductoCatalogoDTO> listarOfertas(
