@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout/publico}">
+
+<head>
+    <title th:text="${pageTitle}">Zero | Buscar</title>
+    <style>
+        /* ── Panel lateral de filtros ────────────────────────────────────── */
+        .zero-search-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .zero-filter-panel {
+            background: #fafafa;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            padding: 1.5rem;
+            position: sticky;
+            top: 1rem;
+        }
+
+        .zero-filter-panel h2 {
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-bottom: 1.25rem;
+            color: #333;
+        }
+
+        .zero-filter-group {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .zero-filter-group:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .zero-filter-group label,
+        .zero-filter-group legend {
+            font-size: .82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #555;
+            display: block;
+            margin-bottom: .6rem;
+        }
+
+        .zero-filter-group input[type="number"],
+        .zero-filter-group input[type="text"],
+        .zero-filter-group select {
+            width: 100%;
+            padding: .45rem .75rem;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            font-size: .9rem;
+            background: #fff;
+            color: #333;
+        }
+
+        .zero-filter-group .price-range {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .5rem;
+        }
+
+        .zero-filter-check {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .9rem;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .zero-filter-actions {
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-filtrar {
+            background: #333;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: .6rem 1rem;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            letter-spacing: .04em;
+            transition: background .2s;
+        }
+
+        .btn-filtrar:hover {
+            background: #111;
+        }
+
+        .btn-limpiar {
+            background: transparent;
+            border: 1px solid #aaa;
+            border-radius: 4px;
+            padding: .5rem 1rem;
+            font-size: .85rem;
+            color: #666;
+            text-decoration: none;
+            text-align: center;
+            transition: border-color .2s, color .2s;
+        }
+
+        .btn-limpiar:hover {
+            border-color: #333;
+            color: #333;
+        }
+
+        /* ── Cabecera de resultados ──────────────────────────────────────── */
+        .zero-search-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .zero-search-header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #222;
+        }
+
+        .zero-search-header h1 em {
+            color: #e02020;
+            font-style: normal;
+        }
+
+        .zero-results-meta {
+            font-size: .88rem;
+            color: #777;
+        }
+
+        .zero-sort-bar {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .88rem;
+            color: #555;
+        }
+
+        .zero-sort-bar select {
+            padding: .35rem .65rem;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            font-size: .88rem;
+            background: #fff;
+            color: #333;
+        }
+
+        /* ── Colapsable mobile ──────────────────────────────────────────── */
+        .zero-filter-toggle {
+            display: none;
+            width: 100%;
+            background: #333;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: .65rem 1rem;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .zero-search-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .zero-filter-toggle {
+                display: block;
+            }
+
+            .zero-filter-panel {
+                position: static;
+            }
+
+            .zero-filter-panel[data-collapsed="true"] .zero-filter-body {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <section class="zero-section">
+            <div class="container">
+
+                <!-- Breadcrumb -->
+                <nav class="zero-breadcrumb" aria-label="Navegación">
+                    <a th:href="@{/}">Inicio</a><span>/</span>
+                    <strong>Búsqueda</strong>
+                </nav>
+
+                <div class="zero-search-layout">
+
+                    <!-- ── Panel lateral de filtros ───────────────────────────── -->
+                    <aside>
+                        <!-- Botón toggle (solo mobile) -->
+                        <button class="zero-filter-toggle" id="btnFiltros" onclick="toggleFiltros()">
+                            ☰ Filtros
+                        </button>
+
+                        <div class="zero-filter-panel" id="panelFiltros" data-collapsed="true">
+                            <h2>Filtrar por</h2>
+                            <div class="zero-filter-body">
+
+                                <form th:action="@{/buscar}" method="get" id="formFiltros">
+                                    <!-- Conserva el término de búsqueda -->
+                                    <input type="hidden" name="q" th:value="${terminoBuscado}">
+
+                                    <!-- Rango de precio -->
+                                    <div class="zero-filter-group">
+                                        <legend>Precio</legend>
+                                        <div class="price-range">
+                                            <input type="number" name="precioMin" id="precioMin" placeholder="Mín"
+                                                min="0" th:value="${precioMin}">
+                                            <input type="number" name="precioMax" id="precioMax" placeholder="Máx"
+                                                min="0" th:value="${precioMax}">
+                                        </div>
+                                    </div>
+
+                                    <!-- Talle -->
+                                    <div class="zero-filter-group">
+                                        <label for="talleInput">Talle</label>
+                                        <input type="text" name="talle" id="talleInput" placeholder="Ej: 42, M, XL..."
+                                            th:value="${talleSeleccionado}">
+                                    </div>
+
+                                    <!-- Solo ofertas -->
+                                    <div class="zero-filter-group">
+                                        <label class="zero-filter-check">
+                                            <input type="checkbox" name="ofertas" value="true"
+                                                th:checked="${soloOfertas}">
+                                            Solo productos en oferta
+                                        </label>
+                                    </div>
+
+                                    <!-- Orden (duplicado aquí para sincronizar con el select superior) -->
+                                    <input type="hidden" name="orden" id="ordenHidden" th:value="${ordenSeleccionado}">
+
+                                    <div class="zero-filter-actions">
+                                        <button type="submit" class="btn-filtrar">Aplicar filtros</button>
+                                        <a th:href="@{/buscar(q=${terminoBuscado})}" class="btn-limpiar">Limpiar
+                                            filtros</a>
+                                    </div>
+                                </form>
+
+                            </div><!-- /.zero-filter-body -->
+                        </div><!-- /.zero-filter-panel -->
+                    </aside>
+
+                    <!-- ── Área de resultados ─────────────────────────────────── -->
+                    <div>
+                        <div class="zero-search-header">
+                            <h1>
+                                <span th:if="${terminoBuscado != null and !#strings.isEmpty(terminoBuscado)}">
+                                    Resultados para <em th:text="'«' + ${terminoBuscado} + '»'"></em>
+                                </span>
+                                <span th:unless="${terminoBuscado != null and !#strings.isEmpty(terminoBuscado)}">
+                                    Todos los productos
+                                </span>
+                            </h1>
+
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="zero-results-meta"
+                                    th:text="${productos.totalElements + ' resultado' + (productos.totalElements == 1 ? '' : 's')}">
+                                    0 resultados
+                                </span>
+
+                                <!-- Select de orden (sincronizado con el form de filtros) -->
+                                <div class="zero-sort-bar">
+                                    <label for="selectOrden">Ordenar:</label>
+                                    <select id="selectOrden" onchange="aplicarOrden(this.value)">
+                                        <option value="" th:selected="${#strings.isEmpty(ordenSeleccionado)}">Relevancia
+                                        </option>
+                                        <option value="precio_asc" th:selected="${ordenSeleccionado == 'precio_asc'}">
+                                            Menor precio</option>
+                                        <option value="precio_desc" th:selected="${ordenSeleccionado == 'precio_desc'}">
+                                            Mayor precio</option>
+                                        <option value="nombre" th:selected="${ordenSeleccionado == 'nombre'}">Nombre A-Z
+                                        </option>
+                                        <option value="novedades" th:selected="${ordenSeleccionado == 'novedades'}">
+                                            Novedades</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grilla de productos -->
+                        <div th:if="${productos.empty}" class="zero-empty-state">
+                            <p>No encontramos productos que coincidan con tu búsqueda.</p>
+                            <p th:if="${terminoBuscado != null and !#strings.isEmpty(terminoBuscado)}">
+                                Intentá con otros términos o eliminá algunos filtros.
+                            </p>
+                            <a th:href="@{/}" class="btn-filtrar"
+                                style="display:inline-block;margin-top:1rem;text-decoration:none;">
+                                Volver al inicio
+                            </a>
+                        </div>
+
+                        <div class="zero-product-grid" th:unless="${productos.empty}">
+                            <th:block th:each="producto : ${productos.content}">
+                                <div th:replace="~{fragments/card-producto :: cardCatalogo(${producto})}"></div>
+                            </th:block>
+                        </div>
+
+                        <!-- Paginación -->
+                        <div class="mt-5" th:if="${totalPaginas > 1}"
+                            th:replace="~{fragments/paginacion :: paginacion(${paginaActual}, ${totalPaginas}, ${baseUrl})}">
+                        </div>
+                    </div>
+
+                </div><!-- /.zero-search-layout -->
+            </div><!-- /.container -->
+        </section>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <script>
+            // ── Toggle del panel de filtros en mobile ────────────────────────
+            function toggleFiltros() {
+                const panel = document.getElementById('panelFiltros');
+                const collapsed = panel.dataset.collapsed === 'true';
+                panel.dataset.collapsed = collapsed ? 'false' : 'true';
+                document.getElementById('btnFiltros').textContent =
+                    collapsed ? '✕ Cerrar filtros' : '☰ Filtros';
+            }
+
+            // ── Cambiar orden sin reenviar el formulario de filtros ──────────
+            function aplicarOrden(valor) {
+                document.getElementById('ordenHidden').value = valor;
+                document.getElementById('formFiltros').submit();
+            }
+
+            // ── En desktop el panel empieza abierto ──────────────────────────
+            (function () {
+                if (window.innerWidth > 768) {
+                    document.getElementById('panelFiltros').dataset.collapsed = 'false';
+                }
+            })();
+        </script>
+    </th:block>
+</body>
+
+</html>
