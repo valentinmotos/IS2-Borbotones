@@ -1,6 +1,8 @@
 package com.zero.ecommerce.services;
 
 import java.security.SecureRandom;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -14,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.zero.ecommerce.dto.UsuarioAdminDTO;
 import com.zero.ecommerce.entities.Persona;
 import com.zero.ecommerce.entities.Usuario;
 import com.zero.ecommerce.entities.enums.RolUsuario;
@@ -183,6 +186,154 @@ public class UsuarioService {
                 .orElseThrow(() -> new ErrorServiceException("El usuario no existe o fue eliminado."));
     }
 
+    /** Crea una cuenta de empleado activa. Las cuentas CLIENTE solo se crean desde el registro público. */
+    @Transactional(rollbackFor = ErrorServiceException.class)
+    public Usuario crearUsuarioEmpleado(String correo, RolUsuario rol, String clave, String confirmacion)
+            throws ErrorServiceException {
+        validarUsuarioEmpleado(correo, rol, clave, confirmacion, null, true);
+        Usuario usuario = new Usuario();
+        usuario.setNombreUsuario(normalizarCorreo(correo));
+        usuario.setRol(rol);
+        usuario.setClave(passwordEncoder.encode(clave));
+        usuario.setCodigoActivacion(null);
+        return usuarioRepository.save(usuario);
+    }
+
+    /** Actualiza correo, rol y, solo si se recibe, una nueva clave del empleado. */
+    @Transactional(rollbackFor = ErrorServiceException.class)
+    public void modificarUsuarioEmpleado(String id, String correo, RolUsuario rol, String clave, String confirmacion)
+            throws ErrorServiceException {
+        Usuario usuario = buscarUsuario(id);
+        if (usuario.getRol() == RolUsuario.CLIENTE) {
+            throw new ErrorServiceException("Los datos de un cliente se editan desde su perfil.");
+        }
+        validarUsuarioEmpleado(correo, rol, clave, confirmacion, id, false);
+        validarQueNoSeaUltimoJefe(usuario, rol);
+        usuario.setNombreUsuario(normalizarCorreo(correo));
+        usuario.setRol(rol);
+        if (clave != null && !clave.isBlank()) {
+            usuario.setClave(passwordEncoder.encode(clave));
+        }
+        usuarioRepository.save(usuario);
+    }
+
+    /** Baja lógica de una cuenta. Protege la sesión actual y la existencia de al menos un JEFE activo. */
+    @Transactional(rollbackFor = ErrorServiceException.class)
+    public void eliminarUsuario(String id, String idUsuarioActual) throws ErrorServiceException {
+        Usuario usuario = buscarUsuario(id);
+        if (usuario.getId().equals(idUsuarioActual)) {
+            throw new ErrorServiceException("No podés darte de baja a vos mismo.");
+        }
+        validarQueNoSeaUltimoJefe(usuario, null);
+        usuario.setEliminado(true);
+        usuarioRepository.save(usuario);
+    }
+
+    /** Los clientes no los edita el panel: únicamente se vuelve a habilitar su cuenta. */
+    @Transactional(rollbackFor = ErrorServiceException.class)
+    public void reactivarCliente(String id) throws ErrorServiceException {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ErrorServiceException("El usuario no existe."));
+        if (usuario.getRol() != RolUsuario.CLIENTE) {
+            throw new ErrorServiceException("Solo se pueden reactivar cuentas de clientes desde este listado.");
+        }
+        if (!usuario.isEliminado()) {
+            throw new ErrorServiceException("La cuenta del cliente ya está activa.");
+        }
+        usuario.setEliminado(false);
+        usuarioRepository.save(usuario);
+    }
+
+    /** Listado administrativo, con estado derivado de baja lógica y activación de cuenta. */
+    public List<UsuarioAdminDTO> listarUsuarios(String rolFiltro, String estadoFiltro, String buscar) {
+        String texto = buscar == null ? "" : buscar.strip().toLowerCase(Locale.ROOT);
+        return usuarioRepository.findAllByOrderByNombreUsuarioAsc().stream()
+                .filter(usuario -> rolFiltro == null || rolFiltro.isBlank() || usuario.getRol().name().equals(rolFiltro))
+                .filter(usuario -> coincideEstado(usuario, estadoFiltro))
+                .filter(usuario -> texto.isBlank() || usuario.getNombreUsuario().toLowerCase(Locale.ROOT).contains(texto))
+                .map(usuario -> new UsuarioAdminDTO(usuario.getId(), nombreParaMostrar(usuario), usuario.getNombreUsuario(),
+                        usuario.getRol().name(), describirEstado(usuario), !usuario.isEliminado(),
+                        usuario.getRol() != RolUsuario.CLIENTE, usuario.getRol() == RolUsuario.CLIENTE))
+                .toList();
+    }
+
+    /** Consulta administrativa: incluye cuentas dadas de baja para poder auditarlas o reactivarlas. */
+    public Usuario buscarUsuarioAdministracion(String id) throws ErrorServiceException {
+        if (id == null || id.isBlank()) throw new ErrorServiceException("El usuario no existe.");
+        return usuarioRepository.findById(id).orElseThrow(() -> new ErrorServiceException("El usuario no existe."));
+    }
+
+    public List<Usuario> listarUsuario() {
+        return usuarioRepository.findAllByOrderByNombreUsuarioAsc();
+    }
+
+    public List<Usuario> listarUsuarioActivo() {
+        return listarUsuario().stream().filter(usuario -> !usuario.isEliminado()).toList();
+    }
+
+    public RolUsuario convertirRolEmpleado(String rol) throws ErrorServiceException {
+        if (rol == null || rol.isBlank()) {
+            throw new ErrorServiceException("El rol es obligatorio.");
+        }
+        try {
+            RolUsuario valor = RolUsuario.valueOf(rol);
+            if (valor == RolUsuario.CLIENTE) throw new ErrorServiceException("Un empleado no puede tener rol CLIENTE.");
+            return valor;
+        } catch (IllegalArgumentException e) {
+            throw new ErrorServiceException("El rol seleccionado no es válido.");
+        }
+    }
+
+    public Map<String, String> listarRolesEmpleado() {
+        Map<String, String> roles = new LinkedHashMap<>();
+        roles.put(RolUsuario.JEFE.name(), "Jefe");
+        roles.put(RolUsuario.ADMINISTRATIVO.name(), "Administrativo");
+        return roles;
+    }
+
+    private void validarUsuarioEmpleado(String correo, RolUsuario rol, String clave, String confirmacion,
+            String idActual, boolean claveObligatoria) throws ErrorServiceException {
+        validarCorreo(correo);
+        Usuario existente = usuarioRepository.findByNombreUsuarioIgnoreCase(normalizarCorreo(correo)).orElse(null);
+        if (existente != null && !existente.getId().equals(idActual)) {
+            throw new ErrorServiceException("Ya existe una cuenta registrada con ese correo.");
+        }
+        if (rol == null || rol == RolUsuario.CLIENTE) {
+            throw new ErrorServiceException("El rol del empleado debe ser JEFE o ADMINISTRATIVO.");
+        }
+        boolean cambioClave = clave != null && !clave.isBlank();
+        if (claveObligatoria && !cambioClave) {
+            throw new ErrorServiceException("La clave es obligatoria.");
+        }
+        if (!cambioClave && confirmacion != null && !confirmacion.isBlank()) {
+            throw new ErrorServiceException("Ingresá una clave nueva para confirmar el cambio.");
+        }
+        if (cambioClave) validarClave(clave, confirmacion);
+    }
+
+    private void validarQueNoSeaUltimoJefe(Usuario usuario, RolUsuario nuevoRol) throws ErrorServiceException {
+        boolean dejaDeSerJefe = usuario.getRol() == RolUsuario.JEFE
+                && (nuevoRol == null || nuevoRol != RolUsuario.JEFE);
+        if (dejaDeSerJefe && usuarioRepository.countByRolAndEliminadoFalse(RolUsuario.JEFE) <= 1) {
+            throw new ErrorServiceException("Debe quedar al menos un JEFE activo en el sistema.");
+        }
+    }
+
+    private boolean coincideEstado(Usuario usuario, String estado) {
+        if (estado == null || estado.isBlank() || "TODOS".equals(estado)) return true;
+        return switch (estado) {
+            case "ACTIVO" -> !usuario.isEliminado() && usuario.getCodigoActivacion() == null;
+            case "PENDIENTE" -> !usuario.isEliminado() && usuario.getCodigoActivacion() != null;
+            case "INACTIVO" -> usuario.isEliminado();
+            default -> false;
+        };
+    }
+
+    private String describirEstado(Usuario usuario) {
+        if (usuario.isEliminado()) return "Inactivo";
+        return usuario.getCodigoActivacion() == null ? "Activo" : "Pendiente de activación";
+    }
+
     public Optional<Usuario> usuarioActual() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()
@@ -196,8 +347,11 @@ public class UsuarioService {
         if (usuario == null) {
             return "";
         }
+        // Si la cuenta está dada de baja, su persona también: se usa igual para mostrar el nombre en el ABM.
         Optional<Persona> persona = personaRepository
-                .findFirstByUsuario_NombreUsuarioIgnoreCaseAndEliminadoFalse(usuario.getNombreUsuario());
+                .findFirstByUsuario_NombreUsuarioIgnoreCaseAndEliminadoFalse(usuario.getNombreUsuario())
+                .or(() -> usuario.isEliminado() ? personaRepository.findFirstByUsuario_Id(usuario.getId())
+                        : Optional.empty());
         if (persona.isEmpty()) {
             return usuario.getNombreUsuario();
         }
