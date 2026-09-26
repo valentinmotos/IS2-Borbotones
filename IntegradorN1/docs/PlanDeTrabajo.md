@@ -101,9 +101,14 @@ El diagrama muestra el flujo de la `OrdenCompra`, que es lineal para no agregar 
 | --- | --- |
 | `EFECTIVO` | El administrador confirma el cobro desde el panel de pedidos. |
 | `TRANSFERENCIA` | El administrador confirma la acreditación desde el panel de pedidos. |
-| `BILLETERA_VIRTUAL` (Mercado Pago) | Pantalla de pago simulado con botón "Pagar", que confirma en el momento. |
+| `BILLETERA_VIRTUAL` (Mercado Pago) | Checkout Pro: el cliente paga en Mercado Pago y el webhook confirma el pago automáticamente. |
 
-No se integra la API real de Mercado Pago. La simulación queda aislada en un método, así se puede reemplazar sin tocar el resto.
+Se integra la **API real de Mercado Pago** con **Checkout Pro** y el SDK oficial para Java, en modo de prueba (sandbox) con cuentas y tarjetas de prueba.
+
+- **Vínculo con la orden:** el pago se asocia con la orden por el `external_reference` de Mercado Pago, que se completa con el `identificadorCompra` de `OrdenCompra`. Ese atributo ya está en el diagrama, así que no se agrega nada.
+- **Confirmación:** la da el **webhook** de Mercado Pago, no la vuelta del cliente al sitio. El sistema consulta el pago a la API y, si está aprobado, registra el pago.
+- **Idempotencia:** Mercado Pago puede notificar varias veces el mismo pago, así que registrar un pago ya registrado no hace nada.
+- **Pago rechazado o abandonado:** la orden sigue en `PENDIENTE_PAGO` y el cliente puede reintentar.
 
 ### Reporte de stock (RF29)
 
@@ -147,18 +152,19 @@ Estas reglas se definen en la Etapa 0 y no se cambian durante el proyecto. El re
 - **Vista:** Thymeleaf Layout Dialect y Thymeleaf Extras Spring Security.
 - **Base de datos:** SQLite con `sqlite-jdbc` y `hibernate-community-dialects`, usando `spring.jpa.database-platform=org.hibernate.community.dialect.SQLiteDialect` y `ddl-auto=update`.
 - **Un solo repositorio** para todo el proyecto. El archivo de la base va en `./data/zero.db` y está en el `.gitignore`: cada uno tiene su base local, que el `DataSeeder` puebla al arrancar.
+- **Mercado Pago:** SDK oficial `com.mercadopago:sdk-java`. El access token de prueba se lee de la variable de entorno `MP_ACCESS_TOKEN` y nunca se sube al repositorio.
 
 ### Estructura de paquetes
 
 ```
 com.zero.ecommerce
  ├─ config        seguridad, mail, scheduling, DataSeeder
- ├─ entities      entidades JPA
+ ├─ entity        entidades JPA
  │   └─ enums
- ├─ repositories  DAO: interfaces Spring Data JPA
- ├─ services      lógica de negocio y validaciones
+ ├─ repository    DAO: interfaces Spring Data JPA
+ ├─ service       lógica de negocio y validaciones
  ├─ dto           reportes, dashboard, catálogo
- ├─ controllers
+ ├─ controller
  │   ├─ publico
  │   ├─ cliente
  │   └─ admin
@@ -795,20 +801,22 @@ Esta etapa cierra el circuito de venta: checkout, pago, factura, seguimiento, an
 **Contratos a acordar en el kickoff.** Las firmas se definen en el kickoff; cada uno crea los métodos vacíos en su rama y los sube primero, para que el resto compile.
 
 - **En `OrdenCompra` (E4-01, lo sube primero Maxi):** `confirmar()`, `registrarPago()`, `marcarEnviado()`, `marcarEntregado()`, `anular(boolean esAdmin)`, `puedeAnularse(boolean esAdmin)` y `pasosSeguimiento()`.
-- **En `VentaService` (Manu):** `confirmarCompra(idCliente, idFormaPago)`, `registrarPago(idOrden)` y `anularVenta(idOrden, esAdmin)`.
+- **En `VentaService` (Manu):** `confirmarCompra(idCliente, idFormaPago)`, `registrarPago(idOrden)` (idempotente) y `anularVenta(idOrden, esAdmin)`.
 - **En `NotificacionCompraService` (Diego):** `enviarConfirmacion(orden)` y `notificarCambioEstado(orden)`.
+- **URL de pago con Mercado Pago (Diego, E4-10):** `GET /cliente/pago/{idOrden}` crea la preferencia de pago y redirige a Mercado Pago. El checkout (E4-02) y el seguimiento (E4-04) solo enlazan a esa URL, así que no necesitan esperar a E4-10.
 
 | ID | Issue | Responsable | Tipo |
 | --- | --- | --- | --- |
 | E4-01 | Estados y transiciones de la orden | Maxi | Back |
 | E4-02 | Checkout y factura al cliente | Manu | Back + Front |
-| E4-03 | Pago, descuento de stock y anulación de ventas | Manu | Back + Front |
-| E4-04 | Historial y seguimiento de compras | Diego | Back + Front |
-| E4-05 | Correos de la compra y anulación por el cliente | Diego | Back + Front |
+| E4-03 | Registro del pago, descuento de stock y anulación de ventas | Manu | Back |
+| E4-04 | Historial, seguimiento y anulación por el cliente | Manu | Back + Front |
+| E4-05 | Correos de la compra | Diego | Back + Front |
 | E4-06 | Panel de pedidos: listado y detalle | Maxi | Back + Front |
 | E4-07 | Acciones sobre pedidos desde el panel | Maxi | Back + Front |
 | E4-08 | Newsletter de ofertas | Valen | Back + Front |
 | E4-09 | Alertas de actualización de precios | Valen | Back + Front |
+| E4-10 | Integración con Mercado Pago | Diego | Back + Front |
 
 ### E4-01 · Estados y transiciones de la orden
 
@@ -842,13 +850,15 @@ Esta etapa cierra el circuito de venta: checkout, pago, factura, seguimiento, an
   - Dirección de entrega del perfil, con un link para modificarla.
   - Elección de la forma de pago entre las activas.
   - Botón "Confirmar compra".
-- Si la forma elegida es efectivo o transferencia, se muestra una página de "Compra registrada" con las instrucciones de pago y el número de compra.
+- Después de confirmar, según la forma de pago:
+  - **Mercado Pago:** redirige a `GET /cliente/pago/{idOrden}`, la URL del contrato que implementa Diego en E4-10.
+  - **Efectivo o transferencia:** muestra la página "Compra registrada", con las instrucciones de pago y el número de compra.
 
 **Criterio de aceptación:** al confirmar, la orden queda en pendiente de pago, la factura tiene los detalles con los precios del momento y el carrito queda vacío para una próxima compra.
 
-### E4-03 · Pago, descuento de stock y anulación de ventas
+### E4-03 · Registro del pago, descuento de stock y anulación de ventas
 
-**Responsable:** Manu · **Tipo:** Back + Front · **Depende de:** E3-04, E4-01, E4-02
+**Responsable:** Manu · **Tipo:** Back · **Depende de:** E3-04, E4-01, E4-02
 
 **ESPERAR a E4-01** (Maxi) y **a E4-02** (Manu): las transiciones de estado y la factura al cliente.
 
@@ -856,22 +866,20 @@ Esta etapa cierra el circuito de venta: checkout, pago, factura, seguimiento, an
   - La factura pasa a `PAGADA` y la orden, a `PENDIENTE_ENVIO`, con `registrarPago()`.
   - Descuenta el stock con `registrarMovimiento` por cada detalle (RF13). El signo negativo lo da `FacturaCliente`.
   - Todo en una transacción: si un producto se quedó sin stock, no se aplica nada y se informa.
+  - **Es idempotente:** si la factura ya está en `PAGADA`, no hace nada. Esto es clave porque Mercado Pago puede notificar el mismo pago más de una vez.
   - Llama a `notificarCambioEstado(orden)`.
+  - Lo usan el panel de pedidos para efectivo y transferencia (E4-07) y el webhook de Mercado Pago (E4-10).
 - `VentaService.anularVenta(idOrden, esAdmin)`:
   - Verifica con `puedeAnularse`.
   - Pasa la orden a `ANULADA` y la factura, a `ANULADA`.
   - Si la factura ya estaba pagada, reingresa el stock con `revertirMovimiento`.
-- Pantalla de pago simulado para Mercado Pago, en `/cliente/pago/{idOrden}`:
-  - Monto, número de compra y botón "Pagar con Mercado Pago", que llama a `registrarPago`.
-  - La lógica de la simulación queda aislada en un método `ProcesadorPagoSimulado.procesar(orden)`.
-- Página "Pago realizado", con un link al seguimiento.
-- Test de integración: compra → pago → stock descontado → anulación por admin → stock reingresado.
+- Test de integración: compra → pago → stock descontado → segundo `registrarPago` sin efecto → anulación por admin → stock reingresado.
 
-**Criterio de aceptación:** un pago con Mercado Pago simulado deja la factura pagada, la orden pendiente de envío y el stock descontado. Anularla como admin devuelve el stock.
+**Criterio de aceptación:** `registrarPago` deja la factura pagada, la orden pendiente de envío y el stock descontado. Llamarlo dos veces no descuenta de nuevo, y anular la venta como admin devuelve el stock.
 
-### E4-04 · Historial y seguimiento de compras
+### E4-04 · Historial, seguimiento y anulación por el cliente
 
-**Responsable:** Diego · **Tipo:** Back + Front · **Depende de:** E2-08, E4-01
+**Responsable:** Manu · **Tipo:** Back + Front · **Depende de:** E2-08, E4-01
 
 **ESPERAR a E4-01** (Maxi): `pasosSeguimiento()`.
 
@@ -880,25 +888,24 @@ Esta etapa cierra el circuito de venta: checkout, pago, factura, seguimiento, an
 - Pantalla de detalle y seguimiento en `/cliente/compras/{id}` (RF22 y RF23):
   - Línea de tiempo visual con `pasosSeguimiento()`, que resalta el estado actual y los pasos cumplidos.
   - Ítems con precio y subtotal, total, forma de pago, número de factura y dirección de entrega.
-  - Si la orden está pendiente de pago con Mercado Pago, un botón "Pagar ahora" que lleva a la pantalla de E4-03.
-- Un cliente no puede ver compras de otro cliente: devuelve 403.
-- Para probar sin E4-02, cargar en el seeder órdenes en todos los estados.
+  - Si la orden está pendiente de pago con Mercado Pago, un botón "Pagar ahora" que lleva a `/cliente/pago/{idOrden}`, la URL del contrato con E4-10.
+  - Botón "Anular compra" (RF19): se muestra solo si `puedeAnularse(false)`, pide confirmación con el modal del kit y llama a `anularVenta(idOrden, false)`.
+- Un cliente no puede ver ni anular compras de otro cliente: devuelve 403.
+- Para probar todos los estados, cargar en el seeder órdenes en cada uno.
 
-**Criterio de aceptación:** el cliente ve todas sus compras, la línea de tiempo coincide con el estado de cada una y no puede abrir la compra de otro cliente.
+**Criterio de aceptación:** el cliente ve todas sus compras, la línea de tiempo coincide con el estado de cada una, puede anular solo las que todavía no pagó y no puede abrir la compra de otro cliente.
 
-### E4-05 · Correos de la compra y anulación por el cliente
+### E4-05 · Correos de la compra
 
-**Responsable:** Diego · **Tipo:** Back + Front · **Depende de:** E1-07, E4-04
-
-**ESPERAR a E4-04** (Diego) y **firma de E4-03** (Manu): el detalle de la compra y `anularVenta(idOrden, esAdmin)`.
+**Responsable:** Diego · **Tipo:** Back + Front · **Depende de:** E1-07
 
 - `NotificacionCompraService`:
   - `enviarConfirmacion(orden)` (RF20): template `email/confirmacion-compra.html`, con número de compra, fecha, ítems con cantidad y precio, total, forma de pago, instrucciones de pago si corresponde y un link al seguimiento.
   - `notificarCambioEstado(orden)`: template `email/cambio-estado.html`, con el nuevo estado y un link al seguimiento.
-- Botón "Anular compra" en el detalle de la compra (RF19): se muestra solo si `puedeAnularse(false)`, pide confirmación con el modal del kit y llama a `anularVenta(idOrden, false)`.
-- Mientras E4-03 no esté mergeado, `anularVenta` puede estar como método vacío del contrato.
+- Los dos métodos usan el envío asíncrono de `EmailService`, así que un fallo de correo no rompe la compra ni el pago.
+- Subir primero las firmas de los dos métodos, porque los usan E4-02, E4-03 y E4-07.
 
-**Criterio de aceptación:** al confirmar una compra llega el mail con todos sus datos, y el cliente puede anular solo las compras que todavía no pagó.
+**Criterio de aceptación:** al confirmar una compra llega el mail con todos sus datos, y cada cambio de estado envía un aviso con link al seguimiento.
 
 ### E4-06 · Panel de pedidos: listado y detalle
 
@@ -942,7 +949,7 @@ Cada acción:
 
 - Activar `@EnableScheduling` y crear `NewsletterScheduler` (RF27):
   - Corre una vez por día y envía si pasaron 10 días desde el último envío.
-  - La fecha del último envío se guarda en el archivo `data/newsletter-ultimo-envio.txt`, así sobrevive a un reinicio y no se agregan tablas al diagrama (persistencia en archivo, patrón DAO).
+  - La fecha del último envío se guarda en el archivo \`data/newsletter-ultimo-envio.txt\`, así sobrevive a un reinicio y no se agregan tablas al diagrama (persistencia en archivo, patrón DAO).
 - `NewsletterService.enviar()`:
   - Arma el template `email/newsletter.html`, con HTML embebido: grilla de productos en oferta con stock, con imagen, nombre, precio y link al detalle.
   - Las imágenes van como URL absoluta al endpoint `/imagen/{id}`, con la URL base configurada en `properties`.
@@ -962,6 +969,34 @@ Cada acción:
 - Badge con la cantidad de alertas en el ítem Precios del sidebar.
 
 **Criterio de aceptación:** un producto con precio de hace 70 días aparece en las alertas, y desde ahí se llega a la actualización masiva con el filtro aplicado.
+
+### E4-10 · Integración con Mercado Pago
+
+**Responsable:** Diego · **Tipo:** Back + Front · **Depende de:** E1-01, E0-05
+
+**ESPERAR firma de E4-03** (Manu): `registrarPago(idOrden)`.
+
+- **Configuración:**
+  - Dependencia `com.mercadopago:sdk-java`.
+  - Propiedades `mercadopago.access-token=${MP_ACCESS_TOKEN}` y `app.url-base`, con la URL pública del sitio.
+  - Crear en Mercado Pago las cuentas de prueba de vendedor y comprador, y documentar en el `README` cómo obtener el access token y qué tarjetas de prueba usar.
+- **`MercadoPagoService.crearPreferencia(orden)`:**
+  - Un ítem por cada `DetalleFactura`, con título, cantidad y precio unitario.
+  - `external_reference` igual al `identificadorCompra` de la orden.
+  - `back_urls` de éxito, pendiente y fallo hacia `/cliente/pago/resultado`, con `auto_return` para pagos aprobados.
+  - `notification_url` igual a `app.url-base` + `/webhooks/mercadopago`.
+  - Devuelve la URL de pago de la preferencia.
+- **`GET /cliente/pago/{idOrden}`** (la URL del contrato): verifica que la orden sea del cliente logueado y esté en `PENDIENTE_PAGO`, crea la preferencia y redirige a Mercado Pago. Cada reintento crea una preferencia nueva.
+- **Webhook `POST /webhooks/mercadopago`:**
+  - Público y sin CSRF: agregar la excepción en la configuración de seguridad de E1-01.
+  - Toma el id del pago de la notificación y **consulta el pago a la API**. Nunca confía en los datos que llegan en la notificación.
+  - Si el pago está aprobado, busca la orden por `external_reference` y llama a `registrarPago`. Si está pendiente o rechazado, no cambia nada.
+  - Responde siempre 200 rápido, para que Mercado Pago no reintente de más, y registra en el log cada notificación.
+- **Página `/cliente/pago/resultado`:** muestra el resultado que informa Mercado Pago al volver (aprobado, pendiente o rechazado), con un link al seguimiento. Si fue aprobado, aclara que la confirmación puede tardar unos segundos, porque el estado real lo pone el webhook.
+- **Desarrollo local:** Mercado Pago no puede llamar a `localhost`, así que el webhook se prueba con un túnel como ngrok apuntando a la app. Documentarlo en el `README`.
+- Para probar sin E4-02, cargar en el seeder una orden en `PENDIENTE_PAGO` con su factura.
+
+**Criterio de aceptación:** con el comprador de prueba y una tarjeta de prueba aprobada, el webhook deja la factura pagada, la orden en pendiente de envío y el stock descontado. Repetir la notificación no cambia nada, y un pago rechazado deja la orden en pendiente de pago, lista para reintentar.
 
 ## Etapa 5 – Reportes y dashboard
 
@@ -1103,7 +1138,7 @@ Tests con `@SpringBootTest` sobre una base SQLite de test (`application-test.pro
 - Anulación por el cliente antes del pago y por el admin después del pago, con reingreso de stock.
 - Acceso denegado a `/admin` para un cliente, con MockMvc.
 
-El `EmailService` se reemplaza por un mock para no mandar correos. Estos tests son los que se muestran en la exposición como pruebas de software.
+El `EmailService` y la API de Mercado Pago se reemplazan por mocks, para no mandar correos ni pagos reales. También se prueba el webhook con una notificación de pago aprobado repetida, que no tiene que descontar el stock dos veces. Estos tests son los que se muestran en la exposición como pruebas de software.
 
 **Criterio de aceptación:** `mvn test` corre todos los tests en verde desde una base vacía.
 
@@ -1191,7 +1226,7 @@ Cada uno explica en el informe los patrones que aplicó en sus issues, con un fr
 **ESPERAR a E6-01** (los cuatro) y **a E6-03** (Diego): el sistema probado y los datos de demostración.
 
 - Merge final de `develop` a `main` con el tag `v1.0`.
-- Verificar que el proyecto corre desde un clon limpio siguiendo solo el `README`.
+- Verificar, con las credenciales de prueba de Mercado Pago y el túnel del webhook configurados, que el proyecto corre desde un clon limpio siguiendo solo el `README`.
 - Armar el guion de la demo: qué muestra cada uno, en qué orden y con qué usuario, siguiendo los puntos de la presentación del enunciado (caso de uso crítico, diagramas, demo, patrones, pruebas y tablero Trello).
 
 **Criterio de aceptación:** el guion está acordado por los cuatro y la demo completa se ensayó al menos una vez de principio a fin.
@@ -1206,11 +1241,11 @@ Cada integrante tiene entre 12 y 14 issues propios, más su parte de los tres is
 | 1 · Transversales | E1-08 Formas de pago · E1-07 Empresa y correo | E1-05 Categorías · E1-06 Imágenes | E1-01 Seguridad · E1-02 Menús por rol | E1-03 Ubicación · E1-04 Fragment de dirección |
 | 2 · Productos y cuentas | E2-01 ABM de productos · E2-02 Lectura de stock | E2-03 Precios · E2-04 Actualización masiva | E2-05 Registro y activación · E2-06 ABM de usuarios | E2-07 Perfil · E2-08 Clave y perfil obligatorio |
 | 3 · Abastecimiento y vidriera | E3-03 Compras a proveedor · E3-04 Recepción y stock | E3-05 Home y catálogo · E3-06 Detalle y ofertas | E3-07 Carrito · E3-08 Carrito en el sitio | E3-01 Proveedores · E3-02 Buscador |
-| 4 · Venta y postventa | E4-01 Estados · E4-06 Panel de pedidos · E4-07 Acciones | E4-08 Newsletter · E4-09 Alertas de precio | E4-02 Checkout · E4-03 Pago y anulación | E4-04 Seguimiento · E4-05 Correos y anulación |
+| 4 · Venta y postventa | E4-01 Estados · E4-06 Panel de pedidos · E4-07 Acciones | E4-08 Newsletter · E4-09 Alertas de precio | E4-02 Checkout · E4-03 Registro del pago · E4-04 Seguimiento y anulación | E4-05 Correos de la compra · E4-10 Mercado Pago |
 | 5 · Reportes | E5-05 Reporte de proveedores · E5-06 Seguridad | E5-03 Reporte de stock · E5-04 WhatsApp | E5-07 Dashboard · E5-08 Tests de integración | E5-01 Reporte de ventas · E5-02 Exportación |
 | 6 · Cierre | E6-06 Versión final | E6-05 Propuesta de mejora | E6-05 Propuesta de mejora | E6-03 Datos de demo |
 
 Los issues de cada celda van en el orden en que se hacen. Hay dos casos donde el orden importa:
 
 - **Maxi en la Etapa 1** hace primero E1-08, porque E1-07 necesita el fragment de dirección de Diego (E1-04).
-- **Maxi en la Etapa 4** sube E4-01 antes que nada, porque Manu, Diego y él mismo usan esas transiciones.
+- **Maxi en la Etapa 4** sube E4-01 antes que nada, porque Manu y él mismo usan esas transiciones.
