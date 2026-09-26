@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
+<body>
+    <div layout:fragment="content">
+        <section class="zero-section">
+            <div class="container">
+                <div class="mb-4">
+                    <div class="zero-kicker">Mi cuenta</div>
+                    <h1 th:text="${'Hola, ' + nombreMostrar}">Hola</h1>
+                    <p>Desde acá podés administrar tus datos, tu clave y tus compras.</p>
+                </div>
+                <div th:if="${!perfilCompleto}" class="alert alert-warning" role="alert">
+                    Tu perfil está incompleto. <a th:href="@{/cliente/perfil}">Completalo</a> para poder confirmar tus compras.
+                </div>
+                <div class="zero-feature-grid">
+                    <a th:href="@{/cliente/perfil}" class="zero-feature-card text-reset">
+                        <div class="zero-feature-icon"><i class="fa fa-user"></i></div>
+                        <h3>Mi perfil</h3>
+                        <p>Datos personales, dirección de entrega, teléfono y foto.</p>
+                    </a>
+                    <a th:href="@{/cliente/perfil/clave}" class="zero-feature-card text-reset">
+                        <div class="zero-feature-icon"><i class="fa fa-lock"></i></div>
+                        <h3>Cambiar clave</h3>
+                        <p>Actualizá la clave con la que ingresás.</p>
+                    </a>
+                    <!-- TODO E4-04: pantalla de Mis compras. -->
+                    <a th:href="@{/cliente/compras}" class="zero-feature-card text-reset">
+                        <div class="zero-feature-icon"><i class="fa fa-shopping-bag"></i></div>
+                        <h3>Mis compras</h3>
+                        <p>Seguimiento de tus pedidos y facturas.</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

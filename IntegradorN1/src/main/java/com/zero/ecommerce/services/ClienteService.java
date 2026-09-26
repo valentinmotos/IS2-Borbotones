@@ -326,4 +326,22 @@ public class ClienteService {
             throw new ErrorServiceException("La fecha de nacimiento no es válida.");
         }
     }
+
+    public boolean perfilCompleto(String idUsuario) {
+        Optional<Cliente> clienteOpt = buscarClientePorUsuario(idUsuario);
+        if (clienteOpt.isEmpty()) {
+            return false;
+        }
+        Cliente cliente = clienteOpt.get();
+        return cliente.getNombre() != null && !cliente.getNombre().isBlank()
+                && cliente.getApellido() != null && !cliente.getApellido().isBlank()
+                && cliente.getSexo() != null
+                && cliente.getFechaNacimiento() != null
+                && cliente.getTipoDocumento() != null
+                && cliente.getNumeroDocumento() != null && !cliente.getNumeroDocumento().isBlank()
+                && cliente.getNacionalidad() != null
+                && cliente.getDireccion() != null
+                && cliente.getTelefono() != null;
+    }
+
 }

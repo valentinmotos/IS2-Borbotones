@@ -75,6 +75,24 @@ public class ClienteController {
         return "redirect:" + BASE;
     }
 
+    @GetMapping("/clave")
+    public String cambiarClave(Model model) {
+        model.addAttribute("pageTitle", "Cambiar clave");
+        return "cliente/clave";
+    }
+
+    @PostMapping("/clave")
+    public String modificarClave(@RequestParam String claveActual, @RequestParam String nuevaClave,
+            @RequestParam String confirmarClave, RedirectAttributes flash) {
+        try {
+            usuarioService.modificarClave(usuarioLogueado().getId(), claveActual, nuevaClave, confirmarClave);
+            flash.addFlashAttribute("exito", "Tu clave se modificó correctamente.");
+        } catch (ErrorServiceException e) {
+            flash.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:" + BASE + "/clave";
+    }
+
     // /cliente/** exige el rol CLIENTE, así que siempre hay un usuario logueado.
     private Usuario usuarioLogueado() {
         return usuarioService.usuarioActual()
