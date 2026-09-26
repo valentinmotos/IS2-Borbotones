@@ -11,6 +11,8 @@ public interface ClienteRepository extends JpaRepository<Cliente, String> {
 
     Optional<Cliente> findByIdAndEliminadoFalse(String id);
 
+    boolean existsByIdAndEliminadoFalse(String id);
+
     Optional<Cliente> findByUsuario_IdAndEliminadoFalse(String idUsuario);
 
     List<Cliente> findAllByOrderByApellidoAscNombreAsc();
