@@ -24,35 +24,26 @@ public class Proveedor extends BaseEntity {
     @JoinColumn(name = "proveedor_id")
     private List<Contacto> contactos = new ArrayList<>();
 
-    /** Devuelve la lista de correos de contacto activos. */
-    public List<ContactoCorreoElectronico> getCorreosActivos() {
+    /** Experto: el proveedor sabe cuáles de sus correos siguen activos. */
+    public List<ContactoCorreoElectronico> listarCorreoActivo() {
         return contactos.stream()
                 .filter(c -> !c.isEliminado() && c instanceof ContactoCorreoElectronico)
                 .map(ContactoCorreoElectronico.class::cast)
                 .toList();
     }
 
-    /** Devuelve la lista de teléfonos de contacto activos. */
-    public List<ContactoTelefonico> getTelefonosActivos() {
+    /** Experto: el proveedor sabe cuáles de sus teléfonos (fijos y celulares) siguen activos. */
+    public List<ContactoTelefonico> listarTelefonoActivo() {
         return contactos.stream()
                 .filter(c -> !c.isEliminado() && c instanceof ContactoTelefonico)
                 .map(ContactoTelefonico.class::cast)
                 .toList();
     }
 
-    /** Experto: devuelve el primer teléfono celular activo para WhatsApp. */
-    public Optional<ContactoTelefonico> buscarPrimerCelularActivo() {
-        return contactos.stream()
-                .filter(c -> !c.isEliminado() && c instanceof ContactoTelefonico)
-                .map(ContactoTelefonico.class::cast)
+    /** Experto: el celular al que se le escribe por WhatsApp (el primero activo). Lo usan E3-03 y E5-04. */
+    public Optional<ContactoTelefonico> buscarCelularActivo() {
+        return listarTelefonoActivo().stream()
                 .filter(t -> t.getTipoTelefono() == TipoTelefono.CELULAR)
                 .findFirst();
-    }
-
-    /** Devuelve el número de celular del primer celular activo, o null si no tiene. */
-    public String getPrimerCelular() {
-        return buscarPrimerCelularActivo()
-                .map(ContactoTelefonico::getTelefono)
-                .orElse(null);
     }
 }

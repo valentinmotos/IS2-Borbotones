@@ -3,196 +3,83 @@
       layout:decorate="~{layout/admin}">
 <body>
     <div layout:fragment="breadcrumb">
-        <span>Inicio</span><span class="breadcrumb-separator">/</span>
+        <span>Abastecimiento</span><span class="breadcrumb-separator">/</span>
         <a th:href="@{/admin/proveedores}">Proveedores</a><span class="breadcrumb-separator">/</span>
         <span th:text="${id == null ? 'Alta' : 'Edición'}">Alta</span>
     </div>
     <div layout:fragment="content">
         <div th:replace="~{fragments/mensajes :: mensajes}"></div>
         <form th:action="@{${id == null ? '/admin/proveedores' : '/admin/proveedores/' + id + '/editar'}}"
-              method="post" class="zero-form" id="form-proveedor">
-            
+              method="post" class="zero-form">
             <div class="zero-panel mb-4">
-                <h2>Datos generales</h2>
-                <div class="form-row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="razonSocial">Razón Social <span class="text-danger">*</span></label>
-                            <input id="razonSocial" name="razonSocial" type="text" class="form-control"
-                                   th:value="${form.razonSocial}" placeholder="Ej: Distribuidora Deportiva Cuyo S.A."
-                                   required autofocus>
-                        </div>
-                    </div>
-                </div>
+                <h2>Datos</h2>
+                <div th:replace="~{fragments/formulario :: campoTexto('razonSocial', 'Razón social', ${proveedorForm.razonSocial}, true)}"></div>
             </div>
-
-            <div class="zero-panel mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2>Contactos</h2>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-contacto">
-                        <i class="fa fa-plus"></i> Agregar contacto
-                    </button>
-                </div>
-                <div class="alert alert-info py-2 mb-3" style="font-size: 0.9rem;">
-                    <i class="fa fa-info-circle"></i> Debe ingresar <strong>al menos un correo electrónico</strong> y <strong>al menos un teléfono celular</strong> (para WhatsApp, guardado en formato internacional sin espacios ni signos, ej: <code>5492614123456</code>).
-                </div>
-
+            <div class="zero-panel">
+                <h2>Contactos</h2>
+                <p class="text-muted">
+                    Tiene que haber al menos un correo electrónico y un celular para WhatsApp. El celular va en formato
+                    internacional, con código de país y de área: <code>5492614123456</code>.
+                </p>
                 <div class="table-responsive zero-table-wrap">
-                    <table class="table table-bordered mb-0" id="tabla-contactos">
-                        <thead class="thead-light">
+                    <table class="table table-bordered mb-0 zero-tabla-contactos">
+                        <thead>
                             <tr>
-                                <th style="width: 22%;">Tipo de medio <span class="text-danger">*</span></th>
-                                <th style="width: 20%;">Ámbito <span class="text-danger">*</span></th>
-                                <th style="width: 28%;">Valor (Email / Teléfono) <span class="text-danger">*</span></th>
-                                <th style="width: 22%;">Observación</th>
-                                <th style="width: 8%;" class="text-center">Quitar</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Valor</th>
+                                <th scope="col">Ámbito</th>
+                                <th scope="col">Observación</th>
+                                <th scope="col">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="contactos-container">
-                            <tr th:each="contacto, stat : ${form.contactos}" class="fila-contacto">
-                                <td>
-                                    <select th:name="|contactos[${stat.index}].tipo|" class="form-control select-tipo" required>
-                                        <option value="CORREO" th:selected="${contacto.tipo == 'CORREO' || contacto.tipo == 'EMAIL'}">Correo electrónico</option>
-                                        <option value="CELULAR" th:selected="${contacto.tipo == 'CELULAR'}">Teléfono Celular (WhatsApp)</option>
-                                        <option value="FIJO" th:selected="${contacto.tipo == 'FIJO'}">Teléfono Fijo</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <select th:name="|contactos[${stat.index}].tipoContacto|" class="form-control" required>
-                                        <option value="EMPRESA" th:selected="${contacto.tipoContacto == 'EMPRESA'}">Empresa</option>
-                                        <option value="LABORAL" th:selected="${contacto.tipoContacto == 'LABORAL'}">Laboral</option>
-                                        <option value="PERSONAL" th:selected="${contacto.tipoContacto == 'PERSONAL'}">Personal</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="text" th:name="|contactos[${stat.index}].valor|" class="form-control input-valor"
-                                           th:value="${contacto.valor}" placeholder="contacto@ejemplo.com" required>
-                                </td>
-                                <td>
-                                    <input type="text" th:name="|contactos[${stat.index}].observacion|" class="form-control"
-                                           th:value="${contacto.observacion}" placeholder="Ej: Ventas, Guardia">
-                                </td>
-                                <td class="text-center align-middle">
-                                    <button type="button" class="btn btn-sm btn-outline-danger btn-quitar-fila" title="Quitar contacto">
-                                        <i class="fa fa-trash-o"></i>
-                                    </button>
-                                </td>
-                            </tr>
+                        <tbody data-contactos>
+                            <th:block th:each="contacto, stat : ${proveedorForm.contactos}">
+                                <tr th:replace="~{admin/proveedores/formulario :: filaContacto(${contacto}, ${stat.index})}"></tr>
+                            </th:block>
                         </tbody>
                     </table>
                 </div>
-            </div>
-
-            <div class="zero-panel">
+                <div class="mt-3">
+                    <button type="button" class="zero-button secondary" data-agregar-contacto>Agregar contacto</button>
+                </div>
                 <div th:replace="~{fragments/formulario :: acciones('/admin/proveedores')}"></div>
             </div>
         </form>
+
+        <!-- Fila vacía que clona static/js/proveedor-contactos.js: INDICE se reemplaza por el número de fila. -->
+        <template id="plantilla-contacto">
+            <tr th:fragment="filaContacto(contacto, indice)" class="fila-contacto"
+                th:with="i=${indice != null ? indice : 'INDICE'}">
+                <td>
+                    <input type="hidden" th:name="|contactos[${i}].id|" th:value="${contacto?.id}">
+                    <select th:name="|contactos[${i}].tipo|" class="form-control" aria-label="Tipo de contacto"
+                            data-tipo-medio required>
+                        <option th:each="opcion : ${tiposMedio}" th:value="${opcion.key}" th:text="${opcion.value}"
+                                th:selected="${opcion.key == contacto?.tipo}">Tipo</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="text" th:name="|contactos[${i}].valor|" class="form-control" th:value="${contacto?.valor}"
+                           aria-label="Correo o teléfono" data-valor-contacto required>
+                </td>
+                <td>
+                    <select th:name="|contactos[${i}].tipoContacto|" class="form-control" aria-label="Ámbito" required>
+                        <option th:each="opcion : ${tiposContacto}" th:value="${opcion.key}" th:text="${opcion.value}"
+                                th:selected="${opcion.key == contacto?.tipoContacto}">Ámbito</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="text" th:name="|contactos[${i}].observacion|" class="form-control"
+                           th:value="${contacto?.observacion}" aria-label="Observación" placeholder="Ej: Ventas">
+                </td>
+                <td class="zero-table-actions">
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-quitar-contacto>Quitar</button>
+                </td>
+            </tr>
+        </template>
     </div>
-
     <th:block layout:fragment="scripts">
-        <script>
-            (function() {
-                var container = document.getElementById('contactos-container');
-                var btnAgregar = document.getElementById('btn-agregar-contacto');
-
-                function actualizarPlaceholders() {
-                    var filas = container.querySelectorAll('.fila-contacto');
-                    filas.forEach(function(fila) {
-                        var selectTipo = fila.querySelector('.select-tipo');
-                        var inputValor = fila.querySelector('.input-valor');
-                        if (selectTipo && inputValor) {
-                            if (selectTipo.value === 'CORREO') {
-                                inputValor.setAttribute('placeholder', 'contacto@ejemplo.com');
-                            } else if (selectTipo.value === 'CELULAR') {
-                                inputValor.setAttribute('placeholder', '5492614123456');
-                            } else {
-                                inputValor.setAttribute('placeholder', '2614231234');
-                            }
-                        }
-                    });
-                }
-
-                function reindexarFilas() {
-                    var filas = container.querySelectorAll('.fila-contacto');
-                    filas.forEach(function(fila, index) {
-                        var campos = fila.querySelectorAll('input, select');
-                        campos.forEach(function(campo) {
-                            var name = campo.getAttribute('name');
-                            if (name) {
-                                var nuevoName = name.replace(/contactos\[\d+\]/, 'contactos[' + index + ']');
-                                campo.setAttribute('name', nuevoName);
-                            }
-                        });
-                    });
-                }
-
-                function vincularEventosFila(fila) {
-                    var btnQuitar = fila.querySelector('.btn-quitar-fila');
-                    if (btnQuitar) {
-                        btnQuitar.onclick = function() {
-                            if (container.querySelectorAll('.fila-contacto').length > 1) {
-                                fila.remove();
-                                reindexarFilas();
-                            } else {
-                                alert('El proveedor debe tener al menos una fila de contacto.');
-                            }
-                        };
-                    }
-
-                    var selectTipo = fila.querySelector('.select-tipo');
-                    if (selectTipo) {
-                        selectTipo.onchange = function() {
-                            actualizarPlaceholders();
-                        };
-                    }
-                }
-
-                if (btnAgregar) {
-                    btnAgregar.addEventListener('click', function() {
-                        var totalFilas = container.querySelectorAll('.fila-contacto').length;
-                        var nuevaFila = document.createElement('tr');
-                        nuevaFila.className = 'fila-contacto';
-                        nuevaFila.innerHTML = `
-                            <td>
-                                <select name="contactos[${totalFilas}].tipo" class="form-control select-tipo" required>
-                                    <option value="CORREO">Correo electrónico</option>
-                                    <option value="CELULAR" selected>Teléfono Celular (WhatsApp)</option>
-                                    <option value="FIJO">Teléfono Fijo</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select name="contactos[${totalFilas}].tipoContacto" class="form-control" required>
-                                    <option value="EMPRESA" selected>Empresa</option>
-                                    <option value="LABORAL">Laboral</option>
-                                    <option value="PERSONAL">Personal</option>
-                                </select>
-                            </td>
-                            <td>
-                                <input type="text" name="contactos[${totalFilas}].valor" class="form-control input-valor"
-                                       placeholder="5492614123456" required>
-                            </td>
-                            <td>
-                                <input type="text" name="contactos[${totalFilas}].observacion" class="form-control"
-                                       placeholder="Ej: Ventas, Guardia">
-                            </td>
-                            <td class="text-center align-middle">
-                                <button type="button" class="btn btn-sm btn-outline-danger btn-quitar-fila" title="Quitar contacto">
-                                    <i class="fa fa-trash-o"></i>
-                                </button>
-                            </td>
-                        `;
-                        container.appendChild(nuevaFila);
-                        vincularEventosFila(nuevaFila);
-                        actualizarPlaceholders();
-                    });
-                }
-
-                container.querySelectorAll('.fila-contacto').forEach(function(fila) {
-                    vincularEventosFila(fila);
-                });
-                actualizarPlaceholders();
-            })();
-        </script>
+        <script th:src="@{/js/proveedor-contactos.js}"></script>
     </th:block>
 </body>
 </html>

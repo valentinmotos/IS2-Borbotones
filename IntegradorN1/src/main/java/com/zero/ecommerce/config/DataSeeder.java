@@ -33,6 +33,7 @@ import com.zero.ecommerce.entities.enums.TipoImagen;
 import com.zero.ecommerce.entities.enums.TipoEmpleado;
 import com.zero.ecommerce.entities.enums.TipoPago;
 import com.zero.ecommerce.exception.ErrorServiceException;
+import com.zero.ecommerce.dto.ContactoItemDTO;
 import com.zero.ecommerce.dto.DireccionForm;
 import com.zero.ecommerce.entities.enums.TipoEmpresa;
 import com.zero.ecommerce.entities.enums.TipoTelefono;
@@ -43,6 +44,7 @@ import com.zero.ecommerce.services.ImagenService;
 import com.zero.ecommerce.services.LocalidadService;
 import com.zero.ecommerce.services.PaisService;
 import com.zero.ecommerce.services.ProductoService;
+import com.zero.ecommerce.services.ProveedorService;
 import com.zero.ecommerce.services.ProvinciaService;
 import com.zero.ecommerce.services.SubCategoriaService;
 import com.zero.ecommerce.services.VigenciaPrecioService;
@@ -85,7 +87,7 @@ public class DataSeeder implements CommandLineRunner {
     private final ImagenService imagenService;
     private final ProductoService productoService;
     private final VigenciaPrecioService vigenciaPrecioService;
-    private final com.zero.ecommerce.services.ProveedorService proveedorService;
+    private final ProveedorService proveedorService;
 
     private static final double PRECIO_INICIAL_DEMO = 10000;
 
@@ -94,7 +96,7 @@ public class DataSeeder implements CommandLineRunner {
             LocalidadService localidadService, EmpresaService empresaService, CategoriaService categoriaService,
             SubCategoriaService subCategoriaService, ImagenService imagenService, ProductoService productoService,
             VigenciaPrecioService vigenciaPrecioService,
-            com.zero.ecommerce.services.ProveedorService proveedorService) {
+            ProveedorService proveedorService) {
         this.entityManager = entityManager;
         this.passwordEncoder = passwordEncoder;
         this.paisService = paisService;
@@ -398,35 +400,30 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void cargarProveedores() {
+        // E3-01: 4 proveedores con sus contactos. Cada uno tiene al menos un correo y un celular para WhatsApp.
         try {
-            // Proveedor 1: Distribuidora Deportiva Cuyo S.A.
             proveedorService.crearProveedor("Distribuidora Deportiva Cuyo S.A.", List.of(
-                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CORREO", "ventas@deportivacuyo.com.ar", "EMPRESA", "Ventas"),
-                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CELULAR", "5492614123456", "LABORAL", "WhatsApp Ventas"),
-                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "FIJO", "2614239870", "EMPRESA", "Mesa de entrada")
-            ));
-
-            // Proveedor 2: Calzados y Textiles del Plata S.R.L.
+                    contacto(ContactoItemDTO.CORREO, "ventas@deportivacuyo.com.ar", "EMPRESA", "Ventas"),
+                    contacto(ContactoItemDTO.CELULAR, "5492614123456", "LABORAL", "WhatsApp ventas"),
+                    contacto(ContactoItemDTO.FIJO, "261 423-9870", "EMPRESA", "Mesa de entrada")));
             proveedorService.crearProveedor("Calzados y Textiles del Plata S.R.L.", List.of(
-                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CORREO", "contacto@textilesdelplata.com", "EMPRESA", "Atención general"),
-                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CELULAR", "5491138765432", "LABORAL", "WhatsApp Comercios")
-            ));
-
-            // Proveedor 3: Indumentaria Atlética San Juan
+                    contacto(ContactoItemDTO.CORREO, "contacto@textilesdelplata.com", "EMPRESA", "Atención general"),
+                    contacto(ContactoItemDTO.CELULAR, "5491138765432", "LABORAL", "WhatsApp comercios")));
             proveedorService.crearProveedor("Indumentaria Atlética San Juan", List.of(
-                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CORREO", "pedidos@atleticasanjuan.com.ar", "LABORAL", "Recepción de pedidos"),
-                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CELULAR", "5492644981122", "EMPRESA", "WhatsApp Despacho")
-            ));
-
-            // Proveedor 4: Accesorios Fitness Andina
+                    contacto(ContactoItemDTO.CORREO, "pedidos@atleticasanjuan.com.ar", "LABORAL", "Recepción de pedidos"),
+                    contacto(ContactoItemDTO.CELULAR, "5492644981122", "EMPRESA", "WhatsApp despacho")));
             proveedorService.crearProveedor("Accesorios Fitness Andina", List.of(
-                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CORREO", "info@fitnessandina.com.ar", "EMPRESA", "Consultas"),
-                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CORREO", "administracion@fitnessandina.com.ar", "LABORAL", "Administración"),
-                    new com.zero.ecommerce.dto.ContactoItemDTO(null, "CELULAR", "5492615558899", "LABORAL", "WhatsApp Guardia")
-            ));
+                    contacto(ContactoItemDTO.CORREO, "info@fitnessandina.com.ar", "EMPRESA", "Consultas"),
+                    contacto(ContactoItemDTO.CORREO, "administracion@fitnessandina.com.ar", "LABORAL", "Administración"),
+                    contacto(ContactoItemDTO.CELULAR, "5492615558899", "LABORAL", "WhatsApp guardia")));
         } catch (ErrorServiceException e) {
             throw new IllegalStateException("Los datos iniciales de proveedores no son válidos: " + e.getMessage(), e);
         }
+        // E3-04: compras de demostración recibidas (stock inicial).
+    }
+
+    private ContactoItemDTO contacto(String tipo, String valor, String tipoContacto, String observacion) {
+        return new ContactoItemDTO(null, tipo, valor, tipoContacto, observacion);
     }
 
     private void cargarVentas() {

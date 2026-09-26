@@ -18,29 +18,38 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ProveedorForm {
 
-    private String id;
     private String razonSocial;
     private List<ContactoItemDTO> contactos = new ArrayList<>();
 
+    /** Formulario de alta: arranca con una fila de correo y una de celular, que son las obligatorias. */
+    public static ProveedorForm nuevo() {
+        ProveedorForm form = new ProveedorForm();
+        form.getContactos().add(new ContactoItemDTO(null, ContactoItemDTO.CORREO, null, "EMPRESA", null));
+        form.getContactos().add(new ContactoItemDTO(null, ContactoItemDTO.CELULAR, null, "EMPRESA", null));
+        return form;
+    }
+
+    /** Formulario de edición con los contactos activos del proveedor. */
     public static ProveedorForm desde(Proveedor proveedor) {
         ProveedorForm form = new ProveedorForm();
-        form.setId(proveedor.getId());
         form.setRazonSocial(proveedor.getRazonSocial());
-        for (Contacto c : proveedor.getContactos()) {
-            if (!c.isEliminado()) {
-                ContactoItemDTO item = new ContactoItemDTO();
-                item.setId(c.getId());
-                item.setTipoContacto(c.getTipoContacto() != null ? c.getTipoContacto().name() : "EMPRESA");
-                item.setObservacion(c.getObservacion());
-                if (c instanceof ContactoCorreoElectronico correo) {
-                    item.setTipo("CORREO");
-                    item.setValor(correo.getEmail());
-                } else if (c instanceof ContactoTelefonico tel) {
-                    item.setTipo(tel.getTipoTelefono() == TipoTelefono.CELULAR ? "CELULAR" : "FIJO");
-                    item.setValor(tel.getTelefono());
-                }
-                form.getContactos().add(item);
+        for (Contacto contacto : proveedor.getContactos()) {
+            if (contacto.isEliminado()) {
+                continue;
             }
+            ContactoItemDTO item = new ContactoItemDTO();
+            item.setId(contacto.getId());
+            item.setTipoContacto(contacto.getTipoContacto() != null ? contacto.getTipoContacto().name() : null);
+            item.setObservacion(contacto.getObservacion());
+            if (contacto instanceof ContactoCorreoElectronico correo) {
+                item.setTipo(ContactoItemDTO.CORREO);
+                item.setValor(correo.getEmail());
+            } else if (contacto instanceof ContactoTelefonico telefono) {
+                item.setTipo(telefono.getTipoTelefono() == TipoTelefono.CELULAR
+                        ? ContactoItemDTO.CELULAR : ContactoItemDTO.FIJO);
+                item.setValor(telefono.getTelefono());
+            }
+            form.getContactos().add(item);
         }
         return form;
     }

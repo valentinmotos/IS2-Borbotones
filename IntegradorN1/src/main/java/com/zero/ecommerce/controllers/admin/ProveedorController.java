@@ -1,6 +1,8 @@
 package com.zero.ecommerce.controllers.admin;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -38,8 +40,8 @@ public class ProveedorController {
 
     @GetMapping
     public String listar(@RequestParam(defaultValue = "") String buscar, Model model) {
+        List<Proveedor> proveedores = service.listarProveedorActivo(buscar);
         model.addAttribute("pageTitle", "Proveedores");
-        List<Proveedor> proveedores = service.buscar(buscar);
         model.addAttribute("proveedores", proveedores);
         model.addAttribute("totalProveedores", proveedores.size());
         model.addAttribute("buscar", buscar);
@@ -49,18 +51,11 @@ public class ProveedorController {
     @GetMapping("/nuevo")
     public String nuevo(Model model) {
         model.addAttribute("pageTitle", "Nuevo proveedor");
-        if (!model.containsAttribute("form")) {
-            ProveedorForm form = new ProveedorForm();
-            form.getContactos().add(new ContactoItemDTO(null, "CORREO", "", "EMPRESA", ""));
-            form.getContactos().add(new ContactoItemDTO(null, "CELULAR", "", "LABORAL", ""));
-            model.addAttribute("form", form);
+        if (!model.containsAttribute("proveedorForm")) {
+            model.addAttribute("proveedorForm", ProveedorForm.nuevo());
         }
+        agregarOpciones(model);
         return "admin/proveedores/formulario";
-    }
-
-    @GetMapping("/nueva")
-    public String nueva() {
-        return "redirect:" + BASE + "/nuevo";
     }
 
     @GetMapping("/{id}/editar")
@@ -68,35 +63,35 @@ public class ProveedorController {
         Proveedor proveedor = buscarO404(id);
         model.addAttribute("pageTitle", "Editar proveedor");
         model.addAttribute("id", id);
-        if (!model.containsAttribute("form")) {
-            model.addAttribute("form", ProveedorForm.desde(proveedor));
+        if (!model.containsAttribute("proveedorForm")) {
+            model.addAttribute("proveedorForm", ProveedorForm.desde(proveedor));
         }
+        agregarOpciones(model);
         return "admin/proveedores/formulario";
     }
 
     @PostMapping
-    public String crear(@ModelAttribute ProveedorForm form, RedirectAttributes flash) {
+    public String crear(@ModelAttribute ProveedorForm proveedorForm, RedirectAttributes flash) {
         try {
-            service.crearProveedor(form.getRazonSocial(), form.getContactos());
+            service.crearProveedor(proveedorForm.getRazonSocial(), proveedorForm.getContactos());
             flash.addFlashAttribute("exito", "Proveedor creado correctamente.");
             return "redirect:" + BASE;
         } catch (ErrorServiceException e) {
-            flash.addFlashAttribute("error", e.getMessage());
-            flash.addFlashAttribute("form", form);
+            errorFormulario(flash, proveedorForm, e);
             return "redirect:" + BASE + "/nuevo";
         }
     }
 
     @PostMapping("/{id}/editar")
-    public String modificar(@PathVariable String id, @ModelAttribute ProveedorForm form, RedirectAttributes flash) {
+    public String modificar(@PathVariable String id, @ModelAttribute ProveedorForm proveedorForm,
+            RedirectAttributes flash) {
         buscarO404(id);
         try {
-            service.modificarProveedor(id, form.getRazonSocial(), form.getContactos());
+            service.modificarProveedor(id, proveedorForm.getRazonSocial(), proveedorForm.getContactos());
             flash.addFlashAttribute("exito", "Proveedor modificado correctamente.");
             return "redirect:" + BASE;
         } catch (ErrorServiceException e) {
-            flash.addFlashAttribute("error", e.getMessage());
-            flash.addFlashAttribute("form", form);
+            errorFormulario(flash, proveedorForm, e);
             return "redirect:" + BASE + "/" + id + "/editar";
         }
     }
@@ -111,6 +106,25 @@ public class ProveedorController {
             flash.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:" + BASE;
+    }
+
+    // Opciones de los selects de cada fila de contacto.
+    private void agregarOpciones(Model model) {
+        Map<String, String> tiposMedio = new LinkedHashMap<>();
+        tiposMedio.put(ContactoItemDTO.CORREO, "Correo electrónico");
+        tiposMedio.put(ContactoItemDTO.CELULAR, "Celular (WhatsApp)");
+        tiposMedio.put(ContactoItemDTO.FIJO, "Teléfono fijo");
+        Map<String, String> tiposContacto = new LinkedHashMap<>();
+        tiposContacto.put("EMPRESA", "Empresa");
+        tiposContacto.put("LABORAL", "Laboral");
+        tiposContacto.put("PERSONAL", "Personal");
+        model.addAttribute("tiposMedio", tiposMedio);
+        model.addAttribute("tiposContacto", tiposContacto);
+    }
+
+    private void errorFormulario(RedirectAttributes flash, ProveedorForm proveedorForm, ErrorServiceException e) {
+        flash.addFlashAttribute("error", e.getMessage());
+        flash.addFlashAttribute("proveedorForm", proveedorForm);
     }
 
     private Proveedor buscarO404(String id) {
