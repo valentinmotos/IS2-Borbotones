@@ -79,6 +79,48 @@ class CatalogoServiceTest {
         assertThat(service.listar(null)).hasSize(1);
     }
 
+    @Test
+    void buscaPorNombreODescripcionYCombinaFiltrosConOrdenDePrecio() throws Exception {
+        Producto economica = producto("p1", "Zapatilla Urbana", "cat-1", "sub-1", true);
+        economica.setTalle("42");
+        economica.setDescripcion("Calzado liviano");
+        Producto cara = producto("p2", "Calzado Trail", "cat-1", "sub-1", true);
+        cara.setTalle("42");
+        cara.setDescripcion("Zapatilla para montaña");
+        Producto otroTalle = producto("p3", "Zapatilla Urbana", "cat-1", "sub-1", true);
+        otroTalle.setTalle("41");
+        Producto sinOferta = producto("p4", "Zapatilla Clásica", "cat-1", "sub-1", false);
+        sinOferta.setTalle("42");
+
+        when(productoService.listarProductoActivo())
+                .thenReturn(List.of(cara, otroTalle, sinOferta, economica));
+        when(stockService.buscarStockActual("p1")).thenReturn(5);
+        when(stockService.buscarStockActual("p2")).thenReturn(3);
+        when(vigenciaPrecioService.buscarPrecioVigente("p1")).thenReturn(15000d);
+        when(vigenciaPrecioService.buscarPrecioVigente("p2")).thenReturn(25000d);
+
+        CatalogoFiltro filtro = CatalogoFiltro.busqueda(10000d, 30000d, "42", true, "precio_asc");
+
+        assertThat(service.buscar("zapatilla", filtro))
+                .extracting(dto -> dto.id())
+                .containsExactly("p1", "p2");
+    }
+
+    @Test
+    void ordenaNovedadesConLaMismaConvencionQueLaHome() throws Exception {
+        Producto primero = producto("p1", "A", "cat-1", "sub-1", false);
+        Producto ultimo = producto("p2", "B", "cat-1", "sub-1", false);
+        when(productoService.listarProductoActivo()).thenReturn(List.of(primero, ultimo));
+        when(stockService.buscarStockActual("p1")).thenReturn(1);
+        when(stockService.buscarStockActual("p2")).thenReturn(1);
+        when(vigenciaPrecioService.buscarPrecioVigente("p1")).thenReturn(1000d);
+        when(vigenciaPrecioService.buscarPrecioVigente("p2")).thenReturn(2000d);
+
+        assertThat(service.buscar(null, CatalogoFiltro.busqueda(null, null, null, null, "novedades")))
+                .extracting(dto -> dto.id())
+                .containsExactly("p2", "p1");
+    }
+
     private Producto producto(String id, String nombre, String categoriaId, String subCategoriaId, boolean oferta) {
         Categoria categoria = new Categoria();
         categoria.setId(categoriaId);
@@ -93,6 +135,7 @@ class CatalogoServiceTest {
         producto.setId(id);
         producto.setCodigo("COD-" + id);
         producto.setNombre(nombre);
+        producto.setDescripcion("Descripcion de " + nombre);
         producto.setTalle("M");
         producto.setEnOferta(oferta);
         producto.setSubCategoria(subCategoria);

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/publico}">
+<head>
+    <title th:text="${pageTitle}">Zero | Buscar</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <section class="zero-section">
+            <div class="container">
+                <nav class="zero-breadcrumb" aria-label="Navegación">
+                    <a th:href="@{/}">Inicio</a><span>/</span><strong>Búsqueda</strong>
+                </nav>
+
+                <div class="zero-search-layout">
+                    <div th:replace="~{fragments/filtros :: catalogo(${filtrosAction}, ${filtrosLimpiarUrl}, ${terminoBuscado}, ${precioMin}, ${precioMax}, ${talleSeleccionado}, ${soloOfertas}, ${ordenSeleccionado})}"></div>
+
+                    <div>
+                        <div class="zero-search-header">
+                            <div>
+                                <span class="zero-kicker">Catálogo</span>
+                                <h1 th:if="${!#strings.isEmpty(terminoBuscado)}">
+                                    Resultados para <em th:text="'«' + ${terminoBuscado} + '»'">búsqueda</em>
+                                </h1>
+                                <h1 th:if="${#strings.isEmpty(terminoBuscado)}">Todos los productos</h1>
+                            </div>
+                            <span class="zero-results-count"
+                                  th:text="${productos.totalElements + ' resultado' + (productos.totalElements == 1 ? '' : 's')}">
+                                0 resultados
+                            </span>
+                        </div>
+
+                        <div th:if="${productos.empty}" class="zero-empty-state">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                            <h2>No encontramos productos</h2>
+                            <p>Probá con otros términos o eliminá alguno de los filtros.</p>
+                            <a th:href="@{/}" class="zero-button secondary">Volver al inicio</a>
+                        </div>
+
+                        <div class="zero-product-grid" th:unless="${productos.empty}">
+                            <th:block th:each="producto : ${productos.content}">
+                                <div th:replace="~{fragments/card-producto :: cardCatalogo(${producto})}"></div>
+                            </th:block>
+                        </div>
+
+                        <div th:if="${totalPaginas > 1}"
+                             th:replace="~{fragments/paginacion :: paginacion(${paginaActual}, ${totalPaginas}, ${baseUrl})}"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

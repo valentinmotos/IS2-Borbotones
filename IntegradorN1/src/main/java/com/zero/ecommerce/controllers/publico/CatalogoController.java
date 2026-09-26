@@ -43,24 +43,41 @@ public class CatalogoController {
 
     @GetMapping("/catalogo/{categoriaId}")
     public String porCategoria(@PathVariable String categoriaId,
+            @RequestParam(required = false) Double precioMin,
+            @RequestParam(required = false) Double precioMax,
+            @RequestParam(required = false) String talle,
+            @RequestParam(required = false) Boolean ofertas,
+            @RequestParam(required = false) String orden,
             @RequestParam(name = "page", defaultValue = "1") int pagina, Model model) {
         Categoria categoria = buscarCategoria(categoriaId);
-        prepararVista(model, categoria, null, catalogoService.listarPorCategoria(categoriaId), pagina,
-                "/catalogo/" + categoriaId);
+        String action = "/catalogo/" + categoriaId;
+        prepararVista(model, categoria, null,
+                catalogoService.buscarEnCategoria(categoriaId, null, null,
+                        normalizarPrecio(precioMin), normalizarPrecio(precioMax), talle, ofertas, orden),
+                pagina, construirBaseUrl(action, precioMin, precioMax, talle, ofertas, orden));
+        prepararFiltros(model, action, precioMin, precioMax, talle, ofertas, orden);
         return "publico/catalogo";
     }
 
     @GetMapping("/catalogo/{categoriaId}/{subCategoriaId}")
     public String porSubCategoria(@PathVariable String categoriaId, @PathVariable String subCategoriaId,
+            @RequestParam(required = false) Double precioMin,
+            @RequestParam(required = false) Double precioMax,
+            @RequestParam(required = false) String talle,
+            @RequestParam(required = false) Boolean ofertas,
+            @RequestParam(required = false) String orden,
             @RequestParam(name = "page", defaultValue = "1") int pagina, Model model) {
         Categoria categoria = buscarCategoria(categoriaId);
         SubCategoria subCategoria = buscarSubCategoria(subCategoriaId);
         if (subCategoria.getCategoria() == null || !categoriaId.equals(subCategoria.getCategoria().getId())) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "La subcategoria no pertenece a la categoria.");
         }
+        String action = "/catalogo/" + categoriaId + "/" + subCategoriaId;
         prepararVista(model, categoria, subCategoria,
-                catalogoService.listarPorSubCategoria(categoriaId, subCategoriaId), pagina,
-                "/catalogo/" + categoriaId + "/" + subCategoriaId);
+                catalogoService.buscarEnCategoria(categoriaId, subCategoriaId, null,
+                        normalizarPrecio(precioMin), normalizarPrecio(precioMax), talle, ofertas, orden),
+                pagina, construirBaseUrl(action, precioMin, precioMax, talle, ofertas, orden));
+        prepararFiltros(model, action, precioMin, precioMax, talle, ofertas, orden);
         return "publico/catalogo";
     }
 
@@ -141,6 +158,34 @@ public class CatalogoController {
 
     private Double normalizarPrecio(Double precio) {
         return precio != null && Double.isFinite(precio) && precio >= 0 ? precio : null;
+    }
+
+    private void prepararFiltros(Model model, String action, Double precioMin, Double precioMax,
+            String talle, Boolean ofertas, String orden) {
+        model.addAttribute("filtrosAction", action);
+        model.addAttribute("filtrosLimpiarUrl", action);
+        model.addAttribute("terminoBuscado", null);
+        model.addAttribute("precioMin", normalizarPrecio(precioMin));
+        model.addAttribute("precioMax", normalizarPrecio(precioMax));
+        model.addAttribute("talleSeleccionado", talle);
+        model.addAttribute("soloOfertas", Boolean.TRUE.equals(ofertas));
+        model.addAttribute("ordenSeleccionado", orden);
+    }
+
+    private String construirBaseUrl(String action, Double precioMin, Double precioMax,
+            String talle, Boolean ofertas, String orden) {
+        StringBuilder url = new StringBuilder(action).append('?');
+        agregar(url, "precioMin", normalizarPrecio(precioMin));
+        agregar(url, "precioMax", normalizarPrecio(precioMax));
+        agregar(url, "talle", talle);
+        if (Boolean.TRUE.equals(ofertas)) {
+            agregar(url, "ofertas", true);
+        }
+        agregar(url, "orden", orden);
+        if (url.charAt(url.length() - 1) == '?' || url.charAt(url.length() - 1) == '&') {
+            url.setLength(url.length() - 1);
+        }
+        return url.toString();
     }
 
     private String construirBaseUrl(FiltroCatalogoDTO filtro) {

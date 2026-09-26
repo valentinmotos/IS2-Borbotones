@@ -67,6 +67,10 @@
 
                     <div class="wrap-icon-header flex-w flex-r-m">
                         <a th:href="@{/ofertas}" class="zero-header-link">Ofertas</a>
+                        <button type="button" class="zero-icon-button icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 js-show-modal-search"
+                                title="Buscar productos" aria-label="Buscar productos">
+                            <i class="zmdi zmdi-search"></i>
+                        </button>
                         <div th:replace="~{fragments/carrito-contador :: contadorDesktop}"></div>
                         <a th:href="@{/login}" class="dis-block icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11" sec:authorize="isAnonymous()">Ingresar</a>
                         <div class="dropdown zero-account-dropdown" sec:authorize="hasRole('CLIENTE')">
@@ -101,6 +105,10 @@
             </div>
 
             <div class="wrap-icon-header flex-w flex-r-m m-r-15">
+                <button type="button" class="zero-icon-button icon-header-item cl2 hov-cl1 trans-04 p-r-11 p-l-10 js-show-modal-search"
+                        title="Buscar productos" aria-label="Buscar productos">
+                    <i class="zmdi zmdi-search"></i>
+                </button>
                 <div th:replace="~{fragments/carrito-contador :: contadorMobile}"></div>
                 <a th:href="@{/login}" class="dis-block icon-header-item cl2 hov-cl1 trans-04 p-r-11 p-l-10" sec:authorize="isAnonymous()">
                     <i class="zmdi zmdi-account-o"></i>
@@ -171,11 +179,14 @@
                     <img th:src="@{/vendor/template/images/icons/icon-close2.png}" alt="CLOSE">
                 </button>
 
-                <form class="wrap-search-header flex-w p-l-15">
+                <!-- E3-02: acción conectada a /buscar?q= -->
+                <form class="wrap-search-header flex-w p-l-15" th:action="@{/buscar}" method="get">
                     <button class="flex-c-m trans-04" type="submit">
                         <i class="zmdi zmdi-search"></i>
                     </button>
-                    <input class="plh3" type="text" name="search" placeholder="Buscar productos">
+                    <input id="busqueda-q" class="plh3" type="text" name="q"
+                           placeholder="Buscar productos..." autocomplete="off"
+                           th:value="${terminoBuscado}">
                 </form>
             </div>
         </div>
