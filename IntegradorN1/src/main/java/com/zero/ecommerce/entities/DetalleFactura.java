@@ -19,4 +19,9 @@ public class DetalleFactura extends BaseEntity {
 
     @ManyToOne
     private Producto producto;
+
+    /** Experto: precio unitario del renglón, derivado del subtotal (el diagrama no lo guarda aparte). */
+    public double getPrecioUnitario() {
+        return cantidad == 0 ? 0 : subtotal / cantidad;
+    }
 }
