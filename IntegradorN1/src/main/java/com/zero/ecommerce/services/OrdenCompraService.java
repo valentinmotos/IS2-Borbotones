@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.zero.ecommerce.dto.CompraClienteDTO;
 import com.zero.ecommerce.dto.PedidoDTO;
 import com.zero.ecommerce.entities.Cliente;
 import com.zero.ecommerce.entities.FacturaCliente;
@@ -23,7 +24,8 @@ import com.zero.ecommerce.utils.TextoUtils;
 
 /**
  * Pedidos de los clientes para el panel (E4-06). Un pedido es una OrdenCompra que ya salió del carrito: los carritos
- * abiertos (PENDIENTE_COMPLETAR) no se listan. Las transiciones de estado las decide la propia orden (E4-01).
+ * abiertos (PENDIENTE_COMPLETAR) no se listan. También arma "Mis compras" del cliente (E4-04). Las transiciones de
+ * estado las decide la propia orden (E4-01).
  */
 @Service
 @Transactional(readOnly = true)
@@ -68,6 +70,36 @@ public class OrdenCompraService {
                         || tieneFormaDePago(facturas.get(o.getId()), idFormaDePago))
                 .map(o -> armarFila(o, facturas.get(o.getId())))
                 .toList();
+    }
+
+    /** Compras del cliente (RF21): todas sus órdenes menos el carrito abierto, de la más nueva a la más vieja. */
+    public List<OrdenCompra> listarComprasCliente(String idCliente) {
+        if (idCliente == null || idCliente.isBlank()) {
+            return List.of();
+        }
+        return repository.findByCliente_IdAndEliminadoFalseOrderByFechaDesc(idCliente).stream()
+                .filter(o -> o.getEstadoOrdenCompra() != null
+                        && o.getEstadoOrdenCompra() != EstadoOrdenCompra.PENDIENTE_COMPLETAR)
+                .toList();
+    }
+
+    /** Filas de "Mis compras": las compras del cliente con la forma de pago de su factura. */
+    public List<CompraClienteDTO> listarFilaCompraCliente(String idCliente) {
+        Map<String, FacturaCliente> facturas = facturasPorOrden();
+        return listarComprasCliente(idCliente).stream()
+                .map(o -> {
+                    FacturaCliente factura = facturas.get(o.getId());
+                    return new CompraClienteDTO(o.getId(), o.getIdentificadorCompra(), o.getFecha(),
+                            o.getCantidadTotalItems(), o.getTotal(), describirFormaDePago(factura),
+                            o.getEstadoOrdenCompra().name());
+                })
+                .toList();
+    }
+
+    /** true si la orden es del cliente: un cliente no puede ver ni anular compras de otro. */
+    public boolean esCompraDelCliente(OrdenCompra orden, String idCliente) {
+        return orden != null && orden.getCliente() != null && idCliente != null
+                && idCliente.equals(orden.getCliente().getId());
     }
 
     /** Cantidad de pedidos activos en cada estado, en el orden del flujo. Los estados sin pedidos quedan en 0. */
@@ -119,12 +151,13 @@ public class OrdenCompraService {
     }
 
     private PedidoDTO armarFila(OrdenCompra orden, FacturaCliente factura) {
-        String formaDePago = factura != null && factura.getFormaDePago() != null
-                ? factura.getFormaDePago().getObservacion()
-                : null;
         return new PedidoDTO(orden.getId(), orden.getIdentificadorCompra(), orden.getFecha(),
-                describirCliente(orden.getCliente()), orden.getTotal(), formaDePago,
+                describirCliente(orden.getCliente()), orden.getTotal(), describirFormaDePago(factura),
                 orden.getEstadoOrdenCompra().name());
+    }
+
+    private String describirFormaDePago(FacturaCliente factura) {
+        return factura != null && factura.getFormaDePago() != null ? factura.getFormaDePago().getObservacion() : null;
     }
 
     private boolean tieneFormaDePago(FacturaCliente factura, String idFormaDePago) {

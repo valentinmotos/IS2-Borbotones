@@ -648,6 +648,7 @@ tienen el stock inicial, así que no cambian los niveles del reporte de stock de
 | ORD-DEMO0004 | Martín Pérez | Entregado | Transferencia | N.º 6, pagada (Jefa) |
 | ORD-DEMO0005 | Martín Pérez | Anulada | Mercado Pago | N.º 7, anulada |
 | ORD-DEMO0006 | Lucía Gómez | Carrito abierto | - | - (no aparece en el panel) |
+| ORD-DEMO0007 | Martín Pérez | Pendiente de pago | Mercado Pago | N.º 8, sin definir (para "Pagar ahora", E4-04) |
 
 **Para verlos en una base que ya existe** hay que borrar `data/zero.db` y volver a levantar la app.
 
@@ -655,6 +656,35 @@ tienen el stock inicial, así que no cambian los niveles del reporte de stock de
 |---|---|---|
 | GET | `/admin/pedidos?estado=&formaPago=&desde=&hasta=&cliente=` | Listar pedidos con filtros y tarjetas por estado |
 | GET | `/admin/pedidos/{id}` | Detalle del pedido con la línea de tiempo |
+
+## Mis compras, seguimiento y anulación por el cliente E4-04
+
+Un cliente logueado entra desde **Mi cuenta → Mis compras** (`/cliente/compras`, solo `CLIENTE`). Para probar, usar
+los clientes del seeder de E4-06: `lucia.gomez@mail.com` o `martin.perez@mail.com`, con la clave `Cliente123!`.
+
+- **Listado (RF21):** número de compra, fecha, cantidad de ítems, total, forma de pago y badge de estado, de la más
+  nueva a la más vieja. No incluye el carrito abierto.
+- **Detalle y seguimiento (RF22 y RF23):** línea de tiempo con `pasosSeguimiento()` (fragment `seguimiento :: linea`),
+  datos de la compra, número de factura, dirección de entrega y productos con precio y subtotal.
+- **"Pagar ahora":** solo si la compra está pendiente de pago con Mercado Pago. Lleva a `/cliente/pago/{idOrden}`, la
+  URL del contrato con E4-10.
+- **"Anular compra" (RF19):** solo si `puedeAnularse(false)`, es decir, antes del pago. Pide confirmación con el modal
+  del kit y llama a `VentaService.anularVenta(idOrden, false)`: la compra y su factura pasan a `ANULADA`.
+- Un cliente no puede ver ni anular compras de otro: devuelve 403.
+
+### Para otros issues
+
+- `OrdenCompraService.listarComprasCliente(idCliente)` (contrato del plan), `listarFilaCompraCliente(idCliente)`
+  (filas con `CompraClienteDTO`) y `esCompraDelCliente(orden, idCliente)`.
+- **`VentaService` es un stub para E4-03** (`// TODO E4-03`): `anularVenta` anula la orden y la factura, que alcanza para
+  el cliente. Falta reingresar el stock con `revertirMovimiento` cuando la factura ya estaba pagada (anulación del
+  admin), además de `confirmarCompra` y `registrarPago`.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/cliente/compras` | Mis compras |
+| GET | `/cliente/compras/{id}` | Detalle y seguimiento de la compra |
+| POST | `/cliente/compras/{id}/anular` | Anular una compra sin pagar |
 
 ## ABM de referencia E0-06: Nacionalidad
 
