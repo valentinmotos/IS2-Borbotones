@@ -3,6 +3,7 @@ package com.zero.ecommerce.config;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,10 @@ import jakarta.persistence.metamodel.EntityType;
 
 import com.zero.ecommerce.entities.Categoria;
 import com.zero.ecommerce.entities.Departamento;
+import com.zero.ecommerce.entities.DetalleFactura;
 import com.zero.ecommerce.entities.Empleado;
+import com.zero.ecommerce.entities.FacturaCliente;
+import com.zero.ecommerce.entities.FacturaProveedor;
 import com.zero.ecommerce.entities.FormaDePago;
 import com.zero.ecommerce.entities.Proveedor;
 import com.zero.ecommerce.entities.Nacionalidad;
@@ -29,6 +33,7 @@ import com.zero.ecommerce.entities.Producto;
 import com.zero.ecommerce.entities.Provincia;
 import com.zero.ecommerce.entities.SubCategoria;
 import com.zero.ecommerce.entities.Usuario;
+import com.zero.ecommerce.entities.enums.EstadoFactura;
 import com.zero.ecommerce.entities.enums.RolUsuario;
 import com.zero.ecommerce.entities.enums.TipoImagen;
 import com.zero.ecommerce.entities.enums.TipoEmpleado;
@@ -51,6 +56,7 @@ import com.zero.ecommerce.services.ProductoService;
 import com.zero.ecommerce.services.ProveedorService;
 import com.zero.ecommerce.services.ProvinciaService;
 import com.zero.ecommerce.services.SubCategoriaService;
+import com.zero.ecommerce.services.StockService;
 import com.zero.ecommerce.services.VigenciaPrecioService;
 import com.zero.ecommerce.utils.ArchivoEnMemoria;
 
@@ -91,6 +97,7 @@ public class DataSeeder implements CommandLineRunner {
     private final ImagenService imagenService;
     private final ProductoService productoService;
     private final VigenciaPrecioService vigenciaPrecioService;
+    private final StockService stockService;
     private final ProveedorService proveedorService;
     private final FormaDePagoService formaDePagoService;
     private final FacturaProveedorService facturaProveedorService;
@@ -101,7 +108,7 @@ public class DataSeeder implements CommandLineRunner {
             ProvinciaService provinciaService, DepartamentoService departamentoService,
             LocalidadService localidadService, EmpresaService empresaService, CategoriaService categoriaService,
             SubCategoriaService subCategoriaService, ImagenService imagenService, ProductoService productoService,
-            VigenciaPrecioService vigenciaPrecioService,
+            VigenciaPrecioService vigenciaPrecioService, StockService stockService,
             ProveedorService proveedorService, FormaDePagoService formaDePagoService,
             FacturaProveedorService facturaProveedorService) {
         this.entityManager = entityManager;
@@ -116,6 +123,7 @@ public class DataSeeder implements CommandLineRunner {
         this.imagenService = imagenService;
         this.productoService = productoService;
         this.vigenciaPrecioService = vigenciaPrecioService;
+        this.stockService = stockService;
         this.proveedorService = proveedorService;
         this.formaDePagoService = formaDePagoService;
         this.facturaProveedorService = facturaProveedorService;
@@ -385,6 +393,11 @@ public class DataSeeder implements CommandLineRunner {
                         PRECIO_INICIAL_DEMO);
                 // El catálogo simula precios con antigüedad para poder probar de inmediato una actualización.
                 precioInicial.setFechaDesde(LocalDate.now().minusMonths(3));
+                // E3-06 necesita mercaderia visible para recorrer ofertas y detalles desde una base nueva.
+                // Se fecha hace 2 meses para que sea el primer movimiento: las compras recibidas y las ventas de
+                // demostración (E3-04) son posteriores y se suman o restan sobre este saldo.
+                stockService.cargarStockInicial(producto.getId(), 8 + Math.abs(producto.getCodigo().hashCode() % 25))
+                        .setFecha(LocalDateTime.now().minusMonths(2));
             }
         } catch (ErrorServiceException e) {
             throw new IllegalStateException("No se pudieron cargar los precios iniciales: " + e.getMessage(), e);
@@ -418,28 +431,78 @@ public class DataSeeder implements CommandLineRunner {
             Proveedor delPlata = proveedorService.crearProveedor("Calzados y Textiles del Plata S.R.L.", List.of(
                     contacto(ContactoItemDTO.CORREO, "contacto@textilesdelplata.com", "EMPRESA", "Atención general"),
                     contacto(ContactoItemDTO.CELULAR, "5491138765432", "LABORAL", "WhatsApp comercios")));
-            proveedorService.crearProveedor("Indumentaria Atlética San Juan", List.of(
+            Proveedor atletica = proveedorService.crearProveedor("Indumentaria Atlética San Juan", List.of(
                     contacto(ContactoItemDTO.CORREO, "pedidos@atleticasanjuan.com.ar", "LABORAL", "Recepción de pedidos"),
                     contacto(ContactoItemDTO.CELULAR, "5492644981122", "EMPRESA", "WhatsApp despacho")));
-            proveedorService.crearProveedor("Accesorios Fitness Andina", List.of(
+            Proveedor andina = proveedorService.crearProveedor("Accesorios Fitness Andina", List.of(
                     contacto(ContactoItemDTO.CORREO, "info@fitnessandina.com.ar", "EMPRESA", "Consultas"),
                     contacto(ContactoItemDTO.CORREO, "administracion@fitnessandina.com.ar", "LABORAL", "Administración"),
                     contacto(ContactoItemDTO.CELULAR, "5492615558899", "LABORAL", "WhatsApp guardia")));
+            // Las recibidas son las más viejas: se cargan primero para que tengan los números 1 y 2.
+            cargarComprasRecibidas(atletica, andina);
             cargarComprasPedidas(cuyo, delPlata);
         } catch (ErrorServiceException e) {
             throw new IllegalStateException("Los datos iniciales de proveedores no son válidos: " + e.getMessage(), e);
         }
-        // E3-04: compras de demostración recibidas (stock inicial).
+    }
+
+    /**
+     * E3-04: dos compras recibidas, que dan el stock inicial (el 100 % del reporte de stock de cada producto). Las
+     * zapatillas Run y los productos de las compras pedidas quedan sin stock.
+     */
+    private void cargarComprasRecibidas(Proveedor atletica, Proveedor andina) {
+        try {
+            String transferencia = buscarFormaDePago(TipoPago.TRANSFERENCIA);
+            FacturaProveedor mujeres = facturaProveedorService.crearFactura(atletica.getId(), transferencia, List.of(
+                    detalleCompra("CAL-FIT-S", 20, 6500),
+                    detalleCompra("CAL-FIT-M", 20, 6500),
+                    detalleCompra("TOP-MOV-M", 15, 5200),
+                    detalleCompra("ZAP-FLW-38", 10, 38000),
+                    detalleCompra("ZAP-FLW-39", 10, 38000),
+                    detalleCompra("COL-YOG-U", 12, 7000)));
+            recibirCompra(mujeres, 30);
+            FacturaProveedor accesorios = facturaProveedorService.crearFactura(andina.getId(), transferencia, List.of(
+                    detalleCompra("MOC-URB-U", 10, 15000),
+                    detalleCompra("BOL-GYM-U", 8, 18000),
+                    detalleCompra("REL-SPT-U", 10, 25000),
+                    detalleCompra("BIL-CUE-U", 15, 6000),
+                    detalleCompra("GOR-TRN-U", 20, 3500),
+                    detalleCompra("CON-KID-8", 12, 9000),
+                    detalleCompra("CON-KID-10", 12, 9000),
+                    detalleCompra("ZAP-KID-24", 8, 21000),
+                    detalleCompra("SAC-KID-U", 10, 4000)));
+            recibirCompra(accesorios, 25);
+        } catch (ErrorServiceException e) {
+            throw new IllegalStateException("Las compras recibidas de demostración no son válidas: " + e.getMessage(), e);
+        }
+    }
+
+    // Recibe la compra y la lleva al pasado: la fecha de la compra y la de sus movimientos de stock.
+    private void recibirCompra(FacturaProveedor compra, int diasAtras) throws ErrorServiceException {
+        facturaProveedorService.recibirFactura(compra.getId());
+        compra.setFechaFactura(LocalDate.now().minusDays(diasAtras + 3L));
+        atrasarMovimientos(compra.getDetalles(), diasAtras);
+    }
+
+    private void atrasarMovimientos(List<DetalleFactura> detalles, int diasAtras) {
+        for (DetalleFactura detalle : detalles) {
+            stockService.listarMovimientos(detalle.getProducto().getId()).get(0)
+                    .setFecha(LocalDateTime.now().minusDays(diasAtras));
+        }
+    }
+
+    private String buscarFormaDePago(TipoPago tipoPago) throws ErrorServiceException {
+        return formaDePagoService.listarFormaDePagoActivo().stream()
+                .filter(f -> f.getTipoPago() == tipoPago)
+                .findFirst()
+                .orElseThrow(() -> new ErrorServiceException("Falta la forma de pago " + tipoPago.getDescripcion() + "."))
+                .getId();
     }
 
     // E3-03: dos compras pedidas (SIN_DEFINIR), sin recibir: no mueven el stock.
     private void cargarComprasPedidas(Proveedor cuyo, Proveedor delPlata) {
         try {
-            String transferencia = formaDePagoService.listarFormaDePagoActivo().stream()
-                    .filter(f -> f.getTipoPago() == TipoPago.TRANSFERENCIA)
-                    .findFirst()
-                    .orElseThrow(() -> new ErrorServiceException("Falta la forma de pago Transferencia."))
-                    .getId();
+            String transferencia = buscarFormaDePago(TipoPago.TRANSFERENCIA);
             facturaProveedorService.crearFactura(cuyo.getId(), transferencia, List.of(
                     detalleCompra("REM-DRY-H-M", 20, 4500),
                     detalleCompra("REM-DRY-H-L", 15, 4500),
@@ -463,7 +526,42 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void cargarVentas() {
+        // E3-04: ventas mínimas pagadas que descuentan stock, para que el reporte de stock (E5-03) tenga productos en
+        // los tres niveles. Cada número es el porcentaje que queda del saldo después de la última recepción (el
+        // 100 %): Calza S, Top y Mochila Urban quedan Regulares; Calza M, Reloj, Zapatilla Kids y Bolso Gym, Malos.
+        // El resto, Bueno. Se usan porcentajes porque el saldo recibido incluye el stock inicial de E3-06, y ninguno
+        // queda en 0 para que todos sigan visibles en el catálogo (E3-06).
+        // TODO E6-03: no tienen cliente ni OrdenCompra. Reemplazarlas por ventas de clientes con perfil completo.
+        try {
+            String efectivo = buscarFormaDePago(TipoPago.EFECTIVO);
+            cargarVentaDemo(1, efectivo, 10, Map.of("CAL-FIT-S", 35, "CAL-FIT-M", 15, "TOP-MOV-M", 40));
+            cargarVentaDemo(2, efectivo, 5, Map.of("MOC-URB-U", 40, "REL-SPT-U", 10, "ZAP-KID-24", 12, "BOL-GYM-U", 10));
+        } catch (ErrorServiceException e) {
+            throw new IllegalStateException("Las ventas de demostración no son válidas: " + e.getMessage(), e);
+        }
         // E4-04: órdenes en todos los estados.
         // E5-01 / E6-03: ventas pagadas en varios meses para reportes y dashboard.
+    }
+
+    // porcentajeQueQueda: código de producto → porcentaje del saldo actual que queda después de la venta.
+    private void cargarVentaDemo(long numero, String idFormaDePago, int diasAtras, Map<String, Integer> porcentajeQueQueda)
+            throws ErrorServiceException {
+        FacturaCliente venta = new FacturaCliente();
+        venta.setNumeroFactura(numero);
+        venta.setFechaFactura(LocalDate.now().minusDays(diasAtras));
+        venta.setEstado(EstadoFactura.PAGADA);
+        venta.setFormaDePago(formaDePagoService.buscarFormaDePago(idFormaDePago));
+        for (Map.Entry<String, Integer> item : porcentajeQueQueda.entrySet()) {
+            Producto producto = productoService.buscarProductoPorCodigo(item.getKey());
+            int saldo = stockService.buscarStockActual(producto.getId());
+            int cantidad = saldo - saldo * item.getValue() / 100;
+            venta.agregarDetalle(producto, cantidad, vigenciaPrecioService.buscarPrecioVigente(producto.getId()));
+        }
+        venta.setTotalPagado(venta.calcularTotal());
+        entityManager.persist(venta);
+        for (DetalleFactura detalle : venta.getDetalles()) {
+            stockService.registrarMovimiento(detalle);
+        }
+        atrasarMovimientos(venta.getDetalles(), diasAtras);
     }
 }

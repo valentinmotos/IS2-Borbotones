@@ -347,6 +347,22 @@ a, a:hover {
     width: 100%;
 }
 
+.zero-product-card-link,
+.zero-product-card-link:hover,
+.zero-product-card-link:focus {
+    color: inherit;
+    display: block;
+    text-decoration: none;
+}
+
+.zero-product-card-link:focus {
+    outline: 3px solid var(--zero-accent-strong);
+    outline-offset: 3px;
+}
+
+.zero-product-meta {
+    font-size: 0.9rem;
+}
 .zero-product-card .price {
     display: inline-block;
     font-weight: 700;
@@ -354,8 +370,24 @@ a, a:hover {
     margin-top: 0.5rem;
 }
 
+/* E3-06: detalle y vidriera de ofertas. */
 .zero-section-compact {
     padding-top: 1.5rem;
+}
+
+.zero-breadcrumb {
+    align-items: center;
+    color: var(--zero-muted);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+    gap: 0.55rem;
+    margin-bottom: 2rem;
+}
+
+.zero-breadcrumb a {
+    color: var(--zero-charcoal);
+    font-weight: 600;
 }
 
 .zero-section-heading {
@@ -368,10 +400,197 @@ a, a:hover {
 .zero-section-heading h1,
 .zero-section-heading h2 {
     color: var(--zero-charcoal);
+    font-size: clamp(2rem, 4vw, 3rem);
     font-weight: 800;
     margin: 0;
 }
 
+.zero-section-heading p {
+    color: var(--zero-muted);
+    margin: 0;
+}
+
+.zero-product-detail {
+    align-items: start;
+    display: grid;
+    gap: clamp(2rem, 5vw, 5rem);
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+}
+
+.zero-product-detail-image {
+    background: #ffffff;
+    border: 1px solid var(--zero-border);
+    border-radius: 24px;
+    min-height: 560px;
+    overflow: hidden;
+    padding: 2rem;
+    position: relative;
+}
+
+.zero-product-detail-image img {
+    height: 520px;
+    object-fit: contain;
+    width: 100%;
+}
+
+.zero-detail-offer {
+    font-size: 0.85rem;
+    left: 1.5rem;
+    padding: 0.55rem 0.85rem;
+    position: absolute;
+    top: 1.5rem;
+    z-index: 1;
+}
+
+.zero-product-detail-info {
+    background: #ffffff;
+    border: 1px solid var(--zero-border);
+    border-radius: 24px;
+    padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+.zero-product-code {
+    color: var(--zero-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+}
+
+.zero-product-detail-info h1 {
+    color: var(--zero-charcoal);
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    font-weight: 800;
+    line-height: 1.05;
+}
+
+.zero-product-price {
+    color: var(--zero-charcoal);
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 1.25rem 0;
+}
+
+.zero-product-description {
+    color: var(--zero-muted);
+    line-height: 1.8;
+}
+
+.zero-detail-block {
+    border-top: 1px solid var(--zero-border);
+    margin-top: 1.75rem;
+    padding-top: 1.5rem;
+}
+
+.zero-size-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 0.8rem;
+}
+
+.zero-size {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid var(--zero-border);
+    border-radius: 8px;
+    color: var(--zero-charcoal);
+    display: inline-flex;
+    font-weight: 700;
+    justify-content: center;
+    min-height: 42px;
+    min-width: 48px;
+    padding: 0.45rem 0.8rem;
+}
+
+.zero-size:hover,
+.zero-size:focus,
+.zero-size.active {
+    background: var(--zero-charcoal);
+    border-color: var(--zero-charcoal);
+    color: #ffffff;
+}
+
+.zero-stock {
+    color: #28753b;
+    font-weight: 700;
+    margin: 1.5rem 0 0;
+}
+
+.zero-add-cart {
+    align-items: end;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 110px 1fr;
+    margin-top: 1rem;
+}
+
+.zero-add-cart .form-group {
+    margin: 0;
+}
+
+.zero-add-cart .zero-button {
+    border: 0;
+    width: 100%;
+}
+
+.zero-related-section {
+    background: #ffffff;
+    border-top: 1px solid var(--zero-border);
+}
+
+.zero-catalog-filters {
+    align-items: end;
+    background: #ffffff;
+    border: 1px solid var(--zero-border);
+    border-radius: 18px;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-bottom: 2rem;
+    padding: 1.25rem;
+}
+
+.zero-catalog-filters .form-group {
+    margin: 0;
+}
+
+.zero-filter-actions {
+    display: flex;
+    gap: 0.75rem;
+    grid-column: 1 / -1;
+}
+
+.zero-filter-actions .zero-button {
+    border: 0;
+}
+
+.zero-empty-state {
+    background: #ffffff;
+    border: 1px solid var(--zero-border);
+    border-radius: 20px;
+    padding: 4rem 1.5rem;
+    text-align: center;
+}
+
+.zero-empty-state i {
+    color: var(--zero-accent-strong);
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.zero-empty-state h2 {
+    color: var(--zero-charcoal);
+    font-weight: 800;
+}
+
+.zero-offers-pagination,
+.zero-pagination {
+    margin-top: 2rem;
+}
+
+/* E3-05: home y navegacion por categorias. */
 .zero-section-heading .zero-kicker {
     margin-bottom: 0.35rem;
 }
@@ -458,7 +677,6 @@ a, a:hover {
     padding: 3rem 1.5rem;
     text-align: center;
 }
-
 .zero-footer {
     background: var(--zero-white);
     color: var(--zero-charcoal);
@@ -1056,6 +1274,22 @@ a, a:hover {
     .zero-filters.zero-filters-amplio {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .zero-product-detail {
+        grid-template-columns: 1fr;
+    }
+
+    .zero-product-detail-image {
+        min-height: 420px;
+    }
+
+    .zero-product-detail-image img {
+        height: 380px;
+    }
+
+    .zero-catalog-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 575px) {
@@ -1094,5 +1328,29 @@ a, a:hover {
     .zero-filters,
     .zero-filters.zero-filters-amplio {
         grid-template-columns: 1fr;
+    }
+
+    .zero-section-heading,
+    .zero-filter-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .zero-catalog-filters,
+    .zero-add-cart {
+        grid-template-columns: 1fr;
+    }
+
+    .zero-filter-actions .zero-button {
+        width: 100%;
+    }
+
+    .zero-product-detail-image {
+        min-height: 320px;
+        padding: 1rem;
+    }
+
+    .zero-product-detail-image img {
+        height: 290px;
     }
 }

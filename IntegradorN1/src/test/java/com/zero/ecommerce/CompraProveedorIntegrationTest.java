@@ -67,16 +67,18 @@ class CompraProveedorIntegrationTest {
     }
 
     @Test
-    void elSeederCargaDosComprasPedidasYElListadoLasMuestra() throws Exception {
+    void elSeederCargaDosComprasRecibidasYDosPedidasYElListadoLasMuestra() throws Exception {
         List<FacturaProveedor> compras = facturaProveedorService.listarFacturaActivo();
-        assertThat(compras).hasSize(2).allMatch(c -> c.getEstado() == EstadoFactura.SIN_DEFINIR);
-        assertThat(compras).extracting(FacturaProveedor::getNumeroFactura).containsExactly(2L, 1L);
+        assertThat(compras).extracting(FacturaProveedor::getNumeroFactura).containsExactly(4L, 3L, 2L, 1L);
+        assertThat(compras).extracting(FacturaProveedor::getEstado).containsExactly(EstadoFactura.SIN_DEFINIR,
+                EstadoFactura.SIN_DEFINIR, EstadoFactura.PAGADA, EstadoFactura.PAGADA);
 
         mvc.perform(get(BASE).session(sesion)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Distribuidora Deportiva Cuyo S.A.")))
                 .andExpect(content().string(containsString("Calzados y Textiles del Plata S.R.L.")))
                 .andExpect(content().string(containsString("Sin definir")))
-                .andExpect(content().string(containsString("2 compras")));
+                .andExpect(content().string(containsString("Pagada")))
+                .andExpect(content().string(containsString("4 compras")));
     }
 
     @Test
@@ -87,6 +89,8 @@ class CompraProveedorIntegrationTest {
                 .andExpect(content().string(not(containsString("Calzados y Textiles del Plata S.R.L.</td>"))))
                 .andExpect(content().string(containsString("1 compra")));
         mvc.perform(get(BASE).param("estado", "PAGADA").session(sesion))
+                .andExpect(content().string(containsString("2 compras")));
+        mvc.perform(get(BASE).param("estado", "ANULADA").session(sesion))
                 .andExpect(content().string(containsString("0 compras")));
         mvc.perform(get(BASE).param("desde", "2000-01-01").param("hasta", "2000-12-31").session(sesion))
                 .andExpect(content().string(containsString("0 compras")));
@@ -100,6 +104,7 @@ class CompraProveedorIntegrationTest {
         String remeraM = idProducto("REM-DRY-H-M");
         String remeraL = idProducto("REM-DRY-H-L");
         String calza = idProducto("CAL-FIT-S");
+        int stockInicialRemeraM = stockService.buscarStockActual(remeraM);
 
         mvc.perform(get(BASE + "/nueva").session(sesion)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("id=\"plantilla-detalle\"")))
@@ -120,23 +125,23 @@ class CompraProveedorIntegrationTest {
                 .param("detalles[3].productoId", calza).param("detalles[3].cantidad", "5")
                 .param("detalles[3].precioUnitario", "3000"))
                 .andExpect(flash().attribute("exito",
-                        "Compra N.º 3 creada: quedó pedida. Podés avisarle al proveedor por WhatsApp."))
+                        "Compra N.º 5 creada: quedó pedida. Podés avisarle al proveedor por WhatsApp."))
                 .andReturn();
 
         FacturaProveedor compra = facturaProveedorService.listarFacturaActivo().get(0);
         assertThat(resultado.getResponse().getRedirectedUrl()).isEqualTo(BASE + "/" + compra.getId());
-        assertThat(compra.getNumeroFactura()).isEqualTo(3);
+        assertThat(compra.getNumeroFactura()).isEqualTo(5);
         assertThat(compra.getEstado()).isEqualTo(EstadoFactura.SIN_DEFINIR);
         assertThat(compra.getDetalles()).hasSize(3);
         double sumaSubtotales = compra.getDetalles().stream().mapToDouble(DetalleFactura::getSubtotal).sum();
         assertThat(sumaSubtotales).isEqualTo(90000 + 45505 + 15000);
         assertThat(compra.getTotalPagado()).isEqualTo(sumaSubtotales);
         // Una compra pedida todavía no mueve el stock.
-        assertThat(stockService.buscarStockActual(remeraM)).isZero();
+        assertThat(stockService.buscarStockActual(remeraM)).isEqualTo(stockInicialRemeraM);
 
         mvc.perform(get(BASE + "/" + compra.getId()).session(sesion).flashAttrs(resultado.getFlashMap()))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Compra N.º 3 creada")))
+                .andExpect(content().string(containsString("Compra N.º 5 creada")))
                 .andExpect(content().string(containsString("$150.505,00")))
                 .andExpect(content().string(containsString("$4.550,50")))
                 .andExpect(content().string(containsString("href=\"https://wa.me/5492614123456?text=Hola")))
@@ -157,7 +162,7 @@ class CompraProveedorIntegrationTest {
                 .andExpect(flash().attribute("error", "El producto Remera Zero Dry Fit Hombre (talle M) está repetido: "
                         + "cargalo en un solo renglón con la cantidad total."))
                 .andReturn();
-        assertThat(facturaProveedorService.listarFacturaActivo()).hasSize(2);
+        assertThat(facturaProveedorService.listarFacturaActivo()).hasSize(4);
 
         mvc.perform(get(BASE + "/nueva").session(sesion).flashAttrs(resultado.getFlashMap()))
                 .andExpect(status().isOk())

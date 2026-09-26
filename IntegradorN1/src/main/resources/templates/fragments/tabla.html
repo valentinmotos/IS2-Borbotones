@@ -67,6 +67,38 @@
             </tbody>
         </table>
     </div>
+    <!-- Como tablaRegistrosImagen, con un botón "Ver" que lleva al detalle del registro ({baseUrl}/{id}). -->
+    <div th:fragment="tablaRegistrosImagenConDetalle(encabezados, registros, baseUrl)" class="table-responsive zero-table-wrap">
+        <table class="table table-striped table-bordered mb-0 zero-table-imagen">
+            <thead>
+                <tr>
+                    <th scope="col">Imagen</th>
+                    <th scope="col" th:each="encabezado : ${encabezados}" th:text="${encabezado}">Columna</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(registros)}">
+                    <td th:colspan="${#lists.size(encabezados) + 2}" class="text-center text-muted py-4">No hay registros para mostrar.</td>
+                </tr>
+                <tr th:each="registro : ${registros}">
+                    <td>
+                        <img class="zero-table-thumb" th:alt="${registro.nombre}"
+                             th:src="${registro.imagenId != null} ? @{/imagen/{id}(id=${registro.imagenId})} : @{/img/default-image.png}">
+                    </td>
+                    <td th:each="celda : ${registro.celdas}" th:text="${celda}">Dato</td>
+                    <td class="zero-table-actions">
+                        <a th:href="@{${baseUrl + '/' + registro.id}}" class="btn btn-sm btn-outline-secondary"
+                           th:attr="aria-label=${'Ver ' + registro.nombre}">Ver</a>
+                        <a th:href="@{${baseUrl + '/' + registro.id + '/editar'}}" class="btn btn-sm btn-outline-primary"
+                           th:attr="aria-label=${'Editar ' + registro.nombre}">Editar</a>
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal"
+                                th:attr="data-target=${'#eliminar-' + registro.id},aria-label=${'Eliminar ' + registro.nombre}">Eliminar</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
     <!-- Acciones por fila de tablaRegistros y tablaRegistrosImagen: editar y abrir el modal #eliminar-{id}. -->
     <td th:fragment="accionesRegistro(registro, baseUrl)" class="zero-table-actions">
         <a th:href="@{${baseUrl + '/' + registro.id + '/editar'}}" class="btn btn-sm btn-outline-primary"

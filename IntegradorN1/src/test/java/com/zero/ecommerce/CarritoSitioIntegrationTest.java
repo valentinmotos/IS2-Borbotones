@@ -84,6 +84,8 @@ class CarritoSitioIntegrationTest {
     private Usuario usuarioCliente;
     private Cliente cliente;
     private Producto producto;
+    private String catalogoUrl;
+    private String productoUrl;
 
     @BeforeEach
     void setUp() {
@@ -133,6 +135,8 @@ class CarritoSitioIntegrationTest {
         producto.setTalle("XL");
         producto.setSubCategoria(subCategoria);
         producto = productoRepository.save(producto);
+        catalogoUrl = "/catalogo/" + subCategoria.getCategoria().getId();
+        productoUrl = "/producto/" + producto.getId();
 
         VigenciaPrecio vigencia = new VigenciaPrecio();
         vigencia.setProducto(producto);
@@ -174,32 +178,29 @@ class CarritoSitioIntegrationTest {
     @Test
     @WithMockUser(username = CORREO_EMPLEADO, roles = { "ADMINISTRATIVO" })
     void empleadoVeBotonCarritoDeshabilitado() throws Exception {
-        mvc.perform(get("/catalogo"))
+        mvc.perform(get(productoUrl))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Solo clientes")));
     }
 
     @Test
     void flujoCompletoVisitanteAgregaVaALoginVuelveConItemAgregadoYContadorActualizado() throws Exception {
-        // 1. Visitante navega a /catalogo
-        MvcResult getCatalogo = mvc.perform(get("/catalogo")).andExpect(status().isOk()).andReturn();
-        MockHttpSession sesion = (MockHttpSession) getCatalogo.getRequest().getSession(false);
-        CsrfToken csrf = (CsrfToken) getCatalogo.getRequest().getAttribute(CsrfToken.class.getName());
+        // 1. Visitante navega al detalle del producto
+        MvcResult getProducto = mvc.perform(get(productoUrl)).andExpect(status().isOk()).andReturn();
+        MockHttpSession sesion = (MockHttpSession) getProducto.getRequest().getSession(false);
+        assertThat(getProducto.getResponse().getContentAsString()).contains("action=\"/login\"")
+                .contains("name=\"retorno\" value=\"" + productoUrl + "\"");
 
-        // 2. Toca "Agregar al carrito" vía POST a /cliente/carrito/agregar
-        MvcResult postAgregar = mvc.perform(post("/cliente/carrito/agregar")
+        // 2. Toca "Agregar al carrito" y el login guarda el producto pendiente
+        MvcResult getLogin = mvc.perform(get("/login")
                 .session(sesion)
-                .param(csrf.getParameterName(), csrf.getToken())
                 .param("idProducto", producto.getId())
                 .param("cantidad", "2")
-                .header("Referer", "http://localhost:8080/catalogo"))
-                .andExpect(status().is3xxRedirection())
+                .param("retorno", productoUrl))
+                .andExpect(status().isOk())
                 .andReturn();
 
-        assertThat(postAgregar.getResponse().getRedirectedUrl()).contains("/login");
-
         // 3. Se loguea con credenciales de cliente
-        MvcResult getLogin = mvc.perform(get("/login").session(sesion)).andExpect(status().isOk()).andReturn();
         CsrfToken loginCsrf = (CsrfToken) getLogin.getRequest().getAttribute(CsrfToken.class.getName());
 
         MvcResult loginResult = mvc.perform(post("/login")
@@ -210,15 +211,15 @@ class CarritoSitioIntegrationTest {
                 .andExpect(status().is3xxRedirection())
                 .andReturn();
 
-        assertThat(loginResult.getResponse().getRedirectedUrl()).contains("/catalogo");
+        assertThat(loginResult.getResponse().getRedirectedUrl()).contains(productoUrl);
 
         // 4. Verifica que en el carrito del cliente ahora está el producto
         var carrito = carritoService.obtenerCarrito(cliente.getId());
         assertThat(carrito.getDetalles()).hasSize(1);
         assertThat(carrito.getDetalles().get(0).getCantidad()).isEqualTo(2);
 
-        // 5. Al volver al catálogo, el contador del header ahora muestra 2
-        mvc.perform(get("/catalogo").session(sesion))
+        // 5. Al volver al producto, el contador del header ahora muestra 2
+        mvc.perform(get(productoUrl).session(sesion))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("data-notify=\"2\"")))
                 .andExpect(content().string(containsString("Ver carrito")));
@@ -228,7 +229,7 @@ class CarritoSitioIntegrationTest {
     void flujoVisitanteConParametroRetornoEnLogin() throws Exception {
         // 1. Visitante accede a login con parámetros de retorno y producto
         MvcResult resLogin = mvc.perform(get("/login")
-                .param("retorno", "/catalogo")
+                .param("retorno", catalogoUrl)
                 .param("idProducto", producto.getId())
                 .param("cantidad", "3"))
                 .andExpect(status().isOk())
@@ -247,7 +248,7 @@ class CarritoSitioIntegrationTest {
                 .andExpect(status().is3xxRedirection())
                 .andReturn();
 
-        assertThat(loginResult.getResponse().getRedirectedUrl()).contains("/catalogo");
+        assertThat(loginResult.getResponse().getRedirectedUrl()).contains(catalogoUrl);
 
         // 3. Ítem agregado y contador en 3
         var carrito = carritoService.obtenerCarrito(cliente.getId());

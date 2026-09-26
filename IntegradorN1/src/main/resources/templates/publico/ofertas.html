@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
+<head>
+    <title>Ofertas | Zero</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <section class="zero-section">
+        <div class="container">
+            <nav class="zero-breadcrumb" aria-label="Migas de pan"><a th:href="@{/}">Inicio</a><span>/</span><span>Ofertas</span></nav>
+            <div class="zero-section-heading">
+                <div><div class="zero-kicker">Precios especiales</div><h1>Ofertas</h1></div>
+                <p th:text="${productos.totalElements == 1 ? '1 producto disponible' : productos.totalElements + ' productos disponibles'}">
+                    Productos disponibles
+                </p>
+            </div>
+
+            <form th:action="@{/ofertas}" method="get" class="zero-catalog-filters">
+                <div class="form-group">
+                    <label for="precioMinimo">Precio mínimo</label>
+                    <input id="precioMinimo" name="precioMinimo" type="number" class="form-control" min="0" step="0.01"
+                           th:value="${precioMinimo}" placeholder="$0">
+                </div>
+                <div class="form-group">
+                    <label for="precioMaximo">Precio máximo</label>
+                    <input id="precioMaximo" name="precioMaximo" type="number" class="form-control" min="0" step="0.01"
+                           th:value="${precioMaximo}" placeholder="Sin límite">
+                </div>
+                <div class="form-group">
+                    <label for="talle">Talle</label>
+                    <select id="talle" name="talle" class="form-control">
+                        <option value="">Todos</option>
+                        <option th:each="opcion : ${talles}" th:value="${opcion}" th:text="${opcion}"
+                                th:selected="${opcion == talle}">M</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="orden">Ordenar por</label>
+                    <select id="orden" name="orden" class="form-control">
+                        <option value="nombre" th:selected="${orden == 'nombre'}">Nombre</option>
+                        <option value="precio-asc" th:selected="${orden == 'precio-asc'}">Menor precio</option>
+                        <option value="precio-desc" th:selected="${orden == 'precio-desc'}">Mayor precio</option>
+                    </select>
+                </div>
+                <div class="zero-filter-actions">
+                    <button type="submit" class="zero-button primary">Aplicar filtros</button>
+                    <a th:href="@{/ofertas}" class="zero-button secondary">Limpiar</a>
+                </div>
+            </form>
+
+            <div th:if="${productos.isEmpty()}" class="zero-empty-state">
+                <i class="zmdi zmdi-tag-more" aria-hidden="true"></i>
+                <h2>No encontramos ofertas</h2>
+                <p>Probá quitando algún filtro o volvé más tarde.</p>
+                <a th:href="@{/ofertas}" class="zero-button secondary">Ver todas las ofertas</a>
+            </div>
+
+            <div th:unless="${productos.isEmpty()}" class="zero-product-grid">
+                <th:block th:each="producto : ${productos.content}">
+                    <article th:replace="~{fragments/card-producto :: cardCatalogo(${producto})}"></article>
+                </th:block>
+            </div>
+
+            <nav th:if="${totalPaginas > 1}" class="zero-offers-pagination"
+                 th:replace="~{fragments/paginacion :: paginacion(${paginaActual}, ${totalPaginas}, ${baseUrl})}"></nav>
+        </div>
+    </section>
+</div>
+</body>
+</html>
