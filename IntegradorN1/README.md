@@ -439,6 +439,29 @@ Los tests (`mvnw test`) usan **GreenMail**, un servidor SMTP en memoria en el pu
 solo de test): verifican el envío, el HTML y el logo sin que salga nada de la máquina. Ver
 `CorreoIntegrationTest` y `EmailAsyncIntegrationTest`.
 
+## Correos de la compra E4-05
+
+`NotificacionCompraService` manda los dos correos de la compra al cliente (el nombre de usuario de su `Usuario`):
+
+- `enviarConfirmacion(orden)` (RF20), template `email/confirmacion-compra.html`: número de compra, fecha, ítems con
+  cantidad, precio unitario y subtotal, total, número de factura, forma de pago y un botón "Seguir mi compra". Si la
+  orden está pendiente de pago, suma las instrucciones de pago según el `TipoPago` (texto fijo, porque el diagrama no
+  guarda datos de cobro) y, con Mercado Pago, un botón a `/cliente/pago/{idOrden}` (E4-10).
+- `notificarCambioEstado(orden)`, template `email/cambio-estado.html`: el nuevo estado, un mensaje y el link al
+  seguimiento.
+- Los links son absolutos, a `app.url-base` + `/cliente/compras/{idOrden}` (pantalla de E4-04).
+
+### Para otros issues
+
+- Llamarlos **después** de la transición y de crear la factura, dentro de la misma transacción (la orden tiene que
+  estar cargada): E4-02 llama a `enviarConfirmacion` y E4-03 / E4-07 a `notificarCambioEstado`.
+- No lanzan excepciones: arman los datos y el envío es `@Async` (`EmailService.enviar`). Si el correo falla, o si la
+  orden no tiene cliente con usuario, queda en el log y la operación sigue.
+- Sin correo configurado no llega nada: cargar la cuenta SMTP en **Configuración → Correo**.
+
+Las pruebas están en `NotificacionCompraServiceTest` y `NotificacionCompraIntegrationTest` (GreenMail, con los
+pedidos del seeder).
+
 ## Newsletter de ofertas E4-08
 
 La pantalla **Newsletter** (`/admin/newsletter`, roles `JEFE` y `ADMINISTRATIVO`) muestra las ofertas
