@@ -42,6 +42,8 @@ class ProductoServiceTest {
     private ImagenService imagenService;
     @Mock
     private VigenciaPrecioService vigenciaPrecioService;
+    @Mock
+    private StockService stockService;
     @InjectMocks
     private ProductoService service;
 
@@ -186,19 +188,20 @@ class ProductoServiceTest {
     }
 
     @Test
-    void paginaLasFilasConPrecioYStockProvisorios() {
+    void paginaLasFilasConElStockActualYPrecioProvisorio() {
         List<Producto> productos = new ArrayList<>();
         for (int i = 1; i <= 12; i++) {
             productos.add(producto(String.valueOf(i), "COD-" + i, "Producto " + i, "M", i == 11, ropaMujeres));
         }
         when(repository.findByEliminadoFalseOrderByNombreAscTalleAsc()).thenReturn(productos);
+        when(stockService.buscarStockActual("11")).thenReturn(7);
         Page<FilaTablaImagenDTO> segunda = service.listarFilaProductoActivo(null, null, null, null, 2, 10);
         assertThat(segunda.getTotalPages()).isEqualTo(2);
         assertThat(segunda.getTotalElements()).isEqualTo(12);
         assertThat(segunda.getNumber()).isEqualTo(1);
         assertThat(segunda.getContent()).containsExactly(
                 new FilaTablaImagenDTO("11", "Producto 11 (talle M)", null,
-                        List.of("COD-11", "Producto 11", "M", "Mujeres / Ropa", "Sí", "Sin precio", "0")),
+                        List.of("COD-11", "Producto 11", "M", "Mujeres / Ropa", "Sí", "Sin precio", "7")),
                 new FilaTablaImagenDTO("12", "Producto 12 (talle M)", null,
                         List.of("COD-12", "Producto 12", "M", "Mujeres / Ropa", "No", "Sin precio", "0")));
         // Una página fuera de rango devuelve la última.

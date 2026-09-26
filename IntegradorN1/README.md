@@ -118,6 +118,36 @@ El seeder crea las siguientes cuentas para desarrollo cuando la base está vací
 
 CSRF está activado; los formularios POST deben usar `th:action` para que Thymeleaf agregue el token.
 
+## Registro y activación de cuenta E2-05
+
+Desde **Crear cuenta** (header o login) se entra a `/registro`: correo, contraseña y confirmación.
+
+- **Validaciones (RF01):** correo obligatorio y con formato válido, que no esté registrado (incluidas
+  cuentas dadas de baja o pendientes de activar), clave de al menos 8 caracteres y confirmación igual.
+  Si falla, el formulario vuelve con el correo, pero nunca con la clave.
+- **Alta:** `UsuarioService.registrarCliente(correo, clave, confirmacion)` crea el `Usuario` con rol
+  `CLIENTE`, la clave con BCrypt, el correo en minúsculas y un `codigoActivacion` aleatorio de 6 dígitos.
+- **Correo (RF02):** `email/activacion.html`, con el código y un botón a `/registro/activar?correo=...`.
+  Lo manda `enviarCodigoActivacion(usuario, urlActivacion)`, que es asincrónico.
+- **Activación:** en `/registro/activar` se ingresan correo y código. Si coinciden, `activarCuenta` pone el
+  código en `null` y redirige al login con "¡Tu cuenta quedó activada!". Antes de eso, el login muestra
+  "La cuenta todavía no está activada" con un link a esta página.
+- **Reenviar código:** botón en la misma página. `reenviarCodigoActivacion` genera un código nuevo y el
+  anterior deja de servir.
+- **Sin correo configurado:** el envío falla en el log, pero el código también queda en el log
+  (`Código de activación de ...: 123456`), así se puede activar la cuenta en desarrollo.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/registro` | Formulario de registro |
+| POST | `/registro` | Registrar cliente y mandar el código |
+| GET | `/registro/activar?correo=` | Formulario de activación |
+| POST | `/registro/activar` | Activar la cuenta |
+| POST | `/registro/reenviar` | Generar y mandar un código nuevo |
+
+Para otros issues: `UsuarioService.LARGO_MINIMO_CLAVE` es la regla de clave del registro (E2-06 y E2-08
+aplican la misma).
+
 ## ABM de categorías y subcategorías E1-05
 
 La sección `/admin/categorias` permite listar las categorías con subcategorías, crear y editar tanto categorías como subcategorías, y eliminar/desactivar solo cuando no hay productos activos relacionados. El árbol activo se expone por `CategoriaService.listarArbolActivo()` y está listo para consumirlo en el catálogo público.
@@ -141,8 +171,9 @@ Entrar a **Productos** en el panel (`/admin/productos`, `JEFE` y `ADMINISTRATIVO
 - **Listado:** miniatura, código, nombre, talle, subcategoría, oferta, precio vigente y stock actual, de a
   10 por página. Se filtra por categoría → subcategoría, por oferta y con un buscador por código o nombre
   (sin importar mayúsculas ni tildes). La paginación conserva los filtros.
-- **Precio y stock:** por ahora se muestran como "Sin precio" y 0. Se conectan en `ProductoService.armarFila`
-  cuando se mergeen E2-03 (`VigenciaPrecioService.buscarPrecioVigente`) y E2-02 (`StockService.buscarStockActual`).
+- **Precio y stock:** el precio es el de la vigencia actual (`VigenciaPrecioService`, E2-03), o "Sin precio" si
+  el producto todavía no tiene uno; el stock sale de `StockService.buscarStockActual` (E2-02). Los dos se
+  arman en `ProductoService.armarFila`.
 - **Formulario:** código, nombre, talle, descripción, categoría → subcategoría, switch de oferta e imagen
   (fragment `input-imagen` de E1-06, con vista previa).
 
@@ -166,7 +197,7 @@ Entrar a **Productos** en el panel (`/admin/productos`, `JEFE` y `ADMINISTRATIVO
 - `listarProductoActivo(texto, idCategoria, idSubCategoria, enOferta)` devuelve los activos filtrados (cada
   filtro puede ser `null`). `buscarProductoPorCodigo` y `buscarProductoPorNombre` devuelven solo activos;
   como cada talle es un producto, `buscarProductoPorNombre` devuelve el primero por talle.
-- El seeder no carga productos: los de demostración son de E2-02.
+- Los productos de demostración los carga el seeder de E2-02 (ver abajo).
 
 | Método | Ruta | Operación |
 |---|---|---|
@@ -176,6 +207,34 @@ Entrar a **Productos** en el panel (`/admin/productos`, `JEFE` y `ADMINISTRATIVO
 | GET | `/admin/productos/{id}/editar` | Formulario de edición |
 | POST | `/admin/productos/{id}/editar` | Modificar (multipart) |
 | POST | `/admin/productos/{id}/eliminar` | Baja lógica |
+
+## Lectura de stock y catálogo de demostración E2-02
+
+### StockService (lectura)
+
+El stock se guarda como movimientos: cada `Stock` tiene en `cantidadActual` el saldo del producto después
+del movimiento.
+
+- `buscarStockActual(idProducto): int`: el `cantidadActual` del último movimiento activo del producto (por
+  `fecha`), o 0 si nunca tuvo movimientos. El diagrama devuelve un `Stock`, pero se respeta el contrato del
+  kickoff de la Etapa 2 (`int`). Lo usa el listado de `/admin/productos` en la columna "Stock actual".
+- `buscarStock(id)` (solo activos) y `listarStock()` (todos, del más reciente al más antiguo).
+- La escritura (`crearStock`, registrar y revertir movimientos) es de E3-03.
+
+### Catálogo de demostración
+
+Con la base vacía, el `DataSeeder` carga **20 productos** en las 12 subcategorías: 6 en oferta y varios
+modelos en más de un talle (Remera Dry Fit M y L, Zapatilla Run 41 y 42, Calza Fit S y M, etc.), siguiendo la
+regla de un producto por talle. Todos arrancan con stock 0 y sin precio (los precios son de E2-03).
+
+- Las fotos están en `src/main/resources/seed/img/`. Son de Unsplash (licencia libre); el origen y el autor de
+  cada una están en `seed/img/CREDITOS.md`.
+- Se cargan con `ImagenService.crearImagen`, así pasan las mismas validaciones que en el formulario. Para
+  pasarle un archivo del classpath se usa `utils/ArchivoEnMemoria`, un `MultipartFile` en memoria.
+- Cada producto tiene su propia `Imagen` aunque varios talles compartan la foto (`Producto.imagen` es 1 a 1).
+- **Para verlos en una base que ya existe** hay que borrar `data/zero.db` y volver a levantar la app.
+- En los tests el seeder también corre: `ProductoIntegrationTest` da de baja esos productos al empezar cada
+  test (se revierte al terminar) para partir de un catálogo vacío.
 
 ## ABM de ubicación E1-03
 

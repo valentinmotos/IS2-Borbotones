@@ -1,5 +1,7 @@
 package com.zero.ecommerce.config;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -7,6 +9,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,17 +27,23 @@ import com.zero.ecommerce.entities.Provincia;
 import com.zero.ecommerce.entities.SubCategoria;
 import com.zero.ecommerce.entities.Usuario;
 import com.zero.ecommerce.entities.enums.RolUsuario;
+import com.zero.ecommerce.entities.enums.TipoImagen;
 import com.zero.ecommerce.entities.enums.TipoEmpleado;
 import com.zero.ecommerce.entities.enums.TipoPago;
 import com.zero.ecommerce.exception.ErrorServiceException;
 import com.zero.ecommerce.dto.DireccionForm;
 import com.zero.ecommerce.entities.enums.TipoEmpresa;
 import com.zero.ecommerce.entities.enums.TipoTelefono;
+import com.zero.ecommerce.services.CategoriaService;
 import com.zero.ecommerce.services.DepartamentoService;
 import com.zero.ecommerce.services.EmpresaService;
+import com.zero.ecommerce.services.ImagenService;
 import com.zero.ecommerce.services.LocalidadService;
 import com.zero.ecommerce.services.PaisService;
+import com.zero.ecommerce.services.ProductoService;
 import com.zero.ecommerce.services.ProvinciaService;
+import com.zero.ecommerce.services.SubCategoriaService;
+import com.zero.ecommerce.utils.ArchivoEnMemoria;
 
 /**
  * Carga los datos iniciales cuando la base está vacía. Cada grupo de datos tiene su método,
@@ -68,10 +77,15 @@ public class DataSeeder implements CommandLineRunner {
     private final DepartamentoService departamentoService;
     private final LocalidadService localidadService;
     private final EmpresaService empresaService;
+    private final CategoriaService categoriaService;
+    private final SubCategoriaService subCategoriaService;
+    private final ImagenService imagenService;
+    private final ProductoService productoService;
 
     public DataSeeder(EntityManager entityManager, PasswordEncoder passwordEncoder, PaisService paisService,
             ProvinciaService provinciaService, DepartamentoService departamentoService,
-            LocalidadService localidadService, EmpresaService empresaService) {
+            LocalidadService localidadService, EmpresaService empresaService, CategoriaService categoriaService,
+            SubCategoriaService subCategoriaService, ImagenService imagenService, ProductoService productoService) {
         this.entityManager = entityManager;
         this.passwordEncoder = passwordEncoder;
         this.paisService = paisService;
@@ -79,6 +93,10 @@ public class DataSeeder implements CommandLineRunner {
         this.departamentoService = departamentoService;
         this.localidadService = localidadService;
         this.empresaService = empresaService;
+        this.categoriaService = categoriaService;
+        this.subCategoriaService = subCategoriaService;
+        this.imagenService = imagenService;
+        this.productoService = productoService;
     }
 
     @Override
@@ -259,9 +277,81 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
+    // E2-02: 20 productos de demostración en las 12 subcategorías, algunos en oferta y algunos en varios
+    // talles (cada talle es un producto). Las fotos están en resources/seed/img (ver CREDITOS.md) y se
+    // cargan con ImagenService; cada producto tiene su propia Imagen aunque compartan la foto.
+    // Columnas: código, nombre, talle, categoría, subcategoría, en oferta, foto, descripción.
+    private static final String[][] CATALOGO = {
+            { "REM-DRY-H-M", "Remera Zero Dry Fit Hombre", "M", "Hombres", "Ropa", "no", "remera-dry-fit-hombre.jpg",
+                    "Remera de entrenamiento de secado rápido, liviana y respirable." },
+            { "REM-DRY-H-L", "Remera Zero Dry Fit Hombre", "L", "Hombres", "Ropa", "no", "remera-dry-fit-hombre.jpg",
+                    "Remera de entrenamiento de secado rápido, liviana y respirable." },
+            { "SHO-RUN-H-M", "Short Zero Run Hombre", "M", "Hombres", "Ropa", "si", "short-run-hombre.jpg",
+                    "Short de running con calza interna y bolsillo trasero con cierre." },
+            { "ZAP-RUN-41", "Zapatilla Zero Run", "41", "Hombres", "Calzado", "no", "zapatilla-run-hombre.jpg",
+                    "Zapatilla de running con amortiguación en la entresuela y capellada de malla." },
+            { "ZAP-RUN-42", "Zapatilla Zero Run", "42", "Hombres", "Calzado", "no", "zapatilla-run-hombre.jpg",
+                    "Zapatilla de running con amortiguación en la entresuela y capellada de malla." },
+            { "GOR-TRN-U", "Gorra Zero Training", "Único", "Hombres", "Accesorios", "si", "gorra-training.jpg",
+                    "Gorra de algodón con visera curva y cierre regulable." },
+            { "CAL-FIT-S", "Calza Zero Fit", "S", "Mujeres", "Ropa", "no", "calza-fit-mujer.jpg",
+                    "Calza larga de tiro alto con tela compresiva que no se transparenta." },
+            { "CAL-FIT-M", "Calza Zero Fit", "M", "Mujeres", "Ropa", "no", "calza-fit-mujer.jpg",
+                    "Calza larga de tiro alto con tela compresiva que no se transparenta." },
+            { "TOP-MOV-M", "Top Deportivo Zero Move", "M", "Mujeres", "Ropa", "si", "top-deportivo-mujer.jpg",
+                    "Top de sujeción media con espalda deportiva y tazas removibles." },
+            { "ZAP-FLW-38", "Zapatilla Zero Flow Mujer", "38", "Mujeres", "Calzado", "no", "zapatilla-flow-mujer.jpg",
+                    "Zapatilla liviana para entrenamiento y uso diario, con suela de goma antideslizante." },
+            { "ZAP-FLW-39", "Zapatilla Zero Flow Mujer", "39", "Mujeres", "Calzado", "no", "zapatilla-flow-mujer.jpg",
+                    "Zapatilla liviana para entrenamiento y uso diario, con suela de goma antideslizante." },
+            { "COL-YOG-U", "Colchoneta de Yoga Zero", "Único", "Mujeres", "Accesorios", "no", "colchoneta-yoga.jpg",
+                    "Colchoneta antideslizante de 6 mm con correa para transportarla." },
+            { "CON-KID-8", "Conjunto Deportivo Zero Kids", "8", "Niños", "Ropa", "si", "conjunto-deportivo-kids.jpg",
+                    "Campera y pantalón de frisa liviana, ideales para la escuela y el deporte." },
+            { "CON-KID-10", "Conjunto Deportivo Zero Kids", "10", "Niños", "Ropa", "si", "conjunto-deportivo-kids.jpg",
+                    "Campera y pantalón de frisa liviana, ideales para la escuela y el deporte." },
+            { "ZAP-KID-24", "Zapatilla Zero Kids", "24", "Niños", "Calzado", "no", "zapatilla-kids.jpg",
+                    "Zapatilla infantil con cierre de abrojo, fácil de poner y sacar." },
+            { "SAC-KID-U", "Mochila Saco Zero Kids", "Único", "Niños", "Accesorios", "no", "mochila-saco-kids.jpg",
+                    "Mochila tipo saco con cordones, para llevar la ropa de gimnasia." },
+            { "MOC-URB-U", "Mochila Zero Urban", "Único", "Accesorios", "Bolsos", "no", "mochila-urban.jpg",
+                    "Mochila de 20 litros con compartimento acolchado para notebook." },
+            { "BOL-GYM-U", "Bolso Zero Gym", "Único", "Accesorios", "Bolsos", "no", "bolso-gym.jpg",
+                    "Bolso de entrenamiento de tela resistente con manijas reforzadas." },
+            { "REL-SPT-U", "Reloj Zero Sport", "Único", "Accesorios", "Joyas", "si", "reloj-sport.jpg",
+                    "Reloj deportivo resistente al agua, con malla de silicona." },
+            { "BIL-CUE-U", "Billetera Zero de Cuero", "Único", "Accesorios", "Marroquinería", "no", "billetera-cuero.jpg",
+                    "Billetera de cuero negro con tarjetero y monedero." }
+    };
+
     private void cargarCatalogo() {
-        // E2-02: productos de demostración con imágenes.
+        try {
+            for (String[] p : CATALOGO) {
+                String idImagen = imagenService.crearImagen(leerImagenSeed(p[6]), TipoImagen.PRODUCTO).getId();
+                productoService.crearProducto(p[0], p[1], p[7], p[2], p[5].equals("si"), idImagen,
+                        buscarSubCategoria(p[3], p[4]));
+            }
+        } catch (ErrorServiceException e) {
+            throw new IllegalStateException("Los datos iniciales del catálogo no son válidos: " + e.getMessage(), e);
+        }
         // E2-03: precios iniciales de los productos.
+    }
+
+    private ArchivoEnMemoria leerImagenSeed(String archivo) {
+        try (InputStream contenido = new ClassPathResource("seed/img/" + archivo).getInputStream()) {
+            return new ArchivoEnMemoria(archivo, "image/jpeg", contenido.readAllBytes());
+        } catch (IOException e) {
+            throw new IllegalStateException("No se encontró la imagen de demostración seed/img/" + archivo, e);
+        }
+    }
+
+    private String buscarSubCategoria(String categoria, String subCategoria) throws ErrorServiceException {
+        String idCategoria = categoriaService.buscarCategoriaPorNombre(categoria).getId();
+        return subCategoriaService.listarSubCategoriaPorCategoria(idCategoria).stream()
+                .filter(s -> s.getNombre().equals(subCategoria))
+                .findFirst()
+                .orElseThrow(() -> new ErrorServiceException("No existe la subcategoría " + categoria + " / " + subCategoria))
+                .getId();
     }
 
     private void cargarProveedores() {
