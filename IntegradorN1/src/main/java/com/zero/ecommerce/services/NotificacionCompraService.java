@@ -120,8 +120,11 @@ public class NotificacionCompraService {
                 formatearImporte(detalle.getSubtotal()));
     }
 
-    // El diagrama no guarda datos de pago de la tienda: las instrucciones son un texto fijo por tipo de pago.
-    private String instruccionesPago(OrdenCompra orden, FormaDePago formaDePago) {
+    /**
+     * Instrucciones de pago de una orden pendiente de pago, o null si no corresponde. El diagrama no guarda datos de
+     * pago de la tienda: son un texto fijo por tipo de pago. También las muestra la página "Compra registrada" (E4-02).
+     */
+    public String instruccionesPago(OrdenCompra orden, FormaDePago formaDePago) {
         if (orden.getEstadoOrdenCompra() != EstadoOrdenCompra.PENDIENTE_PAGO || formaDePago == null
                 || formaDePago.getTipoPago() == null) {
             return null;
