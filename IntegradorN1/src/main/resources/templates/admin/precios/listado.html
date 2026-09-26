@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Catálogo</span><span class="breadcrumb-separator">/</span><span>Precios</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <h2 class="mb-0">Precios con vigencias</h2>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-5">
+                    <div class="list-group">
+                        <a th:each="producto : ${productos}"
+                           th:href="@{/admin/precios(productoId=${producto.id})}"
+                           class="list-group-item list-group-item-action"
+                           th:classappend="${productoSeleccionado != null and productoSeleccionado.id == producto.id ? 'active' : ''}">
+                            <div class="d-flex justify-content-between align-items-center gap-3">
+                                <div>
+                                    <strong th:text="${producto.nombre}">Producto</strong><br>
+                                    <small th:text="${producto.talle}">Talle</small>
+                                </div>
+                                <span th:if="${vigenciaActual != null and productoSeleccionado != null and productoSeleccionado.id == producto.id}"
+                                      class="badge badge-success">$<span th:text="${#numbers.formatDecimal(vigenciaActual.precio, 0, 'POINT', 0, 'COMMA')}">0</span></span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-7" th:if="${productoSeleccionado != null}">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body">
+                            <h3 class="h5 mb-3" th:text="${productoSeleccionado.nombre}">Producto</h3>
+                            <p class="mb-1"><strong>Código:</strong> <span th:text="${productoSeleccionado.codigo}">-</span></p>
+                            <p class="mb-1"><strong>Talle:</strong> <span th:text="${productoSeleccionado.talle}">-</span></p>
+                            <p class="mb-3"><strong>Precio vigente:</strong>
+                                <span th:if="${vigenciaActual != null}">$<span th:text="${#numbers.formatDecimal(vigenciaActual.precio, 0, 'POINT', 0, 'COMMA')}">0</span></span>
+                                <span th:unless="${vigenciaActual != null}" class="text-muted">Sin precio</span>
+                            </p>
+
+                            <form th:action="@{/admin/precios}" method="post" class="zero-form">
+                                <input type="hidden" name="productoId" th:value="${productoSeleccionado.id}">
+                                <div class="form-group">
+                                    <label for="fechaDesde">Fecha desde</label>
+                                    <input id="fechaDesde" name="fechaDesde" type="date" class="form-control" th:value="${#temporals.format(T(java.time.LocalDate).now(), 'yyyy-MM-dd')}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="precio">Precio</label>
+                                    <input id="precio" name="precio" type="number" min="1" step="1" class="form-control" placeholder="1500" required>
+                                </div>
+                                <button type="submit" class="zero-button primary">Guardar vigencia</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h4 class="h6 mb-3">Historial</h4>
+                            <div th:if="${historial == null or #lists.isEmpty(historial)}" class="text-muted">No hay vigencias registradas.</div>
+                            <div th:unless="${historial == null or #lists.isEmpty(historial)}" class="table-responsive">
+                                <table class="table table-sm table-striped mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Desde</th>
+                                            <th>Hasta</th>
+                                            <th>Precio</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="vigencia : ${historial}">
+                                            <td th:text="${vigencia.fechaDesde}">-</td>
+                                            <td th:text="${vigencia.fechaHasta != null ? vigencia.fechaHasta : 'Vigente'}">-</td>
+                                            <td>$<span th:text="${#numbers.formatDecimal(vigencia.precio, 0, 'POINT', 0, 'COMMA')}">0</span></td>
+                                            <td>
+                                                <span th:if="${vigencia.fechaHasta == null}" class="badge badge-success">Vigente</span>
+                                                <span th:unless="${vigencia.fechaHasta == null}" class="badge badge-secondary">Cerrada</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

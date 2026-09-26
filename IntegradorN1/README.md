@@ -173,9 +173,9 @@ Entrar a **Productos** en el panel (`/admin/productos`, `JEFE` y `ADMINISTRATIVO
 - **Listado:** miniatura, código, nombre, talle, subcategoría, oferta, precio vigente y stock actual, de a
   10 por página. Se filtra por categoría → subcategoría, por oferta y con un buscador por código o nombre
   (sin importar mayúsculas ni tildes). La paginación conserva los filtros.
-- **Precio y stock:** el stock sale de `StockService.buscarStockActual` (E2-02). El precio se muestra como
-  "Sin precio" hasta que se mergee E2-03 (`VigenciaPrecioService.buscarPrecioVigente`); se conecta en
-  `ProductoService.armarFila`.
+- **Precio y stock:** el precio es el de la vigencia actual (`VigenciaPrecioService`, E2-03), o "Sin precio" si
+  el producto todavía no tiene uno; el stock sale de `StockService.buscarStockActual` (E2-02). Los dos se
+  arman en `ProductoService.armarFila`.
 - **Formulario:** código, nombre, talle, descripción, categoría → subcategoría, switch de oferta e imagen
   (fragment `input-imagen` de E1-06, con vista previa).
 
