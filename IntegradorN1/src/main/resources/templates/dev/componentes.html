@@ -205,6 +205,23 @@
                     </div>
                     <code>&lt;article th:replace="~{fragments/kpi :: kpi(${titulo}, ${valor}, ${descripcion}, ${icono})}"&gt;&lt;/article&gt;</code>
                 </section>
+
+                <section class="zero-panel mt-4">
+                    <h2>KPI con enlace</h2>
+                    <p class="zero-component-description">La tarjeta entera es un link, por ejemplo para filtrar un listado. El último parámetro resalta la activa.</p>
+                    <div class="zero-kpi-grid zero-kpi-grid-estados">
+                        <a th:replace="~{fragments/kpi :: kpiEnlace('Pendiente de envío', '3', null, null, '/dev/componentes', true)}"></a>
+                        <a th:replace="~{fragments/kpi :: kpiEnlace('Entregado', '12', null, null, '/dev/componentes', false)}"></a>
+                    </div>
+                    <code>&lt;a th:replace="~{fragments/kpi :: kpiEnlace(${titulo}, ${valor}, ${descripcion}, ${icono}, ${url}, ${activo})}"&gt;&lt;/a&gt;</code>
+                </section>
+
+                <section class="zero-panel mt-4">
+                    <h2>Línea de tiempo del seguimiento</h2>
+                    <p class="zero-component-description">Pasos de una compra con OrdenCompra.pasosSeguimiento(). Horizontal en escritorio y vertical en celular.</p>
+                    <ol th:replace="~{fragments/seguimiento :: linea(${pasosDemo})}"></ol>
+                    <code>&lt;ol th:replace="~{fragments/seguimiento :: linea(${pasos})}"&gt;&lt;/ol&gt;</code>
+                </section>
             </div>
         </section>
     </div>

@@ -102,6 +102,8 @@ class ClienteIntegrationTest {
         Localidad godoyCruz = localidadService.buscarLocalidadPorNombre("Godoy Cruz");
         String direccionOriginal = cliente.getDireccion().getId();
         String fotoOriginal = cliente.getImagen().getId();
+        // El seeder carga clientes de demostración (E4-06): se compara contra la cantidad previa a la edición.
+        int clientesAntes = service.listarClienteActivo().size();
         mvc.perform(perfil(godoyCruz, "nombre", "Ana María", "calle", "San Martín"))
                 .andExpect(flash().attribute("exito", "Tus datos se guardaron correctamente."));
         Cliente editado = clienteLogueado();
@@ -111,7 +113,7 @@ class ClienteIntegrationTest {
         assertThat(editado.getDireccion().getCalle()).isEqualTo("San Martín");
         assertThat(editado.getDireccion().getLocalidad().getId()).isEqualTo(godoyCruz.getId());
         assertThat(editado.getImagen().getId()).isEqualTo(fotoOriginal);
-        assertThat(service.listarClienteActivo()).hasSize(1);
+        assertThat(service.listarClienteActivo()).hasSize(clientesAntes);
         // El header muestra el nombre del perfil.
         mvc.perform(get("/").session(sesion)).andExpect(content().string(containsString("Ana María Pérez")));
     }

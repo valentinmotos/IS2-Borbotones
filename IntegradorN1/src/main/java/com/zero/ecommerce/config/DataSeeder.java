@@ -20,7 +20,9 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 
 import com.zero.ecommerce.entities.Categoria;
+import com.zero.ecommerce.entities.Cliente;
 import com.zero.ecommerce.entities.Departamento;
+import com.zero.ecommerce.entities.DetalleCompra;
 import com.zero.ecommerce.entities.DetalleFactura;
 import com.zero.ecommerce.entities.Empleado;
 import com.zero.ecommerce.entities.FacturaCliente;
@@ -28,13 +30,17 @@ import com.zero.ecommerce.entities.FacturaProveedor;
 import com.zero.ecommerce.entities.FormaDePago;
 import com.zero.ecommerce.entities.Proveedor;
 import com.zero.ecommerce.entities.Nacionalidad;
+import com.zero.ecommerce.entities.OrdenCompra;
 import com.zero.ecommerce.entities.Pais;
 import com.zero.ecommerce.entities.Producto;
 import com.zero.ecommerce.entities.Provincia;
 import com.zero.ecommerce.entities.SubCategoria;
 import com.zero.ecommerce.entities.Usuario;
 import com.zero.ecommerce.entities.enums.EstadoFactura;
+import com.zero.ecommerce.entities.enums.EstadoOrdenCompra;
 import com.zero.ecommerce.entities.enums.RolUsuario;
+import com.zero.ecommerce.entities.enums.Sexo;
+import com.zero.ecommerce.entities.enums.TipoDocumento;
 import com.zero.ecommerce.entities.enums.TipoImagen;
 import com.zero.ecommerce.entities.enums.TipoEmpleado;
 import com.zero.ecommerce.entities.enums.TipoPago;
@@ -45,6 +51,7 @@ import com.zero.ecommerce.dto.DireccionForm;
 import com.zero.ecommerce.entities.enums.TipoEmpresa;
 import com.zero.ecommerce.entities.enums.TipoTelefono;
 import com.zero.ecommerce.services.CategoriaService;
+import com.zero.ecommerce.services.ClienteService;
 import com.zero.ecommerce.services.DepartamentoService;
 import com.zero.ecommerce.services.EmpresaService;
 import com.zero.ecommerce.services.FacturaProveedorService;
@@ -101,6 +108,7 @@ public class DataSeeder implements CommandLineRunner {
     private final ProveedorService proveedorService;
     private final FormaDePagoService formaDePagoService;
     private final FacturaProveedorService facturaProveedorService;
+    private final ClienteService clienteService;
 
     private static final double PRECIO_INICIAL_DEMO = 10000;
 
@@ -110,7 +118,7 @@ public class DataSeeder implements CommandLineRunner {
             SubCategoriaService subCategoriaService, ImagenService imagenService, ProductoService productoService,
             VigenciaPrecioService vigenciaPrecioService, StockService stockService,
             ProveedorService proveedorService, FormaDePagoService formaDePagoService,
-            FacturaProveedorService facturaProveedorService) {
+            FacturaProveedorService facturaProveedorService, ClienteService clienteService) {
         this.entityManager = entityManager;
         this.passwordEncoder = passwordEncoder;
         this.paisService = paisService;
@@ -127,6 +135,7 @@ public class DataSeeder implements CommandLineRunner {
         this.proveedorService = proveedorService;
         this.formaDePagoService = formaDePagoService;
         this.facturaProveedorService = facturaProveedorService;
+        this.clienteService = clienteService;
     }
 
     @Override
@@ -148,6 +157,7 @@ public class DataSeeder implements CommandLineRunner {
         cargarCatalogo();
         cargarProveedores();
         cargarVentas();
+        cargarPedidos();
     }
 
     private void cargarUsuariosFaltantes() {
@@ -232,12 +242,13 @@ public class DataSeeder implements CommandLineRunner {
         cargarCliente("cliente@zero.com.ar", "Cliente123!", RolUsuario.CLIENTE);
     }
 
-    private void cargarCliente(String correo, String clave, RolUsuario rol) {
+    private Usuario cargarCliente(String correo, String clave, RolUsuario rol) {
         Usuario usuario = new Usuario();
         usuario.setNombreUsuario(correo);
         usuario.setClave(passwordEncoder.encode(clave));
         usuario.setRol(rol);
         entityManager.persist(usuario);
+        return usuario;
     }
 
     private void cargarClienteSiNoExiste(String correo, String clave, RolUsuario rol) {
@@ -539,8 +550,140 @@ public class DataSeeder implements CommandLineRunner {
         } catch (ErrorServiceException e) {
             throw new IllegalStateException("Las ventas de demostración no son válidas: " + e.getMessage(), e);
         }
-        // E4-04: órdenes en todos los estados.
         // E5-01 / E6-03: ventas pagadas en varios meses para reportes y dashboard.
+    }
+
+    /**
+     * E4-06 (también sirve para E4-04): dos clientes con perfil completo y un pedido en cada estado, más un carrito
+     * abierto que el panel de pedidos no tiene que mostrar. Los estados se alcanzan con las transiciones de la orden
+     * (E4-01). Los pedidos pagados descuentan stock de productos que solo tienen el stock inicial, así no cambian los
+     * niveles del reporte de stock de E3-04.
+     */
+    private void cargarPedidos() {
+        try {
+            Cliente lucia = cargarClienteConPerfil("lucia.gomez@mail.com", "Lucía", "Gómez", Sexo.FEMENINO,
+                    LocalDate.of(1994, 5, 12), "33987654", "261 412-3456",
+                    direccionDemo("San Martín", "1250", null, null, null, "Timbre 3", "Ciudad de Mendoza"));
+            Cliente martin = cargarClienteConPerfil("martin.perez@mail.com", "Martín", "Pérez", Sexo.MASCULINO,
+                    LocalDate.of(1988, 11, 3), "27123987", "261 587-9012",
+                    direccionDemo("Av. San Martín Sur", "540", "Barrio Bombal", "Piso 2", "Depto B", null,
+                            "Godoy Cruz"));
+            FormaDePago efectivo = formaDePagoService.buscarFormaDePago(buscarFormaDePago(TipoPago.EFECTIVO));
+            FormaDePago transferencia = formaDePagoService.buscarFormaDePago(buscarFormaDePago(TipoPago.TRANSFERENCIA));
+            FormaDePago mercadoPago = formaDePagoService.buscarFormaDePago(buscarFormaDePago(TipoPago.BILLETERA_VIRTUAL));
+            Empleado administrativo = buscarEmpleadoDemo("admin@zero.com.ar");
+            Empleado jefa = buscarEmpleadoDemo("jefe@zero.com.ar");
+
+            // Las ventas N.º 1 y N.º 2 son las de cargarVentas: los pedidos siguen con el 3.
+            cargarPedidoDemo(3, "ORD-DEMO0001", lucia, transferencia, null, 1, EstadoOrdenCompra.PENDIENTE_PAGO,
+                    Map.of("GOR-TRN-U", 1, "REM-DRY-H-M", 2));
+            cargarPedidoDemo(4, "ORD-DEMO0002", martin, mercadoPago, null, 3, EstadoOrdenCompra.PENDIENTE_ENVIO,
+                    Map.of("ZAP-RUN-41", 1));
+            cargarPedidoDemo(5, "ORD-DEMO0003", lucia, efectivo, administrativo, 6,
+                    EstadoOrdenCompra.PENDIENTE_ENTREGA, Map.of("REM-DRY-H-L", 1, "SHO-RUN-H-M", 1));
+            cargarPedidoDemo(6, "ORD-DEMO0004", martin, transferencia, jefa, 12, EstadoOrdenCompra.ENTREGADO,
+                    Map.of("SHO-RUN-H-M", 1));
+            cargarPedidoDemo(7, "ORD-DEMO0005", martin, mercadoPago, null, 8, EstadoOrdenCompra.ANULADA,
+                    Map.of("REM-DRY-H-M", 1));
+
+            OrdenCompra carrito = armarOrdenDemo("ORD-DEMO0006", lucia, 0, Map.of("GOR-TRN-U", 1));
+            entityManager.persist(carrito);
+        } catch (ErrorServiceException e) {
+            throw new IllegalStateException("Los pedidos de demostración no son válidos: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Arma el pedido con sus ítems y lo lleva hasta el estado pedido con las transiciones de la orden. La factura queda
+     * en SIN_DEFINIR si falta el pago, PAGADA si se pagó y ANULADA si se anuló. Si se pagó, descuenta el stock.
+     */
+    private void cargarPedidoDemo(long numeroFactura, String identificador, Cliente cliente, FormaDePago formaDePago,
+            Empleado empleado, int diasAtras, EstadoOrdenCompra estado, Map<String, Integer> productos)
+            throws ErrorServiceException {
+        OrdenCompra orden = armarOrdenDemo(identificador, cliente, diasAtras, productos);
+        orden.confirmar();
+        if (estado == EstadoOrdenCompra.ANULADA) {
+            orden.anular(false);
+        } else if (estado != EstadoOrdenCompra.PENDIENTE_PAGO) {
+            orden.registrarPago();
+            if (estado != EstadoOrdenCompra.PENDIENTE_ENVIO) {
+                orden.marcarEnviado();
+            }
+            if (estado == EstadoOrdenCompra.ENTREGADO) {
+                orden.marcarEntregado();
+            }
+        }
+        entityManager.persist(orden);
+
+        FacturaCliente factura = new FacturaCliente();
+        factura.setNumeroFactura(numeroFactura);
+        factura.setFechaFactura(orden.getFecha());
+        factura.setCliente(cliente);
+        factura.setOrdenCompra(orden);
+        factura.setEmpleado(empleado);
+        factura.setFormaDePago(formaDePago);
+        for (DetalleCompra detalle : orden.getDetalles()) {
+            factura.agregarDetalle(detalle.getProducto(), detalle.getCantidad(), detalle.getPrecioUnitario());
+        }
+        factura.setTotalPagado(factura.calcularTotal());
+        boolean pagada = estado != EstadoOrdenCompra.PENDIENTE_PAGO && estado != EstadoOrdenCompra.ANULADA;
+        factura.setEstado(pagada ? EstadoFactura.PAGADA
+                : estado == EstadoOrdenCompra.ANULADA ? EstadoFactura.ANULADA : EstadoFactura.SIN_DEFINIR);
+        entityManager.persist(factura);
+        if (pagada) {
+            for (DetalleFactura detalle : factura.getDetalles()) {
+                stockService.registrarMovimiento(detalle);
+            }
+            atrasarMovimientos(factura.getDetalles(), diasAtras);
+        }
+    }
+
+    private OrdenCompra armarOrdenDemo(String identificador, Cliente cliente, int diasAtras,
+            Map<String, Integer> productos) throws ErrorServiceException {
+        OrdenCompra orden = new OrdenCompra();
+        orden.setIdentificadorCompra(identificador);
+        orden.setFecha(LocalDate.now().minusDays(diasAtras));
+        orden.setCliente(cliente);
+        orden.setEstadoOrdenCompra(EstadoOrdenCompra.PENDIENTE_COMPLETAR);
+        for (Map.Entry<String, Integer> item : productos.entrySet()) {
+            Producto producto = productoService.buscarProductoPorCodigo(item.getKey());
+            orden.crearDetalle(producto, item.getValue(), vigenciaPrecioService.buscarPrecioVigente(producto.getId()));
+        }
+        return orden;
+    }
+
+    // Pasa por ClienteService para aplicar las mismas validaciones que el perfil (E2-07).
+    private Cliente cargarClienteConPerfil(String correo, String nombre, String apellido, Sexo sexo,
+            LocalDate fechaNacimiento, String dni, String celular, DireccionForm direccion)
+            throws ErrorServiceException {
+        Usuario usuario = cargarCliente(correo, "Cliente123!", RolUsuario.CLIENTE);
+        String idArgentina = entityManager
+                .createQuery("select n from Nacionalidad n where n.nombre = 'Argentina'", Nacionalidad.class)
+                .getSingleResult().getId();
+        Cliente cliente = clienteService.crearCliente(nombre, apellido, sexo, fechaNacimiento, TipoDocumento.DNI, dni,
+                celular, direccion, idArgentina, null);
+        clienteService.asociarClienteUsuario(cliente, usuario);
+        return cliente;
+    }
+
+    private DireccionForm direccionDemo(String calle, String numeracion, String barrio, String manzanaPiso,
+            String casaDepartamento, String referencia, String localidad) throws ErrorServiceException {
+        DireccionForm direccion = new DireccionForm();
+        direccion.setCalle(calle);
+        direccion.setNumeracion(numeracion);
+        direccion.setBarrio(barrio);
+        direccion.setManzanaPiso(manzanaPiso);
+        direccion.setCasaDepartamento(casaDepartamento);
+        direccion.setReferencia(referencia);
+        direccion.setLocalidadId(localidadService.buscarLocalidadPorNombre(localidad).getId());
+        return direccion;
+    }
+
+    private Empleado buscarEmpleadoDemo(String correo) {
+        return entityManager
+                .createQuery("select e from Empleado e where e.usuario.nombreUsuario = :correo", Empleado.class)
+                .setParameter("correo", correo)
+                .getSingleResult();
     }
 
     // porcentajeQueQueda: código de producto → porcentaje del saldo actual que queda después de la venta.

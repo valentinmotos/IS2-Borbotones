@@ -17,6 +17,9 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.zero.ecommerce.services.ClienteService;
 
 @SpringBootTest(properties = {
         "spring.datasource.url=jdbc:sqlite::memory:?foreign_keys=on",
@@ -26,10 +29,12 @@ import org.springframework.test.web.servlet.MvcResult;
 class NewsletterIntegrationTest {
 
     private final MockMvc mvc;
+    private final ClienteService clienteService;
     private MockHttpSession sesionAdmin;
 
-    NewsletterIntegrationTest(@Autowired MockMvc mvc) {
+    NewsletterIntegrationTest(@Autowired MockMvc mvc, @Autowired ClienteService clienteService) {
         this.mvc = mvc;
+        this.clienteService = clienteService;
     }
 
     @BeforeEach
@@ -53,8 +58,13 @@ class NewsletterIntegrationTest {
                 .andExpect(content().string(containsString("https://tienda.zero.test/imagen/")));
     }
 
+    // El seeder carga clientes con perfil completo (E4-06): se dan de baja dentro de la transacción del test, que al
+    // terminar se revierte, para probar el caso sin destinatarios.
     @Test
+    @Transactional
     void envioManualExigeCsrfYMuestraSiNoHayDestinatarios() throws Exception {
+        clienteService.listarClienteActivo().forEach(cliente -> cliente.setEliminado(true));
+
         mvc.perform(post("/admin/newsletter/enviar").session(sesionAdmin))
                 .andExpect(status().isForbidden());
 
