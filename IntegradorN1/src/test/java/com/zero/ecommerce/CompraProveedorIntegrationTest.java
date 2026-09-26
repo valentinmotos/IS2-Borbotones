@@ -100,6 +100,7 @@ class CompraProveedorIntegrationTest {
         String remeraM = idProducto("REM-DRY-H-M");
         String remeraL = idProducto("REM-DRY-H-L");
         String calza = idProducto("CAL-FIT-S");
+        int stockInicialRemeraM = stockService.buscarStockActual(remeraM);
 
         mvc.perform(get(BASE + "/nueva").session(sesion)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("id=\"plantilla-detalle\"")))
@@ -132,7 +133,7 @@ class CompraProveedorIntegrationTest {
         assertThat(sumaSubtotales).isEqualTo(90000 + 45505 + 15000);
         assertThat(compra.getTotalPagado()).isEqualTo(sumaSubtotales);
         // Una compra pedida todavía no mueve el stock.
-        assertThat(stockService.buscarStockActual(remeraM)).isZero();
+        assertThat(stockService.buscarStockActual(remeraM)).isEqualTo(stockInicialRemeraM);
 
         mvc.perform(get(BASE + "/" + compra.getId()).session(sesion).flashAttrs(resultado.getFlashMap()))
                 .andExpect(status().isOk())

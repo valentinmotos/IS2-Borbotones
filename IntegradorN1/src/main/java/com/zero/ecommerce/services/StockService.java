@@ -1,5 +1,6 @@
 package com.zero.ecommerce.services;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -7,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.zero.ecommerce.entities.Stock;
 import com.zero.ecommerce.exception.ErrorServiceException;
+import com.zero.ecommerce.repositories.ProductoRepository;
 import com.zero.ecommerce.repositories.StockRepository;
 
 /**
@@ -19,9 +21,34 @@ import com.zero.ecommerce.repositories.StockRepository;
 public class StockService {
 
     private final StockRepository repository;
+    private final ProductoRepository productoRepository;
 
-    public StockService(StockRepository repository) {
+    public StockService(StockRepository repository, ProductoRepository productoRepository) {
         this.repository = repository;
+        this.productoRepository = productoRepository;
+    }
+
+    /**
+     * Carga inicial usada exclusivamente por los datos de demostracion. No reemplaza los
+     * movimientos de compras y no duplica el saldo si el producto ya tiene movimientos.
+     */
+    @Transactional(rollbackFor = ErrorServiceException.class)
+    public Stock cargarStockInicial(String idProducto, int cantidad) throws ErrorServiceException {
+        if (cantidad <= 0) {
+            throw new ErrorServiceException("El stock inicial debe ser mayor a 0.");
+        }
+        var producto = productoRepository.findByIdAndEliminadoFalse(idProducto)
+                .orElseThrow(() -> new ErrorServiceException("El producto no existe o fue eliminado."));
+        var existente = repository.findFirstByProducto_IdAndEliminadoFalseOrderByFechaDesc(idProducto);
+        if (existente.isPresent()) {
+            return existente.get();
+        }
+        Stock stock = new Stock();
+        stock.setProducto(producto);
+        stock.setCantidadActual(cantidad);
+        stock.setFecha(LocalDateTime.now());
+        stock.setObservacion("Stock inicial de demostracion");
+        return repository.save(stock);
     }
 
     /**

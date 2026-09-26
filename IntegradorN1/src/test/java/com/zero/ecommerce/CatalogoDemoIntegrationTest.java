@@ -64,7 +64,7 @@ class CatalogoDemoIntegrationTest {
             assertThat(p.getImagen().getTipoImagen()).isEqualTo(TipoImagen.PRODUCTO);
             assertThat(p.getImagen().getMime()).isEqualTo("image/jpeg");
             assertThat(p.getImagen().getContenido()).isNotEmpty();
-            assertThat(stockService.buscarStockActual(p.getId())).isZero();
+            assertThat(stockService.buscarStockActual(p.getId())).isPositive();
         });
         // Cada producto tiene su propia imagen, aunque varios talles compartan la foto.
         assertThat(productos).extracting(p -> p.getImagen().getId()).doesNotHaveDuplicates();
@@ -99,15 +99,15 @@ class CatalogoDemoIntegrationTest {
         Producto remera = productoService.buscarProductoPorCodigo("REM-DRY-H-M");
         Producto gorra = productoService.buscarProductoPorCodigo("GOR-TRN-U");
         LocalDateTime ahora = LocalDateTime.now();
-        guardarMovimiento(remera, 20, ahora.minusDays(3), false);
-        guardarMovimiento(remera, 14, ahora.minusDays(1), false);
-        guardarMovimiento(gorra, 50, ahora, false);
+        guardarMovimiento(remera, 20, ahora.plusDays(1), false);
+        guardarMovimiento(remera, 14, ahora.plusDays(2), false);
+        guardarMovimiento(gorra, 50, ahora.plusDays(3), false);
         // Un movimiento dado de baja no cuenta, aunque sea el más reciente.
-        guardarMovimiento(remera, 99, ahora.plusMinutes(1), true);
+        guardarMovimiento(remera, 99, ahora.plusDays(4), true);
 
         assertThat(stockService.buscarStockActual(remera.getId())).isEqualTo(14);
         assertThat(stockService.buscarStockActual(gorra.getId())).isEqualTo(50);
-        assertThat(stockService.listarStock()).extracting(Stock::getCantidadActual).containsExactly(99, 50, 14, 20);
+        assertThat(stockService.listarStock()).extracting(Stock::getCantidadActual).startsWith(99, 50, 14, 20);
     }
 
     private void guardarMovimiento(Producto producto, int saldo, LocalDateTime fecha, boolean eliminado) {

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
+<head>
+    <title th:text="${producto.nombre + ' | Zero'}">Detalle de producto | Zero</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <section class="zero-section">
+        <div class="container">
+            <nav class="zero-breadcrumb" aria-label="Migas de pan">
+                <a th:href="@{/}">Inicio</a><span>/</span><a th:href="@{/ofertas}" th:if="${producto.enOferta}">Ofertas</a>
+                <span th:if="${producto.enOferta}">/</span><span th:text="${producto.nombre}">Producto</span>
+            </nav>
+
+            <div class="zero-product-detail">
+                <div class="zero-product-detail-image">
+                    <span th:if="${producto.enOferta}" class="badge badge-danger zero-detail-offer">Oferta</span>
+                    <img th:src="${producto.imagenId != null ? '/imagen/' + producto.imagenId : '/img/default-image.png'}"
+                         th:alt="${producto.nombre}">
+                </div>
+
+                <div class="zero-product-detail-info">
+                    <p class="zero-product-code" th:text="${'Código ' + producto.codigo}">Código</p>
+                    <h1 th:text="${producto.nombre}">Producto</h1>
+                    <p class="zero-product-price" th:text="${producto.precioFormateado}">$0</p>
+                    <p class="zero-product-description" th:text="${producto.descripcion}">Descripción</p>
+
+                    <div class="zero-detail-block">
+                        <strong>Talle</strong>
+                        <div class="zero-size-list" aria-label="Talles disponibles">
+                            <a th:each="variante : ${talles}" th:href="@{/producto/{id}(id=${variante.id})}"
+                               th:text="${variante.talle}"
+                               th:class="${variante.id == producto.id ? 'zero-size active' : 'zero-size'}"
+                               th:attr="aria-current=${variante.id == producto.id ? 'true' : null}">M</a>
+                        </div>
+                    </div>
+
+                    <p class="zero-stock" th:text="${producto.stock == 1 ? 'Última unidad disponible' : producto.stock + ' unidades disponibles'}">
+                        Stock disponible
+                    </p>
+
+                    <form class="zero-add-cart" th:action="@{/cliente/carrito/agregar}" method="post">
+                        <input type="hidden" name="idProducto" th:value="${producto.id}">
+                        <div class="form-group">
+                            <label for="cantidad">Cantidad</label>
+                            <input id="cantidad" name="cantidad" type="number" class="form-control"
+                                   value="1" min="1" th:max="${producto.stock}" inputmode="numeric" required>
+                        </div>
+                        <button type="submit" class="zero-button primary">Agregar al carrito</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="zero-section zero-related-section" th:if="${!relacionados.isEmpty()}">
+        <div class="container">
+            <div class="zero-section-heading">
+                <div><div class="zero-kicker">También te puede gustar</div><h2>Productos relacionados</h2></div>
+            </div>
+            <div class="zero-product-grid">
+                <th:block th:each="relacionado : ${relacionados}">
+                    <article th:replace="~{fragments/card-producto :: cardCatalogo(${relacionado})}"></article>
+                </th:block>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>
