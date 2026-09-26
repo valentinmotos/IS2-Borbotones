@@ -23,7 +23,23 @@
             <p class="zero-product-meta" th:text="${'Talle ' + producto.talle}">Talle</p>
             <span class="price"
                   th:text="${'$' + #numbers.formatDecimal(producto.precio, 1, 'POINT', 0, 'COMMA')}">$0</span>
+            <div class="mt-2">
+                <form th:action="@{/cliente/carrito/agregar}" method="post" sec:authorize="hasRole('CLIENTE')">
+                    <input type="hidden" name="idProducto" th:value="${producto.id}">
+                    <input type="hidden" name="cantidad" value="1">
+                    <button type="submit" class="btn btn-sm btn-dark btn-block">
+                        <i class="fa fa-shopping-cart mr-1"></i> Agregar
+                    </button>
+                </form>
+                <a th:href="@{/login}" class="btn btn-sm btn-outline-dark btn-block" sec:authorize="isAnonymous()">
+                    <i class="fa fa-shopping-cart mr-1"></i> Agregar
+                </a>
+                <button type="button" class="btn btn-sm btn-secondary btn-block" disabled sec:authorize="hasAnyRole('JEFE', 'ADMINISTRATIVO')">
+                    Solo clientes
+                </button>
+            </div>
         </div>
     </article>
 </body>
+
 </html>

@@ -3,6 +3,7 @@ package com.zero.ecommerce.entities;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.zero.ecommerce.entities.enums.EstadoOrdenCompra;
 
@@ -37,4 +38,47 @@ public class OrdenCompra extends BaseEntity {
 
     @OneToMany(mappedBy = "ordenCompra", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleCompra> detalles = new ArrayList<>();
+
+    /**
+     * Creador: la orden crea sus detalles. El subtotal es cantidad * precio unitario; el precio unitario no se
+     * guarda aparte porque el diagrama no lo tiene (se recalcula con {@link DetalleCompra#getPrecioUnitario()}).
+     */
+    public DetalleCompra crearDetalle(Producto producto, int cantidad, double precioUnitario) {
+        DetalleCompra detalle = new DetalleCompra();
+        detalle.setProducto(producto);
+        detalle.setCantidad(cantidad);
+        detalle.calcularSubtotal(precioUnitario);
+        detalle.setOrdenCompra(this);
+        this.detalles.add(detalle);
+        recalcularTotal();
+        return detalle;
+    }
+
+    /** Experto: la orden sabe calcular su total como la suma de los subtotales de sus detalles activos. */
+    public double recalcularTotal() {
+        this.total = this.detalles.stream()
+                .filter(d -> !d.isEliminado())
+                .mapToDouble(DetalleCompra::getSubtotal)
+                .sum();
+        return this.total;
+    }
+
+    /** Busca si ya existe un ítem en el carrito para el producto dado. */
+    public Optional<DetalleCompra> buscarDetallePorProducto(String idProducto) {
+        if (idProducto == null || idProducto.isBlank()) {
+            return Optional.empty();
+        }
+        return this.detalles.stream()
+                .filter(d -> !d.isEliminado() && d.getProducto() != null && idProducto.equals(d.getProducto().getId()))
+                .findFirst();
+    }
+
+    /** Cantidad total de unidades de productos en el carrito. */
+    public int getCantidadTotalItems() {
+        return this.detalles.stream()
+                .filter(d -> !d.isEliminado())
+                .mapToInt(DetalleCompra::getCantidad)
+                .sum();
+    }
 }
+
