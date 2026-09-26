@@ -886,6 +886,14 @@ a, a:hover {
     color: rgba(255, 255, 255, 0.68);
 }
 
+.newsletter-preview {
+    width: 100%;
+    min-height: 760px;
+    border: 1px solid var(--zero-border);
+    border-radius: 8px;
+    background: #efefef;
+}
+
 .admin-main {
     flex: 1;
     background: #f7f7f7;

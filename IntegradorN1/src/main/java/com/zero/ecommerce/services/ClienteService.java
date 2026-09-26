@@ -332,7 +332,20 @@ public class ClienteService {
         if (clienteOpt.isEmpty()) {
             return false;
         }
-        Cliente cliente = clienteOpt.get();
+        return perfilCompleto(clienteOpt.get());
+    }
+
+    /** Clientes y cuentas activos, activados y con todos los datos requeridos para comprar. */
+    public List<Cliente> listarClientesActivosConPerfilCompleto() {
+        return listarClienteActivo().stream()
+                .filter(cliente -> cliente.getUsuario() != null
+                        && !cliente.getUsuario().isEliminado()
+                        && cliente.getUsuario().getCodigoActivacion() == null)
+                .filter(this::perfilCompleto)
+                .toList();
+    }
+
+    private boolean perfilCompleto(Cliente cliente) {
         return cliente.getNombre() != null && !cliente.getNombre().isBlank()
                 && cliente.getApellido() != null && !cliente.getApellido().isBlank()
                 && cliente.getSexo() != null
