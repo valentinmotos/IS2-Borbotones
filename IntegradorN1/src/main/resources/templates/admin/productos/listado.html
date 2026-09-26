@@ -1,38 +1,124 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/admin}">
+<head>
+    <title>Zero | Perfil del Cliente</title>
+</head>
 <body>
-    <div layout:fragment="breadcrumb">
-        <span>Catálogo</span><span class="breadcrumb-separator">/</span><span>Productos</span>
-    </div>
-    <div layout:fragment="content">
-        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
-        <div class="zero-panel">
-            <form th:action="@{/admin/productos}" method="get" class="zero-filters zero-filters-amplio mb-4">
-                <div th:replace="~{fragments/filtros :: campoFiltroTexto('buscar', 'Buscar', ${buscar}, 'Código o nombre')}"></div>
-                <th:block th:replace="~{fragments/categoria :: cascada(${arbolCategorias}, 'categoria', 'subcategoria',
-                          ${categoria}, ${subcategoria}, true)}"></th:block>
-                <div th:replace="~{fragments/filtros :: campoFiltroSelect('oferta', 'Oferta', ${opcionesOferta}, ${oferta})}"></div>
-                <div class="zero-filters-acciones">
-                    <button type="submit" class="zero-button primary">Buscar</button>
-                    <a th:href="@{/admin/productos}" class="zero-button secondary">Limpiar</a>
-                </div>
-            </form>
-            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                <a th:href="@{/admin/productos/nuevo}" class="zero-button primary">Nuevo producto</a>
-                <span class="text-muted"
-                      th:text="${totalProductos == 1 ? '1 producto' : totalProductos + ' productos'}">0 productos</span>
-            </div>
-            <div th:replace="~{fragments/tabla :: tablaRegistrosImagen(${encabezados}, ${productos}, '/admin/productos')}"></div>
-            <div th:if="${totalPaginas > 1}" class="mt-4">
-                <nav th:replace="~{fragments/paginacion :: paginacion(${paginaActual}, ${totalPaginas}, ${paginacionUrl})}"></nav>
+<div layout:fragment="breadcrumb">
+    <span>Cliente</span><span class="breadcrumb-separator">/</span><span>Perfil</span>
+</div>
+
+<div layout:fragment="content">
+    <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+
+    <div class="zero-panel">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 border-bottom pb-3">
+            <div>
+                <h1 class="h3 mb-1">Perfil del Cliente</h1>
+                <span class="text-muted">Carga y actualiza tus datos personales y dirección de envío.</span>
             </div>
         </div>
-        <th:block th:each="producto : ${productos}">
-            <div th:replace="~{fragments/modal-confirmar :: modal(${'eliminar-' + producto.id}, 'Eliminar producto',
-                 ${'¿Querés eliminar el producto ' + producto.nombre + '? Deja de mostrarse en el catálogo.'},
-                 ${'/admin/productos/' + producto.id + '/eliminar'})}"></div>
-        </th:block>
+
+        <form th:action="@{/cliente/perfil}" th:object="${cliente}" method="post" enctype="multipart/form-data">
+            <input type="hidden" th:field="*{id}"/>
+
+            <h5 class="mb-3 text-secondary border-bottom pb-2">Datos Personales</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Nombre *</label>
+                    <input type="text" th:field="*{nombre}" class="form-control" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Apellido *</label>
+                    <input type="text" th:field="*{apellido}" class="form-control" required />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Fecha de Nacimiento *</label>
+                    <input type="date" th:field="*{fechaNacimiento}" class="form-control" required />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Nacionalidad *</label>
+                    <select name="nacionalidadId" class="form-select" required>
+                        <option value="">Seleccione...</option>
+                        <option th:each="n : ${nacionalidades}"
+                                th:value="${n.id}"
+                                th:text="${n.nombre}"
+                                th:selected="${cliente.nacionalidad != null and cliente.nacionalidad.id == n.id}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Tipo Documento *</label>
+                    <select th:field="*{tipoDocumento}" class="form-select" required>
+                        <option value="">Seleccione...</option>
+                        <option th:each="tipo : ${tiposDocumento}"
+                                th:value="${tipo}"
+                                th:text="${tipo}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Número de Documento *</label>
+                    <input type="text" th:field="*{numeroDocumento}" class="form-control" required />
+                </div>
+
+                <!-- Contacto telefónico celular (usa cliente.telefono.telefono) -->
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Teléfono Celular *</label>
+                    <input type="text" name="telefonoCelular"
+                           th:value="${cliente.telefono != null ? cliente.telefono.telefono : ''}"
+                           class="form-control" placeholder="Ej: 2611234567" required />
+                </div>
+
+                <!-- Fragment de Imagen opcional -->
+                <div class="col-md-6">
+                    <div th:replace="~{fragments/imagen :: fragmentoImagen}">
+                        <label class="form-label fw-bold">Foto de Perfil (opcional)</label>
+                        <input type="file" name="foto" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mb-3 text-secondary border-bottom pb-2">Dirección</h5>
+            <div th:replace="~{fragments/direccion :: fragmentoDireccion}">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">Calle *</label>
+                        <input type="text" name="calle" th:value="${cliente.direccion != null ? cliente.direccion.calle : ''}" class="form-control" required />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Número *</label>
+                        <input type="text" name="numeracion" th:value="${cliente.direccion != null ? cliente.direccion.numeracion : ''}" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Barrio</label>
+                        <input type="text" name="barrio" th:value="${cliente.direccion != null ? cliente.direccion.barrio : ''}" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Localidad *</label>
+                        <select name="localidadId" class="form-select" required>
+                            <option value="">Seleccione Localidad...</option>
+                            <option th:each="loc : ${localidades}"
+                                    th:value="${loc.id}"
+                                    th:text="${loc.nombre}"
+                                    th:selected="${cliente.direccion != null and cliente.direccion.localidad != null and cliente.direccion.localidad.id == loc.id}">
+                            </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                <a th:href="@{/}" class="zero-button secondary">Volver al inicio</a>
+                <button type="submit" class="zero-button primary">Guardar Perfil</button>
+            </div>
+        </form>
     </div>
+</div>
 </body>
 </html>

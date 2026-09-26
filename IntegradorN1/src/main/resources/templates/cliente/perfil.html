@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
+<head>
+    <title>Zero | Perfil del Cliente</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <section class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-10 col-lg-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4 p-md-5">
+                        <h1 class="h3 mb-4 text-center font-weight-bold">Perfil del Cliente</h1>
+
+                        <!-- Mensajes globales (éxito / error) -->
+                        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+
+                        <form th:action="@{/cliente/perfil}" method="post" enctype="multipart/form-data">
+                            <input type="hidden" name="id" th:value="${cliente?.id}" />
+
+                            <h5 class="mb-3 text-secondary font-weight-bold">Datos Personales</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label font-weight-bold">Nombre *</label>
+                                    <input type="text" name="nombre" th:value="${cliente?.nombre}" class="form-control" required />
+                                </div>
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label font-weight-bold">Apellido *</label>
+                                    <input type="text" name="apellido" th:value="${cliente?.apellido}" class="form-control" required />
+                                </div>
+
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label font-weight-bold">Fecha de Nacimiento *</label>
+                                    <input type="date" name="fechaNacimiento" th:value="${cliente?.fechaNacimiento}" class="form-control" required />
+                                </div>
+
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label font-weight-bold">Nacionalidad *</label>
+                                    <select name="nacionalidadId" class="form-control form-select" required>
+                                        <option value="">Seleccione...</option>
+                                        <option th:each="n : ${nacionalidades}"
+                                                th:value="${n.id}"
+                                                th:text="${n.nombre}"
+                                                th:selected="${cliente?.nacionalidad != null and cliente.nacionalidad.id == n.id}">
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label font-weight-bold">Tipo Documento *</label>
+                                    <select name="tipoDocumento" class="form-control form-select" required>
+                                        <option value="">Seleccione...</option>
+                                        <option th:each="tipo : ${tiposDocumento}"
+                                                th:value="${tipo}"
+                                                th:text="${tipo}"
+                                                th:selected="${cliente?.tipoDocumento != null and cliente.tipoDocumento == tipo}">
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label font-weight-bold">Número de Documento *</label>
+                                    <input type="text" name="numeroDocumento" th:value="${cliente?.numeroDocumento}" class="form-control" required />
+                                </div>
+
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label font-weight-bold">Teléfono Celular *</label>
+                                    <input type="text" name="telefonoCelular"
+                                           th:value="${cliente?.telefono != null ? cliente.telefono.telefono : ''}"
+                                           class="form-control" placeholder="Ej: 2611234567" required />
+                                </div>
+
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label font-weight-bold">Foto de Perfil (opcional)</label>
+                                    <input type="file" name="foto" class="form-control-file" accept=".jpg,.jpeg,.png,.webp,image/*" />
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- Dirección -->
+                            <h5 class="mb-3 text-secondary font-weight-bold">Dirección</h5>
+                            <div class="row g-3">
+                                <div class="col-md-8 form-group">
+                                    <label class="form-label font-weight-bold">Calle *</label>
+                                    <input type="text" name="calle" th:value="${cliente?.direccion != null ? cliente.direccion.calle : ''}" class="form-control" required />
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label class="form-label font-weight-bold">Número *</label>
+                                    <input type="text" name="numeracion" th:value="${cliente?.direccion != null ? cliente.direccion.numeracion : ''}" class="form-control" required />
+                                </div>
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label font-weight-bold">Barrio</label>
+                                    <input type="text" name="barrio" th:value="${cliente?.direccion != null ? cliente.direccion.barrio : ''}" class="form-control" />
+                                </div>
+                                <div class="col-md-6 form-group">
+                                    <label class="form-label font-weight-bold">Localidad *</label>
+                                    <select name="localidadId" class="form-control form-select" required>
+                                        <option value="">Seleccione Localidad...</option>
+                                        <option th:each="loc : ${localidades}"
+                                                th:value="${loc.id}"
+                                                th:text="${loc.nombre + (loc.codigoPostal != null ? ' (CP ' + loc.codigoPostal + ')' : '')}"
+                                                th:selected="${cliente?.direccion != null and cliente.direccion.localidad != null and cliente.direccion.localidad.id == loc.id}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label class="form-label">Manzana / Piso</label>
+                                    <input type="text" name="manzanaPiso" th:value="${cliente?.direccion != null ? cliente.direccion.manzanaPiso : ''}" class="form-control" />
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label class="form-label">Casa / Departamento</label>
+                                    <input type="text" name="casaDepartamento" th:value="${cliente?.direccion != null ? cliente.direccion.casaDepartamento : ''}" class="form-control" />
+                                </div>
+                                <div class="col-md-4 form-group">
+                                    <label class="form-label">Referencia</label>
+                                    <input type="text" name="referencia" th:value="${cliente?.direccion != null ? cliente.direccion.referencia : ''}" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-dark btn-block btn-lg py-2">Guardar Perfil</button>
+                            </div>
+                        </form>
+
+                        <p class="text-center mt-4 mb-0"><a th:href="@{/}">Volver al inicio</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>
