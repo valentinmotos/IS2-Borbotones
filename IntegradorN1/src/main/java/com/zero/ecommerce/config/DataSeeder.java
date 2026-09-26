@@ -47,6 +47,7 @@ import com.zero.ecommerce.services.ProductoService;
 import com.zero.ecommerce.services.ProveedorService;
 import com.zero.ecommerce.services.ProvinciaService;
 import com.zero.ecommerce.services.SubCategoriaService;
+import com.zero.ecommerce.services.StockService;
 import com.zero.ecommerce.services.VigenciaPrecioService;
 import com.zero.ecommerce.utils.ArchivoEnMemoria;
 
@@ -87,6 +88,7 @@ public class DataSeeder implements CommandLineRunner {
     private final ImagenService imagenService;
     private final ProductoService productoService;
     private final VigenciaPrecioService vigenciaPrecioService;
+    private final StockService stockService;
     private final ProveedorService proveedorService;
 
     private static final double PRECIO_INICIAL_DEMO = 10000;
@@ -95,7 +97,7 @@ public class DataSeeder implements CommandLineRunner {
             ProvinciaService provinciaService, DepartamentoService departamentoService,
             LocalidadService localidadService, EmpresaService empresaService, CategoriaService categoriaService,
             SubCategoriaService subCategoriaService, ImagenService imagenService, ProductoService productoService,
-            VigenciaPrecioService vigenciaPrecioService,
+            VigenciaPrecioService vigenciaPrecioService, StockService stockService,
             ProveedorService proveedorService) {
         this.entityManager = entityManager;
         this.passwordEncoder = passwordEncoder;
@@ -109,6 +111,7 @@ public class DataSeeder implements CommandLineRunner {
         this.imagenService = imagenService;
         this.productoService = productoService;
         this.vigenciaPrecioService = vigenciaPrecioService;
+        this.stockService = stockService;
         this.proveedorService = proveedorService;
     }
 
@@ -376,6 +379,9 @@ public class DataSeeder implements CommandLineRunner {
                         PRECIO_INICIAL_DEMO);
                 // El catálogo simula precios con antigüedad para poder probar de inmediato una actualización.
                 precioInicial.setFechaDesde(LocalDate.now().minusMonths(3));
+                // E3-06 necesita mercaderia visible para recorrer ofertas y detalles desde una base nueva.
+                stockService.cargarStockInicial(producto.getId(),
+                        8 + Math.abs(producto.getCodigo().hashCode() % 25));
             }
         } catch (ErrorServiceException e) {
             throw new IllegalStateException("No se pudieron cargar los precios iniciales: " + e.getMessage(), e);
