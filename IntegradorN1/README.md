@@ -84,6 +84,7 @@ La página `/dev/componentes` muestra todos los fragments funcionando dentro del
 | Solo lectura | `fragments/formulario :: campoSoloLectura(nombre, etiqueta, valor)` | `<div th:replace="~{fragments/formulario :: campoSoloLectura('codigo', 'Código', ${codigo})}"></div>` |
 | Fecha | `fragments/formulario :: campoFecha(nombre, etiqueta, valor, requerido)` | `<div th:replace="~{fragments/formulario :: campoFecha('fechaNacimiento', 'Fecha de nacimiento', ${fechaNacimiento}, true)}"></div>` |
 | Tabla con imagen | `fragments/tabla :: tablaRegistrosImagen(encabezados, registros, baseUrl)` | `<div th:replace="~{fragments/tabla :: tablaRegistrosImagen(${encabezados}, ${productos}, '/admin/productos')}"></div>` |
+| Tabla con imagen y detalle | `fragments/tabla :: tablaRegistrosImagenConDetalle(encabezados, registros, baseUrl)` | `<div th:replace="~{fragments/tabla :: tablaRegistrosImagenConDetalle(${encabezados}, ${productos}, '/admin/productos')}"></div>` |
 | Campo de filtro | `fragments/filtros :: campoFiltroTexto(nombre, etiqueta, valor, ayuda)` y `campoFiltroSelect(nombre, etiqueta, opciones, seleccionado)` | `<div th:replace="~{fragments/filtros :: campoFiltroTexto('buscar', 'Buscar', ${buscar}, 'Código o nombre')}"></div>` |
 | Filtro de fecha | `fragments/filtros :: campoFiltroFecha(nombre, etiqueta, valor)` | `<div th:replace="~{fragments/filtros :: campoFiltroFecha('desde', 'Desde', ${desde})}"></div>` |
 | Categoría → subcategoría | `fragments/categoria :: cascada(arbol, nombreCategoria, nombreSubCategoria, categoriaId, subCategoriaId, esFiltro)` | `<th:block th:replace="~{fragments/categoria :: cascada(${arbol}, 'categoriaId', 'subCategoriaId', ${categoriaId}, ${subCategoriaId}, false)}"></th:block>` |
@@ -222,14 +223,15 @@ del movimiento.
   `fecha`), o 0 si nunca tuvo movimientos. El diagrama devuelve un `Stock`, pero se respeta el contrato del
   kickoff de la Etapa 2 (`int`). Lo usa el listado de `/admin/productos` en la columna "Stock actual".
 - `buscarStock(id)` (solo activos) y `listarStock()` (todos, del más reciente al más antiguo).
-- La escritura (`crearStock`, registrar y revertir movimientos) es de E3-03.
+- La escritura (registrar y revertir movimientos) es de E3-04: ver "Recepción de mercadería y movimientos de
+  stock E3-04".
 
 ### Catálogo de demostración
 
 Con la base vacía, el `DataSeeder` carga **20 productos** en las 12 subcategorías: 6 en oferta y varios
 modelos en más de un talle (Remera Dry Fit M y L, Zapatilla Run 41 y 42, Calza Fit S y M, etc.), siguiendo la
-regla de un producto por talle. Todos arrancan con stock 0 y una vigencia de precio de demostración de
-$10.000, que se puede modificar desde **Precios**.
+regla de un producto por talle. Todos arrancan con una vigencia de precio de demostración de $10.000, que se
+puede modificar desde **Precios**. El stock inicial lo dan las compras recibidas del seeder de E3-04.
 
 - Las fotos están en `src/main/resources/seed/img/`. Son de Unsplash (licencia libre); el origen y el autor de
   cada una están en `seed/img/CREDITOS.md`.
@@ -478,7 +480,7 @@ formulario con una lista dinámica de contactos. Cada fila tiene tipo (correo, c
 
 **Compras a proveedor** (`/admin/compras`, `JEFE` y `ADMINISTRATIVO`). Una compra es una `FacturaProveedor` con sus
 `DetalleFactura` (RF25). Se crea en `SIN_DEFINIR`, que significa **pedida**: todavía no mueve el stock. Recibirla
-(pasa a `PAGADA` y genera el stock) y anularla es de E3-04.
+(pasa a `PAGADA` y genera el stock) y anularla está en la sección de E3-04.
 
 - **Listado:** número, fecha, proveedor, forma de pago, total y badge de estado, de la más nueva a la más vieja.
   Filtros por estado, proveedor y rango de fechas (`campoFiltroFecha`, agregado al kit).
@@ -510,8 +512,8 @@ formulario con una lista dinámica de contactos. Cada fila tiene tipo (correo, c
   económico de E5-05).
 - `listarFacturaActivo(estado, idProveedor, desde, hasta)`, `listarFacturaPorEstado(estado)` y `buscarFactura(id)`
   para la recepción (E3-04) y los reportes. `eliminarFactura(id)` es la baja lógica, solo de compras pedidas.
-- El seeder carga dos compras pedidas: la N.º 1 a Distribuidora Deportiva Cuyo (3 productos) y la N.º 2 a Calzados y
-  Textiles del Plata (2 productos).
+- El seeder carga dos compras pedidas: la N.º 3 a Distribuidora Deportiva Cuyo (3 productos) y la N.º 4 a Calzados y
+  Textiles del Plata (2 productos). La N.º 1 y la N.º 2 son las recibidas de E3-04.
 
 | Método | Ruta | Operación |
 |---|---|---|
@@ -519,6 +521,66 @@ formulario con una lista dinámica de contactos. Cada fila tiene tipo (correo, c
 | GET | `/admin/compras/nueva` | Formulario de nueva compra |
 | POST | `/admin/compras` | Crear la compra pedida |
 | GET | `/admin/compras/{id}` | Detalle y botón de WhatsApp |
+
+## Recepción de mercadería y movimientos de stock E3-04
+
+### Recepción y anulación (RF26)
+
+En el detalle de una compra pedida (`/admin/compras/{id}`) hay dos botones, cada uno con un modal de confirmación:
+
+- **Marcar como recibida:** la compra pasa a `PAGADA` y se registra un movimiento de stock por cada detalle, todo en
+  una transacción: si un movimiento falla, la compra sigue pedida y no queda stock a medias. Una compra recibida no
+  se puede recibir de nuevo ni anular.
+- **Anular compra:** solo para compras pedidas. Pasa a `ANULADA` y no mueve el stock, porque nunca entró. Una compra
+  anulada no se puede recibir.
+
+### StockService (escritura)
+
+- `registrarMovimiento(detalle)`: nuevo saldo = saldo actual + `cantidad × factura.getSignoStock()`. El signo lo da
+  la factura por **polimorfismo**: `FacturaProveedor` suma (+1) y `FacturaCliente` resta (-1). La observación es el
+  comprobante, con `Factura.describir()` (otro método polimórfico): "Compra N.º 3" o "Venta N.º 1".
+- `revertirMovimiento(detalle)`: el mismo movimiento con el signo inverso y la observación "Anulación". Lo usa la
+  anulación de una venta pagada (E4-03).
+- Los dos **rechazan un saldo negativo** con un `ErrorServiceException` ("No hay stock suficiente de ...: hay 2 y
+  se necesitan 3."). E4-03 lo puede mostrar tal cual.
+- `listarMovimientos(idProducto)`: los movimientos activos del producto, del más reciente al más antiguo.
+  `listarHistorial(idProducto)` los arma como `MovimientoStockDTO` para la pantalla: como cada movimiento guarda
+  solo el saldo, la cantidad movida es la diferencia con el saldo anterior.
+- `crearStock(idDetalleFactura)` del diagrama se cubre con `registrarMovimiento`, que recibe el detalle ya cargado
+  (contrato del kickoff de la Etapa 3).
+
+### Detalle del producto
+
+En **Productos**, el botón **Ver** (fragment `tablaRegistrosImagenConDetalle`, agregado al kit) abre
+`/admin/productos/{id}`: los datos del producto, el stock actual y el historial de movimientos (fecha, comprobante
+con link a la compra, cantidad +/- y saldo). Desde el detalle de una compra, el código de cada producto lleva a
+esta pantalla.
+
+### Datos de demostración
+
+Con la base vacía, el seeder deja productos en los tres niveles del reporte de stock (E5-03):
+
+| Comprobante | Qué hace |
+|---|---|
+| Compra N.º 1, recibida hace 30 días | Indumentaria Atlética San Juan: calzas, top, zapatillas Flow y colchoneta |
+| Compra N.º 2, recibida hace 25 días | Accesorios Fitness Andina: mochila, bolso, reloj, billetera, gorra y productos de niños |
+| Venta N.º 1, hace 10 días | Descuenta Calza Fit S (queda 7/20, Regular), Calza Fit M (3/20 = 15 %, Malo) y Top (6/15, Regular) |
+| Venta N.º 2, hace 5 días | Descuenta Mochila Urban (4/10, Regular), Reloj (1/10, Malo), Zapatilla Kids (1/8, Malo) y Bolso Gym (0/8, Malo) |
+
+El resto de los productos recibidos queda en Bueno. Las remeras, el short y las zapatillas Run no tienen stock:
+son los de las compras pedidas N.º 3 y N.º 4, para probar la recepción.
+
+- **Las ventas N.º 1 y N.º 2 son mínimas:** `FacturaCliente` pagadas **sin cliente ni `OrdenCompra`**, cargadas en
+  `cargarVentas` solo para generar las salidas de stock. Las pantallas de ventas y los reportes (Etapas 4 y 5)
+  tienen que tolerar `cliente` y `ordenCompra` nulos, o E6-03 reemplaza estas ventas por ventas de clientes reales
+  (queda un `TODO E6-03` en el seeder).
+- **Para verlos en una base que ya existe** hay que borrar `data/zero.db` y volver a levantar la app.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| POST | `/admin/compras/{id}/recibir` | Marcar la compra como recibida y sumar el stock |
+| POST | `/admin/compras/{id}/anular` | Anular una compra pedida |
+| GET | `/admin/productos/{id}` | Detalle del producto con stock e historial |
 
 ## ABM de referencia E0-06: Nacionalidad
 

@@ -56,7 +56,7 @@ class CatalogoDemoIntegrationTest {
     }
 
     @Test
-    void elSeederCargaVeinteProductosConImagenEnLasDoceSubcategorias() {
+    void elSeederCargaVeinteProductosConImagenEnLasDoceSubcategorias() throws Exception {
         List<Producto> productos = productoService.listarProductoActivo();
         assertThat(productos).hasSize(20);
         assertThat(productos).allSatisfy(p -> {
@@ -64,8 +64,9 @@ class CatalogoDemoIntegrationTest {
             assertThat(p.getImagen().getTipoImagen()).isEqualTo(TipoImagen.PRODUCTO);
             assertThat(p.getImagen().getMime()).isEqualTo("image/jpeg");
             assertThat(p.getImagen().getContenido()).isNotEmpty();
-            assertThat(stockService.buscarStockActual(p.getId())).isZero();
         });
+        // Desde E3-04 el seeder recibe compras: los productos que nunca se recibieron siguen con stock 0.
+        assertThat(stockService.buscarStockActual(productoService.buscarProductoPorCodigo("ZAP-RUN-42").getId())).isZero();
         // Cada producto tiene su propia imagen, aunque varios talles compartan la foto.
         assertThat(productos).extracting(p -> p.getImagen().getId()).doesNotHaveDuplicates();
         assertThat(productos).extracting(p -> p.getSubCategoria().getId())
@@ -78,7 +79,7 @@ class CatalogoDemoIntegrationTest {
     }
 
     @Test
-    void elPanelMuestraLosProductosConSusImagenesYStockCero() throws Exception {
+    void elPanelMuestraLosProductosConSusImagenes() throws Exception {
         MockHttpSession sesion = login();
         mvc.perform(get("/admin/productos").session(sesion))
                 .andExpect(status().isOk())
@@ -107,7 +108,9 @@ class CatalogoDemoIntegrationTest {
 
         assertThat(stockService.buscarStockActual(remera.getId())).isEqualTo(14);
         assertThat(stockService.buscarStockActual(gorra.getId())).isEqualTo(50);
-        assertThat(stockService.listarStock()).extracting(Stock::getCantidadActual).containsExactly(99, 50, 14, 20);
+        // Solo los movimientos de este test: el seeder también carga los suyos (E3-04).
+        assertThat(stockService.listarStock()).filteredOn(m -> "Test".equals(m.getObservacion()))
+                .extracting(Stock::getCantidadActual).containsExactly(99, 50, 14, 20);
     }
 
     private void guardarMovimiento(Producto producto, int saldo, LocalDateTime fecha, boolean eliminado) {

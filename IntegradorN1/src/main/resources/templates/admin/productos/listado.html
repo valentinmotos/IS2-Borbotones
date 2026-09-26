@@ -23,7 +23,7 @@
                 <span class="text-muted"
                       th:text="${totalProductos == 1 ? '1 producto' : totalProductos + ' productos'}">0 productos</span>
             </div>
-            <div th:replace="~{fragments/tabla :: tablaRegistrosImagen(${encabezados}, ${productos}, '/admin/productos')}"></div>
+            <div th:replace="~{fragments/tabla :: tablaRegistrosImagenConDetalle(${encabezados}, ${productos}, '/admin/productos')}"></div>
             <div th:if="${totalPaginas > 1}" class="mt-4">
                 <nav th:replace="~{fragments/paginacion :: paginacion(${paginaActual}, ${totalPaginas}, ${paginacionUrl})}"></nav>
             </div>

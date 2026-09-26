@@ -122,6 +122,31 @@ public class CompraProveedorController {
         return "admin/compras/detalle";
     }
 
+    @PostMapping("/{id}/recibir")
+    public String recibir(@PathVariable String id, RedirectAttributes flash) {
+        buscarO404(id);
+        try {
+            FacturaProveedor compra = service.recibirFactura(id);
+            flash.addFlashAttribute("exito", "Compra N.º " + compra.getNumeroFactura()
+                    + " recibida: se sumó la mercadería al stock.");
+        } catch (ErrorServiceException e) {
+            flash.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:" + BASE + "/" + id;
+    }
+
+    @PostMapping("/{id}/anular")
+    public String anular(@PathVariable String id, RedirectAttributes flash) {
+        buscarO404(id);
+        try {
+            FacturaProveedor compra = service.anularFactura(id);
+            flash.addFlashAttribute("exito", "Compra N.º " + compra.getNumeroFactura() + " anulada.");
+        } catch (ErrorServiceException e) {
+            flash.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:" + BASE + "/" + id;
+    }
+
     private Map<String, String> opcionesProveedor() {
         Map<String, String> opciones = new LinkedHashMap<>();
         for (Proveedor proveedor : proveedorService.listarProveedorActivo()) {

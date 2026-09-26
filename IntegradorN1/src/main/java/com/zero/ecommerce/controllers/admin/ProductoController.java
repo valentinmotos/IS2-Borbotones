@@ -25,6 +25,7 @@ import com.zero.ecommerce.entities.Producto;
 import com.zero.ecommerce.exception.ErrorServiceException;
 import com.zero.ecommerce.services.CategoriaService;
 import com.zero.ecommerce.services.ProductoService;
+import com.zero.ecommerce.services.StockService;
 
 @Controller
 @RequestMapping("/admin/productos")
@@ -34,10 +35,12 @@ public class ProductoController {
     private static final int TAMANIO_PAGINA = 10;
     private final ProductoService service;
     private final CategoriaService categoriaService;
+    private final StockService stockService;
 
-    public ProductoController(ProductoService service, CategoriaService categoriaService) {
+    public ProductoController(ProductoService service, CategoriaService categoriaService, StockService stockService) {
         this.service = service;
         this.categoriaService = categoriaService;
+        this.stockService = stockService;
     }
 
     @ModelAttribute("menuActivo")
@@ -72,6 +75,17 @@ public class ProductoController {
     @GetMapping("/nuevo")
     public String nuevo(Model model) {
         return formulario(model, null, new ProductoForm(), null);
+    }
+
+    /** Detalle del producto con su stock actual y el historial de movimientos (E3-04). */
+    @GetMapping("/{id}")
+    public String detalle(@PathVariable String id, Model model) {
+        Producto producto = buscarO404(id);
+        model.addAttribute("pageTitle", producto.getNombre() + " (talle " + producto.getTalle() + ")");
+        model.addAttribute("producto", producto);
+        model.addAttribute("stockActual", stockService.buscarStockActual(id));
+        model.addAttribute("movimientos", stockService.listarHistorial(id));
+        return "admin/productos/detalle";
     }
 
     @GetMapping("/{id}/editar")

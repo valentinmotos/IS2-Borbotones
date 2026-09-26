@@ -122,6 +122,13 @@
                 </section>
 
                 <section class="zero-panel mb-4">
+                    <h2>Tabla con imagen y detalle</h2>
+                    <p class="zero-component-description">Como la tabla con imagen, con un botón "Ver" que lleva a {baseUrl}/{id}.</p>
+                    <div th:replace="~{fragments/tabla :: tablaRegistrosImagenConDetalle(${encabezadosImagen}, ${registrosImagen}, '/dev/componentes')}"></div>
+                    <code>&lt;div th:replace="~{fragments/tabla :: tablaRegistrosImagenConDetalle(${encabezados}, ${registros}, ${baseUrl})}"&gt;&lt;/div&gt;</code>
+                </section>
+
+                <section class="zero-panel mb-4">
                     <h2>Barra de filtros</h2>
                     <p class="zero-component-description">Varios filtros sueltos en una grilla de cuatro columnas, con los botones debajo.</p>
                     <form th:action="@{/dev/componentes}" method="get" class="zero-filters zero-filters-amplio">

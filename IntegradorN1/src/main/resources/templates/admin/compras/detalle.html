@@ -24,7 +24,8 @@
                 <dd>
                     <span th:replace="~{fragments/badge-estado :: badge(${compra.estado.name()})}"></span>
                     <span th:if="${compra.estado.name() == 'SIN_DEFINIR'}" class="text-muted">Pedida: todavía no se recibió la mercadería.</span>
-                    <span th:if="${compra.estado.name() == 'PAGADA'}" class="text-muted">Recibida.</span>
+                    <span th:if="${compra.estado.name() == 'PAGADA'}" class="text-muted">Recibida: la mercadería ya se sumó al stock.</span>
+                    <span th:if="${compra.estado.name() == 'ANULADA'}" class="text-muted">Anulada: no se va a recibir.</span>
                 </dd>
             </dl>
             <div class="zero-form-actions">
@@ -34,6 +35,14 @@
                    th:attr="aria-label=${'Avisar a ' + compra.proveedor.razonSocial + ' por WhatsApp'}">
                     <i class="fa fa-whatsapp" aria-hidden="true"></i> Avisar al proveedor por WhatsApp
                 </a>
+                <th:block th:if="${compra.estado.name() == 'SIN_DEFINIR'}">
+                    <button type="button" class="zero-button primary" data-toggle="modal" data-target="#recibir-compra">
+                        Marcar como recibida
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#anular-compra">
+                        Anular compra
+                    </button>
+                </th:block>
                 <a th:href="@{/admin/compras}" class="zero-button secondary">Volver</a>
             </div>
         </div>
@@ -53,7 +62,7 @@
                     </thead>
                     <tbody>
                         <tr th:each="detalle : ${compra.detalles}" th:unless="${detalle.eliminado}">
-                            <td th:text="${detalle.producto.codigo}">COD</td>
+                            <td><a th:href="@{'/admin/productos/' + ${detalle.producto.id}}" th:text="${detalle.producto.codigo}">COD</a></td>
                             <td th:text="${detalle.producto.nombre}">Producto</td>
                             <td th:text="${detalle.producto.talle}">M</td>
                             <td class="text-right" th:text="${detalle.cantidad}">1</td>
@@ -70,6 +79,14 @@
                 </table>
             </div>
         </div>
+        <th:block th:if="${compra.estado.name() == 'SIN_DEFINIR'}">
+            <div th:replace="~{fragments/modal-confirmar :: modal('recibir-compra', 'Marcar como recibida',
+                 ${'¿Llegó la mercadería de la compra N.º ' + compra.numeroFactura + '? Se suman al stock las unidades de todos sus productos y la compra ya no se puede anular.'},
+                 ${'/admin/compras/' + compra.id + '/recibir'})}"></div>
+            <div th:replace="~{fragments/modal-confirmar :: modal('anular-compra', 'Anular compra',
+                 ${'¿Querés anular la compra N.º ' + compra.numeroFactura + '? No se va a poder recibir.'},
+                 ${'/admin/compras/' + compra.id + '/anular'})}"></div>
+        </th:block>
     </div>
 </body>
 </html>

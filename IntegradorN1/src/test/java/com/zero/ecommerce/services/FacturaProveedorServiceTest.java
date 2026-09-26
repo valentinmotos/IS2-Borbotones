@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +45,8 @@ class FacturaProveedorServiceTest {
     private FormaDePagoService formaDePagoService;
     @Mock
     private ProductoService productoService;
+    @Mock
+    private StockService stockService;
     @InjectMocks
     private FacturaProveedorService service;
 
@@ -141,6 +144,56 @@ class FacturaProveedorServiceTest {
                 LocalDate.of(2026, 5, 1)))
                 .isInstanceOf(ErrorServiceException.class)
                 .hasMessage("La fecha desde no puede ser posterior a la fecha hasta.");
+    }
+
+    @Test
+    void recibirLaCompraLaPasaAPagadaYRegistraUnMovimientoPorDetalle() throws ErrorServiceException {
+        FacturaProveedor compra = compraPedidaConDosDetalles();
+        when(repository.findByIdAndEliminadoFalse("c1")).thenReturn(Optional.of(compra));
+
+        service.recibirFactura("c1");
+
+        assertThat(compra.getEstado()).isEqualTo(EstadoFactura.PAGADA);
+        verify(stockService, times(2)).registrarMovimiento(any(DetalleFactura.class));
+        verify(stockService).registrarMovimiento(compra.getDetalles().get(0));
+        verify(stockService).registrarMovimiento(compra.getDetalles().get(1));
+    }
+
+    @Test
+    void unaCompraRecibidaNoSePuedeRecibirDeNuevoNiAnular() throws ErrorServiceException {
+        FacturaProveedor compra = compraPedidaConDosDetalles();
+        compra.setEstado(EstadoFactura.PAGADA);
+        when(repository.findByIdAndEliminadoFalse("c1")).thenReturn(Optional.of(compra));
+
+        assertThatThrownBy(() -> service.recibirFactura("c1"))
+                .isInstanceOf(ErrorServiceException.class)
+                .hasMessage("La compra N.º 4 ya fue recibida: no se puede recibir de nuevo.");
+        assertThatThrownBy(() -> service.anularFactura("c1"))
+                .isInstanceOf(ErrorServiceException.class)
+                .hasMessage("La compra N.º 4 ya fue recibida: no se puede anular.");
+        verify(stockService, never()).registrarMovimiento(any());
+    }
+
+    @Test
+    void anularUnaCompraPedidaNoMueveElStockYDespuesNoSePuedeRecibir() throws ErrorServiceException {
+        FacturaProveedor compra = compraPedidaConDosDetalles();
+        when(repository.findByIdAndEliminadoFalse("c1")).thenReturn(Optional.of(compra));
+
+        service.anularFactura("c1");
+
+        assertThat(compra.getEstado()).isEqualTo(EstadoFactura.ANULADA);
+        assertThatThrownBy(() -> service.recibirFactura("c1"))
+                .isInstanceOf(ErrorServiceException.class)
+                .hasMessage("La compra N.º 4 está anulada: no se puede recibir.");
+        verify(stockService, never()).registrarMovimiento(any());
+    }
+
+    private FacturaProveedor compraPedidaConDosDetalles() throws ErrorServiceException {
+        FacturaProveedor compra = compraNumero(4);
+        compra.setEstado(EstadoFactura.SIN_DEFINIR);
+        compra.agregarDetalle(productoService.buscarProducto("p1"), 20, 4500);
+        compra.agregarDetalle(productoService.buscarProducto("p2"), 5, 1000);
+        return compra;
     }
 
     private FacturaProveedor compraNumero(long numero) {

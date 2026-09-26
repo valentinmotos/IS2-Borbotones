@@ -28,4 +28,9 @@ public class FacturaCliente extends Factura {
     public int getSignoStock() {
         return -1;
     }
+
+    @Override
+    public String describir() {
+        return "Venta N.º " + getNumeroFactura();
+    }
 }

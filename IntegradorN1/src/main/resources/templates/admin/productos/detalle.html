@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Catálogo</span><span class="breadcrumb-separator">/</span>
+        <a th:href="@{/admin/productos}">Productos</a><span class="breadcrumb-separator">/</span>
+        <span>Detalle</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel mb-4">
+            <h2>Datos</h2>
+            <div class="d-flex flex-wrap align-items-start">
+                <img class="zero-table-thumb mr-4 mb-3" th:alt="${producto.nombre}"
+                     th:src="${producto.imagen != null} ? @{/imagen/{id}(id=${producto.imagen.id})} : @{/img/default-image.png}">
+                <dl class="mb-0">
+                    <dt>Código</dt>
+                    <dd th:text="${producto.codigo}">COD</dd>
+                    <dt>Nombre</dt>
+                    <dd th:text="${producto.nombre}">Producto</dd>
+                    <dt>Talle</dt>
+                    <dd th:text="${producto.talle}">M</dd>
+                    <dt>Subcategoría</dt>
+                    <dd th:text="${producto.subCategoria.categoria.nombre + ' / ' + producto.subCategoria.nombre}">Hombres / Ropa</dd>
+                </dl>
+            </div>
+            <div class="zero-kpi-grid mt-3">
+                <div th:replace="~{fragments/kpi :: kpi('Stock actual', ${stockActual + (stockActual == 1 ? ' unidad' : ' unidades')},
+                     'Saldo del último movimiento', 'fa fa-cubes')}"></div>
+            </div>
+            <div class="zero-form-actions">
+                <a th:href="@{'/admin/productos/' + ${producto.id} + '/editar'}" class="zero-button primary">Editar</a>
+                <a th:href="@{/admin/productos}" class="zero-button secondary">Volver</a>
+            </div>
+        </div>
+        <div class="zero-panel">
+            <h2>Historial de movimientos</h2>
+            <p class="text-muted">Del más reciente al más antiguo. Las compras recibidas suman y las ventas restan.</p>
+            <div class="table-responsive zero-table-wrap">
+                <table class="table table-striped table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">Movimiento</th>
+                            <th scope="col">Cantidad</th>
+                            <th scope="col">Saldo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(movimientos)}">
+                            <td colspan="4" class="text-center text-muted py-4">El producto todavía no tuvo movimientos de stock.</td>
+                        </tr>
+                        <tr th:each="movimiento : ${movimientos}">
+                            <td th:text="${#temporals.format(movimiento.fecha, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</td>
+                            <!-- La observación es el comprobante ("Compra N.º 1") salvo en las reversiones ("Anulación"). -->
+                            <td>
+                                <span th:if="${movimiento.observacion != movimiento.comprobante}"
+                                      th:text="${movimiento.observacion + ' · '}">Anulación · </span>
+                                <a th:if="${movimiento.compraId != null}" th:href="@{'/admin/compras/' + ${movimiento.compraId}}"
+                                   th:text="${movimiento.comprobante}">Compra N.º 1</a>
+                                <span th:unless="${movimiento.compraId != null}" th:text="${movimiento.comprobante}">Venta N.º 1</span>
+                            </td>
+                            <td class="text-right" th:classappend="${movimiento.cantidad < 0 ? 'text-danger' : 'text-success'}"
+                                th:text="${movimiento.cantidad > 0 ? '+' + movimiento.cantidad : movimiento.cantidad}">+20</td>
+                            <td class="text-right" th:text="${movimiento.saldo}">20</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

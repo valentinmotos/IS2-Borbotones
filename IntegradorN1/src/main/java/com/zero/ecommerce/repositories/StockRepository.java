@@ -14,4 +14,7 @@ public interface StockRepository extends JpaRepository<Stock, String> {
 
     /** Último movimiento de un producto: su cantidadActual es el stock actual. */
     Optional<Stock> findFirstByProducto_IdAndEliminadoFalseOrderByFechaDesc(String idProducto);
+
+    /** Movimientos activos de un producto, del más reciente al más antiguo. */
+    List<Stock> findByProducto_IdAndEliminadoFalseOrderByFechaDesc(String idProducto);
 }
