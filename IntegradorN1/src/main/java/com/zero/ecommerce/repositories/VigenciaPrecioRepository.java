@@ -13,5 +13,7 @@ public interface VigenciaPrecioRepository extends JpaRepository<VigenciaPrecio, 
 
     List<VigenciaPrecio> findByEliminadoFalseOrderByFechaDesdeAsc();
 
+    List<VigenciaPrecio> findByEliminadoFalseAndFechaHastaIsNull();
+
     Optional<VigenciaPrecio> findByProducto_IdAndEliminadoFalseAndFechaHastaIsNull(String productoId);
 }
