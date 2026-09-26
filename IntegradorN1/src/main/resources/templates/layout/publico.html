@@ -52,15 +52,14 @@
                     <div class="menu-desktop">
                         <ul class="main-menu">
                             <li class="active-menu"><a th:href="@{/}">Inicio</a></li>
-                            <li><a href="#">Niños</a></li>
-                            <li><a href="#">Niñas</a></li>
-                            <li><a href="#">Mujeres</a></li>
-                            <li>
-                                <a href="#">Hombres</a>
+                            <li th:each="categoria : ${categoriasCatalogo}">
+                                <a th:href="@{/catalogo/{id}(id=${categoria.id})}"
+                                   th:text="${categoria.nombre}">Categoría</a>
                                 <ul class="sub-menu">
-                                    <li><a href="#">Ropa</a></li>
-                                    <li><a href="#">Calzado</a></li>
-                                    <li><a href="#">Accesorios</a></li>
+                                    <li th:each="subCategoria : ${categoria.subCategorias}">
+                                        <a th:href="@{/catalogo/{categoriaId}/{subCategoriaId}(categoriaId=${categoria.id},subCategoriaId=${subCategoria.id})}"
+                                           th:text="${subCategoria.nombre}">Subcategoría</a>
+                                    </li>
                                 </ul>
                             </li>
                         </ul>
@@ -153,15 +152,14 @@
 
             <ul class="main-menu-m">
                 <li><a th:href="@{/}">Inicio</a></li>
-                <li><a href="#">Niños</a></li>
-                <li><a href="#">Niñas</a></li>
-                <li><a href="#">Mujeres</a></li>
-                <li>
-                    <a href="#">Hombres</a>
+                <li th:each="categoria : ${categoriasCatalogo}">
+                    <a th:href="@{/catalogo/{id}(id=${categoria.id})}"
+                       th:text="${categoria.nombre}">Categoría</a>
                     <ul class="sub-menu-m">
-                        <li><a href="#">Ropa</a></li>
-                        <li><a href="#">Calzado</a></li>
-                        <li><a href="#">Accesorios</a></li>
+                        <li th:each="subCategoria : ${categoria.subCategorias}">
+                            <a th:href="@{/catalogo/{categoriaId}/{subCategoriaId}(categoriaId=${categoria.id},subCategoriaId=${subCategoria.id})}"
+                               th:text="${subCategoria.nombre}">Subcategoría</a>
+                        </li>
                     </ul>
                     <span class="arrow-main-menu-m"><i class="fa fa-angle-right" aria-hidden="true"></i></span>
                 </li>

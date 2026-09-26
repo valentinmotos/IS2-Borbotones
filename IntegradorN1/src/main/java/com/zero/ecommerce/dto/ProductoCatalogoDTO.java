@@ -1,8 +1,8 @@
 package com.zero.ecommerce.dto;
 
 /**
- * Proyeccion de solo lectura para la vidriera publica. Mantiene fuera de la vista
- * las entidades y concentra los datos calculados de precio y stock.
+ * Producto listo para mostrar en la vidriera publica. No expone entidades JPA y
+ * concentra los datos calculados que necesitan catalogo, detalle y carrito.
  */
 public record ProductoCatalogoDTO(
         String id,
@@ -18,4 +18,14 @@ public record ProductoCatalogoDTO(
         String categoria,
         String subCategoria,
         String subCategoriaId) {
+
+    /** Alias conservado para las vistas y consumidores incorporados en E3-05. */
+    public String imagen() {
+        return imagenId;
+    }
+
+    /** Alias conservado para las vistas y consumidores incorporados en E3-05. */
+    public boolean oferta() {
+        return enOferta;
+    }
 }

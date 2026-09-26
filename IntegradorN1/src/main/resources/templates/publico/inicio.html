@@ -12,14 +12,57 @@
                 </div>
                 <div class="zero-banner">
                     <div class="container zero-banner-content">
-                        <div class="zero-kicker">Zero – proyecto base</div>
+                        <div class="zero-kicker">Nueva temporada</div>
                         <h1>Ropa y accesorios<br>para mover la energía</h1>
-                        <p>Zero – proyecto base con el layout público adaptado al estilo deportivo del template original.</p>
-                        <div>
-                            <a href="#" class="zero-button primary">Ver colección</a>
-                            <a href="#" class="zero-button secondary">Explorar</a>
-                        </div>
+                        <p>Encontrá indumentaria, calzado y accesorios para cada entrenamiento.</p>
+                        <a th:if="${!categoriasDestacadas.isEmpty()}"
+                           th:href="@{/catalogo/{id}(id=${categoriasDestacadas[0].id})}"
+                           class="zero-button primary">Ver colección</a>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="zero-section zero-section-compact">
+            <div class="container">
+                <div class="zero-section-heading">
+                    <div><span class="zero-kicker">Explorá</span><h2>Categorías</h2></div>
+                </div>
+                <div class="zero-category-grid">
+                    <a class="zero-category-card" th:each="categoria : ${categoriasDestacadas}"
+                       th:href="@{/catalogo/{id}(id=${categoria.id})}">
+                        <span th:text="${categoria.nombre}">Categoría</span>
+                        <small th:text="${categoria.subCategorias.size() + ' colecciones'}">3 colecciones</small>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="zero-section zero-section-compact" th:if="${!productosOferta.isEmpty()}">
+            <div class="container">
+                <div class="zero-section-heading">
+                    <div><span class="zero-kicker">Elegidos</span><h2>Productos en oferta</h2></div>
+                </div>
+                <div class="zero-product-carousel">
+                    <th:block th:each="producto : ${productosOferta}">
+                        <div th:replace="~{fragments/card-producto :: cardCatalogo(${producto})}"></div>
+                    </th:block>
+                </div>
+            </div>
+        </section>
+
+        <section class="zero-section zero-section-compact">
+            <div class="container">
+                <div class="zero-section-heading">
+                    <div><span class="zero-kicker">Novedades</span><h2>Últimos productos agregados</h2></div>
+                </div>
+                <div th:if="${ultimosProductos.isEmpty()}" class="zero-empty-state">
+                    Próximamente vas a encontrar nuevos productos disponibles.
+                </div>
+                <div class="zero-product-grid" th:unless="${ultimosProductos.isEmpty()}">
+                    <th:block th:each="producto : ${ultimosProductos}">
+                        <div th:replace="~{fragments/card-producto :: cardCatalogo(${producto})}"></div>
+                    </th:block>
                 </div>
             </div>
         </section>

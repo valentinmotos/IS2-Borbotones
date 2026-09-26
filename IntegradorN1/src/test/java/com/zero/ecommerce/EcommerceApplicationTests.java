@@ -43,7 +43,7 @@ class EcommerceApplicationTests {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("publico/inicio"))
-                .andExpect(content().string(containsString("Zero – proyecto base")));
+                .andExpect(content().string(containsString("Ropa y accesorios")));
     }
 
     @Test

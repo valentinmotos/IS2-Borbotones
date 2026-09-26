@@ -85,6 +85,7 @@ La página `/dev/componentes` muestra todos los fragments funcionando dentro del
 | Fecha | `fragments/formulario :: campoFecha(nombre, etiqueta, valor, requerido)` | `<div th:replace="~{fragments/formulario :: campoFecha('fechaNacimiento', 'Fecha de nacimiento', ${fechaNacimiento}, true)}"></div>` |
 | Tabla con imagen | `fragments/tabla :: tablaRegistrosImagen(encabezados, registros, baseUrl)` | `<div th:replace="~{fragments/tabla :: tablaRegistrosImagen(${encabezados}, ${productos}, '/admin/productos')}"></div>` |
 | Campo de filtro | `fragments/filtros :: campoFiltroTexto(nombre, etiqueta, valor, ayuda)` y `campoFiltroSelect(nombre, etiqueta, opciones, seleccionado)` | `<div th:replace="~{fragments/filtros :: campoFiltroTexto('buscar', 'Buscar', ${buscar}, 'Código o nombre')}"></div>` |
+| Filtro de fecha | `fragments/filtros :: campoFiltroFecha(nombre, etiqueta, valor)` | `<div th:replace="~{fragments/filtros :: campoFiltroFecha('desde', 'Desde', ${desde})}"></div>` |
 | Categoría → subcategoría | `fragments/categoria :: cascada(arbol, nombreCategoria, nombreSubCategoria, categoriaId, subCategoriaId, esFiltro)` | `<th:block th:replace="~{fragments/categoria :: cascada(${arbol}, 'categoriaId', 'subCategoriaId', ${categoriaId}, ${subCategoriaId}, false)}"></th:block>` |
 
 `mensajes` consume los atributos flash existentes `error` y `exito`; no crea un mecanismo nuevo. `tabla` recibe encabezados y filas como listas, y sus URLs pueden ser `null` para ocultar acciones. La tabla muestra un estado vacío cuando `filas` está vacío. `formulario` recibe errores ya calculados por el backend y no valida reglas de negocio.
@@ -432,6 +433,17 @@ Los tests (`mvnw test`) usan **GreenMail**, un servidor SMTP en memoria en el pu
 solo de test): verifican el envío, el HTML y el logo sin que salga nada de la máquina. Ver
 `CorreoIntegrationTest` y `EmailAsyncIntegrationTest`.
 
+## Catálogo público E3-05
+
+La home y las rutas `/catalogo/{categoriaId}` y
+`/catalogo/{categoriaId}/{subCategoriaId}` muestran únicamente productos activos que tengan
+stock mayor a cero y una vigencia de precio abierta. El menú público de escritorio y celular se
+genera desde el árbol de categorías activas. Las páginas de catálogo incluyen breadcrumb, cards
+responsive y paginación mediante el parámetro `page`.
+
+La firma compartida con las siguientes issues es
+`CatalogoService.listar(CatalogoFiltro)`, que devuelve objetos `ProductoCatalogoDTO` sin exponer
+entidades JPA a la vista.
 ## ABM de proveedores E3-01
 
 **Proveedores** (`/admin/proveedores`, `JEFE` y `ADMINISTRATIVO`): listado con buscador por razón social y
@@ -461,6 +473,52 @@ formulario con una lista dinámica de contactos. Cada fila tiene tipo (correo, c
 - `ProveedorService.listarProveedorActivo()` para los selects de proveedor.
 - El seeder carga 4 proveedores con sus contactos: Distribuidora Deportiva Cuyo S.A., Calzados y Textiles del
   Plata S.R.L., Indumentaria Atlética San Juan y Accesorios Fitness Andina.
+
+## Compras a proveedor E3-03
+
+**Compras a proveedor** (`/admin/compras`, `JEFE` y `ADMINISTRATIVO`). Una compra es una `FacturaProveedor` con sus
+`DetalleFactura` (RF25). Se crea en `SIN_DEFINIR`, que significa **pedida**: todavía no mueve el stock. Recibirla
+(pasa a `PAGADA` y genera el stock) y anularla es de E3-04.
+
+- **Listado:** número, fecha, proveedor, forma de pago, total y badge de estado, de la más nueva a la más vieja.
+  Filtros por estado, proveedor y rango de fechas (`campoFiltroFecha`, agregado al kit).
+- **Nueva compra:** proveedor, forma de pago y una tabla dinámica de productos (`static/js/compra-detalles.js`, que
+  clona el `<template id="plantilla-detalle">`). El producto de cada renglón se elige con un select con buscador
+  (Select2 del template, `vendor/template/vendor/select2`): se escribe parte del código, nombre o talle, en cualquier
+  orden y sin importar tildes ("remera l"). Después van la cantidad y el precio de costo unitario; el subtotal y el
+  total se calculan en vivo. Sin JavaScript queda un select común.
+- **Detalle** (`/admin/compras/{id}`): datos, renglones con precio de costo y subtotal, y total. Al crear la compra se
+  vuelve a esta pantalla, que mientras esté pedida tiene el botón **Avisar al proveedor por WhatsApp**: abre
+  `https://wa.me/{celular}?text=` con el pedido armado (productos, talles, códigos, cantidades, precios y total).
+
+### Validaciones y reglas
+
+- Proveedor y forma de pago activos y obligatorios.
+- Al menos un producto. Los renglones vacíos se ignoran.
+- Cantidad entera y precio de costo mayores a 0. Un valor que no es número vuelve al formulario con un mensaje.
+- Sin productos repetidos: cada producto (cada talle) va en un solo renglón.
+- Número secuencial propio de las compras (1, 2, 3...) y fecha de hoy.
+- Si algo falla, el formulario vuelve con los renglones cargados.
+
+### Para otros issues
+
+- `FacturaProveedorService.crearFactura(idProveedor, idFormaDePago, detalles)` recibe una lista de
+  `DetalleFacturaItemDTO(productoId, cantidad, precioUnitario)`. Es la que usa el seeder.
+- **Patrones:** `Factura.agregarDetalle(producto, cantidad, precioUnitario)` crea el detalle (Creador) y
+  `Factura.calcularTotal()` suma los subtotales (Experto). El diagrama no guarda el precio unitario: el detalle
+  guarda `cantidad` y `subtotal`, y `DetalleFactura.getPrecioUnitario()` lo calcula (sirve para el proveedor más
+  económico de E5-05).
+- `listarFacturaActivo(estado, idProveedor, desde, hasta)`, `listarFacturaPorEstado(estado)` y `buscarFactura(id)`
+  para la recepción (E3-04) y los reportes. `eliminarFactura(id)` es la baja lógica, solo de compras pedidas.
+- El seeder carga dos compras pedidas: la N.º 1 a Distribuidora Deportiva Cuyo (3 productos) y la N.º 2 a Calzados y
+  Textiles del Plata (2 productos).
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/admin/compras?estado=&proveedor=&desde=&hasta=` | Listar activas con filtros |
+| GET | `/admin/compras/nueva` | Formulario de nueva compra |
+| POST | `/admin/compras` | Crear la compra pedida |
+| GET | `/admin/compras/{id}` | Detalle y botón de WhatsApp |
 
 ## ABM de referencia E0-06: Nacionalidad
 

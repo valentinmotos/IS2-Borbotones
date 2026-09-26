@@ -343,7 +343,7 @@ a, a:hover {
 
 .zero-product-card .image-wrap img {
     height: 220px;
-    object-fit: contain;
+    object-fit: cover;
     width: 100%;
 }
 
@@ -363,7 +363,6 @@ a, a:hover {
 .zero-product-meta {
     font-size: 0.9rem;
 }
-
 .zero-product-card .price {
     display: inline-block;
     font-weight: 700;
@@ -372,6 +371,10 @@ a, a:hover {
 }
 
 /* E3-06: detalle y vidriera de ofertas. */
+.zero-section-compact {
+    padding-top: 1.5rem;
+}
+
 .zero-breadcrumb {
     align-items: center;
     color: var(--zero-muted);
@@ -587,6 +590,93 @@ a, a:hover {
     margin-top: 2rem;
 }
 
+/* E3-05: home y navegacion por categorias. */
+.zero-section-heading .zero-kicker {
+    margin-bottom: 0.35rem;
+}
+
+.zero-category-grid {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.zero-category-card {
+    background: var(--zero-charcoal);
+    border-radius: 18px;
+    color: var(--zero-white);
+    display: flex;
+    flex-direction: column;
+    min-height: 150px;
+    padding: 1.5rem;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.zero-category-card:hover,
+.zero-category-card:focus {
+    background: var(--zero-black);
+    color: var(--zero-accent);
+    transform: translateY(-3px);
+}
+
+.zero-category-card span {
+    font-size: 1.35rem;
+    font-weight: 800;
+    margin-top: auto;
+}
+
+.zero-category-card small {
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 0.4rem;
+}
+
+.zero-product-carousel {
+    display: grid;
+    gap: 1.5rem;
+    grid-auto-columns: minmax(240px, 290px);
+    grid-auto-flow: column;
+    overflow-x: auto;
+    padding: 0.25rem 0 1rem;
+    scroll-snap-type: x mandatory;
+}
+
+.zero-product-carousel .zero-product-card {
+    scroll-snap-align: start;
+}
+
+.zero-product-meta {
+    font-size: 0.9rem;
+}
+
+.zero-breadcrumb {
+    align-items: center;
+    color: var(--zero-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-bottom: 2rem;
+}
+
+.zero-breadcrumb a {
+    color: var(--zero-muted);
+}
+
+.zero-breadcrumb a:hover {
+    color: var(--zero-charcoal);
+}
+
+.zero-results-count {
+    color: var(--zero-muted);
+}
+
+.zero-empty-state {
+    background: var(--zero-white);
+    border: 1px dashed var(--zero-border);
+    border-radius: 18px;
+    color: var(--zero-muted);
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
 .zero-footer {
     background: var(--zero-white);
     color: var(--zero-charcoal);
@@ -850,6 +940,59 @@ a, a:hover {
 
 .zero-tabla-contactos .form-control {
     min-width: 10rem;
+}
+
+/* Tabla dinámica de productos del formulario de compra a proveedor: mismo criterio que la de contactos. */
+.zero-tabla-detalles td {
+    vertical-align: middle;
+}
+
+.zero-tabla-detalles .form-control {
+    min-width: 8rem;
+}
+
+.zero-tabla-detalles td:first-child {
+    min-width: 18rem;
+}
+
+/* Como en la tabla con imagen: una celda flex no se estira con filas altas y se desalinea del borde. */
+.zero-tabla-detalles td.zero-table-actions {
+    display: table-cell;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.zero-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Select con buscador (Select2 del template) dentro de un formulario: mismo aspecto que .zero-form .form-control. */
+.zero-form .select2-container--default .select2-selection--single {
+    border: 1px solid rgba(0, 0, 0, 0.16);
+    border-radius: 10px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+    height: 44px;
+}
+
+.zero-form .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #495057;
+    line-height: 42px;
+    padding-left: 0.75rem;
+}
+
+.zero-form .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 42px;
+    right: 0.5rem;
+}
+
+.zero-form .select2-container--default.select2-container--focus .select2-selection--single,
+.zero-form .select2-container--default.select2-container--open .select2-selection--single {
+    border-color: var(--zero-accent-strong);
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background: var(--zero-charcoal);
 }
 
 .zero-form-actions {
@@ -1116,6 +1259,10 @@ a, a:hover {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .zero-category-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .admin-shell {
         display: block;
     }
@@ -1148,6 +1295,16 @@ a, a:hover {
 @media (max-width: 575px) {
     .zero-product-grid {
         grid-template-columns: 1fr;
+    }
+
+    .zero-category-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .zero-section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.75rem;
     }
 
     .admin-topbar {
