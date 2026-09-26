@@ -34,7 +34,8 @@
             <nav class="admin-sidebar-nav">
                 <div class="admin-nav-section">
                     <a href="#" class="admin-nav-item" th:classappend="${menuActivo == 'inicio' ? 'active' : ''}">Inicio</a>
-                    <a href="#" class="admin-nav-item" sec:authorize="hasRole('JEFE')">Usuarios</a>
+                    <a th:href="@{/admin/usuarios}" class="admin-nav-item" sec:authorize="hasRole('JEFE')"
+                       th:classappend="${menuActivo == 'usuarios' ? 'active' : ''}">Usuarios</a>
                     <a th:href="@{/admin/productos}" class="admin-nav-item" th:classappend="${menuActivo == 'productos' ? 'active' : ''}">Productos</a>
                     <a th:href="@{/admin/precios}" class="admin-nav-item" th:classappend="${menuActivo == 'precios' ? 'active' : ''}">Precios</a>
                     <a th:href="@{/admin/precios/actualizacion}" class="admin-nav-item sub"

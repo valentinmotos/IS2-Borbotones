@@ -37,6 +37,70 @@ class UsuarioServiceTest {
     private UsuarioService service;
 
     @Test
+    void unJefeNoPuedeDarseDeBajaASiMismo() {
+        when(usuarioRepository.findByIdAndEliminadoFalse("1")).thenReturn(Optional.of(usuario("1", RolUsuario.JEFE)));
+        assertThatThrownBy(() -> service.eliminarUsuario("1", "1"))
+                .isInstanceOf(ErrorServiceException.class)
+                .hasMessage("No podés darte de baja a vos mismo.");
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    void noPermiteDarDeBajaAlUltimoJefe() {
+        when(usuarioRepository.findByIdAndEliminadoFalse("2")).thenReturn(Optional.of(usuario("2", RolUsuario.JEFE)));
+        when(usuarioRepository.countByRolAndEliminadoFalse(RolUsuario.JEFE)).thenReturn(1L);
+        assertThatThrownBy(() -> service.eliminarUsuario("2", "1"))
+                .isInstanceOf(ErrorServiceException.class)
+                .hasMessage("Debe quedar al menos un JEFE activo en el sistema.");
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    void permiteDarDeBajaUnJefeSiQuedaOtro() throws Exception {
+        Usuario jefe = usuario("2", RolUsuario.JEFE);
+        when(usuarioRepository.findByIdAndEliminadoFalse("2")).thenReturn(Optional.of(jefe));
+        when(usuarioRepository.countByRolAndEliminadoFalse(RolUsuario.JEFE)).thenReturn(2L);
+        service.eliminarUsuario("2", "1");
+        assertThat(jefe.isEliminado()).isTrue();
+        verify(usuarioRepository).save(jefe);
+    }
+
+    @Test
+    void noPermiteQuitarleElRolAlUltimoJefe() {
+        when(usuarioRepository.findByIdAndEliminadoFalse("1")).thenReturn(Optional.of(usuario("1", RolUsuario.JEFE)));
+        when(usuarioRepository.findByNombreUsuarioIgnoreCase("jefe@zero.com.ar")).thenReturn(Optional.empty());
+        when(usuarioRepository.countByRolAndEliminadoFalse(RolUsuario.JEFE)).thenReturn(1L);
+        assertThatThrownBy(() -> service.modificarUsuarioEmpleado("1", "jefe@zero.com.ar", RolUsuario.ADMINISTRATIVO,
+                null, null))
+                .isInstanceOf(ErrorServiceException.class)
+                .hasMessage("Debe quedar al menos un JEFE activo en el sistema.");
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    void creaEmpleadoActivoConClaveEncriptada() throws Exception {
+        when(usuarioRepository.findByNombreUsuarioIgnoreCase("nuevo@zero.com.ar")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("Clave123!")).thenReturn("hash");
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+        Usuario creado = service.crearUsuarioEmpleado(" Nuevo@Zero.com.ar ", RolUsuario.ADMINISTRATIVO, "Clave123!",
+                "Clave123!");
+        assertThat(creado.getNombreUsuario()).isEqualTo("nuevo@zero.com.ar");
+        assertThat(creado.getClave()).isEqualTo("hash");
+        assertThat(creado.getCodigoActivacion()).isNull();
+    }
+
+    @Test
+    void rechazaCorreoRepetidoAlCrearEmpleado() {
+        when(usuarioRepository.findByNombreUsuarioIgnoreCase("admin@zero.com.ar"))
+                .thenReturn(Optional.of(usuario("9", RolUsuario.ADMINISTRATIVO)));
+        assertThatThrownBy(() -> service.crearUsuarioEmpleado("admin@zero.com.ar", RolUsuario.ADMINISTRATIVO,
+                "Clave123!", "Clave123!"))
+                .isInstanceOf(ErrorServiceException.class)
+                .hasMessage("Ya existe una cuenta registrada con ese correo.");
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
     void modificarClaveRechazaClaveActualIncorrecta() {
         when(usuarioRepository.findByIdAndEliminadoFalse("1")).thenReturn(Optional.of(cliente()));
         when(passwordEncoder.matches("Incorrecta1", "hash-actual")).thenReturn(false);
@@ -65,6 +129,14 @@ class UsuarioServiceTest {
         service.modificarClave("1", "Cliente123!", "Nueva1234", "Nueva1234");
         assertThat(usuario.getClave()).isEqualTo("hash-nuevo");
         verify(usuarioRepository).save(usuario);
+    }
+
+    private Usuario usuario(String id, RolUsuario rol) {
+        Usuario usuario = new Usuario();
+        usuario.setId(id);
+        usuario.setNombreUsuario("usuario" + id + "@zero.com.ar");
+        usuario.setRol(rol);
+        return usuario;
     }
 
     private Usuario cliente() {
