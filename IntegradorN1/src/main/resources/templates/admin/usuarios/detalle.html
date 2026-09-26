@@ -1,0 +1,6 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin}">
+<body><div layout:fragment="breadcrumb"><a th:href="@{/admin/usuarios}">Usuarios</a><span class="breadcrumb-separator">/</span><span>Detalle</span></div>
+    <div layout:fragment="content"><div class="zero-panel"><dl><dt>Nombre</dt><dd th:text="${nombre}"></dd><dt>Correo</dt><dd th:text="${usuario.nombreUsuario}"></dd><dt>Rol</dt><dd th:text="${usuario.rol}"></dd><dt>Estado</dt><dd th:text="${usuario.eliminado ? 'Inactivo' : (usuario.codigoActivacion == null ? 'Activo' : 'Pendiente de activación')}"></dd></dl>
+        <a th:href="@{/admin/usuarios}" class="zero-button secondary">Volver</a></div></div>
+</body></html>
