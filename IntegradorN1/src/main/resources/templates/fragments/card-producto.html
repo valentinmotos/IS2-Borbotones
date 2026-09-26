@@ -24,20 +24,30 @@
             <span class="price"
                   th:text="${'$' + #numbers.formatDecimal(producto.precio, 1, 'POINT', 0, 'COMMA')}">$0</span>
             <div class="mt-2">
+                <!-- Cliente logueado: agrega directamente -->
                 <form th:action="@{/cliente/carrito/agregar}" method="post" sec:authorize="hasRole('CLIENTE')">
                     <input type="hidden" name="idProducto" th:value="${producto.id}">
                     <input type="hidden" name="cantidad" value="1">
                     <button type="submit" class="btn btn-sm btn-dark btn-block">
-                        <i class="fa fa-shopping-cart mr-1"></i> Agregar
+                        <i class="fa fa-shopping-cart mr-1"></i> Agregar al carrito
                     </button>
                 </form>
-                <a th:href="@{/login}" class="btn btn-sm btn-outline-dark btn-block" sec:authorize="isAnonymous()">
-                    <i class="fa fa-shopping-cart mr-1"></i> Agregar
-                </a>
-                <button type="button" class="btn btn-sm btn-secondary btn-block" disabled sec:authorize="hasAnyRole('JEFE', 'ADMINISTRATIVO')">
-                    Solo clientes
+                <!-- Visitante anónimo: envía POST a /cliente/carrito/agregar; Spring Security lo redirige al login y al autenticarse vuelve con el producto agregado -->
+                <form th:action="@{/cliente/carrito/agregar}" method="post" sec:authorize="isAnonymous()">
+                    <input type="hidden" name="idProducto" th:value="${producto.id}">
+                    <input type="hidden" name="cantidad" value="1">
+                    <button type="submit" class="btn btn-sm btn-outline-dark btn-block" title="Ingresá para agregar al carrito">
+                        <i class="fa fa-shopping-cart mr-1"></i> Agregar al carrito
+                    </button>
+                </form>
+                <!-- Empleados: no pueden usar el carrito (E3-08) -->
+                <button type="button" class="btn btn-sm btn-secondary btn-block" disabled
+                        sec:authorize="hasAnyRole('JEFE', 'ADMINISTRATIVO')"
+                        title="Los empleados no pueden utilizar el carrito de compras">
+                    <i class="fa fa-shopping-cart mr-1"></i> Solo clientes
                 </button>
             </div>
+
         </div>
     </article>
 </body>

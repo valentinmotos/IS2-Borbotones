@@ -83,6 +83,7 @@ public class CarritoController {
             Cliente cliente = carritoService.obtenerOCrearClienteParaUsuario(usuarioLogueado());
             carritoService.agregarProducto(cliente.getId(), idProducto, cantidad);
             flash.addFlashAttribute("exito", "Producto agregado al carrito con éxito.");
+            flash.addFlashAttribute("verCarritoLink", true);
         } catch (ErrorServiceException e) {
             flash.addFlashAttribute("error", e.getMessage());
         }
