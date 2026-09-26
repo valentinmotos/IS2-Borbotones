@@ -12,18 +12,20 @@
         </div>
     </article>
 
+    <!-- Card navegable usada por las grillas reales del catalogo. -->
     <article th:fragment="cardCatalogo(producto)" class="zero-product-card">
-        <div class="image-wrap">
-            <img th:src="${producto.imagen != null ? '/imagen/' + producto.imagen : '/img/default-image.png'}"
-                 th:alt="${producto.nombre}" loading="lazy">
-        </div>
-        <div class="zero-product-card-body">
-            <span th:if="${producto.oferta}" class="badge badge-danger zero-offer-badge">Oferta</span>
-            <h3 th:text="${producto.nombre}">Producto</h3>
-            <p class="zero-product-meta" th:text="${'Talle ' + producto.talle}">Talle</p>
-            <span class="price"
-                  th:text="${'$' + #numbers.formatDecimal(producto.precio, 1, 'POINT', 0, 'COMMA')}">$0</span>
-        </div>
+        <a class="zero-product-card-link" th:href="@{/producto/{id}(id=${producto.id})}">
+            <div class="image-wrap">
+                <img th:src="${producto.imagenId != null ? '/imagen/' + producto.imagenId : '/img/default-image.png'}"
+                     th:alt="${producto.nombre}" loading="lazy">
+            </div>
+            <div class="zero-product-card-body">
+                <span th:if="${producto.enOferta}" class="badge badge-danger zero-offer-badge">Oferta</span>
+                <h3 th:text="${producto.nombre}">Producto</h3>
+                <p class="zero-product-meta" th:text="${'Talle ' + producto.talle}">Talle M</p>
+                <span class="price" th:text="${producto.precioFormateado}">$0</span>
+            </div>
+        </a>
     </article>
 </body>
 </html>

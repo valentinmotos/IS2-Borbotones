@@ -14,6 +14,7 @@ import com.zero.ecommerce.entities.FacturaProveedor;
 import com.zero.ecommerce.entities.Producto;
 import com.zero.ecommerce.entities.Stock;
 import com.zero.ecommerce.exception.ErrorServiceException;
+import com.zero.ecommerce.repositories.ProductoRepository;
 import com.zero.ecommerce.repositories.StockRepository;
 
 /**
@@ -28,9 +29,34 @@ public class StockService {
     public static final String OBSERVACION_ANULACION = "Anulación";
 
     private final StockRepository repository;
+    private final ProductoRepository productoRepository;
 
-    public StockService(StockRepository repository) {
+    public StockService(StockRepository repository, ProductoRepository productoRepository) {
         this.repository = repository;
+        this.productoRepository = productoRepository;
+    }
+
+    /**
+     * Carga inicial usada exclusivamente por los datos de demostracion. No reemplaza los
+     * movimientos de compras y no duplica el saldo si el producto ya tiene movimientos.
+     */
+    @Transactional(rollbackFor = ErrorServiceException.class)
+    public Stock cargarStockInicial(String idProducto, int cantidad) throws ErrorServiceException {
+        if (cantidad <= 0) {
+            throw new ErrorServiceException("El stock inicial debe ser mayor a 0.");
+        }
+        var producto = productoRepository.findByIdAndEliminadoFalse(idProducto)
+                .orElseThrow(() -> new ErrorServiceException("El producto no existe o fue eliminado."));
+        var existente = repository.findFirstByProducto_IdAndEliminadoFalseOrderByFechaDesc(idProducto);
+        if (existente.isPresent()) {
+            return existente.get();
+        }
+        Stock stock = new Stock();
+        stock.setProducto(producto);
+        stock.setCantidadActual(cantidad);
+        stock.setFecha(LocalDateTime.now());
+        stock.setObservacion("Stock inicial de demostracion");
+        return repository.save(stock);
     }
 
     /**
@@ -125,7 +151,7 @@ public class StockService {
             int saldoAnterior = i + 1 < movimientos.size() ? movimientos.get(i + 1).getCantidadActual() : 0;
             Factura factura = movimiento.getDetalleFactura() == null ? null : movimiento.getDetalleFactura().getFactura();
             historial.add(new MovimientoStockDTO(movimiento.getFecha(), movimiento.getObservacion(),
-                    factura == null ? "-" : factura.describir(),
+                    factura == null ? null : factura.describir(),
                     factura instanceof FacturaProveedor ? factura.getId() : null,
                     movimiento.getCantidadActual() - saldoAnterior, movimiento.getCantidadActual()));
         }

@@ -53,9 +53,11 @@
                         </tr>
                         <tr th:each="movimiento : ${movimientos}">
                             <td th:text="${#temporals.format(movimiento.fecha, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</td>
-                            <!-- La observación es el comprobante ("Compra N.º 1") salvo en las reversiones ("Anulación"). -->
+                            <!-- La observación es el comprobante ("Compra N.º 1") salvo en las reversiones ("Anulación")
+                                 y en el stock inicial de demostración, que no tiene comprobante. -->
                             <td>
-                                <span th:if="${movimiento.observacion != movimiento.comprobante}"
+                                <span th:if="${movimiento.comprobante == null}" th:text="${movimiento.observacion}">Stock inicial</span>
+                                <span th:if="${movimiento.comprobante != null and movimiento.observacion != movimiento.comprobante}"
                                       th:text="${movimiento.observacion + ' · '}">Anulación · </span>
                                 <a th:if="${movimiento.compraId != null}" th:href="@{'/admin/compras/' + ${movimiento.compraId}}"
                                    th:text="${movimiento.comprobante}">Compra N.º 1</a>

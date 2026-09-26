@@ -231,7 +231,9 @@ del movimiento.
 Con la base vacía, el `DataSeeder` carga **20 productos** en las 12 subcategorías: 6 en oferta y varios
 modelos en más de un talle (Remera Dry Fit M y L, Zapatilla Run 41 y 42, Calza Fit S y M, etc.), siguiendo la
 regla de un producto por talle. Todos arrancan con una vigencia de precio de demostración de $10.000, que se
-puede modificar desde **Precios**. El stock inicial lo dan las compras recibidas del seeder de E3-04.
+puede modificar desde **Precios**. Cada producto tiene además un stock inicial de demostración de entre 8 y 32
+unidades (`StockService.cargarStockInicial`, E3-06), fechado hace 2 meses para que sea su primer movimiento. Sobre
+ese saldo, el seeder de E3-04 suma compras recibidas y resta ventas.
 
 - Las fotos están en `src/main/resources/seed/img/`. Son de Unsplash (licencia libre); el origen y el autor de
   cada una están en `seed/img/CREDITOS.md`.
@@ -558,17 +560,21 @@ esta pantalla.
 
 ### Datos de demostración
 
-Con la base vacía, el seeder deja productos en los tres niveles del reporte de stock (E5-03):
+Con la base vacía, el seeder deja productos en los tres niveles del reporte de stock (E5-03). El orden de los
+movimientos de cada producto es: stock inicial de E3-06 (hace 2 meses), compra recibida y venta.
 
 | Comprobante | Qué hace |
 |---|---|
 | Compra N.º 1, recibida hace 30 días | Indumentaria Atlética San Juan: calzas, top, zapatillas Flow y colchoneta |
 | Compra N.º 2, recibida hace 25 días | Accesorios Fitness Andina: mochila, bolso, reloj, billetera, gorra y productos de niños |
-| Venta N.º 1, hace 10 días | Descuenta Calza Fit S (queda 7/20, Regular), Calza Fit M (3/20 = 15 %, Malo) y Top (6/15, Regular) |
-| Venta N.º 2, hace 5 días | Descuenta Mochila Urban (4/10, Regular), Reloj (1/10, Malo), Zapatilla Kids (1/8, Malo) y Bolso Gym (0/8, Malo) |
+| Venta N.º 1, hace 10 días | Deja Calza Fit S en 35 % y Top en 40 % (Regular), y Calza Fit M en 15 % (Malo) |
+| Venta N.º 2, hace 5 días | Deja Mochila Urban en 40 % (Regular), y Reloj, Zapatilla Kids y Bolso Gym entre 10 % y 12 % (Malo) |
 
-El resto de los productos recibidos queda en Bueno. Las remeras, el short y las zapatillas Run no tienen stock:
-son los de las compras pedidas N.º 3 y N.º 4, para probar la recepción.
+Los porcentajes son del saldo después de la recepción (inicial + recibido) y se redondean para abajo, así que el
+valor exacto depende del stock inicial. Ningún producto queda en 0, para que todos se sigan viendo en el catálogo.
+El resto de los productos recibidos queda en Bueno. Las remeras, el short y las zapatillas Run solo tienen el stock
+inicial, que no es una recepción, así que quedan fuera del reporte: son los de las compras pedidas N.º 3 y N.º 4,
+para probar la recepción.
 
 - **Las ventas N.º 1 y N.º 2 son mínimas:** `FacturaCliente` pagadas **sin cliente ni `OrdenCompra`**, cargadas en
   `cargarVentas` solo para generar las salidas de stock. Las pantallas de ventas y los reportes (Etapas 4 y 5)

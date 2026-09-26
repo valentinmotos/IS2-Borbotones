@@ -55,8 +55,8 @@ import com.zero.ecommerce.services.PaisService;
 import com.zero.ecommerce.services.ProductoService;
 import com.zero.ecommerce.services.ProveedorService;
 import com.zero.ecommerce.services.ProvinciaService;
-import com.zero.ecommerce.services.StockService;
 import com.zero.ecommerce.services.SubCategoriaService;
+import com.zero.ecommerce.services.StockService;
 import com.zero.ecommerce.services.VigenciaPrecioService;
 import com.zero.ecommerce.utils.ArchivoEnMemoria;
 
@@ -97,10 +97,10 @@ public class DataSeeder implements CommandLineRunner {
     private final ImagenService imagenService;
     private final ProductoService productoService;
     private final VigenciaPrecioService vigenciaPrecioService;
+    private final StockService stockService;
     private final ProveedorService proveedorService;
     private final FormaDePagoService formaDePagoService;
     private final FacturaProveedorService facturaProveedorService;
-    private final StockService stockService;
 
     private static final double PRECIO_INICIAL_DEMO = 10000;
 
@@ -108,9 +108,9 @@ public class DataSeeder implements CommandLineRunner {
             ProvinciaService provinciaService, DepartamentoService departamentoService,
             LocalidadService localidadService, EmpresaService empresaService, CategoriaService categoriaService,
             SubCategoriaService subCategoriaService, ImagenService imagenService, ProductoService productoService,
-            VigenciaPrecioService vigenciaPrecioService,
+            VigenciaPrecioService vigenciaPrecioService, StockService stockService,
             ProveedorService proveedorService, FormaDePagoService formaDePagoService,
-            FacturaProveedorService facturaProveedorService, StockService stockService) {
+            FacturaProveedorService facturaProveedorService) {
         this.entityManager = entityManager;
         this.passwordEncoder = passwordEncoder;
         this.paisService = paisService;
@@ -123,10 +123,10 @@ public class DataSeeder implements CommandLineRunner {
         this.imagenService = imagenService;
         this.productoService = productoService;
         this.vigenciaPrecioService = vigenciaPrecioService;
+        this.stockService = stockService;
         this.proveedorService = proveedorService;
         this.formaDePagoService = formaDePagoService;
         this.facturaProveedorService = facturaProveedorService;
-        this.stockService = stockService;
     }
 
     @Override
@@ -393,6 +393,11 @@ public class DataSeeder implements CommandLineRunner {
                         PRECIO_INICIAL_DEMO);
                 // El catálogo simula precios con antigüedad para poder probar de inmediato una actualización.
                 precioInicial.setFechaDesde(LocalDate.now().minusMonths(3));
+                // E3-06 necesita mercaderia visible para recorrer ofertas y detalles desde una base nueva.
+                // Se fecha hace 2 meses para que sea el primer movimiento: las compras recibidas y las ventas de
+                // demostración (E3-04) son posteriores y se suman o restan sobre este saldo.
+                stockService.cargarStockInicial(producto.getId(), 8 + Math.abs(producto.getCodigo().hashCode() % 25))
+                        .setFecha(LocalDateTime.now().minusMonths(2));
             }
         } catch (ErrorServiceException e) {
             throw new IllegalStateException("No se pudieron cargar los precios iniciales: " + e.getMessage(), e);
@@ -522,13 +527,15 @@ public class DataSeeder implements CommandLineRunner {
 
     private void cargarVentas() {
         // E3-04: ventas mínimas pagadas que descuentan stock, para que el reporte de stock (E5-03) tenga productos en
-        // los tres niveles. Sobre lo recibido: Calza S 7/20 y Top 6/15 quedan Regulares; Calza M 3/20 (15 %),
-        // Reloj 1/10, Zapatilla Kids 1/8 y Bolso Gym 0/8 quedan Malos; el resto, Bueno.
+        // los tres niveles. Cada número es el porcentaje que queda del saldo después de la última recepción (el
+        // 100 %): Calza S, Top y Mochila Urban quedan Regulares; Calza M, Reloj, Zapatilla Kids y Bolso Gym, Malos.
+        // El resto, Bueno. Se usan porcentajes porque el saldo recibido incluye el stock inicial de E3-06, y ninguno
+        // queda en 0 para que todos sigan visibles en el catálogo (E3-06).
         // TODO E6-03: no tienen cliente ni OrdenCompra. Reemplazarlas por ventas de clientes con perfil completo.
         try {
             String efectivo = buscarFormaDePago(TipoPago.EFECTIVO);
-            cargarVentaDemo(1, efectivo, 10, Map.of("CAL-FIT-S", 13, "CAL-FIT-M", 17, "TOP-MOV-M", 9));
-            cargarVentaDemo(2, efectivo, 5, Map.of("MOC-URB-U", 6, "REL-SPT-U", 9, "ZAP-KID-24", 7, "BOL-GYM-U", 8));
+            cargarVentaDemo(1, efectivo, 10, Map.of("CAL-FIT-S", 35, "CAL-FIT-M", 15, "TOP-MOV-M", 40));
+            cargarVentaDemo(2, efectivo, 5, Map.of("MOC-URB-U", 40, "REL-SPT-U", 10, "ZAP-KID-24", 12, "BOL-GYM-U", 10));
         } catch (ErrorServiceException e) {
             throw new IllegalStateException("Las ventas de demostración no son válidas: " + e.getMessage(), e);
         }
@@ -536,16 +543,19 @@ public class DataSeeder implements CommandLineRunner {
         // E5-01 / E6-03: ventas pagadas en varios meses para reportes y dashboard.
     }
 
-    private void cargarVentaDemo(long numero, String idFormaDePago, int diasAtras, Map<String, Integer> cantidades)
+    // porcentajeQueQueda: código de producto → porcentaje del saldo actual que queda después de la venta.
+    private void cargarVentaDemo(long numero, String idFormaDePago, int diasAtras, Map<String, Integer> porcentajeQueQueda)
             throws ErrorServiceException {
         FacturaCliente venta = new FacturaCliente();
         venta.setNumeroFactura(numero);
         venta.setFechaFactura(LocalDate.now().minusDays(diasAtras));
         venta.setEstado(EstadoFactura.PAGADA);
         venta.setFormaDePago(formaDePagoService.buscarFormaDePago(idFormaDePago));
-        for (Map.Entry<String, Integer> item : cantidades.entrySet()) {
+        for (Map.Entry<String, Integer> item : porcentajeQueQueda.entrySet()) {
             Producto producto = productoService.buscarProductoPorCodigo(item.getKey());
-            venta.agregarDetalle(producto, item.getValue(), vigenciaPrecioService.buscarPrecioVigente(producto.getId()));
+            int saldo = stockService.buscarStockActual(producto.getId());
+            int cantidad = saldo - saldo * item.getValue() / 100;
+            venta.agregarDetalle(producto, cantidad, vigenciaPrecioService.buscarPrecioVigente(producto.getId()));
         }
         venta.setTotalPagado(venta.calcularTotal());
         entityManager.persist(venta);

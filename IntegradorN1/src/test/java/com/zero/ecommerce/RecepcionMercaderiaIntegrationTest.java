@@ -61,11 +61,13 @@ class RecepcionMercaderiaIntegrationTest {
     }
 
     @Test
-    void recibirUnaCompraDe20UnidadesLlevaElStockDe0A20YNoSePuedeRecibirDeNuevo() throws Exception {
-        // La compra pedida N.º 3 del seeder trae 20 Remeras Dry Fit M, que todavía no tienen stock.
+    void recibirUnaCompraDe20UnidadesLeSuma20AlStockYNoSePuedeRecibirDeNuevo() throws Exception {
+        // La compra pedida N.º 3 del seeder trae 20 Remeras Dry Fit M y 15 L. Solo tienen el stock inicial de E3-06.
         FacturaProveedor compra = compraNumero(3);
         String remeraM = productoService.buscarProductoPorCodigo("REM-DRY-H-M").getId();
-        assertThat(stockService.buscarStockActual(remeraM)).isZero();
+        String remeraL = productoService.buscarProductoPorCodigo("REM-DRY-H-L").getId();
+        int inicialM = stockService.buscarStockActual(remeraM);
+        int inicialL = stockService.buscarStockActual(remeraL);
 
         mvc.perform(get(COMPRAS + "/" + compra.getId()).session(sesion))
                 .andExpect(content().string(containsString("Marcar como recibida")))
@@ -75,14 +77,15 @@ class RecepcionMercaderiaIntegrationTest {
                 .andExpect(flash().attribute("exito", "Compra N.º 3 recibida: se sumó la mercadería al stock."));
 
         assertThat(facturaProveedorService.buscarFactura(compra.getId()).getEstado()).isEqualTo(EstadoFactura.PAGADA);
-        assertThat(stockService.buscarStockActual(remeraM)).isEqualTo(20);
-        assertThat(stockService.buscarStockActual(productoService.buscarProductoPorCodigo("REM-DRY-H-L").getId()))
-                .isEqualTo(15);
+        assertThat(stockService.buscarStockActual(remeraM)).isEqualTo(inicialM + 20);
+        assertThat(stockService.buscarStockActual(remeraL)).isEqualTo(inicialL + 15);
+        // Historial: la recepción sobre el stock inicial de demostración.
         List<MovimientoStockDTO> historial = stockService.listarHistorial(remeraM);
-        assertThat(historial).hasSize(1);
+        assertThat(historial).hasSize(2);
         assertThat(historial.get(0).cantidad()).isEqualTo(20);
-        assertThat(historial.get(0).saldo()).isEqualTo(20);
+        assertThat(historial.get(0).saldo()).isEqualTo(inicialM + 20);
         assertThat(historial.get(0).comprobante()).isEqualTo("Compra N.º 3");
+        assertThat(historial.get(1).saldo()).isEqualTo(inicialM);
 
         // Ya recibida: el detalle no ofrece las acciones y un segundo intento se rechaza sin tocar el stock.
         mvc.perform(get(COMPRAS + "/" + compra.getId()).session(sesion))
@@ -90,23 +93,26 @@ class RecepcionMercaderiaIntegrationTest {
         mvc.perform(postConCsrf(COMPRAS + "/" + compra.getId() + "/recibir", COMPRAS))
                 .andExpect(redirectedUrl(COMPRAS + "/" + compra.getId()))
                 .andExpect(flash().attribute("error", "La compra N.º 3 ya fue recibida: no se puede recibir de nuevo."));
-        assertThat(stockService.buscarStockActual(remeraM)).isEqualTo(20);
+        assertThat(stockService.buscarStockActual(remeraM)).isEqualTo(inicialM + 20);
     }
 
     @Test
     void elDetalleDelProductoMuestraElStockActualYElHistorialDeMovimientos() throws Exception {
-        // Calza Fit M: recibió 20 en la compra N.º 1 y se vendieron 17 en la venta de demostración N.º 1.
+        // Calza Fit M: stock inicial (E3-06), +20 de la compra N.º 1 y la venta de demostración N.º 1.
         String calzaM = productoService.buscarProductoPorCodigo("CAL-FIT-M").getId();
         String compra1 = compraNumero(1).getId();
+        int stockActual = stockService.buscarStockActual(calzaM);
+        int vendidas = stockService.listarHistorial(calzaM).get(0).cantidad();
+        assertThat(vendidas).isNegative();
 
         mvc.perform(get(PRODUCTOS).session(sesion))
                 .andExpect(content().string(containsString("href=\"" + PRODUCTOS + "/" + calzaM + "\"")));
         mvc.perform(get(PRODUCTOS + "/" + calzaM).session(sesion)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("Historial de movimientos")))
-                .andExpect(content().string(containsString("3 unidades")))
+                .andExpect(content().string(containsString(stockActual + " unidades")))
                 .andExpect(content().string(containsString("href=\"/admin/compras/" + compra1 + "\"")))
                 .andExpect(content().string(containsString(">+20</td>")))
-                .andExpect(content().string(containsString(">-17</td>")))
+                .andExpect(content().string(containsString(">" + vendidas + "</td>")))
                 .andExpect(content().string(containsString("Venta N.º 1")));
         mvc.perform(get(PRODUCTOS + "/no-existe").session(sesion)).andExpect(status().isNotFound());
     }
@@ -115,31 +121,41 @@ class RecepcionMercaderiaIntegrationTest {
     void anularUnaCompraPedidaLaDejaAnuladaSinMoverElStock() throws Exception {
         FacturaProveedor compra = compraNumero(4);
         String zapatilla = productoService.buscarProductoPorCodigo("ZAP-RUN-42").getId();
+        int inicial = stockService.buscarStockActual(zapatilla);
 
         mvc.perform(postConCsrf(COMPRAS + "/" + compra.getId() + "/anular", COMPRAS + "/" + compra.getId()))
                 .andExpect(redirectedUrl(COMPRAS + "/" + compra.getId()))
                 .andExpect(flash().attribute("exito", "Compra N.º 4 anulada."));
 
         assertThat(facturaProveedorService.buscarFactura(compra.getId()).getEstado()).isEqualTo(EstadoFactura.ANULADA);
-        assertThat(stockService.buscarStockActual(zapatilla)).isZero();
+        assertThat(stockService.buscarStockActual(zapatilla)).isEqualTo(inicial);
         mvc.perform(postConCsrf(COMPRAS + "/" + compra.getId() + "/recibir", COMPRAS))
                 .andExpect(flash().attribute("error", "La compra N.º 4 está anulada: no se puede recibir."));
-        assertThat(stockService.buscarStockActual(zapatilla)).isZero();
+        assertThat(stockService.buscarStockActual(zapatilla)).isEqualTo(inicial);
     }
 
     @Test
     void elSeederDejaProductosEnLosTresNivelesDelReporteDeStock() throws Exception {
         // Porcentaje = stock actual ÷ saldo después de la última recepción (decisiones de diseño, RF29).
-        assertThat(stock("COL-YOG-U")).isEqualTo(12);   // 12/12: Bueno
-        assertThat(stock("CAL-FIT-S")).isEqualTo(7);    // 7/20 = 35 %: Regular
-        assertThat(stock("TOP-MOV-M")).isEqualTo(6);    // 6/15 = 40 %: Regular
-        assertThat(stock("CAL-FIT-M")).isEqualTo(3);    // 3/20 = 15 %: Malo
-        assertThat(stock("BOL-GYM-U")).isZero();        // 0/8: Malo
-        assertThat(stock("ZAP-RUN-42")).isZero();       // nunca se recibió: queda fuera del reporte
+        // Bueno: más del 50 %. Regular: entre 20 % y 50 %. Malo: menos del 20 %.
+        assertThat(porcentaje("COL-YOG-U")).isGreaterThan(50);
+        assertThat(porcentaje("CAL-FIT-S")).isBetween(20, 50);
+        assertThat(porcentaje("TOP-MOV-M")).isBetween(20, 50);
+        assertThat(porcentaje("CAL-FIT-M")).isLessThan(20);
+        assertThat(porcentaje("BOL-GYM-U")).isLessThan(20);
+        // Solo tiene el stock inicial de E3-06, que no es una recepción: queda fuera del reporte.
+        assertThat(historial("ZAP-RUN-42")).noneMatch(m -> m.compraId() != null);
     }
 
-    private int stock(String codigo) throws Exception {
-        return stockService.buscarStockActual(productoService.buscarProductoPorCodigo(codigo).getId());
+    private int porcentaje(String codigo) throws Exception {
+        List<MovimientoStockDTO> historial = historial(codigo);
+        int saldoRecibido = historial.stream().filter(m -> m.compraId() != null).findFirst()
+                .orElseThrow().saldo();
+        return historial.get(0).saldo() * 100 / saldoRecibido;
+    }
+
+    private List<MovimientoStockDTO> historial(String codigo) throws Exception {
+        return stockService.listarHistorial(productoService.buscarProductoPorCodigo(codigo).getId());
     }
 
     private FacturaProveedor compraNumero(long numero) {
