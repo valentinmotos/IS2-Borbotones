@@ -11,5 +11,19 @@
             <span class="price" th:text="${precio}">$0</span>
         </div>
     </article>
+
+    <article th:fragment="cardCatalogo(producto)" class="zero-product-card">
+        <div class="image-wrap">
+            <img th:src="${producto.imagen != null ? '/imagen/' + producto.imagen : '/img/default-image.png'}"
+                 th:alt="${producto.nombre}" loading="lazy">
+        </div>
+        <div class="zero-product-card-body">
+            <span th:if="${producto.oferta}" class="badge badge-danger zero-offer-badge">Oferta</span>
+            <h3 th:text="${producto.nombre}">Producto</h3>
+            <p class="zero-product-meta" th:text="${'Talle ' + producto.talle}">Talle</p>
+            <span class="price"
+                  th:text="${'$' + #numbers.formatDecimal(producto.precio, 1, 'POINT', 0, 'COMMA')}">$0</span>
+        </div>
+    </article>
 </body>
 </html>

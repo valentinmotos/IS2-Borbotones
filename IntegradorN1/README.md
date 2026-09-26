@@ -432,6 +432,18 @@ Los tests (`mvnw test`) usan **GreenMail**, un servidor SMTP en memoria en el pu
 solo de test): verifican el envío, el HTML y el logo sin que salga nada de la máquina. Ver
 `CorreoIntegrationTest` y `EmailAsyncIntegrationTest`.
 
+## Catálogo público E3-05
+
+La home y las rutas `/catalogo/{categoriaId}` y
+`/catalogo/{categoriaId}/{subCategoriaId}` muestran únicamente productos activos que tengan
+stock mayor a cero y una vigencia de precio abierta. El menú público de escritorio y celular se
+genera desde el árbol de categorías activas. Las páginas de catálogo incluyen breadcrumb, cards
+responsive y paginación mediante el parámetro `page`.
+
+La firma compartida con las siguientes issues es
+`CatalogoService.listar(CatalogoFiltro)`, que devuelve objetos `ProductoCatalogoDTO` sin exponer
+entidades JPA a la vista.
+
 ## ABM de referencia E0-06: Nacionalidad
 
 Entrar a `/admin/nacionalidades` o a **Configuración → Nacionalidades** en el panel.
