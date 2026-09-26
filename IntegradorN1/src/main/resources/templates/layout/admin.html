@@ -37,6 +37,8 @@
                     <a href="#" class="admin-nav-item" sec:authorize="hasRole('JEFE')">Usuarios</a>
                     <a th:href="@{/admin/productos}" class="admin-nav-item" th:classappend="${menuActivo == 'productos' ? 'active' : ''}">Productos</a>
                     <a th:href="@{/admin/precios}" class="admin-nav-item" th:classappend="${menuActivo == 'precios' ? 'active' : ''}">Precios</a>
+                    <a th:href="@{/admin/precios/actualizacion}" class="admin-nav-item sub"
+                       th:classappend="${menuActivo == 'precios-actualizacion' ? 'active' : ''}">Actualización por inflación</a>
                     <a th:href="@{/admin/categorias}" class="admin-nav-item" th:classappend="${menuActivo == 'categorias' ? 'active' : ''}">Categorías</a>
                     <a href="#" class="admin-nav-item">Proveedores</a>
                     <a href="#" class="admin-nav-item">Compras a proveedor</a>

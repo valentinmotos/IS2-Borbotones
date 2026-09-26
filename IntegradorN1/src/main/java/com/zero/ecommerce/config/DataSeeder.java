@@ -2,6 +2,7 @@ package com.zero.ecommerce.config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import com.zero.ecommerce.entities.Empleado;
 import com.zero.ecommerce.entities.FormaDePago;
 import com.zero.ecommerce.entities.Nacionalidad;
 import com.zero.ecommerce.entities.Pais;
+import com.zero.ecommerce.entities.Producto;
 import com.zero.ecommerce.entities.Provincia;
 import com.zero.ecommerce.entities.SubCategoria;
 import com.zero.ecommerce.entities.Usuario;
@@ -43,6 +45,7 @@ import com.zero.ecommerce.services.PaisService;
 import com.zero.ecommerce.services.ProductoService;
 import com.zero.ecommerce.services.ProvinciaService;
 import com.zero.ecommerce.services.SubCategoriaService;
+import com.zero.ecommerce.services.VigenciaPrecioService;
 import com.zero.ecommerce.utils.ArchivoEnMemoria;
 
 /**
@@ -81,11 +84,15 @@ public class DataSeeder implements CommandLineRunner {
     private final SubCategoriaService subCategoriaService;
     private final ImagenService imagenService;
     private final ProductoService productoService;
+    private final VigenciaPrecioService vigenciaPrecioService;
+
+    private static final double PRECIO_INICIAL_DEMO = 10000;
 
     public DataSeeder(EntityManager entityManager, PasswordEncoder passwordEncoder, PaisService paisService,
             ProvinciaService provinciaService, DepartamentoService departamentoService,
             LocalidadService localidadService, EmpresaService empresaService, CategoriaService categoriaService,
-            SubCategoriaService subCategoriaService, ImagenService imagenService, ProductoService productoService) {
+            SubCategoriaService subCategoriaService, ImagenService imagenService, ProductoService productoService,
+            VigenciaPrecioService vigenciaPrecioService) {
         this.entityManager = entityManager;
         this.passwordEncoder = passwordEncoder;
         this.paisService = paisService;
@@ -97,6 +104,7 @@ public class DataSeeder implements CommandLineRunner {
         this.subCategoriaService = subCategoriaService;
         this.imagenService = imagenService;
         this.productoService = productoService;
+        this.vigenciaPrecioService = vigenciaPrecioService;
     }
 
     @Override
@@ -357,7 +365,16 @@ public class DataSeeder implements CommandLineRunner {
         } catch (ErrorServiceException e) {
             throw new IllegalStateException("Los datos iniciales del catálogo no son válidos: " + e.getMessage(), e);
         }
-        // E2-03: precios iniciales de los productos.
+        try {
+            for (Producto producto : productoService.listarProductoActivo()) {
+                var precioInicial = vigenciaPrecioService.crearVigenciaPrecio(producto.getId(), LocalDate.now(),
+                        PRECIO_INICIAL_DEMO);
+                // El catálogo simula precios con antigüedad para poder probar de inmediato una actualización.
+                precioInicial.setFechaDesde(LocalDate.now().minusMonths(3));
+            }
+        } catch (ErrorServiceException e) {
+            throw new IllegalStateException("No se pudieron cargar los precios iniciales: " + e.getMessage(), e);
+        }
     }
 
     private ArchivoEnMemoria leerImagenSeed(String archivo) {

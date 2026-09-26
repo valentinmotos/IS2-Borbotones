@@ -227,7 +227,8 @@ del movimiento.
 
 Con la base vacía, el `DataSeeder` carga **20 productos** en las 12 subcategorías: 6 en oferta y varios
 modelos en más de un talle (Remera Dry Fit M y L, Zapatilla Run 41 y 42, Calza Fit S y M, etc.), siguiendo la
-regla de un producto por talle. Todos arrancan con stock 0 y sin precio (los precios son de E2-03).
+regla de un producto por talle. Todos arrancan con stock 0 y una vigencia de precio de demostración de
+$10.000, que se puede modificar desde **Precios**.
 
 - Las fotos están en `src/main/resources/seed/img/`. Son de Unsplash (licencia libre); el origen y el autor de
   cada una están en `seed/img/CREDITOS.md`.
@@ -237,6 +238,16 @@ regla de un producto por talle. Todos arrancan con stock 0 y sin precio (los pre
 - **Para verlos en una base que ya existe** hay que borrar `data/zero.db` y volver a levantar la app.
 - En los tests el seeder también corre: `ProductoIntegrationTest` da de baja esos productos al empezar cada
   test (se revierte al terminar) para partir de un catálogo vacío.
+
+## Actualización de precios por inflación E2-04
+
+En **Precios → Actualización por inflación** (`/admin/precios/actualizacion`) se puede aplicar un aumento
+a todo el catálogo, a una categoría o a una subcategoría. La vista previa muestra precios actuales, precios
+nuevos redondeados a múltiplos de $10 y diferencias; la confirmación crea una vigencia nueva por producto
+y cierra las anteriores en una sola transacción. El porcentaje debe ser mayor que cero y la fecha desde no
+puede ser anterior a hoy ni igual o anterior al inicio de alguno de los precios vigentes. Si un producto del
+alcance no tiene precio vigente, se informa y no se aplica ninguna actualización. La confirmación también
+comprueba que los precios no hayan cambiado desde la vista previa.
 
 ## Perfil del cliente E2-07
 

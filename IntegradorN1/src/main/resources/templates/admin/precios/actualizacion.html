@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Catálogo</span><span class="breadcrumb-separator">/</span><a th:href="@{/admin/precios}">Precios</a>
+        <span class="breadcrumb-separator">/</span><span>Actualización por inflación</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <h2 class="mb-0">Actualización masiva de precios</h2>
+                <a th:href="@{/admin/precios}" class="zero-button secondary">Volver a precios</a>
+            </div>
+
+            <form th:action="@{/admin/precios/actualizacion/vista-previa}" method="post" class="zero-form mb-4">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label for="alcance">Alcance</label>
+                        <select id="alcance" name="alcance" class="form-control" required>
+                            <option value="TODO" th:selected="${alcance == 'TODO'}">Todo el catálogo</option>
+                            <option value="CATEGORIA" th:selected="${alcance == 'CATEGORIA'}">Una categoría</option>
+                            <option value="SUBCATEGORIA" th:selected="${alcance == 'SUBCATEGORIA'}">Una subcategoría</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="categoriaId">Categoría</label>
+                        <select id="categoriaId" name="categoriaId" class="form-control">
+                            <option value="">Seleccionar categoría</option>
+                            <option th:each="categoria : ${categorias}" th:value="${categoria.id}"
+                                    th:text="${categoria.nombre}" th:selected="${categoria.id == categoriaId}">Categoría</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="subCategoriaId">Subcategoría</label>
+                        <select id="subCategoriaId" name="subCategoriaId" class="form-control">
+                            <option value="">Seleccionar subcategoría</option>
+                            <optgroup th:each="categoria : ${categorias}" th:label="${categoria.nombre}">
+                                <option th:each="subCategoria : ${categoria.subCategorias}" th:value="${subCategoria.id}"
+                                        th:text="${subCategoria.nombre}"
+                                        th:selected="${subCategoria.id == subCategoriaId}">Subcategoría</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row align-items-end">
+                    <div class="form-group col-md-4">
+                        <label for="porcentaje">Porcentaje de aumento</label>
+                        <div class="input-group">
+                            <input id="porcentaje" name="porcentaje" type="number" min="0.01" step="0.01"
+                                   class="form-control" th:value="${porcentaje}" required>
+                            <div class="input-group-append"><span class="input-group-text">%</span></div>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="fechaDesde">Fecha desde</label>
+                        <input id="fechaDesde" name="fechaDesde" type="date" class="form-control"
+                               th:value="${fechaDesde}" required>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <button type="submit" class="zero-button primary">Ver vista previa</button>
+                    </div>
+                </div>
+            </form>
+
+            <section th:if="${!#lists.isEmpty(preview)}" aria-labelledby="titulo-preview">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h3 id="titulo-preview" class="h5 mb-0">Vista previa</h3>
+                    <button type="button" class="zero-button primary" data-toggle="modal"
+                            data-target="#confirmarActualizacion">Confirmar actualización</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Código</th>
+                                <th>Precio actual</th>
+                                <th>Precio nuevo</th>
+                                <th>Diferencia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="fila : ${preview}">
+                                <td><span th:text="${fila.nombre}">Producto</span> <small class="text-muted" th:text="${fila.talle}">Talle</small></td>
+                                <td th:text="${fila.codigo}">Código</td>
+                                <td>$<span th:text="${#numbers.formatDecimal(fila.precioActual, 0, 'POINT', 0, 'COMMA')}">0</span></td>
+                                <td>$<span th:text="${#numbers.formatDecimal(fila.precioNuevo, 0, 'POINT', 0, 'COMMA')}">0</span></td>
+                                <td>$<span th:text="${#numbers.formatDecimal(fila.diferencia, 0, 'POINT', 0, 'COMMA')}">0</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal fade" id="confirmarActualizacion" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content zero-modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirmar actualización</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+                            </div>
+                            <div class="modal-body" th:text="|Se crearán nuevas vigencias para ${#lists.size(preview)} productos. ¿Querés continuar?|">Confirmar actualización</div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
+                                <form th:action="@{/admin/precios/actualizacion/confirmar}" method="post">
+                                    <button type="submit" class="btn btn-danger">Aplicar aumento</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>
