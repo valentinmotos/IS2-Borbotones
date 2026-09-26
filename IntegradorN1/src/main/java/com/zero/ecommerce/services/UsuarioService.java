@@ -1,11 +1,11 @@
 package com.zero.ecommerce.services;
 
 import java.security.SecureRandom;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.LinkedHashMap;
 import java.util.Optional;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +16,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.zero.ecommerce.dto.UsuarioAdminDTO;
 import com.zero.ecommerce.entities.Persona;
 import com.zero.ecommerce.entities.Usuario;
 import com.zero.ecommerce.entities.enums.RolUsuario;
-import com.zero.ecommerce.dto.UsuarioAdminDTO;
 import com.zero.ecommerce.exception.ErrorServiceException;
 import com.zero.ecommerce.repositories.PersonaRepository;
 import com.zero.ecommerce.repositories.UsuarioRepository;
@@ -252,8 +252,8 @@ public class UsuarioService {
                 .filter(usuario -> coincideEstado(usuario, estadoFiltro))
                 .filter(usuario -> texto.isBlank() || usuario.getNombreUsuario().toLowerCase(Locale.ROOT).contains(texto))
                 .map(usuario -> new UsuarioAdminDTO(usuario.getId(), nombreParaMostrar(usuario), usuario.getNombreUsuario(),
-                        usuario.getRol().name(), describirEstado(usuario), usuario.getRol() != RolUsuario.CLIENTE,
-                        usuario.getRol() == RolUsuario.CLIENTE))
+                        usuario.getRol().name(), describirEstado(usuario), !usuario.isEliminado(),
+                        usuario.getRol() != RolUsuario.CLIENTE, usuario.getRol() == RolUsuario.CLIENTE))
                 .toList();
     }
 
@@ -347,8 +347,11 @@ public class UsuarioService {
         if (usuario == null) {
             return "";
         }
+        // Si la cuenta está dada de baja, su persona también: se usa igual para mostrar el nombre en el ABM.
         Optional<Persona> persona = personaRepository
-                .findFirstByUsuario_NombreUsuarioIgnoreCaseAndEliminadoFalse(usuario.getNombreUsuario());
+                .findFirstByUsuario_NombreUsuarioIgnoreCaseAndEliminadoFalse(usuario.getNombreUsuario())
+                .or(() -> usuario.isEliminado() ? personaRepository.findFirstByUsuario_Id(usuario.getId())
+                        : Optional.empty());
         if (persona.isEmpty()) {
             return usuario.getNombreUsuario();
         }

@@ -1,20 +1,36 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin}">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
 <body>
-    <div layout:fragment="breadcrumb"><a th:href="@{/admin/usuarios}">Usuarios</a><span class="breadcrumb-separator">/</span><span th:text="${id == null ? 'Alta' : 'Edición'}"></span></div>
-    <div layout:fragment="content"><div th:replace="~{fragments/mensajes :: mensajes}"></div><div class="zero-panel">
-        <form th:action="@{${formAction}}" method="post" class="zero-form" th:object="${empleadoForm}">
-            <div th:replace="~{fragments/formulario :: campoTexto('nombre', 'Nombre', *{nombre}, true)}"></div>
-            <div th:replace="~{fragments/formulario :: campoTexto('apellido', 'Apellido', *{apellido}, true)}"></div>
-            <div th:replace="~{fragments/formulario :: campoFecha('fechaNacimiento', 'Fecha de nacimiento', *{fechaNacimiento}, true)}"></div>
-            <div th:replace="~{fragments/formulario :: campoSelect('tipoDocumento', 'Tipo de documento', ${tiposDocumento}, *{tipoDocumento}, true)}"></div>
-            <div th:replace="~{fragments/formulario :: campoTexto('numeroDocumento', 'Número de documento', *{numeroDocumento}, true)}"></div>
-            <div class="form-group"><label for="correo">Correo electrónico</label><input id="correo" name="correo" type="email" class="form-control" th:value="*{correo}" required></div>
-            <div th:replace="~{fragments/formulario :: campoSelect('rol', 'Rol', ${rolesEmpleado}, *{rol}, true)}"></div>
-            <div th:replace="~{fragments/formulario :: campoClave('clave', 'Clave', ${id == null}, ${id == null ? 'Mínimo 8 caracteres.' : 'Dejala vacía para no cambiarla.'})}"></div>
-            <div th:replace="~{fragments/formulario :: campoClave('confirmacionClave', 'Confirmar clave', ${id == null}, ${id == null ? 'Repetí la clave inicial.' : 'Completala solo si definís una clave nueva.'})}"></div>
-            <div th:replace="~{fragments/formulario :: acciones('/admin/usuarios')}"></div>
-        </form>
-    </div></div>
+    <div layout:fragment="breadcrumb">
+        <a th:href="@{/admin/usuarios}">Usuarios</a><span class="breadcrumb-separator">/</span>
+        <span th:text="${id == null ? 'Alta' : 'Edición'}">Alta</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <form th:action="@{${formAction}}" method="post" class="zero-form" th:object="${empleadoForm}">
+                <div th:replace="~{fragments/formulario :: campoTexto('nombre', 'Nombre', *{nombre}, true)}"></div>
+                <div th:replace="~{fragments/formulario :: campoTexto('apellido', 'Apellido', *{apellido}, true)}"></div>
+                <div th:replace="~{fragments/formulario :: campoFecha('fechaNacimiento', 'Fecha de nacimiento',
+                     *{fechaNacimiento}, true)}"></div>
+                <div th:replace="~{fragments/formulario :: campoSelect('tipoDocumento', 'Tipo de documento',
+                     ${tiposDocumento}, *{tipoDocumento}, true)}"></div>
+                <div th:replace="~{fragments/formulario :: campoTexto('numeroDocumento', 'Número de documento',
+                     *{numeroDocumento}, true)}"></div>
+                <!-- El kit no tiene campo de correo: se replica la estructura de campoTexto con type="email". -->
+                <div class="form-group">
+                    <label for="correo">Correo electrónico</label>
+                    <input id="correo" name="correo" type="email" class="form-control" th:value="*{correo}" required>
+                </div>
+                <div th:replace="~{fragments/formulario :: campoSelect('rol', 'Rol', ${rolesEmpleado}, *{rol}, true)}"></div>
+                <div th:replace="~{fragments/formulario :: campoClave('clave', 'Clave', ${id == null},
+                     ${id == null ? 'Mínimo 8 caracteres.' : 'Dejala vacía para no cambiarla.'})}"></div>
+                <div th:replace="~{fragments/formulario :: campoClave('confirmacionClave', 'Confirmar clave', ${id == null},
+                     ${id == null ? 'Repetí la clave inicial.' : 'Completala solo si definís una clave nueva.'})}"></div>
+                <div th:replace="~{fragments/formulario :: acciones('/admin/usuarios')}"></div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

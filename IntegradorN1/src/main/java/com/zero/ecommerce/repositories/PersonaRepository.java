@@ -12,6 +12,8 @@ public interface PersonaRepository extends JpaRepository<Persona, String> {
 
     Optional<Persona> findFirstByUsuario_NombreUsuarioIgnoreCaseAndEliminadoFalse(String nombreUsuario);
 
+    Optional<Persona> findFirstByUsuario_Id(String idUsuario);
+
     // Documento único entre todas las personas activas (clientes y empleados).
     List<Persona> findByTipoDocumentoAndNumeroDocumentoAndEliminadoFalse(TipoDocumento tipoDocumento,
             String numeroDocumento);

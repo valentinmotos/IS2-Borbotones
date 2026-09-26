@@ -18,6 +18,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.zero.ecommerce.dto.EmpleadoUsuarioForm;
 import com.zero.ecommerce.entities.Empleado;
 import com.zero.ecommerce.entities.Usuario;
+import com.zero.ecommerce.entities.enums.RolUsuario;
 import com.zero.ecommerce.exception.ErrorServiceException;
 import com.zero.ecommerce.services.EmpleadoService;
 import com.zero.ecommerce.services.UsuarioService;
@@ -36,7 +37,9 @@ public class UsuarioAdminController {
     }
 
     @ModelAttribute("menuActivo")
-    public String menuActivo() { return "usuarios"; }
+    public String menuActivo() {
+        return "usuarios";
+    }
 
     @GetMapping
     public String listar(@RequestParam(defaultValue = "") String rol, @RequestParam(defaultValue = "") String estado,
@@ -52,7 +55,9 @@ public class UsuarioAdminController {
     }
 
     @GetMapping("/nuevo")
-    public String nuevo(Model model) { return formulario(model, null, new EmpleadoUsuarioForm()); }
+    public String nuevo(Model model) {
+        return formulario(model, null, new EmpleadoUsuarioForm());
+    }
 
     @GetMapping("/{id}")
     public String ver(@PathVariable String id, Model model) {
@@ -81,6 +86,8 @@ public class UsuarioAdminController {
             return "redirect:" + BASE;
         } catch (ErrorServiceException e) {
             flash.addFlashAttribute("error", e.getMessage());
+            form.setClave(null);
+            form.setConfirmacionClave(null);
             flash.addFlashAttribute("empleadoForm", form);
             return "redirect:" + BASE + "/nuevo";
         }
@@ -99,6 +106,8 @@ public class UsuarioAdminController {
             return "redirect:" + BASE;
         } catch (ErrorServiceException e) {
             flash.addFlashAttribute("error", e.getMessage());
+            form.setClave(null);
+            form.setConfirmacionClave(null);
             flash.addFlashAttribute("empleadoForm", form);
             return "redirect:" + BASE + "/" + id + "/editar";
         }
@@ -109,8 +118,12 @@ public class UsuarioAdminController {
         Usuario usuario = buscarO404(id);
         try {
             String actual = usuarioService.usuarioActual().orElseThrow().getId();
-            if (usuario.getRol().name().equals("CLIENTE")) usuarioService.eliminarUsuario(id, actual);
-            else empleadoService.eliminarEmpleadoPorUsuario(id, actual);
+            // El cliente solo tiene su cuenta; el empleado se da de baja junto con su cuenta.
+            if (usuario.getRol() == RolUsuario.CLIENTE) {
+                usuarioService.eliminarUsuario(id, actual);
+            } else {
+                empleadoService.eliminarEmpleadoPorUsuario(id, actual);
+            }
             flash.addFlashAttribute("exito", "Usuario dado de baja correctamente.");
         } catch (ErrorServiceException e) {
             flash.addFlashAttribute("error", e.getMessage());
@@ -141,18 +154,23 @@ public class UsuarioAdminController {
     }
 
     private Usuario buscarO404(String id) {
-        try { return usuarioService.buscarUsuarioAdministracion(id); }
-        catch (ErrorServiceException e) { throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()); }
+        try {
+            return usuarioService.buscarUsuarioAdministracion(id);
+        } catch (ErrorServiceException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
     }
 
     private Empleado buscarEmpleadoO404(String idUsuario) {
-        try { return empleadoService.buscarEmpleadoPorUsuario(idUsuario); }
-        catch (ErrorServiceException e) { throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage()); }
+        try {
+            return empleadoService.buscarEmpleadoPorUsuario(idUsuario);
+        } catch (ErrorServiceException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
     }
 
     private Map<String, String> opcionesRoles() {
         Map<String, String> roles = new LinkedHashMap<>();
-        roles.put("", "Todos los roles");
         roles.put("JEFE", "Jefe");
         roles.put("ADMINISTRATIVO", "Administrativo");
         roles.put("CLIENTE", "Cliente");
@@ -161,7 +179,6 @@ public class UsuarioAdminController {
 
     private Map<String, String> opcionesEstados() {
         Map<String, String> estados = new LinkedHashMap<>();
-        estados.put("", "Todos los estados");
         estados.put("ACTIVO", "Activo");
         estados.put("PENDIENTE", "Pendiente de activación");
         estados.put("INACTIVO", "Inactivo");
