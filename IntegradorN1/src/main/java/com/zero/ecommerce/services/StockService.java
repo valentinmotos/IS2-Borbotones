@@ -131,6 +131,11 @@ public class StockService {
         return repository.findAllByOrderByFechaDesc();
     }
 
+    /** Todos los movimientos vigentes, del más reciente al más antiguo. */
+    public List<Stock> listarStockActivo() {
+        return repository.findByEliminadoFalseOrderByFechaDesc();
+    }
+
     /** Movimientos activos de un producto, del más reciente al más antiguo. */
     public List<Stock> listarMovimientos(String idProducto) {
         if (idProducto == null || idProducto.isBlank()) {
