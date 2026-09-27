@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.zero.ecommerce.entities.Cliente;
+import com.zero.ecommerce.entities.DetalleFactura;
 import com.zero.ecommerce.entities.FacturaCliente;
 import com.zero.ecommerce.entities.FormaDePago;
 import com.zero.ecommerce.entities.OrdenCompra;
@@ -79,6 +80,8 @@ class VentaServiceTest {
         assertThat(factura.getEstado()).isEqualTo(EstadoFactura.ANULADA);
         verify(ordenCompraRepository).save(orden);
         verify(facturaClienteRepository).save(factura);
+        // Todavía no se había pagado: el stock no se descontó y no hay nada que reingresar.
+        verify(stockService, never()).revertirMovimiento(any());
     }
 
     @Test
@@ -92,6 +95,8 @@ class VentaServiceTest {
         assertThat(orden.getEstadoOrdenCompra()).isEqualTo(EstadoOrdenCompra.PENDIENTE_ENVIO);
         verify(ordenCompraRepository, never()).save(any());
     }
+
+    // ----- registrarPago y anulación del admin (E4-03 / E4-07) -----
 
     @Test
     void elAdministradorAnulaUnaVentaPagadaYReponeElStock() throws Exception {
@@ -141,6 +146,47 @@ class VentaServiceTest {
         verify(stockService, never()).registrarMovimiento(any());
         verify(notificacionCompraService, never()).notificarCambioEstado(any());
         verify(ordenCompraService, times(2)).buscarPedido("o1");
+    }
+
+    @Test
+    void siUnProductoSeQuedoSinStockElPagoNoSeRegistraNiSeAvisa() throws Exception {
+        orden.setEstadoOrdenCompra(EstadoOrdenCompra.PENDIENTE_PAGO);
+        DetalleFactura remera = factura.agregarDetalle(producto("p1", "Remera"), 5, 1000);
+        when(ordenCompraService.buscarPedido("o1")).thenReturn(orden);
+        when(ordenCompraService.buscarFacturaDePedido("o1")).thenReturn(Optional.of(factura));
+        when(stockService.registrarMovimiento(remera))
+                .thenThrow(new ErrorServiceException("No hay stock suficiente de Remera (talle M): hay 2 y se necesitan 5."));
+
+        assertThatThrownBy(() -> service.registrarPago("o1"))
+                .isInstanceOf(ErrorServiceException.class)
+                .hasMessage("No hay stock suficiente de Remera (talle M): hay 2 y se necesitan 5.");
+        assertThat(factura.getEstado()).isEqualTo(EstadoFactura.SIN_DEFINIR);
+        verify(facturaClienteRepository, never()).save(any());
+        verify(notificacionCompraService, never()).notificarCambioEstado(any());
+    }
+
+    @Test
+    void unPedidoSinFacturaNoSePuedePagar() throws Exception {
+        orden.setEstadoOrdenCompra(EstadoOrdenCompra.PENDIENTE_PAGO);
+        when(ordenCompraService.buscarPedido("o1")).thenReturn(orden);
+        when(ordenCompraService.buscarFacturaDePedido("o1")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.registrarPago("o1"))
+                .isInstanceOf(ErrorServiceException.class)
+                .hasMessage("El pedido no tiene una factura asociada.");
+    }
+
+    @Test
+    void unaVentaAnuladaNoSePuedePagar() throws Exception {
+        orden.setEstadoOrdenCompra(EstadoOrdenCompra.ANULADA);
+        factura.setEstado(EstadoFactura.ANULADA);
+        when(ordenCompraService.buscarPedido("o1")).thenReturn(orden);
+        when(ordenCompraService.buscarFacturaDePedido("o1")).thenReturn(Optional.of(factura));
+
+        assertThatThrownBy(() -> service.registrarPago("o1"))
+                .isInstanceOf(ErrorServiceException.class)
+                .hasMessage("No se puede registrar el pago de una factura anulada.");
+        verify(stockService, never()).registrarMovimiento(any());
     }
 
     // ----- confirmarCompra (E4-02) -----
