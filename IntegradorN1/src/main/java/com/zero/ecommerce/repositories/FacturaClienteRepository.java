@@ -3,9 +3,11 @@ package com.zero.ecommerce.repositories;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.zero.ecommerce.entities.FacturaCliente;
+import com.zero.ecommerce.entities.enums.EstadoFactura;
 
 public interface FacturaClienteRepository extends JpaRepository<FacturaCliente, String> {
 
@@ -17,4 +19,10 @@ public interface FacturaClienteRepository extends JpaRepository<FacturaCliente, 
 
     /** La venta con el número más alto (incluidas las eliminadas), para la numeración secuencial. */
     Optional<FacturaCliente> findFirstByOrderByNumeroFacturaDesc();
+
+    /** Reporte de ventas (E5-01): facturas de clientes por estado (PAGADA) y rango de fechas de factura. */
+    @EntityGraph(attributePaths = { "formaDePago", "ordenCompra", "detalles", "detalles.producto",
+            "detalles.producto.subCategoria", "detalles.producto.subCategoria.categoria" })
+    List<FacturaCliente> findByEstadoAndFechaFacturaBetweenAndEliminadoFalseOrderByFechaFacturaDescNumeroFacturaDesc(
+            EstadoFactura estado, java.time.LocalDate desde, java.time.LocalDate hasta);
 }

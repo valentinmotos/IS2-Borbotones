@@ -158,6 +158,7 @@ public class DataSeeder implements CommandLineRunner {
         cargarProveedores();
         cargarVentas();
         cargarPedidos();
+        cargarVentasMarzo(); // E5-01: ventas pagadas en marzo para el reporte de ventas.
     }
 
     private void cargarUsuariosFaltantes() {
@@ -550,7 +551,6 @@ public class DataSeeder implements CommandLineRunner {
         } catch (ErrorServiceException e) {
             throw new IllegalStateException("Las ventas de demostración no son válidas: " + e.getMessage(), e);
         }
-        // E5-01 / E6-03: ventas pagadas en varios meses para reportes y dashboard.
     }
 
     /**
@@ -709,5 +709,53 @@ public class DataSeeder implements CommandLineRunner {
             stockService.registrarMovimiento(detalle);
         }
         atrasarMovimientos(venta.getDetalles(), diasAtras);
+    }
+
+    /**
+     * E5-01: igual que cargarVentaDemo pero con fecha absoluta y cantidades fijas en lugar de porcentajes.
+     * productosCantidad: código de producto → cantidad exacta a vender.
+     */
+    private void cargarVentaDemoFecha(long numero, String idFormaDePago, LocalDate fecha,
+            Map<String, Integer> productosCantidad) throws ErrorServiceException {
+        FacturaCliente venta = new FacturaCliente();
+        venta.setNumeroFactura(numero);
+        venta.setFechaFactura(fecha);
+        venta.setEstado(EstadoFactura.PAGADA);
+        venta.setFormaDePago(formaDePagoService.buscarFormaDePago(idFormaDePago));
+        for (Map.Entry<String, Integer> item : productosCantidad.entrySet()) {
+            Producto producto = productoService.buscarProductoPorCodigo(item.getKey());
+            int cantidad = item.getValue();
+            venta.agregarDetalle(producto, cantidad, vigenciaPrecioService.buscarPrecioVigente(producto.getId()));
+        }
+        venta.setTotalPagado(venta.calcularTotal());
+        entityManager.persist(venta);
+        for (DetalleFactura detalle : venta.getDetalles()) {
+            stockService.registrarMovimiento(detalle);
+        }
+    }
+
+    /**
+     * E5-01: ventas pagadas en marzo del año actual para el criterio de aceptación del reporte de ventas.
+     * Se llama después de cargarPedidos (que usa facturas 3–8) para que los números 9, 10 y 11 no colisionen.
+     */
+    private void cargarVentasMarzo() {
+        try {
+            int anio = LocalDate.now().getYear();
+            String efectivo = buscarFormaDePago(TipoPago.EFECTIVO);
+            String transferencia = buscarFormaDePago(TipoPago.TRANSFERENCIA);
+            String mercadoPago = buscarFormaDePago(TipoPago.BILLETERA_VIRTUAL);
+            // Venta 9  – 05/03: Gorra Training × 3 + Colchoneta Yoga × 2 (Efectivo).
+            // Se evitan productos cuyo saldo ya fue reducido a un nivel crítico por las ventas de E3-04.
+            cargarVentaDemoFecha(9, efectivo, LocalDate.of(anio, 3, 5),
+                    Map.of("GOR-TRN-U", 3, "COL-YOG-U", 2));
+            // Venta 10 – 14/03: Mochila Urban × 2 (Transferencia)
+            cargarVentaDemoFecha(10, transferencia, LocalDate.of(anio, 3, 14),
+                    Map.of("MOC-URB-U", 2));
+            // Venta 11 – 28/03: Bolso Gym × 1 + Billetera Cuero × 4 (Mercado Pago)
+            cargarVentaDemoFecha(11, mercadoPago, LocalDate.of(anio, 3, 28),
+                    Map.of("BOL-GYM-U", 1, "BIL-CUE-U", 4));
+        } catch (ErrorServiceException e) {
+            throw new IllegalStateException("Las ventas de marzo (E5-01) no son válidas: " + e.getMessage(), e);
+        }
     }
 }
