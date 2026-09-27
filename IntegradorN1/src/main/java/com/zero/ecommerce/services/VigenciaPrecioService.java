@@ -3,6 +3,7 @@ package com.zero.ecommerce.services;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.zero.ecommerce.dto.ActualizacionPrecioDTO;
+import com.zero.ecommerce.dto.ProductoPrecioVencidoDTO;
 import com.zero.ecommerce.entities.Categoria;
 import com.zero.ecommerce.entities.Producto;
 import com.zero.ecommerce.entities.SubCategoria;
@@ -27,6 +29,8 @@ import com.zero.ecommerce.repositories.VigenciaPrecioRepository;
 @Service
 @Transactional(readOnly = true)
 public class VigenciaPrecioService {
+
+    public static final int MESES_PARA_ALERTA = 2;
 
     private final VigenciaPrecioRepository repository;
     private final ProductoRepository productoRepository;
@@ -82,6 +86,19 @@ public class VigenciaPrecioService {
 
     public double buscarPrecioVigente(String idProducto) throws ErrorServiceException {
         return buscarVigenciaVigente(idProducto).getPrecio();
+    }
+
+    /** Lista los productos activos cuyo precio vigente comenzo hace mas de dos meses. */
+    public List<ProductoPrecioVencidoDTO> listarProductosConPrecioVencido() {
+        LocalDate hoy = LocalDate.now();
+        LocalDate limite = hoy.minusMonths(MESES_PARA_ALERTA);
+        return repository.listarVigenciasVencidas(limite).stream()
+                .map(vigencia -> convertirEnAlerta(vigencia, hoy))
+                .toList();
+    }
+
+    public long contarProductosConPrecioVencido() {
+        return repository.contarVigenciasVencidas(LocalDate.now().minusMonths(MESES_PARA_ALERTA));
     }
 
     public List<ActualizacionPrecioDTO> previsualizarActualizacionMasiva(String alcance, String idAlcance,
@@ -208,6 +225,16 @@ public class VigenciaPrecioService {
             throw new ErrorServiceException("El precio calculado está fuera del rango permitido.");
         }
         return nuevoPrecio;
+    }
+
+    private ProductoPrecioVencidoDTO convertirEnAlerta(VigenciaPrecio vigencia, LocalDate hoy) {
+        Producto producto = vigencia.getProducto();
+        SubCategoria subCategoria = producto.getSubCategoria();
+        Categoria categoria = subCategoria.getCategoria();
+        return new ProductoPrecioVencidoDTO(producto.getId(), producto.getCodigo(), producto.getNombre(),
+                producto.getTalle(), vigencia.getPrecio(), vigencia.getFechaDesde(),
+                ChronoUnit.DAYS.between(vigencia.getFechaDesde(), hoy), categoria.getId(), categoria.getNombre(),
+                subCategoria.getNombre());
     }
 
     private void validarFechaYPrecio(LocalDate fechaDesde, double precio) throws ErrorServiceException {

@@ -875,6 +875,16 @@ a, a:hover {
     transition: all 0.2s ease;
 }
 
+.admin-nav-item-with-badge {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.admin-nav-badge {
+    min-width: 1.5rem;
+}
+
 .admin-nav-item:hover,
 .admin-nav-item.active {
     background: rgba(215, 255, 63, 0.12);
@@ -884,6 +894,15 @@ a, a:hover {
 .admin-nav-item.sub {
     padding-left: 1.5rem;
     color: rgba(255, 255, 255, 0.68);
+}
+
+.price-alert-group {
+    border-top: 1px solid var(--zero-border);
+    padding-top: 1.5rem;
+}
+
+.price-alert-group + .price-alert-group {
+    margin-top: 2rem;
 }
 
 .newsletter-preview {

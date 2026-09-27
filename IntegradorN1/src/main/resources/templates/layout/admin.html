@@ -37,9 +37,16 @@
                     <a th:href="@{/admin/usuarios}" class="admin-nav-item" sec:authorize="hasRole('JEFE')"
                        th:classappend="${menuActivo == 'usuarios' ? 'active' : ''}">Usuarios</a>
                     <a th:href="@{/admin/productos}" class="admin-nav-item" th:classappend="${menuActivo == 'productos' ? 'active' : ''}">Productos</a>
-                    <a th:href="@{/admin/precios}" class="admin-nav-item" th:classappend="${menuActivo == 'precios' ? 'active' : ''}">Precios</a>
+                    <a th:href="@{/admin/precios}" class="admin-nav-item admin-nav-item-with-badge"
+                       th:classappend="${menuActivo == 'precios' or menuActivo == 'precios-alertas' ? 'active' : ''}">
+                        <span>Precios</span>
+                        <span th:if="${cantidadAlertasPrecio > 0}" class="badge badge-danger admin-nav-badge"
+                              th:text="${cantidadAlertasPrecio}" aria-label="Productos con precio desactualizado">0</span>
+                    </a>
                     <a th:href="@{/admin/precios/actualizacion}" class="admin-nav-item sub"
                        th:classappend="${menuActivo == 'precios-actualizacion' ? 'active' : ''}">Actualización por inflación</a>
+                    <a th:href="@{/admin/precios/alertas}" class="admin-nav-item sub"
+                       th:classappend="${menuActivo == 'precios-alertas' ? 'active' : ''}">Alertas de precios</a>
                     <a th:href="@{/admin/categorias}" class="admin-nav-item" th:classappend="${menuActivo == 'categorias' ? 'active' : ''}">Categorías</a>
                     <a th:href="@{/admin/proveedores}" class="admin-nav-item" th:classappend="${menuActivo == 'proveedores' ? 'active' : ''}">Proveedores</a>
                     <a th:href="@{/admin/compras}" class="admin-nav-item" th:classappend="${menuActivo == 'compras' ? 'active' : ''}">Compras a proveedor</a>

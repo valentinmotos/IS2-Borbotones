@@ -44,6 +44,23 @@
                         ? factura.empleado.nombre + ' ' + factura.empleado.apellido : '-'}">Empleado</dd>
             </dl>
             <div class="zero-form-actions">
+                <form th:if="${pedido.estadoOrdenCompra.name() == 'PENDIENTE_PAGO'
+                        and factura != null and factura.formaDePago != null
+                        and (factura.formaDePago.tipoPago.name() == 'EFECTIVO'
+                        or factura.formaDePago.tipoPago.name() == 'TRANSFERENCIA')}"
+                      th:action="@{'/admin/pedidos/' + ${pedido.id} + '/confirmar-pago'}" method="post">
+                    <button type="submit" class="zero-button primary">Confirmar pago</button>
+                </form>
+                <form th:if="${pedido.estadoOrdenCompra.name() == 'PENDIENTE_ENVIO'}"
+                      th:action="@{'/admin/pedidos/' + ${pedido.id} + '/marcar-enviado'}" method="post">
+                    <button type="submit" class="zero-button primary">Marcar como enviado</button>
+                </form>
+                <form th:if="${pedido.estadoOrdenCompra.name() == 'PENDIENTE_ENTREGA'}"
+                      th:action="@{'/admin/pedidos/' + ${pedido.id} + '/marcar-entregado'}" method="post">
+                    <button type="submit" class="zero-button primary">Marcar como entregado</button>
+                </form>
+                <button th:if="${pedido.puedeAnularse(true)}" type="button" class="btn btn-outline-danger"
+                        data-toggle="modal" data-target="#anular-pedido">Anular</button>
                 <a th:href="@{/admin/pedidos}" class="zero-button secondary">Volver</a>
             </div>
         </div>
@@ -104,6 +121,37 @@
                         </tr>
                     </tfoot>
                 </table>
+            </div>
+        </div>
+        <div th:if="${pedido.puedeAnularse(true)}" class="modal fade" id="anular-pedido" tabindex="-1"
+             role="dialog" aria-labelledby="titulo-anular-pedido" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content zero-modal-content">
+                    <form th:action="@{'/admin/pedidos/' + ${pedido.id} + '/anular'}" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="titulo-anular-pedido">Anular pedido</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p th:text="${'¿Querés anular el pedido ' + pedido.identificadorCompra + '?'}">
+                                ¿Querés anular este pedido?
+                            </p>
+                            <div class="form-group mb-0">
+                                <label for="motivo-anulacion">Motivo</label>
+                                <textarea id="motivo-anulacion" name="motivo" class="form-control" rows="4"
+                                          maxlength="500" required
+                                          th:text="${motivoAnulacion}"></textarea>
+                                <small class="form-text text-muted">Indicá por qué se anula el pedido.</small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger">Anular pedido</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

@@ -482,6 +482,22 @@ perfil completo; de esa forma nunca se comparten direcciones entre destinatarios
 Las pruebas están en `NewsletterServiceTest`, `NewsletterEnvioRepositoryTest` y
 `NewsletterIntegrationTest`.
 
+## Alertas de actualización de precios E4-09
+
+La pantalla **Alertas de precios** (`/admin/precios/alertas`, roles `JEFE` y `ADMINISTRATIVO`)
+muestra los productos activos cuyo precio vigente comenzó hace más de dos meses. Los agrupa por
+categoría e informa el precio, la fecha del último cambio y los días transcurridos.
+
+- El badge de **Precios** en el sidebar muestra la cantidad actual de alertas.
+- **Actualizar categoría** abre la actualización masiva de E2-04 con esa categoría preseleccionada.
+- `PrecioScheduler` ejecuta la detección todos los días a las 09:15 de Buenos Aires. El horario y la
+  zona se pueden cambiar con `precios.alertas.cron` y `precios.alertas.zona`.
+- Las alertas se calculan desde las vigencias actuales; al crear una nueva vigencia dejan de aparecer
+  automáticamente, sin mantener estado duplicado.
+
+Las pruebas están en `VigenciaPrecioServiceTest`, `PrecioSchedulerTest` y
+`AlertasPrecioIntegrationTest`.
+
 ## Catálogo público E3-05
 
 La home y las rutas `/catalogo/{categoriaId}` y
@@ -633,7 +649,7 @@ para probar la recepción.
 | POST | `/admin/compras/{id}/anular` | Anular una compra pedida |
 | GET | `/admin/productos/{id}` | Detalle del producto con stock e historial |
 
-## Panel de pedidos E4-06
+## Panel de pedidos y acciones E4-06 / E4-07
 
 **Pedidos** (`/admin/pedidos`, `JEFE` y `ADMINISTRATIVO`). Un pedido es una `OrdenCompra` que ya salió del carrito:
 los carritos abiertos (`PENDIENTE_COMPLETAR`) no aparecen.
@@ -648,6 +664,12 @@ los carritos abiertos (`PENDIENTE_COMPLETAR`) no aparecen.
 - **"Registrado por":** el diagrama guarda un solo `Empleado` por `FacturaCliente`, así que se muestra ese (el último
   que registró una acción del panel, E4-07). No hay un empleado por paso.
 - La forma de pago y la factura salen de la `FacturaCliente` del pedido. Si todavía no tiene factura, se muestra "-".
+- **Acciones:** el detalle muestra solamente la transición válida para el estado actual. Efectivo y transferencia
+  permiten confirmar el pago manualmente; luego se puede marcar el pedido como enviado y entregado. Mercado Pago no
+  admite confirmación manual. Cada cambio registra al empleado autenticado, actualiza el seguimiento, muestra un
+  mensaje y solicita el correo de cambio de estado.
+- **Anulación administrativa:** está disponible hasta `PENDIENTE_ENVIO` y exige confirmar la acción e informar
+  un motivo. Si la venta ya estaba pagada, repone el stock en la misma transacción.
 
 ### Para otros issues
 
@@ -679,6 +701,10 @@ tienen el stock inicial, así que no cambian los niveles del reporte de stock de
 |---|---|---|
 | GET | `/admin/pedidos?estado=&formaPago=&desde=&hasta=&cliente=` | Listar pedidos con filtros y tarjetas por estado |
 | GET | `/admin/pedidos/{id}` | Detalle del pedido con la línea de tiempo |
+| POST | `/admin/pedidos/{id}/confirmar-pago` | Confirmar un pago en efectivo o transferencia |
+| POST | `/admin/pedidos/{id}/marcar-enviado` | Pasar el pedido a pendiente de entrega |
+| POST | `/admin/pedidos/{id}/marcar-entregado` | Marcar el pedido como entregado |
+| POST | `/admin/pedidos/{id}/anular` | Anular con motivo y reponer stock si estaba pagado |
 
 ## Mis compras, seguimiento y anulación por el cliente E4-04
 
@@ -699,9 +725,7 @@ los clientes del seeder de E4-06: `lucia.gomez@mail.com` o `martin.perez@mail.co
 
 - `OrdenCompraService.listarComprasCliente(idCliente)` (contrato del plan), `listarFilaCompraCliente(idCliente)`
   (filas con `CompraClienteDTO`) y `esCompraDelCliente(orden, idCliente)`.
-- **`VentaService` es un stub para E4-03** (`// TODO E4-03`): `anularVenta` anula la orden y la factura, que alcanza para
-  el cliente. Falta reingresar el stock con `revertirMovimiento` cuando la factura ya estaba pagada (anulación del
-  admin), además de `registrarPago`. `confirmarCompra` ya está (E4-02).
+- La anulación usa `VentaService.anularVenta(idOrden, false)`, completa desde E4-03 (ver esa sección).
 
 | Método | Ruta | Operación |
 |---|---|---|
@@ -743,6 +767,38 @@ Las pruebas están en `VentaServiceTest` y `CheckoutIntegrationTest`.
 | GET | `/cliente/checkout` | Resumen, dirección y forma de pago |
 | POST | `/cliente/checkout` | Confirmar la compra (`idFormaPago`) |
 | GET | `/cliente/checkout/registrada/{idOrden}` | "Compra registrada" con las instrucciones de pago |
+
+## Registro del pago, descuento de stock y anulación de ventas E4-03
+
+Son métodos de `VentaService` sin pantalla propia: los usan las acciones del panel de pedidos (E4-07, a través de
+`PedidoAccionService`), el webhook de Mercado Pago (E4-10) y "Mis compras" (E4-04). E4-07 se mergeó antes e incluyó
+la misma implementación, así que este issue suma las pruebas de integración y la documentación.
+
+- **`registrarPago(idOrden)`:** la orden pasa a `PENDIENTE_ENVIO` (`OrdenCompra.registrarPago()`), la factura a
+  `PAGADA`, y se descuenta el stock con `StockService.registrarMovimiento` por cada detalle (RF13). El signo negativo
+  lo da `FacturaCliente`, y `totalPagado` se recalcula con los detalles. Al final llama a
+  `NotificacionCompraService.notificarCambioEstado(orden)`.
+  - **Una sola transacción:** si un producto se quedó sin stock, `StockService` lanza "No hay stock suficiente de ...:
+    hay 2 y se necesitan 3." y se deshace todo, incluidos los movimientos de los otros productos. La orden sigue en
+    `PENDIENTE_PAGO`.
+  - **Idempotente:** si la factura ya está `PAGADA`, no hace nada, no mueve stock y no manda correo. Mercado Pago
+    puede notificar el mismo pago más de una vez.
+  - Rechaza pedidos sin factura ("El pedido no tiene una factura asociada."), facturas anuladas ("No se puede
+    registrar el pago de una factura anulada.") y órdenes sin confirmar (con el mensaje de la transición de E4-01).
+- **`anularVenta(idOrden, esAdmin)`:** verifica con `puedeAnularse(esAdmin)` y pasa la orden y la factura a `ANULADA`.
+  Si la factura ya estaba `PAGADA` (solo el admin anula en `PENDIENTE_ENVIO`), reingresa el stock con
+  `StockService.revertirMovimiento` por cada detalle (movimiento inverso con la observación "Anulación").
+  Al final llama a `notificarCambioEstado(orden)`, tanto si anula el cliente como el administrador.
+
+### Para otros issues
+
+- `registrarPago` y `anularVenta` ya mandan el correo de cambio de estado: quien los llame no tiene que volver a
+  llamar a `notificarCambioEstado` (así lo hace `PedidoAccionService` de E4-07).
+- **E4-10 (webhook):** llamar a `registrarPago` cada vez que llegue un pago aprobado. Es seguro repetirlo.
+
+Las pruebas están en `VentaServiceTest` y en `VentaIntegrationTest`: compra → pago → stock descontado → segundo pago
+sin efecto → anulación del admin → stock reingresado, y un pago sin stock que no aplica nada. Este último test no es
+`@Transactional`, para ver el rollback real, y usa `@DirtiesContext` para no ensuciar la base de las otras clases.
 
 ## ABM de referencia E0-06: Nacionalidad
 

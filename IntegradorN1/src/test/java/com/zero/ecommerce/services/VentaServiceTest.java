@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.zero.ecommerce.entities.Cliente;
+import com.zero.ecommerce.entities.DetalleFactura;
 import com.zero.ecommerce.entities.FacturaCliente;
 import com.zero.ecommerce.entities.FormaDePago;
 import com.zero.ecommerce.entities.OrdenCompra;
@@ -78,6 +80,8 @@ class VentaServiceTest {
         assertThat(factura.getEstado()).isEqualTo(EstadoFactura.ANULADA);
         verify(ordenCompraRepository).save(orden);
         verify(facturaClienteRepository).save(factura);
+        // Todavía no se había pagado: el stock no se descontó y no hay nada que reingresar.
+        verify(stockService, never()).revertirMovimiento(any());
     }
 
     @Test
@@ -119,6 +123,99 @@ class VentaServiceTest {
                 .hasMessage("La orden ya fue pagada. Para anularla comunicate con la tienda.");
         assertThat(orden.getEstadoOrdenCompra()).isEqualTo(EstadoOrdenCompra.PENDIENTE_ENVIO);
         verify(ordenCompraRepository, never()).save(any());
+    }
+
+    // ----- registrarPago y anulación del admin (E4-03 / E4-07) -----
+
+    @Test
+    void elAdministradorAnulaUnaVentaPagadaYReponeElStock() throws Exception {
+        orden.setEstadoOrdenCompra(EstadoOrdenCompra.PENDIENTE_ENVIO);
+        factura.setEstado(EstadoFactura.PAGADA);
+        factura.agregarDetalle(new Producto(), 2, 1500);
+        when(ordenCompraService.buscarPedido("o1")).thenReturn(orden);
+        when(ordenCompraService.buscarFacturaDePedido("o1")).thenReturn(Optional.of(factura));
+
+        service.anularVenta("o1", true);
+
+        assertThat(orden.getEstadoOrdenCompra()).isEqualTo(EstadoOrdenCompra.ANULADA);
+        assertThat(factura.getEstado()).isEqualTo(EstadoFactura.ANULADA);
+        verify(stockService).revertirMovimiento(factura.getDetalles().get(0));
+        verify(notificacionCompraService).notificarCambioEstado(orden);
+    }
+
+    @Test
+    void registrarPagoActualizaOrdenFacturaStockYNotifica() throws Exception {
+        orden.setEstadoOrdenCompra(EstadoOrdenCompra.PENDIENTE_PAGO);
+        Producto producto = new Producto();
+        factura.agregarDetalle(producto, 2, 1500);
+        when(ordenCompraService.buscarPedido("o1")).thenReturn(orden);
+        when(ordenCompraService.buscarFacturaDePedido("o1")).thenReturn(Optional.of(factura));
+
+        service.registrarPago("o1");
+
+        assertThat(orden.getEstadoOrdenCompra()).isEqualTo(EstadoOrdenCompra.PENDIENTE_ENVIO);
+        assertThat(factura.getEstado()).isEqualTo(EstadoFactura.PAGADA);
+        assertThat(factura.getTotalPagado()).isEqualTo(3000);
+        verify(stockService).registrarMovimiento(factura.getDetalles().get(0));
+        verify(notificacionCompraService).notificarCambioEstado(orden);
+    }
+
+    @Test
+    void registrarDosVecesElMismoPagoNoDuplicaStockNiCorreo() throws Exception {
+        orden.setEstadoOrdenCompra(EstadoOrdenCompra.PENDIENTE_ENVIO);
+        factura.setEstado(EstadoFactura.PAGADA);
+        Producto producto = new Producto();
+        factura.agregarDetalle(producto, 2, 1500);
+        when(ordenCompraService.buscarPedido("o1")).thenReturn(orden);
+        when(ordenCompraService.buscarFacturaDePedido("o1")).thenReturn(Optional.of(factura));
+
+        service.registrarPago("o1");
+        service.registrarPago("o1");
+
+        verify(stockService, never()).registrarMovimiento(any());
+        verify(notificacionCompraService, never()).notificarCambioEstado(any());
+        verify(ordenCompraService, times(2)).buscarPedido("o1");
+    }
+
+    @Test
+    void siUnProductoSeQuedoSinStockElPagoNoSeRegistraNiSeAvisa() throws Exception {
+        orden.setEstadoOrdenCompra(EstadoOrdenCompra.PENDIENTE_PAGO);
+        DetalleFactura remera = factura.agregarDetalle(producto("p1", "Remera"), 5, 1000);
+        when(ordenCompraService.buscarPedido("o1")).thenReturn(orden);
+        when(ordenCompraService.buscarFacturaDePedido("o1")).thenReturn(Optional.of(factura));
+        when(stockService.registrarMovimiento(remera))
+                .thenThrow(new ErrorServiceException("No hay stock suficiente de Remera (talle M): hay 2 y se necesitan 5."));
+
+        assertThatThrownBy(() -> service.registrarPago("o1"))
+                .isInstanceOf(ErrorServiceException.class)
+                .hasMessage("No hay stock suficiente de Remera (talle M): hay 2 y se necesitan 5.");
+        assertThat(factura.getEstado()).isEqualTo(EstadoFactura.SIN_DEFINIR);
+        verify(facturaClienteRepository, never()).save(any());
+        verify(notificacionCompraService, never()).notificarCambioEstado(any());
+    }
+
+    @Test
+    void unPedidoSinFacturaNoSePuedePagar() throws Exception {
+        orden.setEstadoOrdenCompra(EstadoOrdenCompra.PENDIENTE_PAGO);
+        when(ordenCompraService.buscarPedido("o1")).thenReturn(orden);
+        when(ordenCompraService.buscarFacturaDePedido("o1")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.registrarPago("o1"))
+                .isInstanceOf(ErrorServiceException.class)
+                .hasMessage("El pedido no tiene una factura asociada.");
+    }
+
+    @Test
+    void unaVentaAnuladaNoSePuedePagar() throws Exception {
+        orden.setEstadoOrdenCompra(EstadoOrdenCompra.ANULADA);
+        factura.setEstado(EstadoFactura.ANULADA);
+        when(ordenCompraService.buscarPedido("o1")).thenReturn(orden);
+        when(ordenCompraService.buscarFacturaDePedido("o1")).thenReturn(Optional.of(factura));
+
+        assertThatThrownBy(() -> service.registrarPago("o1"))
+                .isInstanceOf(ErrorServiceException.class)
+                .hasMessage("No se puede registrar el pago de una factura anulada.");
+        verify(stockService, never()).registrarMovimiento(any());
     }
 
     // ----- confirmarCompra (E4-02) -----
