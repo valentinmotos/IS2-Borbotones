@@ -40,8 +40,10 @@ public class ActualizacionPreciosController {
     }
 
     @GetMapping
-    public String formulario(Model model) {
-        prepararFormulario(model, "TODO", null, null, null, LocalDate.now(), List.of());
+    public String formulario(@RequestParam(defaultValue = "TODO") String alcance,
+            @RequestParam(required = false) String categoriaId,
+            @RequestParam(required = false) String subCategoriaId, Model model) {
+        prepararFormulario(model, alcance, categoriaId, subCategoriaId, null, LocalDate.now(), List.of());
         return "admin/precios/actualizacion";
     }
 

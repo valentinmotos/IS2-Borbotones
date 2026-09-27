@@ -75,6 +75,25 @@ class VigenciaPrecioServiceTest {
     }
 
     @Test
+    void listaProductosConPrecioDeMasDeDosMesesEInformaLosDias() {
+        Categoria hombres = categoria("cat-h", "Hombres");
+        Producto zapatilla = producto("prod-1", "ZAP-42", "Zapatilla Run", "42", hombres);
+        VigenciaPrecio precioVencido = vigencia(zapatilla, 1000);
+        precioVencido.setFechaDesde(LocalDate.now().minusDays(70));
+        when(repository.listarVigenciasVencidas(LocalDate.now().minusMonths(2)))
+                .thenReturn(List.of(precioVencido));
+
+        var alertas = service.listarProductosConPrecioVencido();
+
+        assertThat(alertas).singleElement().satisfies(alerta -> {
+            assertThat(alerta.productoId()).isEqualTo("prod-1");
+            assertThat(alerta.categoriaId()).isEqualTo("cat-h");
+            assertThat(alerta.categoriaNombre()).isEqualTo("Hombres");
+            assertThat(alerta.diasSinActualizar()).isEqualTo(70);
+        });
+    }
+
+    @Test
     void validaPrecioYFechaAntesDeGuardar() {
         assertThatThrownBy(() -> service.crearVigenciaPrecio("prod-1", LocalDate.now().minusDays(1), 0))
                 .isInstanceOf(ErrorServiceException.class)
