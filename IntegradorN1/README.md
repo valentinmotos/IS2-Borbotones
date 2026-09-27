@@ -868,3 +868,71 @@ el ABM; no hace falta borrar información para probarlo.
 | GET | `/admin/nacionalidades/{id}/editar` | Formulario de edición |
 | POST | `/admin/nacionalidades/{id}/editar` | Modificar |
 | POST | `/admin/nacionalidades/{id}/eliminar` | Baja lógica |
+
+## Integración con Mercado Pago (E4-10)
+
+### Credenciales (`.env`)
+Las credenciales **nunca** van en `application.properties` ni en el repo. La app las lee de variables de entorno o de
+un archivo `.env` en la carpeta `IntegradorN1`, que está en el `.gitignore`:
+
+1. Copiar `.env.example` como `.env`.
+2. Completar:
+   - `MP_ACCESS_TOKEN`: access token de prueba del vendedor. En Checkout Pro las credenciales de prueba empiezan con
+     `APP_USR-`, así que ese prefijo no significa que sean de producción.
+   - `MP_WEBHOOK_SECRET`: clave secreta de Webhooks, en *Tus integraciones > app > Webhooks > Configurar notificaciones*.
+     Con ella se valida la firma (`x-signature`) de cada notificación. Si falta, la firma no se valida (solo sirve
+     para desarrollo).
+   - `APP_URL_BASE`: URL pública **HTTPS** del sitio (ver ngrok más abajo). Por defecto es `http://localhost:8080`.
+
+Las variables de entorno del sistema tienen prioridad sobre el `.env`.
+
+### Cuentas de prueba
+En [Tus integraciones](https://www.mercadopago.com.ar/developers/panel/app) > app > *Cuentas de prueba* hay un
+**vendedor** (dueño de las credenciales) y un **comprador**. Tienen que ser usuarios distintos y del mismo país. Para
+pagar, iniciar sesión en Mercado Pago **con el comprador de prueba, en una ventana de incógnito**.
+
+### Tarjetas de prueba (Argentina)
+| Tarjeta | Número | CVV | Vencimiento |
+|---|---|---|---|
+| Mastercard crédito | `5031 7557 3453 0604` | `123` | `11/30` |
+| Visa crédito | `4509 9535 6623 3704` | `123` | `11/30` |
+| American Express | `3711 803032 57522` | `1234` | `11/30` |
+| Mastercard débito | `5287 3383 1025 3304` | `123` | `11/30` |
+| Visa débito | `4002 7686 9439 5619` | `123` | `11/30` |
+
+El **nombre del titular** define el resultado; documento DNI `12345678`:
+- `APRO`: aprobado.
+- `OTHE`: rechazado por error general.
+- `CONT`: pendiente de pago.
+- `FUND`: rechazado por monto insuficiente.
+- `SECU`: rechazado por código de seguridad inválido.
+
+### Cómo se confirma el pago
+- La **fuente de verdad** es siempre la API: el webhook (`POST /webhooks/mercadopago`) y la página de vuelta
+  (`/cliente/pago/resultado`) solo toman el id del pago y lo consultan con `GET /v1/payments/{id}`. Nunca se confía en
+  los datos que llegan en la notificación o en la URL.
+- Si el pago está `approved` y el monto y la moneda coinciden con la factura, se registra el pago (E4-03). Registrar
+  un pago ya registrado no hace nada.
+- Si la orden no admite el pago (por ejemplo, se quedó sin stock mientras el cliente pagaba), se **devuelve el
+  dinero** automáticamente y se anula la orden.
+- Si un pago aprobado pasa a `refunded` o `charged_back`, la orden pagada (pendiente de envío) se anula y el stock
+  vuelve. Si ya se envió, solo queda registrado en el log para revisarla a mano.
+- `pending`, `in_process`, `rejected`: la orden sigue en pendiente de pago, lista para reintentar.
+
+### Pruebas de Webhook en Desarrollo Local con ngrok
+Mercado Pago descarta las `back_urls` y la `notification_url` que no son **HTTPS públicas** (no acepta `localhost`), así
+que en desarrollo hay que exponer la app con un túnel como **ngrok**:
+
+1. Una sola vez: `ngrok config add-authtoken <NGROK_AUTHTOKEN>`.
+2. En otra terminal: `ngrok http 8080`.
+3. Copiar la URL pública generada (ejemplo: `https://a1b2-c3d4.ngrok-free.app`) en `APP_URL_BASE` del `.env`.
+4. Levantar la app: `mvnw.cmd spring-boot:run` (Windows) o `./mvnw spring-boot:run` (Linux o Mac).
+
+La preferencia se crea con `notification_url` = `APP_URL_BASE` + `/webhooks/mercadopago?source_news=webhooks` y con
+`auto_return` para volver solo al sitio cuando el pago se aprueba.
+
+> **Importante:** según la documentación de Mercado Pago, los pagos hechos con credenciales de prueba **no envían
+> notificaciones** a la `notification_url` de la preferencia. Para probar el webhook, configurar la URL
+> (`APP_URL_BASE/webhooks/mercadopago`) en *Tus integraciones > app > Webhooks*, con el evento **Pagos**, y usar el botón
+> **Simular**. Igual, al volver de Mercado Pago la página de resultado consulta el pago a la API y lo registra, así que
+> el flujo completo funciona aunque la notificación no llegue.

@@ -123,6 +123,14 @@ public class OrdenCompraService {
                 .orElseThrow(() -> new ErrorServiceException("El pedido no existe o fue eliminado."));
     }
 
+    /** Busca una orden activa por su identificadorCompra (ej: ORD-DEMO0001). */
+    public Optional<OrdenCompra> buscarPorIdentificadorCompra(String identificadorCompra) {
+        if (identificadorCompra == null || identificadorCompra.isBlank()) {
+            return Optional.empty();
+        }
+        return repository.findByIdentificadorCompraAndEliminadoFalse(identificadorCompra);
+    }
+
     /** La factura del pedido, o vacío si todavía no tiene (por ejemplo, un pedido cargado antes del checkout). */
     public Optional<FacturaCliente> buscarFacturaDePedido(String idOrden) {
         return facturaClienteRepository.findFirstByOrdenCompra_IdAndEliminadoFalse(idOrden);
