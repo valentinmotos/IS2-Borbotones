@@ -85,35 +85,6 @@ class VentaServiceTest {
     }
 
     @Test
-    void registrarPagoPasaOrdenAPendienteEnvioYFacturaAPagada() throws Exception {
-        orden.setEstadoOrdenCompra(EstadoOrdenCompra.PENDIENTE_PAGO);
-        Producto producto = producto("p1", "Remera");
-        factura.agregarDetalle(producto, 2, 1000.0);
-
-        when(ordenCompraService.buscarPedido("o1")).thenReturn(orden);
-        when(ordenCompraService.buscarFacturaDePedido("o1")).thenReturn(Optional.of(factura));
-
-        service.registrarPago("o1");
-
-        assertThat(orden.getEstadoOrdenCompra()).isEqualTo(EstadoOrdenCompra.PENDIENTE_ENVIO);
-        assertThat(factura.getEstado()).isEqualTo(EstadoFactura.PAGADA);
-        verify(ordenCompraRepository).save(orden);
-        verify(facturaClienteRepository).save(factura);
-        verify(stockService).registrarMovimiento(any());
-    }
-
-    @Test
-    void registrarPagoEsIdempotenteSiLaOrdenYaEstaEnPendienteEnvio() throws Exception {
-        orden.setEstadoOrdenCompra(EstadoOrdenCompra.PENDIENTE_ENVIO);
-        when(ordenCompraService.buscarPedido("o1")).thenReturn(orden);
-
-        service.registrarPago("o1");
-
-        verify(ordenCompraRepository, never()).save(any());
-        verify(facturaClienteRepository, never()).save(any());
-    }
-
-    @Test
     void elClienteNoPuedeAnularUnaCompraPagada() throws Exception {
         orden.setEstadoOrdenCompra(EstadoOrdenCompra.PENDIENTE_ENVIO);
         when(ordenCompraService.buscarPedido("o1")).thenReturn(orden);

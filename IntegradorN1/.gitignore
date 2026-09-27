@@ -33,3 +33,6 @@ bin/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Credenciales locales (Mercado Pago, ngrok). Usar .env.example como plantilla.
+.env

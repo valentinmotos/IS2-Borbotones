@@ -1,22 +1,23 @@
 package com.zero.ecommerce.controllers.api;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mercadopago.exceptions.MPInvalidWebhookSignatureException;
+import com.mercadopago.webhook.WebhookSignatureValidator;
 import com.zero.ecommerce.services.MercadoPagoService;
 
 /**
- * Webhook público para recibir notificaciones de pago de Mercado Pago (E4-10).
- * Exento de CSRF y autenticación.
+ * Webhook público de Mercado Pago (E4-10), exento de CSRF y autenticación. Solo procesa notificaciones de pagos
+ * (type=payment) con la firma válida; el estado real del pago lo consulta el service a la API.
  */
 @RestController
 @RequestMapping("/webhooks/mercadopago")
@@ -25,88 +26,51 @@ public class PagoWebhookController {
     private static final Logger LOGGER = LoggerFactory.getLogger(PagoWebhookController.class);
 
     private final MercadoPagoService mercadoPagoService;
+    private final String webhookSecret;
 
-    public PagoWebhookController(MercadoPagoService mercadoPagoService) {
+    public PagoWebhookController(MercadoPagoService mercadoPagoService,
+            @Value("${mercadopago.webhook-secret:}") String webhookSecret) {
         this.mercadoPagoService = mercadoPagoService;
+        this.webhookSecret = webhookSecret;
     }
 
+    /**
+     * Responde 200 rápido en todos los casos esperables (incluidas las notificaciones que no son de pagos), 401 si la
+     * firma no es válida y 500 solo si no se pudo consultar a Mercado Pago o guardar el pago, para que reintente.
+     */
     @PostMapping
-    public ResponseEntity<Void> recibirNotificacionPost(
-            @RequestParam(name = "id", required = false) String queryId,
+    public ResponseEntity<Void> recibirNotificacion(
             @RequestParam(name = "data.id", required = false) String dataId,
-            @RequestParam(name = "external_reference", required = false) String queryExternalRef,
             @RequestParam(name = "type", required = false) String type,
             @RequestParam(name = "topic", required = false) String topic,
-            @RequestBody(required = false) Map<String, Object> body) {
+            @RequestHeader(name = "x-signature", required = false) String firma,
+            @RequestHeader(name = "x-request-id", required = false) String requestId) {
 
-        String paymentId = extraerPaymentId(queryId, dataId, body);
-        String externalRef = extraerExternalRef(queryExternalRef, body);
-        LOGGER.info("Notificación Webhook POST recibida en /webhooks/mercadopago. PaymentID: {}, ExternalRef: {}, Type: {}, Topic: {}, Body: {}",
-                paymentId, externalRef, type, topic, body);
+        LOGGER.info("Notificación de Mercado Pago: type={}, topic={}, data.id={}, x-request-id={}",
+                type, topic, dataId, requestId);
 
-        if ((paymentId != null && !paymentId.isBlank()) || (externalRef != null && !externalRef.isBlank())) {
+        if (!"payment".equals(type) || dataId == null || dataId.isBlank()) {
+            // merchant_order, IPN (topic/id) u otros tópicos: no cambian la orden.
+            return ResponseEntity.ok().build();
+        }
+
+        if (webhookSecret == null || webhookSecret.isBlank()) {
+            LOGGER.warn("Falta la clave secreta del webhook (MP_WEBHOOK_SECRET): no se valida la firma.");
+        } else {
             try {
-                mercadoPagoService.procesarNotificacion(paymentId, externalRef);
-            } catch (Exception e) {
-                LOGGER.error("Error al procesar notificación de Mercado Pago para pago ID {}: {}", paymentId, e.getMessage(), e);
+                WebhookSignatureValidator.validate(firma, requestId, dataId, webhookSecret);
+            } catch (MPInvalidWebhookSignatureException e) {
+                LOGGER.warn("Firma inválida en la notificación del pago {} ({}).", dataId, e.getReason());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
         }
 
-        // Responde siempre 200 OK de inmediato para evitar reintentos masivos de Mercado Pago
-        return ResponseEntity.ok().build();
-    }
-
-    @GetMapping
-    public ResponseEntity<Void> recibirNotificacionGet(
-            @RequestParam(name = "id", required = false) String queryId,
-            @RequestParam(name = "data.id", required = false) String dataId,
-            @RequestParam(name = "type", required = false) String type,
-            @RequestParam(name = "topic", required = false) String topic) {
-
-        String paymentId = queryId != null ? queryId : dataId;
-        LOGGER.info("Notificación Webhook GET recibida en /webhooks/mercadopago. PaymentID: {}, Type: {}, Topic: {}",
-                paymentId, type, topic);
-
-        if (paymentId != null && !paymentId.isBlank()) {
-            try {
-                mercadoPagoService.procesarNotificacion(paymentId);
-            } catch (Exception e) {
-                LOGGER.error("Error al procesar notificación GET de Mercado Pago para pago ID {}: {}", paymentId, e.getMessage(), e);
-            }
+        try {
+            mercadoPagoService.procesarPago(dataId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            LOGGER.error("No se pudo procesar el pago {}; Mercado Pago va a reintentar: {}", dataId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
-        return ResponseEntity.ok().build();
-    }
-
-    @SuppressWarnings("unchecked")
-    private String extraerPaymentId(String queryId, String dataId, Map<String, Object> body) {
-        if (queryId != null && !queryId.isBlank()) {
-            return queryId;
-        }
-        if (dataId != null && !dataId.isBlank()) {
-            return dataId;
-        }
-        if (body != null) {
-            if (body.get("data") instanceof Map) {
-                Map<String, Object> dataMap = (Map<String, Object>) body.get("data");
-                if (dataMap.get("id") != null) {
-                    return String.valueOf(dataMap.get("id"));
-                }
-            }
-            if (body.get("id") != null) {
-                return String.valueOf(body.get("id"));
-            }
-        }
-        return null;
-    }
-
-    private String extraerExternalRef(String queryRef, Map<String, Object> body) {
-        if (queryRef != null && !queryRef.isBlank()) {
-            return queryRef;
-        }
-        if (body != null && body.get("external_reference") != null) {
-            return String.valueOf(body.get("external_reference"));
-        }
-        return null;
     }
 }

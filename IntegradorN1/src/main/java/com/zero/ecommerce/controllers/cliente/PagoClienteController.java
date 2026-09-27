@@ -1,5 +1,7 @@
 package com.zero.ecommerce.controllers.cliente;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,6 +29,8 @@ import com.zero.ecommerce.services.UsuarioService;
 @Controller
 @RequestMapping("/cliente/pago")
 public class PagoClienteController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PagoClienteController.class);
 
     private final OrdenCompraService ordenCompraService;
     private final MercadoPagoService mercadoPagoService;
@@ -77,7 +81,9 @@ public class PagoClienteController {
     }
 
     /**
-     * Página de retorno de Mercado Pago tras completar o cancelar el flujo de pago.
+     * Página de retorno de Mercado Pago tras completar o cancelar el flujo de pago. Los parámetros de la URL solo
+     * sirven para mostrar el mensaje: el pago se registra consultándolo a la API, igual que en el webhook. Eso además
+     * cubre el caso en que la notificación no llega (por ejemplo, con credenciales de prueba).
      */
     @GetMapping("/resultado")
     public String resultadoPago(
@@ -93,24 +99,24 @@ public class PagoClienteController {
             estadoResultado = "desconocido";
         }
 
-        String idPagoPrueba = payment_id != null && !payment_id.isBlank() ? payment_id : collection_id;
-        if (idPagoPrueba != null && !idPagoPrueba.isBlank() && "approved".equalsIgnoreCase(estadoResultado)) {
+        String idPago = payment_id != null && !payment_id.isBlank() ? payment_id : collection_id;
+        if (idPago != null && !idPago.isBlank()) {
             try {
-                mercadoPagoService.procesarNotificacion(idPagoPrueba);
+                mercadoPagoService.procesarPago(idPago);
             } catch (Exception e) {
-                // Si falla el procesamiento en el retorno, el webhook se encargará
+                // Si no se pudo consultar ahora, el webhook lo va a registrar cuando llegue la notificación.
+                LOGGER.warn("No se pudo verificar el pago {} al volver de Mercado Pago: {}", idPago, e.getMessage());
             }
         }
 
-        OrdenCompra compra = null;
-        if (external_reference != null && !external_reference.isBlank()) {
-            compra = ordenCompraService.buscarPorIdentificadorCompra(external_reference).orElse(null);
-        }
+        // Solo se muestra la compra si es del cliente logueado.
+        Cliente cliente = clienteActual();
+        OrdenCompra compra = ordenCompraService.buscarPorIdentificadorCompra(external_reference)
+                .filter(o -> cliente != null && ordenCompraService.esCompraDelCliente(o, cliente.getId()))
+                .orElse(null);
 
         model.addAttribute("pageTitle", "Resultado del pago");
         model.addAttribute("resultado", estadoResultado.toLowerCase());
-        model.addAttribute("externalReference", external_reference);
-        model.addAttribute("paymentId", idPagoPrueba);
         model.addAttribute("compra", compra);
 
         return "cliente/pago-resultado";
