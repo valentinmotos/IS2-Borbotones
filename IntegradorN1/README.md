@@ -905,6 +905,23 @@ el ABM; no hace falta borrar información para probarlo.
 | POST | `/admin/nacionalidades/{id}/editar` | Modificar |
 | POST | `/admin/nacionalidades/{id}/eliminar` | Baja lógica |
 
+## Reposición por WhatsApp E5-04
+
+En `/admin/reportes/stock`, las filas con estado **Malo** permiten pedir las unidades necesarias para llegar al
+50 % del stock de referencia (redondeado hacia arriba):
+
+- **Pedir reposición** abre `wa.me` con el celular del proveedor cuyo último precio para ese producto es el más
+  bajo. El mensaje incluye razón social, producto, código, talle, cantidad y la firma de Zero.
+- **Crear compra** abre `/admin/compras/nueva` con proveedor, producto y cantidad precargados; solo queda elegir la
+  forma de pago y completar el precio de costo acordado.
+- Si el producto no tiene compras recibidas de un proveedor que siga activo, ambos botones abren un modal para
+  elegir uno. Los enlaces de WhatsApp no requieren API, token ni una cuenta Business.
+
+La URL que arma el mensaje es
+`GET /admin/reportes/stock/reposicion/{idProducto}/whatsapp?proveedor={idProveedor}`. `proveedor` es opcional cuando
+existe una recomendación. La cantidad se recalcula en el servidor antes de redirigir, para no confiar en datos de
+la URL.
+
 ## Integración con Mercado Pago (E4-10)
 
 ### Credenciales (`.env`)

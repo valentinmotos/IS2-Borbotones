@@ -23,4 +23,12 @@ public class CompraProveedorForm {
         form.getDetalles().add(new DetalleFacturaItemDTO());
         return form;
     }
+
+    /** Formulario iniciado desde una reposición de stock; el precio se completa al pedir la cotización. */
+    public static CompraProveedorForm precargado(String proveedorId, String productoId, Integer cantidad) {
+        CompraProveedorForm form = new CompraProveedorForm();
+        form.setProveedorId(proveedorId);
+        form.getDetalles().add(new DetalleFacturaItemDTO(productoId, cantidad, null));
+        return form;
+    }
 }
