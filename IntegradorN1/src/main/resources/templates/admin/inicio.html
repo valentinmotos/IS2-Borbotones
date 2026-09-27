@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Inicio</span>
+    </div>
+
+    <div layout:fragment="content">
+        <div class="zero-kpi-grid zero-kpi-grid-estados mb-4">
+            <a th:replace="~{fragments/kpi :: kpiEnlace('Ventas del mes', ${'$ ' + #numbers.formatDecimal(dashboard.ventasMesMonto, 1, 'POINT', 2, 'COMMA')}, ${dashboard.ventasMesCantidad + ' ventas'}, 'zmdi zmdi-trending-up', @{/admin/pedidos}, false)}"></a>
+            <a th:replace="~{fragments/kpi :: kpiEnlace('Pendientes de pago', ${dashboard.pedidosPendientesPago}, 'Por confirmar', 'zmdi zmdi-time-interval', @{/admin/pedidos(estado='PENDIENTE_PAGO')}, false)}"></a>
+            <a th:replace="~{fragments/kpi :: kpiEnlace('Pendientes de envío', ${dashboard.pedidosPendientesEnvio}, 'A preparar', 'zmdi zmdi-truck', @{/admin/pedidos(estado='PENDIENTE_ENVIO')}, false)}"></a>
+            <a th:replace="~{fragments/kpi :: kpiEnlace('Stock malo', ${dashboard.productosStockMalo}, 'Productos con riesgo', 'zmdi zmdi-alert-circle', @{/admin/reportes/stock(estado='MALO')}, false)}"></a>
+            <a th:replace="~{fragments/kpi :: kpiEnlace('Precios vencidos', ${dashboard.productosPrecioVencido}, 'Revisar actualizaciones', 'zmdi zmdi-money-box', @{/admin/precios/alertas}, false)}"></a>
+            <a th:replace="~{fragments/kpi :: kpiEnlace('Clientes', ${dashboard.clientesRegistrados}, 'Registrados', 'zmdi zmdi-accounts', @{/admin/usuarios}, false)}"></a>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="zero-panel">
+                    <h2>Ventas de los últimos 6 meses</h2>
+                    <canvas id="dashboardChart" height="120"></canvas>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="zero-panel">
+                    <h2>Top 5 productos</h2>
+                    <div th:if="${#lists.isEmpty(dashboard.productosMasVendidos)}" class="text-muted">Todavía no hubo ventas.</div>
+                    <div th:unless="${#lists.isEmpty(dashboard.productosMasVendidos)}" class="list-group list-group-flush">
+                        <div class="list-group-item" th:each="producto, iter : ${dashboard.productosMasVendidos}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong th:text="${iter.index + 1 + '. ' + producto.nombre}">1. Producto</strong>
+                                    <div class="text-muted small" th:text="${producto.talle}">M</div>
+                                </div>
+                                <span class="badge badge-dark" th:text="${producto.cantidad + ' u.'}">0 u.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="zero-panel">
+            <h2>Últimos 10 pedidos</h2>
+            <div th:if="${#lists.isEmpty(pedidosRecientes)}" class="text-muted py-3">No hay pedidos recientes.</div>
+            <div th:unless="${#lists.isEmpty(pedidosRecientes)}" class="table-responsive zero-table-wrap mt-3">
+                <table class="table table-striped table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="pedido : ${pedidosRecientes}">
+                            <td th:text="${pedido.numero}">ORD-0001</td>
+                            <td th:text="${pedido.fecha != null ? #temporals.format(pedido.fecha, 'dd/MM/yyyy') : '-'}">01/01/2026</td>
+                            <td th:text="${pedido.cliente}">Cliente</td>
+                            <td class="text-right" th:text="${'$ ' + #numbers.formatDecimal(pedido.total, 1, 'POINT', 2, 'COMMA')}">$ 0,00</td>
+                            <td><span th:replace="~{fragments/badge-estado :: badge(${pedido.estado})}"></span></td>
+                            <td class="zero-table-actions">
+                                <a th:href="@{'/admin/pedidos/' + ${pedido.id}}" class="btn btn-sm btn-outline-primary">Ver</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script th:inline="javascript">
+            const chartLabels = /*[[${chartLabels}]]*/ [];
+            const chartValues = /*[[${chartValues}]]*/ [];
+
+            new Chart(document.getElementById('dashboardChart'), {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Ventas',
+                        data: chartValues,
+                        backgroundColor: '#d7ff3f',
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+    </th:block>
+</body>
+</html>
