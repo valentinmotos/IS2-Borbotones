@@ -17,4 +17,8 @@ public interface FacturaClienteRepository extends JpaRepository<FacturaCliente, 
 
     /** La venta con el número más alto (incluidas las eliminadas), para la numeración secuencial. */
     Optional<FacturaCliente> findFirstByOrderByNumeroFacturaDesc();
+
+    /** Reporte de ventas (E5-01): facturas de clientes por estado (PAGADA) y rango de fechas de factura. */
+    List<FacturaCliente> findByEstadoAndFechaFacturaBetweenAndEliminadoFalseOrderByFechaFacturaDescNumeroFacturaDesc(
+            com.zero.ecommerce.entities.enums.EstadoFactura estado, java.time.LocalDate desde, java.time.LocalDate hasta);
 }
