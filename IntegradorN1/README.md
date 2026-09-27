@@ -812,3 +812,46 @@ el ABM; no hace falta borrar información para probarlo.
 | GET | `/admin/nacionalidades/{id}/editar` | Formulario de edición |
 | POST | `/admin/nacionalidades/{id}/editar` | Modificar |
 | POST | `/admin/nacionalidades/{id}/eliminar` | Baja lógica |
+
+## Integración con Mercado Pago (E4-10)
+
+### Configuración y Credenciales
+- **Variable de entorno:** `MP_ACCESS_TOKEN` contiene el Access Token de prueba de Mercado Pago.
+- **Propiedad `app.url-base`:** URL pública base del sitio (en `application.properties` es `${APP_URL_BASE:http://localhost:8080}`).
+- **Cuentas de prueba en Sandbox:**
+  1. Crear una cuenta de vendedor y una cuenta de comprador en [Mercado Pago Developers](https://www.mercadopago.com.ar/developers/panel/test-credentials).
+  2. Obtener el `Access Token` de prueba del vendedor y configurar la variable de entorno:
+     - PowerShell: `$env:MP_ACCESS_TOKEN="TEST-1234..."`
+     - Bash: `export MP_ACCESS_TOKEN="TEST-1234..."`
+- **Tarjetas de prueba (Sandbox):**
+  - **Aprobada:** Número `4509 9500 0000 0000`, Vencimiento `11/30`, CVV `123`, Titular `APROV`.
+  - **Rechazada por fondos insuficientes:** Número `4509 9500 0000 0001`, Vencimiento `11/30`, CVV `123`, Titular `CONT`.
+  - **Pendiente de acreditación:** Número `4509 9500 0000 0002`, Vencimiento `11/30`, CVV `123`, Titular `OTRO`.
+
+### Pruebas de Webhook en Desarrollo Local con ngrok
+Como Mercado Pago requiere enviar notificaciones de pago vía HTTP/HTTPS públicas (los servidores de Mercado Pago no pueden llamar a `localhost`), en entorno de desarrollo se debe exponer la aplicación mediante un túnel como **ngrok**:
+
+1. **Iniciar la aplicación Spring Boot:**
+   ```bash
+   mvnw.cmd spring-boot:run
+   ```
+2. **Iniciar el túnel con ngrok (en otra terminal):**
+   ```bash
+   ngrok http 8080
+   ```
+3. **Copiar la URL pública generada** (ejemplo: `https://a1b2-c3d4.ngrok-free.app`).
+4. **Iniciar o configurar la app con dicha URL base:**
+   - PowerShell:
+     ```powershell
+     $env:APP_URL_BASE="https://a1b2-c3d4.ngrok-free.app"
+     $env:MP_ACCESS_TOKEN="TEST-xxxx..."
+     mvnw.cmd spring-boot:run
+     ```
+   - Bash:
+     ```bash
+     export APP_URL_BASE="https://a1b2-c3d4.ngrok-free.app"
+     export MP_ACCESS_TOKEN="TEST-xxxx..."
+     ./mvnw spring-boot:run
+     ```
+5. Al realizar el checkout con Mercado Pago, la URL de notificación del webhook apuntará a `https://a1b2-c3d4.ngrok-free.app/webhooks/mercadopago`, permitiendo a Mercado Pago notificar la aprobación del pago directamente al servidor local.
+

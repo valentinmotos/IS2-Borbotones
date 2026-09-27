@@ -18,5 +18,7 @@ public interface OrdenCompraRepository extends JpaRepository<OrdenCompra, String
     List<OrdenCompra> findByEstadoOrdenCompraAndEliminadoFalseOrderByFechaDesc(EstadoOrdenCompra estado);
 
     List<OrdenCompra> findByEliminadoFalseOrderByFechaDesc();
+
+    Optional<OrdenCompra> findByIdentificadorCompraAndEliminadoFalse(String identificadorCompra);
 }
 

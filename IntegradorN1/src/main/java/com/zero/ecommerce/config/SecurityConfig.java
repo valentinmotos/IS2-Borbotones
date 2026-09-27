@@ -25,6 +25,7 @@ public class SecurityConfig {
             LoginAuthenticationSuccessHandler successHandler,
             LoginAuthenticationFailureHandler failureHandler) throws Exception {
         http
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/webhooks/**"))
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/admin/usuarios", "/admin/usuarios/**",
                             "/admin/configuracion", "/admin/configuracion/**").hasRole("JEFE")

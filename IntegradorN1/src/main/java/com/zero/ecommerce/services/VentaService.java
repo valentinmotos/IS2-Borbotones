@@ -7,11 +7,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.zero.ecommerce.entities.Cliente;
 import com.zero.ecommerce.entities.DetalleCompra;
+import com.zero.ecommerce.entities.DetalleFactura;
 import com.zero.ecommerce.entities.FacturaCliente;
 import com.zero.ecommerce.entities.FormaDePago;
 import com.zero.ecommerce.entities.OrdenCompra;
 import com.zero.ecommerce.entities.Producto;
 import com.zero.ecommerce.entities.enums.EstadoFactura;
+import com.zero.ecommerce.entities.enums.EstadoOrdenCompra;
 import com.zero.ecommerce.exception.ErrorServiceException;
 import com.zero.ecommerce.repositories.FacturaClienteRepository;
 import com.zero.ecommerce.repositories.OrdenCompraRepository;
@@ -97,6 +99,32 @@ public class VentaService {
             throw new ErrorServiceException("Elegí una forma de pago.");
         }
         return formaDePagoService.buscarFormaDePago(idFormaPago);
+    }
+
+    /**
+     * Registra el pago de una orden (E4-03 / E4-10): pasa la orden a PENDIENTE_ENVIO, la factura a PAGADA y
+     * descuenta el stock de los productos.
+     */
+    // TODO E4-03: registrarPago(idOrden)
+    @Transactional(rollbackFor = ErrorServiceException.class)
+    public void registrarPago(String idOrden) throws ErrorServiceException {
+        OrdenCompra orden = ordenCompraService.buscarPedido(idOrden);
+        if (orden.getEstadoOrdenCompra() == EstadoOrdenCompra.PENDIENTE_ENVIO) {
+            return;
+        }
+        orden.registrarPago();
+        ordenCompraRepository.save(orden);
+
+        FacturaCliente factura = ordenCompraService.buscarFacturaDePedido(idOrden).orElse(null);
+        if (factura != null && factura.getEstado() != EstadoFactura.PAGADA) {
+            factura.setEstado(EstadoFactura.PAGADA);
+            facturaClienteRepository.save(factura);
+            for (DetalleFactura detalle : factura.getDetalles()) {
+                if (!detalle.isEliminado()) {
+                    stockService.registrarMovimiento(detalle);
+                }
+            }
+        }
     }
 
     /**

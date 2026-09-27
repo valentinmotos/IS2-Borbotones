@@ -1,0 +1,13 @@
+
+Titular : APRO	
+5031 7557 3453 0604
+DNI: 12345678
+Email: test@testuser.com
+5031 7557 3453 0604
+123
+11/30
+
+Ngrok Proceso
+ngrok config add-authtoken 3JtFwf8bfZuhRmZLz22byY8TJh8_3GvoU5BrhaoRn9qctAVA
+
+Iniciar: ngrok http 8080

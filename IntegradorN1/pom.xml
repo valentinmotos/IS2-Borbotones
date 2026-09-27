@@ -85,6 +85,13 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Mercado Pago SDK -->
+        <dependency>
+            <groupId>com.mercadopago</groupId>
+            <artifactId>sdk-java</artifactId>
+            <version>2.1.28</version>
+        </dependency>
+
         <!-- SMTP en memoria para probar EmailService sin enviar correos reales (E1-07) -->
         <dependency>
             <groupId>com.icegreen</groupId>
