@@ -699,9 +699,7 @@ los clientes del seeder de E4-06: `lucia.gomez@mail.com` o `martin.perez@mail.co
 
 - `OrdenCompraService.listarComprasCliente(idCliente)` (contrato del plan), `listarFilaCompraCliente(idCliente)`
   (filas con `CompraClienteDTO`) y `esCompraDelCliente(orden, idCliente)`.
-- **`VentaService` es un stub para E4-03** (`// TODO E4-03`): `anularVenta` anula la orden y la factura, que alcanza para
-  el cliente. Falta reingresar el stock con `revertirMovimiento` cuando la factura ya estaba pagada (anulación del
-  admin), además de `registrarPago`. `confirmarCompra` ya está (E4-02).
+- La anulación usa `VentaService.anularVenta(idOrden, false)`, completa desde E4-03 (ver esa sección).
 
 | Método | Ruta | Operación |
 |---|---|---|
@@ -743,6 +741,36 @@ Las pruebas están en `VentaServiceTest` y `CheckoutIntegrationTest`.
 | GET | `/cliente/checkout` | Resumen, dirección y forma de pago |
 | POST | `/cliente/checkout` | Confirmar la compra (`idFormaPago`) |
 | GET | `/cliente/checkout/registrada/{idOrden}` | "Compra registrada" con las instrucciones de pago |
+
+## Registro del pago, descuento de stock y anulación de ventas E4-03
+
+Son métodos de `VentaService` sin pantalla propia: los usan el panel de pedidos (E4-07), el webhook de Mercado Pago
+(E4-10) y "Mis compras" (E4-04).
+
+- **`registrarPago(idOrden)`:** la orden pasa a `PENDIENTE_ENVIO` (`OrdenCompra.registrarPago()`), la factura a
+  `PAGADA`, y se descuenta el stock con `StockService.registrarMovimiento` por cada detalle (RF13). El signo negativo
+  lo da `FacturaCliente`. Al final llama a `NotificacionCompraService.notificarCambioEstado(orden)`.
+  - **Una sola transacción:** si un producto se quedó sin stock, `StockService` lanza "No hay stock suficiente de ...:
+    hay 2 y se necesitan 3." y se deshace todo, incluidos los movimientos de los otros productos. La orden sigue en
+    `PENDIENTE_PAGO`.
+  - **Idempotente:** si la factura ya está `PAGADA`, no hace nada, no mueve stock y no manda correo. Mercado Pago
+    puede notificar el mismo pago más de una vez.
+  - Rechaza pedidos sin factura ("El pedido no tiene factura.") y órdenes sin confirmar o anuladas (con el mensaje de
+    la transición de E4-01).
+- **`anularVenta(idOrden, esAdmin)`:** verifica con `puedeAnularse(esAdmin)` y pasa la orden y la factura a `ANULADA`.
+  Si la factura ya estaba `PAGADA` (solo el admin anula en `PENDIENTE_ENVIO`), reingresa el stock con
+  `StockService.revertirMovimiento` por cada detalle (movimiento inverso con la observación "Anulación").
+  **No manda correo:** en E4-07 lo avisa la acción del panel con `notificarCambioEstado`.
+
+### Para otros issues
+
+- **E4-07 ("Confirmar pago"):** llamar a `registrarPago` y **no** volver a llamar a `notificarCambioEstado`, porque
+  `registrarPago` ya lo hace. **"Anular":** llamar a `anularVenta(idOrden, true)` y después a `notificarCambioEstado`.
+- **E4-10 (webhook):** llamar a `registrarPago` cada vez que llegue un pago aprobado. Es seguro repetirlo.
+
+Las pruebas están en `VentaServiceTest` y en `VentaIntegrationTest`: compra → pago → stock descontado → segundo pago
+sin efecto → anulación del admin → stock reingresado, y un pago sin stock que no aplica nada. Este último test no es
+`@Transactional`, para ver el rollback real, y usa `@DirtiesContext` para no ensuciar la base de las otras clases.
 
 ## ABM de referencia E0-06: Nacionalidad
 

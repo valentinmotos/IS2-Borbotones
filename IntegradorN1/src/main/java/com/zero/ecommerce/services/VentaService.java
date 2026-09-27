@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.zero.ecommerce.entities.Cliente;
 import com.zero.ecommerce.entities.DetalleCompra;
+import com.zero.ecommerce.entities.DetalleFactura;
 import com.zero.ecommerce.entities.FacturaCliente;
 import com.zero.ecommerce.entities.FormaDePago;
 import com.zero.ecommerce.entities.OrdenCompra;
@@ -100,11 +101,37 @@ public class VentaService {
     }
 
     /**
-     * Anula la venta (RF19): la orden y su factura pasan a ANULADA. Quién puede anular y en qué estado lo decide la
-     * orden con puedeAnularse(esAdmin).
+     * Registra el pago de la venta (RF13): la orden pasa a PENDIENTE_ENVIO, la factura a PAGADA y se descuenta el
+     * stock de cada detalle (el signo negativo lo da FacturaCliente). Todo en una transacción: si un producto se quedó
+     * sin stock, StockService lanza la excepción y no se aplica nada. Es idempotente: si la factura ya está PAGADA no
+     * hace nada, porque Mercado Pago puede notificar el mismo pago más de una vez. Lo usan el panel de pedidos
+     * (E4-07) y el webhook de Mercado Pago (E4-10).
      */
-    // TODO E4-03: implementación mínima para la anulación del cliente (E4-04), que solo anula antes del pago. Falta
-    // reingresar el stock con StockService.revertirMovimiento cuando la factura ya estaba PAGADA (anulación del admin).
+    @Transactional(rollbackFor = ErrorServiceException.class)
+    public void registrarPago(String idOrden) throws ErrorServiceException {
+        OrdenCompra orden = ordenCompraService.buscarPedido(idOrden);
+        FacturaCliente factura = buscarFactura(idOrden);
+        if (factura.getEstado() == EstadoFactura.PAGADA) {
+            return;
+        }
+        // registrarPago valida el estado de origen: una orden sin confirmar o anulada no se puede pagar.
+        orden.registrarPago();
+        for (DetalleFactura detalle : factura.getDetalles()) {
+            if (!detalle.isEliminado()) {
+                stockService.registrarMovimiento(detalle);
+            }
+        }
+        factura.setEstado(EstadoFactura.PAGADA);
+        ordenCompraRepository.save(orden);
+        facturaClienteRepository.save(factura);
+        notificacionCompraService.notificarCambioEstado(orden);
+    }
+
+    /**
+     * Anula la venta (RF19): la orden y su factura pasan a ANULADA. Quién puede anular y en qué estado lo decide la
+     * orden con puedeAnularse(esAdmin). Si la factura ya estaba PAGADA (solo el admin anula en PENDIENTE_ENVIO), el
+     * stock ya se había descontado y se reingresa con un movimiento inverso por detalle.
+     */
     @Transactional(rollbackFor = ErrorServiceException.class)
     public void anularVenta(String idOrden, boolean esAdmin) throws ErrorServiceException {
         OrdenCompra orden = ordenCompraService.buscarPedido(idOrden);
@@ -113,6 +140,13 @@ public class VentaService {
         ordenCompraRepository.save(orden);
         FacturaCliente factura = ordenCompraService.buscarFacturaDePedido(idOrden).orElse(null);
         if (factura != null) {
+            if (factura.getEstado() == EstadoFactura.PAGADA) {
+                for (DetalleFactura detalle : factura.getDetalles()) {
+                    if (!detalle.isEliminado()) {
+                        stockService.revertirMovimiento(detalle);
+                    }
+                }
+            }
             factura.setEstado(EstadoFactura.ANULADA);
             facturaClienteRepository.save(factura);
         }
@@ -148,6 +182,11 @@ public class VentaService {
             detalle.calcularSubtotal(precioVigente);
         }
         orden.recalcularTotal();
+    }
+
+    private FacturaCliente buscarFactura(String idOrden) throws ErrorServiceException {
+        return ordenCompraService.buscarFacturaDePedido(idOrden)
+                .orElseThrow(() -> new ErrorServiceException("El pedido no tiene factura."));
     }
 
     // Numeración secuencial propia de las ventas, simulando la validada por ARCA.
