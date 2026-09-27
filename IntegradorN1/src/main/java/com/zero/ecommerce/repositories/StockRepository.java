@@ -10,6 +10,9 @@ import com.zero.ecommerce.entities.Stock;
 public interface StockRepository extends JpaRepository<Stock, String> {
     List<Stock> findAllByOrderByFechaDesc();
 
+    /** Movimientos activos de todos los productos, usados para construir reportes. */
+    List<Stock> findByEliminadoFalseOrderByFechaDesc();
+
     Optional<Stock> findByIdAndEliminadoFalse(String id);
 
     /** Último movimiento de un producto: su cantidadActual es el stock actual. */

@@ -1373,6 +1373,48 @@ a, a:hover {
     grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
 }
 
+/* Reporte de stock (RF29): nivel visual y estado comparten la misma escala de colores. */
+.zero-stock-progress {
+    background: #e5e7eb;
+    border-radius: 999px;
+    height: 0.65rem;
+    min-width: 8rem;
+    overflow: hidden;
+}
+
+.zero-stock-progress > span {
+    display: block;
+    height: 100%;
+}
+
+.zero-stock-progress .estado-bueno,
+.zero-stock-badge.estado-bueno {
+    background: #198754;
+}
+
+.zero-stock-progress .estado-regular,
+.zero-stock-badge.estado-regular {
+    background: #f0ad00;
+}
+
+.zero-stock-progress .estado-malo,
+.zero-stock-badge.estado-malo {
+    background: #dc3545;
+}
+
+.zero-stock-badge {
+    border-radius: 999px;
+    color: #ffffff;
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+}
+
+.zero-stock-table td {
+    vertical-align: middle;
+}
+
 /* Línea de tiempo del seguimiento (fragments/seguimiento). Cada paso dibuja el tramo que lo une con el anterior. */
 .zero-timeline {
     display: flex;
