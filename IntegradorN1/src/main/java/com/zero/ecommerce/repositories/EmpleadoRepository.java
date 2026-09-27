@@ -13,5 +13,7 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, String> {
 
     Optional<Empleado> findByUsuario_IdAndEliminadoFalse(String idUsuario);
 
+    Optional<Empleado> findByUsuario_NombreUsuarioIgnoreCaseAndEliminadoFalse(String nombreUsuario);
+
     List<Empleado> findByEliminadoFalseOrderByApellidoAscNombreAsc();
 }

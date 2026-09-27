@@ -100,22 +100,62 @@ public class VentaService {
     }
 
     /**
+     * Registra el pago de una venta y descuenta sus productos del stock. La factura pagada vuelve idempotente la
+     * operación: una segunda notificación del mismo pago no cambia estados, stock ni envía otro correo.
+     */
+    @Transactional(rollbackFor = ErrorServiceException.class)
+    public void registrarPago(String idOrden) throws ErrorServiceException {
+        OrdenCompra orden = ordenCompraService.buscarPedido(idOrden);
+        FacturaCliente factura = buscarFactura(idOrden);
+        if (factura.getEstado() == EstadoFactura.PAGADA) {
+            return;
+        }
+        if (factura.getEstado() == EstadoFactura.ANULADA) {
+            throw new ErrorServiceException("No se puede registrar el pago de una factura anulada.");
+        }
+
+        orden.registrarPago();
+        for (var detalle : factura.getDetalles()) {
+            if (!detalle.isEliminado()) {
+                stockService.registrarMovimiento(detalle);
+            }
+        }
+        factura.setEstado(EstadoFactura.PAGADA);
+        factura.setTotalPagado(factura.calcularTotal());
+        ordenCompraRepository.save(orden);
+        facturaClienteRepository.save(factura);
+        notificacionCompraService.notificarCambioEstado(orden);
+    }
+
+    /**
      * Anula la venta (RF19): la orden y su factura pasan a ANULADA. Quién puede anular y en qué estado lo decide la
      * orden con puedeAnularse(esAdmin).
      */
-    // TODO E4-03: implementación mínima para la anulación del cliente (E4-04), que solo anula antes del pago. Falta
-    // reingresar el stock con StockService.revertirMovimiento cuando la factura ya estaba PAGADA (anulación del admin).
     @Transactional(rollbackFor = ErrorServiceException.class)
     public void anularVenta(String idOrden, boolean esAdmin) throws ErrorServiceException {
         OrdenCompra orden = ordenCompraService.buscarPedido(idOrden);
+        FacturaCliente factura = ordenCompraService.buscarFacturaDePedido(idOrden).orElse(null);
+        boolean estabaPagada = factura != null && factura.getEstado() == EstadoFactura.PAGADA;
         // anular verifica con puedeAnularse y, si no corresponde, lanza la excepción con el mensaje del estado.
         orden.anular(esAdmin);
-        ordenCompraRepository.save(orden);
-        FacturaCliente factura = ordenCompraService.buscarFacturaDePedido(idOrden).orElse(null);
         if (factura != null) {
+            if (estabaPagada) {
+                for (var detalle : factura.getDetalles()) {
+                    if (!detalle.isEliminado()) {
+                        stockService.revertirMovimiento(detalle);
+                    }
+                }
+            }
             factura.setEstado(EstadoFactura.ANULADA);
             facturaClienteRepository.save(factura);
         }
+        ordenCompraRepository.save(orden);
+        notificacionCompraService.notificarCambioEstado(orden);
+    }
+
+    private FacturaCliente buscarFactura(String idOrden) throws ErrorServiceException {
+        return ordenCompraService.buscarFacturaDePedido(idOrden)
+                .orElseThrow(() -> new ErrorServiceException("El pedido no tiene una factura asociada."));
     }
 
     /**
