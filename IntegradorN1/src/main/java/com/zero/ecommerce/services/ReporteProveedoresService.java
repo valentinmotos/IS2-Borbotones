@@ -72,6 +72,29 @@ public class ReporteProveedoresService {
         return new ReporteProveedoresDTO(filas.size(), proveedores, conVariosProveedores, filas);
     }
 
+    /** Exporta el reporte de proveedores filtrado a CSV en UTF-8 con BOM (E5-02). */
+    public byte[] exportarCsv(String texto, String idCategoria) {
+        ReporteProveedoresDTO reporte = generar(texto, idCategoria);
+        List<String> encabezados = List.of(
+                "Código", "Producto", "Talle", "Categoría", "Proveedor recomendado", "Precio de costo más bajo", "Fecha de compra"
+        );
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        List<List<String>> filas = new ArrayList<>();
+        for (ProductoProveedorDTO p : reporte.productos()) {
+            PrecioProveedorDTO rec = p.recomendado();
+            filas.add(List.of(
+                    p.codigo() != null ? p.codigo() : "",
+                    p.nombre() != null ? p.nombre() : "",
+                    p.talle() != null ? p.talle() : "",
+                    (p.categoria() != null ? p.categoria() : "") + " / " + (p.subCategoria() != null ? p.subCategoria() : ""),
+                    rec != null && rec.razonSocial() != null ? rec.razonSocial() : "",
+                    rec != null ? String.format(java.util.Locale.US, "%.2f", rec.precioCosto()) : "",
+                    rec != null && rec.fechaCompra() != null ? rec.fechaCompra().format(fmt) : ""
+            ));
+        }
+        return com.zero.ecommerce.utils.ExportadorCsv.exportar(encabezados, filas);
+    }
+
     /**
      * El proveedor con el último precio de costo más bajo para el producto (lo usa la reposición por WhatsApp de
      * E5-04). Vacío si el producto no tiene compras recibidas de ningún proveedor activo: ahí se elige a mano.

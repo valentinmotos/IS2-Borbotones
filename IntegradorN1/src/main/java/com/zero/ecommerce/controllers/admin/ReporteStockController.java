@@ -62,4 +62,18 @@ public class ReporteStockController {
             return null;
         }
     }
+
+    @GetMapping("/exportar")
+    public org.springframework.http.ResponseEntity<byte[]> exportarCsv(
+            @RequestParam(defaultValue = "") String estado,
+            @RequestParam(defaultValue = "") String categoria) throws ErrorServiceException {
+
+        byte[] contenido = reporteStockService.exportarCsv(estado, categoria);
+        String filename = "reporte_stock.csv";
+
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(org.springframework.http.MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body(contenido);
+    }
 }

@@ -71,6 +71,42 @@ public class ReporteStockService {
                 buenos, regulares, malos, List.copyOf(productos));
     }
 
+    /** Exporta el reporte de stock filtrado a CSV en UTF-8 con BOM (E5-02). */
+    public byte[] exportarCsv(String estado, String categoria) throws ErrorServiceException {
+        EstadoStock estadoSeleccionado = null;
+        if (estado != null && !estado.isBlank()) {
+            try {
+                estadoSeleccionado = EstadoStock.valueOf(estado.strip().toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        final EstadoStock estFiltro = estadoSeleccionado;
+        ReporteStockDTO reporte = generar();
+        List<ProductoStockDTO> productos = reporte.productos().stream()
+                .filter(p -> estFiltro == null || p.estado() == estFiltro)
+                .filter(p -> categoria == null || categoria.isBlank() || p.categoriaId().equals(categoria))
+                .toList();
+
+        List<String> encabezados = List.of(
+                "Código", "Producto", "Talle", "Categoría", "Stock actual", "Stock de referencia", "Estado stock"
+        );
+
+        List<List<String>> filas = new ArrayList<>();
+        for (ProductoStockDTO p : productos) {
+            filas.add(List.of(
+                    p.codigo() != null ? p.codigo() : "",
+                    p.nombre() != null ? p.nombre() : "",
+                    p.talle() != null ? p.talle() : "",
+                    (p.categoriaNombre() != null ? p.categoriaNombre() : "") + " / " + (p.subCategoriaNombre() != null ? p.subCategoriaNombre() : ""),
+                    String.valueOf(p.stockActual()),
+                    String.valueOf(p.stockReferencia()),
+                    p.estado() != null ? p.estado().name() : ""
+            ));
+        }
+
+        return com.zero.ecommerce.utils.ExportadorCsv.exportar(encabezados, filas);
+    }
+
     private boolean esRecepcion(Stock movimiento) {
         return movimiento.getDetalleFactura() != null
                 && movimiento.getDetalleFactura().getFactura() instanceof FacturaProveedor;

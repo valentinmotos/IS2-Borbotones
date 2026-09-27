@@ -53,4 +53,23 @@ public class ReporteVentasController {
 
         return "admin/reportes/ventas";
     }
+
+    @GetMapping("/exportar")
+    public org.springframework.http.ResponseEntity<byte[]> exportarCsv(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta)
+            throws ErrorServiceException {
+
+        LocalDate hoy = LocalDate.now();
+        LocalDate desdeEfectivo = desde != null ? desde : hoy.withDayOfMonth(1);
+        LocalDate hastaEfectivo = hasta != null ? hasta : hoy.withDayOfMonth(hoy.lengthOfMonth());
+
+        byte[] contenido = service.exportarCsv(desdeEfectivo, hastaEfectivo);
+        String filename = "reporte_ventas_" + desdeEfectivo + "_a_" + hastaEfectivo + ".csv";
+
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(org.springframework.http.MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body(contenido);
+    }
 }

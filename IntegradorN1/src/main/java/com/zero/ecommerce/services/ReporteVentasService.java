@@ -105,6 +105,42 @@ public class ReporteVentasService {
                 List.copyOf(detalle), subtotales);
     }
 
+    /**
+     * Exporta el reporte de ventas a formato CSV en UTF-8 con BOM (E5-02).
+     */
+    public byte[] exportarCsv(LocalDate desde, LocalDate hasta) throws ErrorServiceException {
+        ReporteVentasDTO reporte = generar(desde, hasta);
+
+        List<String> encabezados = List.of(
+                "Fecha de compra",
+                "Producto",
+                "Categoría",
+                "Cantidad",
+                "Precio unitario",
+                "Subtotal",
+                "ID Compra",
+                "Forma de pago"
+        );
+
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        List<List<String>> filas = new ArrayList<>();
+
+        for (DetalleVentaDTO d : reporte.detalle()) {
+            filas.add(List.of(
+                    d.fechaCompra() != null ? d.fechaCompra().format(fmt) : "",
+                    d.producto() != null ? d.producto() : "",
+                    d.categoria() != null ? d.categoria() : "",
+                    String.valueOf(d.cantidad()),
+                    String.format(java.util.Locale.US, "%.2f", d.precioUnitario()),
+                    String.format(java.util.Locale.US, "%.2f", d.subtotal()),
+                    d.identificadorCompra() != null ? d.identificadorCompra() : "",
+                    d.formaPago() != null ? d.formaPago() : ""
+            ));
+        }
+
+        return com.zero.ecommerce.utils.ExportadorCsv.exportar(encabezados, filas);
+    }
+
     // --------------- helpers privados ---------------
 
     private String resolverIdentificador(FacturaCliente factura) {

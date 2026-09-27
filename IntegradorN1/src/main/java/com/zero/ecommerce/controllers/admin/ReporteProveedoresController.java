@@ -50,4 +50,18 @@ public class ReporteProveedoresController {
         }
         return opciones;
     }
+
+    @GetMapping("/exportar")
+    public org.springframework.http.ResponseEntity<byte[]> exportarCsv(
+            @RequestParam(defaultValue = "") String buscar,
+            @RequestParam(defaultValue = "") String categoria) {
+
+        byte[] contenido = service.exportarCsv(buscar, categoria);
+        String filename = "reporte_proveedores.csv";
+
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(org.springframework.http.MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body(contenido);
+    }
 }

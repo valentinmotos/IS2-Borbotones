@@ -6,6 +6,12 @@
         <span>Reportes</span><span class="breadcrumb-separator">/</span><span>Stock</span>
     </div>
     <div layout:fragment="content">
+        <!-- Encabezado exclusivo para impresión (E5-02) -->
+        <div class="zero-print-header">
+            <h1>E-Commerce Zero — Reporte de productos y stock</h1>
+            <p th:text="${'Sucursal: ' + reporte.sucursal}">Sucursal Central</p>
+        </div>
+
         <div class="zero-kpi-grid zero-kpi-grid-estados mb-4">
             <div th:replace="~{fragments/kpi :: kpiEnlace('Unidades en stock', ${reporte.totalUnidades},
                  ${reporte.sucursal}, 'zmdi zmdi-store', @{/admin/reportes/stock(categoria=${categoria})}, ${#strings.isEmpty(estado)})}"></div>
@@ -18,19 +24,30 @@
         </div>
 
         <div class="zero-panel">
-            <form th:action="@{/admin/reportes/stock}" method="get" class="zero-filters mb-4">
-                <input th:if="${!#strings.isEmpty(estado)}" type="hidden" name="estado" th:value="${estado}">
-                <div class="form-group">
-                    <label for="filtro-categoria">Categoría</label>
-                    <select id="filtro-categoria" name="categoria" class="form-control">
-                        <option value="">Todas las categorías</option>
-                        <option th:each="opcion : ${categorias}" th:value="${opcion.id}" th:text="${opcion.nombre}"
-                                th:selected="${opcion.id == categoria}">Categoría</option>
-                    </select>
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+                <form th:action="@{/admin/reportes/stock}" method="get" class="zero-filters mb-0">
+                    <input th:if="${!#strings.isEmpty(estado)}" type="hidden" name="estado" th:value="${estado}">
+                    <div class="form-group">
+                        <label for="filtro-categoria">Categoría</label>
+                        <select id="filtro-categoria" name="categoria" class="form-control">
+                            <option value="">Todas las categorías</option>
+                            <option th:each="opcion : ${categorias}" th:value="${opcion.id}" th:text="${opcion.nombre}"
+                                    th:selected="${opcion.id == categoria}">Categoría</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="zero-button primary">Filtrar</button>
+                    <a th:href="@{/admin/reportes/stock}" class="zero-button secondary">Limpiar</a>
+                </form>
+
+                <div class="d-flex gap-2 align-items-center no-print">
+                    <a th:href="@{/admin/reportes/stock/exportar(estado=${estado},categoria=${categoria})}" class="zero-button secondary no-print">
+                        <i class="fa fa-file-excel-o" aria-hidden="true"></i> Exportar CSV
+                    </a>
+                    <button type="button" onclick="window.print()" class="zero-button secondary no-print ml-2">
+                        <i class="fa fa-print" aria-hidden="true"></i> Imprimir
+                    </button>
                 </div>
-                <button type="submit" class="zero-button primary">Filtrar</button>
-                <a th:href="@{/admin/reportes/stock}" class="zero-button secondary">Limpiar</a>
-            </form>
+            </div>
 
             <div th:if="${#lists.isEmpty(productos)}" class="zero-empty-state">
                 <i class="zmdi zmdi-storage" aria-hidden="true"></i>
