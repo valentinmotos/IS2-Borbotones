@@ -482,6 +482,22 @@ perfil completo; de esa forma nunca se comparten direcciones entre destinatarios
 Las pruebas están en `NewsletterServiceTest`, `NewsletterEnvioRepositoryTest` y
 `NewsletterIntegrationTest`.
 
+## Alertas de actualización de precios E4-09
+
+La pantalla **Alertas de precios** (`/admin/precios/alertas`, roles `JEFE` y `ADMINISTRATIVO`)
+muestra los productos activos cuyo precio vigente comenzó hace más de dos meses. Los agrupa por
+categoría e informa el precio, la fecha del último cambio y los días transcurridos.
+
+- El badge de **Precios** en el sidebar muestra la cantidad actual de alertas.
+- **Actualizar categoría** abre la actualización masiva de E2-04 con esa categoría preseleccionada.
+- `PrecioScheduler` ejecuta la detección todos los días a las 09:15 de Buenos Aires. El horario y la
+  zona se pueden cambiar con `precios.alertas.cron` y `precios.alertas.zona`.
+- Las alertas se calculan desde las vigencias actuales; al crear una nueva vigencia dejan de aparecer
+  automáticamente, sin mantener estado duplicado.
+
+Las pruebas están en `VigenciaPrecioServiceTest`, `PrecioSchedulerTest` y
+`AlertasPrecioIntegrationTest`.
+
 ## Catálogo público E3-05
 
 La home y las rutas `/catalogo/{categoriaId}` y

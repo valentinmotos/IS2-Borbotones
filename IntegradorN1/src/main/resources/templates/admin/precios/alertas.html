@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Catálogo</span><span class="breadcrumb-separator">/</span><a th:href="@{/admin/precios}">Precios</a>
+        <span class="breadcrumb-separator">/</span><span>Alertas</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+
+        <div class="zero-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div>
+                    <h2 class="mb-1">Precios pendientes de actualización</h2>
+                    <p class="text-muted mb-0">Productos cuyo precio vigente comenzó hace más de dos meses.</p>
+                </div>
+                <a th:href="@{/admin/precios}" class="zero-button secondary">Volver a precios</a>
+            </div>
+
+            <div th:if="${#lists.isEmpty(alertas)}" class="zero-empty-state">
+                <i class="zmdi zmdi-check-circle" aria-hidden="true"></i>
+                <h3 class="h5">Los precios están al día</h3>
+                <p class="mb-0">No hay productos con precios de más de dos meses.</p>
+            </div>
+
+            <section th:each="grupo : ${alertasPorCategoria}" class="price-alert-group"
+                     th:aria-labelledby="|categoria-${grupo.value[0].categoriaId}|">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h3 class="h5 mb-0" th:id="|categoria-${grupo.value[0].categoriaId}|">
+                        <span th:text="${grupo.key}">Categoría</span>
+                        <span class="badge badge-warning" th:text="${#lists.size(grupo.value)}">0</span>
+                    </h3>
+                    <a class="zero-button primary"
+                       th:href="@{/admin/precios/actualizacion(alcance='CATEGORIA',categoriaId=${grupo.value[0].categoriaId})}">
+                        Actualizar categoría
+                    </a>
+                </div>
+                <div class="table-responsive zero-table-wrap">
+                    <table class="table table-striped table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Código</th>
+                                <th>Subcategoría</th>
+                                <th>Precio vigente</th>
+                                <th>Último cambio</th>
+                                <th>Días transcurridos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="alerta : ${grupo.value}">
+                                <td><span th:text="${alerta.nombre}">Producto</span>
+                                    <small class="text-muted" th:text="${alerta.talle}">Talle</small></td>
+                                <td th:text="${alerta.codigo}">Código</td>
+                                <td th:text="${alerta.subCategoriaNombre}">Subcategoría</td>
+                                <td>$<span th:text="${#numbers.formatDecimal(alerta.precio, 0, 'POINT', 0, 'COMMA')}">0</span></td>
+                                <td th:text="${#temporals.format(alerta.fechaUltimoCambio, 'dd/MM/yyyy')}">01/01/2026</td>
+                                <td><strong th:text="|${alerta.diasSinActualizar} días|">70 días</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>
