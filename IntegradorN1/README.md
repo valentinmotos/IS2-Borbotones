@@ -800,6 +800,42 @@ Las pruebas están en `VentaServiceTest` y en `VentaIntegrationTest`: compra →
 sin efecto → anulación del admin → stock reingresado, y un pago sin stock que no aplica nada. Este último test no es
 `@Transactional`, para ver el rollback real, y usa `@DirtiesContext` para no ensuciar la base de las otras clases.
 
+## Reporte de proveedores E5-05
+
+**Reportes → Proveedores** (`/admin/reportes/proveedores`, `JEFE` y `ADMINISTRATIVO`). Compara lo que le cobró cada
+proveedor a Zero por cada producto (RF31).
+
+- **Datos:** salen de los `DetalleFactura` de las compras **recibidas** (`FacturaProveedor` en `PAGADA`). Las pedidas y
+  las anuladas no cuentan. El precio de costo es `DetalleFactura.getPrecioUnitario()`.
+- **Último precio por proveedor:** de cada proveedor se toma su compra recibida más reciente del producto (por fecha y,
+  el mismo día, por número). El **recomendado** es el de menor último precio; con el mismo precio, el de la compra más
+  reciente. Así un precio viejo que el proveedor ya no mantiene no define la recomendación.
+- Quedan afuera los productos sin compras recibidas y los productos o proveedores dados de baja.
+- **Pantalla:** tarjetas con la cantidad de productos, de proveedores y de productos con más de un proveedor; filtro
+  por categoría y buscador por código o nombre del producto. La tabla muestra el proveedor recomendado resaltado, su
+  precio y la fecha de la compra. **Comparar** despliega el último precio de cada proveedor, con link a la compra y la
+  diferencia porcentual contra el más barato.
+
+### Para otros issues
+
+- `ReporteProveedoresService.buscarProveedorMasEconomico(idProducto)` devuelve un `Optional<Proveedor>`: vacío si el
+  producto no tiene compras recibidas de un proveedor activo (E5-04 elige el proveedor en un modal). El celular para
+  WhatsApp sale de `Proveedor.buscarCelularActivo()`.
+- `generar()` y `generar(texto, idCategoria)` devuelven un `ReporteProveedoresDTO` (totales y una lista de
+  `ProductoProveedorDTO`, cada uno con sus `PrecioProveedorDTO`). E5-02 puede armar el CSV con esas filas.
+- El seeder no tiene todavía un mismo producto comprado a varios proveedores: cada producto recibido tiene uno solo. Eso
+  lo agrega E6-03 ("4 proveedores con precios distintos para un mismo producto"). Para probar la comparación, ver abajo.
+
+**Probarlo a mano:** en **Compras a proveedor** crear tres compras de la Zapatilla Zero Run 41 (`ZAP-RUN-41`) a tres
+proveedores distintos con precios diferentes (por ejemplo $30.000, $32.000 y $36.000) y marcarlas como recibidas. El
+reporte recomienda la de $30.000 y muestra las otras con +6,7 % y +20,0 %.
+
+Las pruebas están en `ReporteProveedoresServiceTest` y `ReporteProveedoresIntegrationTest`.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/admin/reportes/proveedores?buscar=&categoria=` | Reporte con filtros |
+
 ## ABM de referencia E0-06: Nacionalidad
 
 Entrar a `/admin/nacionalidades` o a **Configuración → Nacionalidades** en el panel.
