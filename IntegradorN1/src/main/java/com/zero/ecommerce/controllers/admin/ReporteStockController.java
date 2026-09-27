@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -14,6 +15,8 @@ import com.zero.ecommerce.dto.ReporteStockDTO;
 import com.zero.ecommerce.entities.enums.EstadoStock;
 import com.zero.ecommerce.exception.ErrorServiceException;
 import com.zero.ecommerce.services.CategoriaService;
+import com.zero.ecommerce.services.ProveedorService;
+import com.zero.ecommerce.services.ReposicionStockService;
 import com.zero.ecommerce.services.ReporteStockService;
 
 @Controller
@@ -22,10 +25,15 @@ public class ReporteStockController {
 
     private final ReporteStockService reporteStockService;
     private final CategoriaService categoriaService;
+    private final ReposicionStockService reposicionStockService;
+    private final ProveedorService proveedorService;
 
-    public ReporteStockController(ReporteStockService reporteStockService, CategoriaService categoriaService) {
+    public ReporteStockController(ReporteStockService reporteStockService, CategoriaService categoriaService,
+            ReposicionStockService reposicionStockService, ProveedorService proveedorService) {
         this.reporteStockService = reporteStockService;
         this.categoriaService = categoriaService;
+        this.reposicionStockService = reposicionStockService;
+        this.proveedorService = proveedorService;
     }
 
     @ModelAttribute("menuActivo")
@@ -47,9 +55,17 @@ public class ReporteStockController {
         model.addAttribute("reporte", reporte);
         model.addAttribute("productos", productos);
         model.addAttribute("categorias", categoriaService.listarCategoriaActiva());
+        model.addAttribute("reposiciones", reposicionStockService.listar(reporte.productos()));
+        model.addAttribute("proveedores", proveedorService.listarProveedorActivo());
         model.addAttribute("estado", estadoSeleccionado == null ? "" : estadoSeleccionado.name());
         model.addAttribute("categoria", categoria);
         return "admin/reportes/stock";
+    }
+
+    @GetMapping("/reposicion/{idProducto}/whatsapp")
+    public String pedirPorWhatsApp(@PathVariable String idProducto,
+            @RequestParam(required = false) String proveedor) throws ErrorServiceException {
+        return "redirect:" + reposicionStockService.generarUrlWhatsApp(idProducto, proveedor);
     }
 
     private EstadoStock convertirEstado(String estado) {
