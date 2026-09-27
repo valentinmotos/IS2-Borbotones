@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Reportes</span><span class="breadcrumb-separator">/</span><span>Stock</span>
+    </div>
+    <div layout:fragment="content">
+        <div class="zero-kpi-grid zero-kpi-grid-estados mb-4">
+            <div th:replace="~{fragments/kpi :: kpiEnlace('Unidades en stock', ${reporte.totalUnidades},
+                 ${reporte.sucursal}, 'zmdi zmdi-store', @{/admin/reportes/stock(categoria=${categoria})}, ${#strings.isEmpty(estado)})}"></div>
+            <div th:replace="~{fragments/kpi :: kpiEnlace('Stock bueno', ${reporte.cantidadBueno},
+                 'Más del 50 %', 'zmdi zmdi-check-circle', @{/admin/reportes/stock(estado='BUENO',categoria=${categoria})}, ${estado == 'BUENO'})}"></div>
+            <div th:replace="~{fragments/kpi :: kpiEnlace('Stock regular', ${reporte.cantidadRegular},
+                 'Entre 20 % y 50 %', 'zmdi zmdi-alert-triangle', @{/admin/reportes/stock(estado='REGULAR',categoria=${categoria})}, ${estado == 'REGULAR'})}"></div>
+            <div th:replace="~{fragments/kpi :: kpiEnlace('Stock malo', ${reporte.cantidadMalo},
+                 'Menos del 20 %', 'zmdi zmdi-alert-circle', @{/admin/reportes/stock(estado='MALO',categoria=${categoria})}, ${estado == 'MALO'})}"></div>
+        </div>
+
+        <div class="zero-panel">
+            <form th:action="@{/admin/reportes/stock}" method="get" class="zero-filters mb-4">
+                <input th:if="${!#strings.isEmpty(estado)}" type="hidden" name="estado" th:value="${estado}">
+                <div class="form-group">
+                    <label for="filtro-categoria">Categoría</label>
+                    <select id="filtro-categoria" name="categoria" class="form-control">
+                        <option value="">Todas las categorías</option>
+                        <option th:each="opcion : ${categorias}" th:value="${opcion.id}" th:text="${opcion.nombre}"
+                                th:selected="${opcion.id == categoria}">Categoría</option>
+                    </select>
+                </div>
+                <button type="submit" class="zero-button primary">Filtrar</button>
+                <a th:href="@{/admin/reportes/stock}" class="zero-button secondary">Limpiar</a>
+            </form>
+
+            <div th:if="${#lists.isEmpty(productos)}" class="zero-empty-state">
+                <i class="zmdi zmdi-storage" aria-hidden="true"></i>
+                <h2 class="h5">No hay productos para mostrar</h2>
+                <p class="mb-0">No existen recepciones que coincidan con los filtros aplicados.</p>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(productos)}" class="table-responsive zero-table-wrap">
+                <table class="table table-striped table-bordered mb-0 zero-stock-table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Código</th>
+                            <th>Categoría</th>
+                            <th>Stock actual</th>
+                            <th>Referencia</th>
+                            <th>Nivel de stock</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="producto : ${productos}">
+                            <td>
+                                <a th:href="@{/admin/productos/{id}(id=${producto.productoId})}"
+                                   th:text="${producto.nombre}">Producto</a>
+                                <small class="text-muted d-block" th:text="|Talle ${producto.talle}|">Talle M</small>
+                            </td>
+                            <td th:text="${producto.codigo}">COD-001</td>
+                            <td>
+                                <span th:text="${producto.categoriaNombre}">Categoría</span>
+                                <small class="text-muted d-block" th:text="${producto.subCategoriaNombre}">Subcategoría</small>
+                            </td>
+                            <td><strong th:text="${producto.stockActual}">3</strong></td>
+                            <td th:text="${producto.stockReferencia}">20</td>
+                            <td>
+                                <div class="zero-stock-progress" role="progressbar"
+                                     th:attr="aria-valuenow=${producto.porcentaje},aria-label=|Stock de ${producto.nombre}: ${producto.porcentaje} %|"
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    <span th:classappend="| estado-${#strings.toLowerCase(producto.estado.name())}|"
+                                          th:style="|width: ${producto.porcentajeBarra}%|"></span>
+                                </div>
+                                <small th:text="|${producto.porcentaje} %|">15 %</small>
+                            </td>
+                            <td>
+                                <span class="zero-stock-badge"
+                                      th:classappend="| estado-${#strings.toLowerCase(producto.estado.name())}|"
+                                      th:text="${producto.estado.descripcion}">Malo</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

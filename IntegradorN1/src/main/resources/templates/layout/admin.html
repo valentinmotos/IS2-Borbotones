@@ -58,7 +58,8 @@
                 <div class="admin-nav-section">
                     <div class="admin-nav-label">Reportes</div>
                     <a href="#" class="admin-nav-item sub">Ventas</a>
-                    <a href="#" class="admin-nav-item sub">Stock</a>
+                    <a th:href="@{/admin/reportes/stock}" class="admin-nav-item sub"
+                       th:classappend="${menuActivo == 'reporte-stock' ? 'active' : ''}">Stock</a>
                     <a th:href="@{/admin/reportes/proveedores}" class="admin-nav-item sub"
                        th:classappend="${menuActivo == 'reportes-proveedores' ? 'active' : ''}">Proveedores</a>
                 </div>
