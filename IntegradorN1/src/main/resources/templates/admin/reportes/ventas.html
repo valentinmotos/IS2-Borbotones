@@ -31,8 +31,9 @@
             </form>
 
             <!-- Sin datos -->
-            <div th:if="${reporte == null or #lists.isEmpty(reporte.detalle)}" class="text-center text-muted py-5">
+            <div th:if="${reporte != null and #lists.isEmpty(reporte.detalle)}" class="zero-empty-state">
                 <i class="fa fa-bar-chart fa-3x mb-3" aria-hidden="true"></i>
+                <h2 class="h5">No hay ventas para mostrar</h2>
                 <p class="mb-0">No hay ventas pagadas en el período seleccionado.</p>
             </div>
 

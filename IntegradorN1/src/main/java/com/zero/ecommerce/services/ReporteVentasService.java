@@ -44,7 +44,10 @@ public class ReporteVentasService {
      * @throws ErrorServiceException si "desde" es posterior a "hasta".
      */
     public ReporteVentasDTO generar(LocalDate desde, LocalDate hasta) throws ErrorServiceException {
-        if (desde != null && hasta != null && desde.isAfter(hasta)) {
+        if (desde == null || hasta == null) {
+            throw new ErrorServiceException("Las fechas 'desde' y 'hasta' son obligatorias.");
+        }
+        if (desde.isAfter(hasta)) {
             throw new ErrorServiceException("La fecha 'desde' no puede ser posterior a la fecha 'hasta'.");
         }
 
@@ -53,21 +56,23 @@ public class ReporteVentasService {
                         EstadoFactura.PAGADA, desde, hasta);
 
         List<DetalleVentaDTO> detalle = new ArrayList<>();
+        Map<String, SubtotalAcumulado> porFormaPago = new LinkedHashMap<>();
         for (FacturaCliente factura : facturas) {
+            FormaDePago formaDePago = factura.getFormaDePago();
+            String formaPago = resolverFormaPago(formaDePago);
+            SubtotalAcumulado subtotalForma = porFormaPago.computeIfAbsent(claveFormaPago(formaDePago),
+                    clave -> new SubtotalAcumulado(formaPago));
+            subtotalForma.compras++;
+
             for (DetalleFactura df : factura.getDetalles()) {
                 if (df.isEliminado()) {
                     continue;
                 }
                 Producto producto = df.getProducto();
                 SubCategoria subCategoria = producto != null ? producto.getSubCategoria() : null;
-                String nombreProducto = producto != null
-                        ? producto.getNombre() + " (Talle " + producto.getTalle() + ")"
-                        : "—";
-                String categoria = (subCategoria != null)
-                        ? subCategoria.getCategoria().getNombre() + " / " + subCategoria.getNombre()
-                        : "—";
+                String nombreProducto = resolverProducto(producto);
+                String categoria = resolverCategoria(subCategoria);
                 String identificadorCompra = resolverIdentificador(factura);
-                String formaPago = resolverFormaPago(factura.getFormaDePago());
 
                 detalle.add(new DetalleVentaDTO(
                         factura.getFechaFactura(),
@@ -81,39 +86,30 @@ public class ReporteVentasService {
                         factura.getId(),
                         factura.getOrdenCompra() != null ? factura.getOrdenCompra().getId() : null
                 ));
+                subtotalForma.unidades += df.getCantidad();
+                subtotalForma.monto += df.getSubtotal();
             }
         }
 
-        // Totales globales: una compra = una factura distinta (se cuentan facturas únicas en el detalle)
-        long facturasUnicas = facturas.size();
+        // Totales globales: una compra = una factura pagada del rango, aunque tenga más de un renglón.
+        int cantidadCompras = facturas.size();
         int unidadesVendidas = detalle.stream().mapToInt(DetalleVentaDTO::cantidad).sum();
         double montoTotal = detalle.stream().mapToDouble(DetalleVentaDTO::subtotal).sum();
 
-        // Subtotales por forma de pago
-        Map<String, SubtotalAcumulado> porFormaPago = new LinkedHashMap<>();
-        for (FacturaCliente factura : facturas) {
-            String fp = resolverFormaPago(factura.getFormaDePago());
-            SubtotalAcumulado acum = porFormaPago.computeIfAbsent(fp, k -> new SubtotalAcumulado());
-            acum.compras++;
-            for (DetalleFactura df : factura.getDetalles()) {
-                if (!df.isEliminado()) {
-                    acum.unidades += df.getCantidad();
-                    acum.monto += df.getSubtotal();
-                }
-            }
-        }
-        List<SubtotalFormaPagoDTO> subtotales = new ArrayList<>();
-        porFormaPago.forEach((fp, acum) ->
-                subtotales.add(new SubtotalFormaPagoDTO(fp, acum.compras, acum.unidades, acum.monto)));
+        List<SubtotalFormaPagoDTO> subtotales = porFormaPago.values().stream()
+                .map(acum -> new SubtotalFormaPagoDTO(
+                        acum.formaPago, acum.compras, acum.unidades, acum.monto))
+                .toList();
 
-        return new ReporteVentasDTO((int) facturasUnicas, unidadesVendidas, montoTotal, detalle, subtotales);
+        return new ReporteVentasDTO(cantidadCompras, unidadesVendidas, montoTotal,
+                List.copyOf(detalle), subtotales);
     }
 
     // --------------- helpers privados ---------------
 
     private String resolverIdentificador(FacturaCliente factura) {
         OrdenCompra orden = factura.getOrdenCompra();
-        if (orden != null && orden.getIdentificadorCompra() != null) {
+        if (orden != null && orden.getIdentificadorCompra() != null && !orden.getIdentificadorCompra().isBlank()) {
             return orden.getIdentificadorCompra();
         }
         // Ventas del seeder sin OrdenCompra: se usa el número de factura
@@ -124,14 +120,52 @@ public class ReporteVentasService {
         if (formaDePago == null) {
             return "—";
         }
-        return formaDePago.getObservacion() != null ? formaDePago.getObservacion()
-                : formaDePago.getTipoPago().getDescripcion();
+        if (formaDePago.getObservacion() != null && !formaDePago.getObservacion().isBlank()) {
+            return formaDePago.getObservacion();
+        }
+        return formaDePago.getTipoPago() == null ? "—" : formaDePago.getTipoPago().getDescripcion();
+    }
+
+    /** La clave evita mezclar dos formas distintas que casualmente tengan la misma observación. */
+    private String claveFormaPago(FormaDePago formaDePago) {
+        if (formaDePago == null) {
+            return "sin-forma-de-pago";
+        }
+        if (formaDePago.getId() != null && !formaDePago.getId().isBlank()) {
+            return "id:" + formaDePago.getId();
+        }
+        return "valor:" + formaDePago.getTipoPago() + ":" + formaDePago.getObservacion();
+    }
+
+    private String resolverProducto(Producto producto) {
+        if (producto == null) {
+            return "—";
+        }
+        if (producto.getTalle() == null || producto.getTalle().isBlank()) {
+            return producto.getNombre();
+        }
+        return producto.getNombre() + " (Talle " + producto.getTalle() + ")";
+    }
+
+    private String resolverCategoria(SubCategoria subCategoria) {
+        if (subCategoria == null) {
+            return "—";
+        }
+        if (subCategoria.getCategoria() == null) {
+            return subCategoria.getNombre();
+        }
+        return subCategoria.getCategoria().getNombre() + " / " + subCategoria.getNombre();
     }
 
     /** Acumulador interno para sumar compras, unidades y monto por forma de pago. */
     private static class SubtotalAcumulado {
+        final String formaPago;
         int compras;
         int unidades;
         double monto;
+
+        SubtotalAcumulado(String formaPago) {
+            this.formaPago = formaPago;
+        }
     }
 }

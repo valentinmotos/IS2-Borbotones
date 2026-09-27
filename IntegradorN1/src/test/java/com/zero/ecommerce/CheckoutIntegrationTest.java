@@ -35,7 +35,7 @@ import com.zero.ecommerce.services.VigenciaPrecioService;
 
 /**
  * Checkout del cliente (E4-02) con los datos del seeder: Lucía tiene el carrito abierto ORD-DEMO0006 con una gorra
- * GOR-TRN-U. Las ventas del seeder llegan hasta la factura N.º 8.
+ * GOR-TRN-U. Las ventas del seeder llegan hasta la factura N.º 11.
  */
 @SpringBootTest(properties = {
         "spring.datasource.url=jdbc:sqlite::memory:?foreign_keys=on",
@@ -91,7 +91,7 @@ class CheckoutIntegrationTest {
         assertThat(orden.getEstadoOrdenCompra()).isEqualTo(EstadoOrdenCompra.PENDIENTE_PAGO);
         FacturaCliente factura = ordenCompraService.buscarFacturaDePedido(idCarrito).orElseThrow();
         assertThat(factura.getEstado()).isEqualTo(EstadoFactura.SIN_DEFINIR);
-        assertThat(factura.getNumeroFactura()).isEqualTo(9);
+        assertThat(factura.getNumeroFactura()).isEqualTo(12);
         assertThat(factura.getCliente()).isSameAs(orden.getCliente());
         assertThat(factura.getFormaDePago().getTipoPago()).isEqualTo(TipoPago.TRANSFERENCIA);
         assertThat(factura.getDetalles()).singleElement().satisfies((DetalleFactura d) -> {
@@ -105,7 +105,7 @@ class CheckoutIntegrationTest {
         mvc.perform(get(BASE + "/registrada/" + idCarrito).session(lucia)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("ORD-DEMO0006")))
                 .andExpect(content().string(containsString("transferencia por el total")))
-                .andExpect(content().string(containsString("N.º 9")));
+                .andExpect(content().string(containsString("N.º 12")));
     }
 
     @Test

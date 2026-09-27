@@ -744,9 +744,10 @@ public class DataSeeder implements CommandLineRunner {
             String efectivo = buscarFormaDePago(TipoPago.EFECTIVO);
             String transferencia = buscarFormaDePago(TipoPago.TRANSFERENCIA);
             String mercadoPago = buscarFormaDePago(TipoPago.BILLETERA_VIRTUAL);
-            // Venta 9  – 05/03: Gorra Training × 3 + Reloj Sport × 2 (Efectivo)
+            // Venta 9  – 05/03: Gorra Training × 3 + Colchoneta Yoga × 2 (Efectivo).
+            // Se evitan productos cuyo saldo ya fue reducido a un nivel crítico por las ventas de E3-04.
             cargarVentaDemoFecha(9, efectivo, LocalDate.of(anio, 3, 5),
-                    Map.of("GOR-TRN-U", 3, "REL-SPT-U", 2));
+                    Map.of("GOR-TRN-U", 3, "COL-YOG-U", 2));
             // Venta 10 – 14/03: Mochila Urban × 2 (Transferencia)
             cargarVentaDemoFecha(10, transferencia, LocalDate.of(anio, 3, 14),
                     Map.of("MOC-URB-U", 2));

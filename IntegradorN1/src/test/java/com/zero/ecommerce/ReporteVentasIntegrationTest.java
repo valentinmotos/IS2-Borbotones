@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -82,7 +83,16 @@ class ReporteVentasIntegrationTest {
         ReporteVentasDTO reporte = reporteService.generar(desde, hasta);
 
         assertThat(reporte).isNotNull();
-        assertThat(reporte.detalle()).isNotEmpty();
+        // El seeder agrega estas tres ventas fijas de marzo. Si la prueba corre durante marzo también pueden
+        // corresponder ventas relativas a la fecha actual, que igualmente deben incluirse por estar pagadas.
+        assertThat(reporte.cantidadCompras()).isGreaterThanOrEqualTo(3);
+        assertThat(reporte.unidadesVendidas()).isGreaterThanOrEqualTo(12);
+        assertThat(reporte.detalle()).hasSizeGreaterThanOrEqualTo(5);
+        assertThat(reporte.detalle()).extracting(DetalleVentaDTO::identificadorCompra)
+                .contains("Venta N.º 9", "Venta N.º 10", "Venta N.º 11")
+                .doesNotContain("ORD-DEMO0001", "ORD-DEMO0005", "ORD-DEMO0007");
+        assertThat(reporte.detalle().stream().map(DetalleVentaDTO::idFactura).distinct().count())
+                .isEqualTo(reporte.cantidadCompras());
 
         // Criterio de aceptación: el total coincide con la suma del detalle
         double sumaDetalle = reporte.detalle().stream().mapToDouble(DetalleVentaDTO::subtotal).sum();
@@ -93,6 +103,9 @@ class ReporteVentasIntegrationTest {
 
         // Subtotales por forma de pago no vacíos
         assertThat(reporte.subtotalesPorFormaPago()).isNotEmpty();
+        assertThat(reporte.subtotalesPorFormaPago()).hasSize(3);
+        assertThat(reporte.subtotalesPorFormaPago().stream()
+                .mapToDouble(subtotal -> subtotal.montoTotal()).sum()).isEqualTo(reporte.montoTotal());
     }
 
     @Test
@@ -107,6 +120,19 @@ class ReporteVentasIntegrationTest {
                 .andExpect(content().string(containsString("Reporte de ventas")))
                 .andExpect(content().string(containsString("Unidades vendidas")))
                 .andExpect(content().string(containsString("Subtotales por forma de pago")));
+    }
+
+    @Test
+    void vistaVentas_rangoInvalidoConservaFiltroYMuestraErrorSinEstadoVacio() throws Exception {
+        mvc.perform(get(BASE)
+                        .param("desde", "2026-03-31")
+                        .param("hasta", "2026-03-01")
+                        .session(sesion))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("reporte", org.hamcrest.Matchers.nullValue()))
+                .andExpect(content().string(containsString("no puede ser posterior")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        containsString("No hay ventas pagadas en el período seleccionado"))));
     }
 
     @Test

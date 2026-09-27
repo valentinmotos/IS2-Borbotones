@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.zero.ecommerce.exception.ErrorServiceException;
 import com.zero.ecommerce.services.ReporteVentasService;
@@ -34,23 +33,22 @@ public class ReporteVentasController {
     public String reporte(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-            Model model, RedirectAttributes redirectAttributes) {
+            Model model) {
 
-        // Valores por defecto: primer y último día del mes actual
-        LocalDate desdeEfectivo = desde != null ? desde : LocalDate.now().withDayOfMonth(1);
-        LocalDate hastaEfectivo = hasta != null ? hasta : LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
+        // Valores por defecto: primer y último día del mes actual.
+        LocalDate hoy = LocalDate.now();
+        LocalDate desdeEfectivo = desde != null ? desde : hoy.withDayOfMonth(1);
+        LocalDate hastaEfectivo = hasta != null ? hasta : hoy.withDayOfMonth(hoy.lengthOfMonth());
+
+        model.addAttribute("pageTitle", "Reporte de ventas");
+        model.addAttribute("desde", desdeEfectivo);
+        model.addAttribute("hasta", hastaEfectivo);
 
         try {
-            model.addAttribute("pageTitle", "Reporte de ventas");
             model.addAttribute("reporte", service.generar(desdeEfectivo, hastaEfectivo));
-            model.addAttribute("desde", desdeEfectivo);
-            model.addAttribute("hasta", hastaEfectivo);
         } catch (ErrorServiceException e) {
-            model.addAttribute("pageTitle", "Reporte de ventas");
             model.addAttribute("error", e.getMessage());
             model.addAttribute("reporte", null);
-            model.addAttribute("desde", desdeEfectivo);
-            model.addAttribute("hasta", hastaEfectivo);
         }
 
         return "admin/reportes/ventas";
