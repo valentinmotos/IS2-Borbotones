@@ -711,13 +711,48 @@ los clientes del seeder de E4-06: `lucia.gomez@mail.com` o `martin.perez@mail.co
   (filas con `CompraClienteDTO`) y `esCompraDelCliente(orden, idCliente)`.
 - **`VentaService` es un stub para E4-03** (`// TODO E4-03`): `anularVenta` anula la orden y la factura, que alcanza para
   el cliente. Falta reingresar el stock con `revertirMovimiento` cuando la factura ya estaba pagada (anulación del
-  admin), además de `confirmarCompra` y `registrarPago`.
+  admin), además de `registrarPago`. `confirmarCompra` ya está (E4-02).
 
 | Método | Ruta | Operación |
 |---|---|---|
 | GET | `/cliente/compras` | Mis compras |
 | GET | `/cliente/compras/{id}` | Detalle y seguimiento de la compra |
 | POST | `/cliente/compras/{id}/anular` | Anular una compra sin pagar |
+
+## Checkout y factura al cliente E4-02
+
+Desde el carrito, **"Continuar al pago"** lleva a `/cliente/checkout` (solo `CLIENTE`). Para probar, usar a
+`lucia.gomez@mail.com` / `Cliente123!`, que tiene el carrito abierto ORD-DEMO0006 del seeder.
+
+- **Pantalla (RF18):** resumen del pedido, dirección de entrega del perfil con un link para modificarla y la forma de
+  pago entre las activas (`campoSelect` del kit).
+- **Perfil obligatorio:** sin perfil completo (`ClienteService.perfilCompleto`) el checkout redirige a `/cliente/perfil`
+  con un mensaje, y `confirmarCompra` también lo rechaza.
+- Al abrir el checkout se sincroniza el carrito como en E3-07. Si hubo ajustes de stock, vuelve al carrito con el aviso.
+- **Después de confirmar:** con Mercado Pago (`BILLETERA_VIRTUAL`) redirige a `/cliente/pago/{idOrden}` (E4-10); con
+  efectivo o transferencia muestra "Compra registrada" con el número de compra y las instrucciones de pago.
+
+### `VentaService.confirmarCompra(idCliente, idFormaPago)`
+
+- Valida perfil completo y forma de pago activa, y revalida cada ítem: activo, con precio vigente y con stock
+  suficiente. Si falta stock o precio, rechaza con "Revisá tu carrito". Si el precio cambió, toma el vigente.
+- `orden.confirmar()` (E4-01) pasa la orden a `PENDIENTE_PAGO`, y su fecha pasa a ser la de la confirmación.
+- Crea la `FacturaCliente` en `SIN_DEFINIR` con cliente, orden, forma de pago, número secuencial propio de las ventas
+  (`FacturaClienteRepository.findFirstByOrderByNumeroFacturaDesc`) y un `DetalleFactura` por ítem con el precio del
+  momento (`Factura.agregarDetalle`, Creador).
+- Llama a `NotificacionCompraService.enviarConfirmacion(orden)` (E4-05). Devuelve la factura.
+- El carrito queda vacío solo: la orden ya no está en `PENDIENTE_COMPLETAR`, así que `CarritoService.obtenerCarrito`
+  crea una nueva la próxima vez.
+- El texto de las instrucciones de pago sale de `NotificacionCompraService.instruccionesPago(orden, formaDePago)`, el
+  mismo del correo.
+
+Las pruebas están en `VentaServiceTest` y `CheckoutIntegrationTest`.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/cliente/checkout` | Resumen, dirección y forma de pago |
+| POST | `/cliente/checkout` | Confirmar la compra (`idFormaPago`) |
+| GET | `/cliente/checkout/registrada/{idOrden}` | "Compra registrada" con las instrucciones de pago |
 
 ## ABM de referencia E0-06: Nacionalidad
 

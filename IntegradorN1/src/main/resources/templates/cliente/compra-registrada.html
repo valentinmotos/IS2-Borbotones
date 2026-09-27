@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
+<head>
+    <title th:text="${pageTitle}">Zero | Compra registrada</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <section class="zero-section">
+            <div class="container">
+                <nav class="zero-breadcrumb" aria-label="Navegación">
+                    <a th:href="@{/}">Inicio</a>
+                    <span>/</span>
+                    <a th:href="@{/cliente}">Mi cuenta</a>
+                    <span>/</span>
+                    <strong>Compra registrada</strong>
+                </nav>
+
+                <div class="zero-section-heading mb-4">
+                    <div>
+                        <span class="zero-kicker">¡Gracias por tu compra!</span>
+                        <h1>Compra registrada</h1>
+                    </div>
+                </div>
+
+                <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+
+                <div class="zero-panel mb-4">
+                    <h2 th:text="${'Tu número de compra es ' + compra.identificadorCompra}">Tu número de compra es ORD-0001</h2>
+                    <p>Te enviamos un correo con el detalle de la compra.</p>
+                    <dl>
+                        <dt>Estado</dt>
+                        <dd><span th:replace="~{fragments/badge-estado :: badge(${compra.estadoOrdenCompra.name()})}"></span></dd>
+                        <dt>Total</dt>
+                        <dd th:text="${'$' + #numbers.formatDecimal(compra.total, 1, 'POINT', 2, 'COMMA')}">$0,00</dd>
+                        <dt>Forma de pago</dt>
+                        <dd th:text="${factura != null and factura.formaDePago != null ? factura.formaDePago.observacion : '-'}">Efectivo</dd>
+                        <dt>Factura</dt>
+                        <dd th:text="${factura != null ? 'N.º ' + factura.numeroFactura : '-'}">N.º 1</dd>
+                    </dl>
+                </div>
+
+                <div class="zero-panel mb-4" th:if="${instruccionesPago != null}">
+                    <h2>Cómo pagar</h2>
+                    <p th:text="${instruccionesPago}">Instrucciones de pago.</p>
+                </div>
+
+                <div class="zero-form-actions">
+                    <a th:href="@{'/cliente/compras/' + ${compra.id}}" class="zero-button primary">Seguir mi compra</a>
+                    <a th:href="@{/catalogo}" class="zero-button secondary">Seguir comprando</a>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

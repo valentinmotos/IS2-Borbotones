@@ -14,4 +14,7 @@ public interface FacturaClienteRepository extends JpaRepository<FacturaCliente, 
 
     /** Las facturas asociadas a un pedido, para armar el listado de pedidos sin una consulta por fila. */
     List<FacturaCliente> findByOrdenCompraIsNotNullAndEliminadoFalse();
+
+    /** La venta con el número más alto (incluidas las eliminadas), para la numeración secuencial. */
+    Optional<FacturaCliente> findFirstByOrderByNumeroFacturaDesc();
 }

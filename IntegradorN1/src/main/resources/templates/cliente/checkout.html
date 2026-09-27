@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
+<head>
+    <title th:text="${pageTitle}">Zero | Confirmar compra</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <section class="zero-section">
+            <div class="container">
+                <nav class="zero-breadcrumb" aria-label="Navegación">
+                    <a th:href="@{/}">Inicio</a>
+                    <span>/</span>
+                    <a th:href="@{/cliente/carrito}">Carrito de compras</a>
+                    <span>/</span>
+                    <strong>Confirmar compra</strong>
+                </nav>
+
+                <div class="zero-section-heading mb-4">
+                    <div>
+                        <span class="zero-kicker">Mi compra</span>
+                        <h1>Confirmar compra</h1>
+                    </div>
+                </div>
+
+                <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="zero-panel mb-4">
+                            <h2>Resumen del pedido</h2>
+                            <div class="table-responsive zero-table-wrap">
+                                <table class="table table-striped table-bordered mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Producto</th>
+                                            <th scope="col">Talle</th>
+                                            <th scope="col">Cantidad</th>
+                                            <th scope="col">Precio</th>
+                                            <th scope="col">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="detalle : ${detalles}">
+                                            <td th:text="${detalle.producto.nombre}">Producto</td>
+                                            <td th:text="${detalle.producto.talle}">M</td>
+                                            <td class="text-right" th:text="${detalle.cantidad}">1</td>
+                                            <td class="text-right" th:text="${'$' + #numbers.formatDecimal(detalle.precioUnitario, 1, 'POINT', 2, 'COMMA')}">$0,00</td>
+                                            <td class="text-right" th:text="${'$' + #numbers.formatDecimal(detalle.subtotal, 1, 'POINT', 2, 'COMMA')}">$0,00</td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th scope="row" colspan="4" class="text-right">Total</th>
+                                            <th class="text-right" th:text="${'$' + #numbers.formatDecimal(carrito.total, 1, 'POINT', 2, 'COMMA')}">$0,00</th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="zero-panel mb-4">
+                            <h2>Dirección de entrega</h2>
+                            <p th:text="${cliente.direccion != null ? cliente.direccion.describir() : '-'}">San Martín 1250, Ciudad de Mendoza</p>
+                            <a th:href="@{/cliente/perfil}" class="zero-button secondary">Modificar dirección</a>
+                        </div>
+
+                        <div class="zero-panel mb-4">
+                            <h2>Forma de pago</h2>
+                            <form th:action="@{/cliente/checkout}" method="post" class="zero-form">
+                                <div th:replace="~{fragments/formulario :: campoSelect('idFormaPago', 'Elegí cómo pagar', ${formasDePago}, null, true)}"></div>
+                                <div class="zero-form-actions">
+                                    <button type="submit" class="zero-button primary">Confirmar compra</button>
+                                    <a th:href="@{/cliente/carrito}" class="zero-button secondary">Volver al carrito</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
