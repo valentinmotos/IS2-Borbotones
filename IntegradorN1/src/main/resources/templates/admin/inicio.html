@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin}">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/admin}">
 <body>
     <div layout:fragment="breadcrumb">
         <span>Inicio</span>
@@ -7,12 +8,15 @@
 
     <div layout:fragment="content">
         <div class="zero-kpi-grid zero-kpi-grid-estados mb-4">
-            <a th:replace="~{fragments/kpi :: kpiEnlace('Ventas del mes', ${'$ ' + #numbers.formatDecimal(dashboard.ventasMesMonto, 1, 'POINT', 2, 'COMMA')}, ${dashboard.ventasMesCantidad + ' ventas'}, 'zmdi zmdi-trending-up', @{/admin/pedidos}, false)}"></a>
+            <a th:replace="~{fragments/kpi :: kpiEnlace('Ventas del mes', ${'$ ' + #numbers.formatDecimal(dashboard.ventasMesMonto, 1, 'POINT', 2, 'COMMA')}, ${dashboard.ventasMesCantidad + ' ventas · ' + #numbers.formatDecimal(dashboard.variacionMesAnterior, 1, 'POINT', 1, 'COMMA') + '% vs. mes anterior'}, 'zmdi zmdi-trending-up', @{/admin/pedidos(desde=${inicioMes},hasta=${finMes})}, false)}"></a>
             <a th:replace="~{fragments/kpi :: kpiEnlace('Pendientes de pago', ${dashboard.pedidosPendientesPago}, 'Por confirmar', 'zmdi zmdi-time-interval', @{/admin/pedidos(estado='PENDIENTE_PAGO')}, false)}"></a>
             <a th:replace="~{fragments/kpi :: kpiEnlace('Pendientes de envío', ${dashboard.pedidosPendientesEnvio}, 'A preparar', 'zmdi zmdi-truck', @{/admin/pedidos(estado='PENDIENTE_ENVIO')}, false)}"></a>
             <a th:replace="~{fragments/kpi :: kpiEnlace('Stock malo', ${dashboard.productosStockMalo}, 'Productos con riesgo', 'zmdi zmdi-alert-circle', @{/admin/reportes/stock(estado='MALO')}, false)}"></a>
             <a th:replace="~{fragments/kpi :: kpiEnlace('Precios vencidos', ${dashboard.productosPrecioVencido}, 'Revisar actualizaciones', 'zmdi zmdi-money-box', @{/admin/precios/alertas}, false)}"></a>
-            <a th:replace="~{fragments/kpi :: kpiEnlace('Clientes', ${dashboard.clientesRegistrados}, 'Registrados', 'zmdi zmdi-accounts', @{/admin/usuarios}, false)}"></a>
+            <a sec:authorize="hasRole('JEFE')"
+               th:replace="~{fragments/kpi :: kpiEnlace('Clientes', ${dashboard.clientesRegistrados}, 'Registrados', 'zmdi zmdi-accounts', @{/admin/usuarios(rol='CLIENTE')}, false)}"></a>
+            <div sec:authorize="hasRole('ADMINISTRATIVO')"
+                 th:replace="~{fragments/kpi :: kpi('Clientes', ${dashboard.clientesRegistrados}, 'Registrados', 'zmdi zmdi-accounts')}"></div>
         </div>
 
         <div class="row g-4 mb-4">

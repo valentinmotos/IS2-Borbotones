@@ -42,12 +42,13 @@ class DashboardServiceTest {
 
     @Test
     void generarCalculaTotalesKPIsYTopProductos() throws Exception {
-        FacturaCliente facturaActual = factura(LocalDate.now(), 3000.0, 1, "Remera Zero");
+        FacturaCliente facturaActual = factura(LocalDate.now(), 3000.0, 5, "Remera Zero");
         FacturaCliente facturaActual2 = factura(LocalDate.now(), 1500.0, 2, "Gorra Zero");
         FacturaCliente facturaAnterior = factura(LocalDate.now().minusMonths(1), 5000.0, 1, "Remera Zero");
+        FacturaCliente facturaFutura = factura(LocalDate.now().plusMonths(1), 9000.0, 20, "Producto Futuro");
 
         when(facturaClienteRepository.findByEliminadoFalseOrderByFechaFacturaAsc())
-                .thenReturn(List.of(facturaAnterior, facturaActual, facturaActual2));
+                .thenReturn(List.of(facturaAnterior, facturaActual, facturaActual2, facturaFutura));
         when(ordenCompraService.listarPedidoActivo()).thenReturn(List.of(
                 orden(EstadoOrdenCompra.PENDIENTE_PAGO),
                 orden(EstadoOrdenCompra.PENDIENTE_ENVIO),
@@ -69,8 +70,9 @@ class DashboardServiceTest {
         assertThat(dashboard.clientesRegistrados()).isEqualTo(3L);
         assertThat(dashboard.ventasUltimosSeisMeses()).hasSize(6);
         assertThat(dashboard.productosMasVendidos()).hasSize(2);
-        assertThat(dashboard.productosMasVendidos().get(0).cantidad()).isGreaterThanOrEqualTo(2L);
-        assertThat(dashboard.productosMasVendidos().get(0).nombre()).isNotBlank();
+        assertThat(dashboard.productosMasVendidos())
+                .extracting(producto -> producto.nombre())
+                .containsExactly("Remera Zero", "Gorra Zero");
     }
 
     private FacturaCliente factura(LocalDate fecha, double total, int cantidad, String nombreProducto) {

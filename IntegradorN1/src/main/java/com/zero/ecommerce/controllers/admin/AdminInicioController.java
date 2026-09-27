@@ -1,5 +1,6 @@
 package com.zero.ecommerce.controllers.admin;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
@@ -42,6 +43,9 @@ public class AdminInicioController {
         model.addAttribute("pedidosRecientes", pedidosRecientes);
         model.addAttribute("chartLabels", dashboard.ventasUltimosSeisMeses().stream().map(v -> v.etiqueta()).toList());
         model.addAttribute("chartValues", dashboard.ventasUltimosSeisMeses().stream().map(v -> v.monto()).toList());
+        LocalDate hoy = LocalDate.now();
+        model.addAttribute("inicioMes", hoy.withDayOfMonth(1));
+        model.addAttribute("finMes", hoy.withDayOfMonth(hoy.lengthOfMonth()));
         return "admin/inicio";
     }
 }

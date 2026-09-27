@@ -8,7 +8,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,23 +50,24 @@ public class DashboardService {
     public DashboardDTO generar() throws ErrorServiceException {
         LocalDate hoy = LocalDate.now();
         LocalDate inicioMes = hoy.withDayOfMonth(1);
+        LocalDate inicioMesSiguiente = inicioMes.plusMonths(1);
         LocalDate inicioMesAnterior = inicioMes.minusMonths(1);
 
         List<FacturaCliente> ventas = facturaClienteRepository.findByEliminadoFalseOrderByFechaFacturaAsc().stream()
                 .filter(factura -> factura.getEstado() == EstadoFactura.PAGADA)
+                .filter(factura -> factura.getFechaFactura() != null && !factura.getFechaFactura().isAfter(hoy))
                 .toList();
 
         double ventasMesMonto = ventas.stream()
-                .filter(f -> f.getFechaFactura() != null && !f.getFechaFactura().isBefore(inicioMes))
+                .filter(f -> estaEnRango(f, inicioMes, inicioMesSiguiente))
                 .mapToDouble(FacturaCliente::getTotalPagado)
                 .sum();
         long ventasMesCantidad = ventas.stream()
-                .filter(f -> f.getFechaFactura() != null && !f.getFechaFactura().isBefore(inicioMes))
+                .filter(f -> estaEnRango(f, inicioMes, inicioMesSiguiente))
                 .count();
 
         double ventasMesAnteriorMonto = ventas.stream()
-                .filter(f -> f.getFechaFactura() != null && !f.getFechaFactura().isBefore(inicioMesAnterior)
-                        && f.getFechaFactura().isBefore(inicioMes))
+                .filter(f -> estaEnRango(f, inicioMesAnterior, inicioMes))
                 .mapToDouble(FacturaCliente::getTotalPagado)
                 .sum();
 
@@ -96,6 +96,11 @@ public class DashboardService {
             return actual <= 0 ? 0.0 : 100.0;
         }
         return ((actual - anterior) / anterior) * 100.0;
+    }
+
+    private boolean estaEnRango(FacturaCliente factura, LocalDate desdeInclusive, LocalDate hastaExclusive) {
+        LocalDate fecha = factura.getFechaFactura();
+        return fecha != null && !fecha.isBefore(desdeInclusive) && fecha.isBefore(hastaExclusive);
     }
 
     private List<VentaMensualDTO> calcularVentasUltimosSeisMeses(List<FacturaCliente> ventas, LocalDate hoy) {
@@ -141,7 +146,8 @@ public class DashboardService {
 
         return resumen.values().stream()
                 .sorted(Comparator.<ResumenProducto>comparingLong(r -> r.cantidad).reversed()
-                        .thenComparingDouble(r -> r.monto).reversed())
+                        .thenComparing(Comparator.comparingDouble((ResumenProducto r) -> r.monto).reversed())
+                        .thenComparing(r -> r.producto.getNombre(), String.CASE_INSENSITIVE_ORDER))
                 .limit(5)
                 .map(resumenProducto -> new ProductoMasVendidoDTO(
                         resumenProducto.producto.getId(),
