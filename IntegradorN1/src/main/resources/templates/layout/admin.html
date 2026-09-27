@@ -60,7 +60,8 @@
                     <a href="#" class="admin-nav-item sub">Ventas</a>
                     <a th:href="@{/admin/reportes/stock}" class="admin-nav-item sub"
                        th:classappend="${menuActivo == 'reporte-stock' ? 'active' : ''}">Stock</a>
-                    <a href="#" class="admin-nav-item sub">Proveedores</a>
+                    <a th:href="@{/admin/reportes/proveedores}" class="admin-nav-item sub"
+                       th:classappend="${menuActivo == 'reportes-proveedores' ? 'active' : ''}">Proveedores</a>
                 </div>
 
                 <div class="admin-nav-section" sec:authorize="hasRole('JEFE')">

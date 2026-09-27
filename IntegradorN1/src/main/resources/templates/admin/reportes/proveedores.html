@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Reportes</span><span class="breadcrumb-separator">/</span><span>Proveedores</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-kpi-grid zero-kpi-grid-estados mb-4">
+            <article th:replace="~{fragments/kpi :: kpi('Productos', ${reporte.cantidadProductos},
+                     'Con compras recibidas', 'fa fa-cube')}"></article>
+            <article th:replace="~{fragments/kpi :: kpi('Proveedores', ${reporte.cantidadProveedores},
+                     'Con precios en el reporte', 'fa fa-truck')}"></article>
+            <article th:replace="~{fragments/kpi :: kpi('Para comparar', ${reporte.cantidadConVariosProveedores},
+                     'Productos con más de un proveedor', 'fa fa-balance-scale')}"></article>
+        </div>
+        <div class="zero-panel">
+            <form th:action="@{/admin/reportes/proveedores}" method="get" class="zero-filters zero-filters-amplio mb-4">
+                <div th:replace="~{fragments/filtros :: campoFiltroTexto('buscar', 'Producto', ${buscar}, 'Código o nombre')}"></div>
+                <div th:replace="~{fragments/filtros :: campoFiltroSelect('categoria', 'Categoría', ${opcionesCategoria}, ${categoria})}"></div>
+                <div class="zero-filters-acciones">
+                    <button type="submit" class="zero-button primary">Buscar</button>
+                    <a th:href="@{/admin/reportes/proveedores}" class="zero-button secondary">Limpiar</a>
+                </div>
+            </form>
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                <span class="text-muted">Precios de costo de las compras recibidas. Se compara el último precio de cada proveedor.</span>
+                <span class="text-muted"
+                      th:text="${reporte.cantidadProductos == 1 ? '1 producto' : reporte.cantidadProductos + ' productos'}">0 productos</span>
+            </div>
+            <!-- Misma estructura que fragments/tabla :: tablaRegistros, con una fila desplegable por producto (collapse
+                 de Bootstrap) que el fragment no soporta. Sin rayas, porque las filas ocultas cortarían la alternancia. -->
+            <div class="table-responsive zero-table-wrap">
+                <table class="table table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Código</th>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Categoría</th>
+                            <th scope="col">Proveedor recomendado</th>
+                            <th scope="col">Precio de costo más bajo</th>
+                            <th scope="col">Fecha de compra</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(reporte.productos)}">
+                            <td colspan="7" class="text-center text-muted py-4">No hay productos con compras recibidas para mostrar.</td>
+                        </tr>
+                        <th:block th:each="producto : ${reporte.productos}">
+                            <tr>
+                                <td><a th:href="@{'/admin/productos/' + ${producto.idProducto}}" th:text="${producto.codigo}">COD-001</a></td>
+                                <td><span th:text="${producto.nombre}">Producto</span>
+                                    <small class="text-muted" th:text="${'Talle ' + producto.talle}">Talle M</small></td>
+                                <td th:text="${producto.categoria + ' / ' + producto.subCategoria}">Categoría / Subcategoría</td>
+                                <td><strong th:text="${producto.recomendado.razonSocial}">Proveedor</strong>
+                                    <span class="badge badge-success">Recomendado</span></td>
+                                <td class="text-right"
+                                    th:text="${'$' + #numbers.formatDecimal(producto.recomendado.precioCosto, 1, 'POINT', 2, 'COMMA')}">$0,00</td>
+                                <td th:text="${#temporals.format(producto.recomendado.fechaCompra, 'dd/MM/yyyy')}">01/01/2026</td>
+                                <td class="zero-table-actions">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="collapse"
+                                            aria-expanded="false"
+                                            th:attr="data-target=${'#comparar-' + producto.idProducto},
+                                                     aria-controls=${'comparar-' + producto.idProducto}"
+                                            th:text="${#lists.size(producto.proveedores) == 1 ? 'Ver 1 proveedor'
+                                                     : 'Comparar ' + #lists.size(producto.proveedores) + ' proveedores'}">Comparar</button>
+                                </td>
+                            </tr>
+                            <tr class="collapse" th:id="${'comparar-' + producto.idProducto}">
+                                <td colspan="7" class="bg-light">
+                                    <table class="table table-sm table-bordered mb-0 bg-white">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Proveedor</th>
+                                                <th scope="col">Último precio de costo</th>
+                                                <th scope="col">Fecha de compra</th>
+                                                <th scope="col">Compra</th>
+                                                <th scope="col">Diferencia con el más barato</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="precio : ${producto.proveedores}"
+                                                th:classappend="${precio.recomendado} ? 'table-success'">
+                                                <td><span th:text="${precio.razonSocial}">Proveedor</span>
+                                                    <span th:if="${precio.recomendado}" class="badge badge-success">Recomendado</span></td>
+                                                <td class="text-right"
+                                                    th:text="${'$' + #numbers.formatDecimal(precio.precioCosto, 1, 'POINT', 2, 'COMMA')}">$0,00</td>
+                                                <td th:text="${#temporals.format(precio.fechaCompra, 'dd/MM/yyyy')}">01/01/2026</td>
+                                                <td><a th:href="@{'/admin/compras/' + ${precio.idCompra}}"
+                                                       th:text="${'N.º ' + precio.numeroCompra}">N.º 1</a></td>
+                                                <td class="text-right"
+                                                    th:text="${precio.recomendado ? 'Más barato'
+                                                             : '+' + #numbers.formatDecimal(precio.diferenciaPorcentual, 1, 'POINT', 1, 'COMMA') + ' %'}">+0,0 %</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </th:block>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
