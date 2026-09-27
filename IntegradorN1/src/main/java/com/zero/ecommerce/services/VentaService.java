@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.zero.ecommerce.entities.Cliente;
 import com.zero.ecommerce.entities.DetalleCompra;
-import com.zero.ecommerce.entities.DetalleFactura;
 import com.zero.ecommerce.entities.FacturaCliente;
 import com.zero.ecommerce.entities.FormaDePago;
 import com.zero.ecommerce.entities.OrdenCompra;
@@ -101,11 +100,8 @@ public class VentaService {
     }
 
     /**
-     * Registra el pago de la venta (RF13): la orden pasa a PENDIENTE_ENVIO, la factura a PAGADA y se descuenta el
-     * stock de cada detalle (el signo negativo lo da FacturaCliente). Todo en una transacción: si un producto se quedó
-     * sin stock, StockService lanza la excepción y no se aplica nada. Es idempotente: si la factura ya está PAGADA no
-     * hace nada, porque Mercado Pago puede notificar el mismo pago más de una vez. Lo usan el panel de pedidos
-     * (E4-07) y el webhook de Mercado Pago (E4-10).
+     * Registra el pago de una venta y descuenta sus productos del stock. La factura pagada vuelve idempotente la
+     * operación: una segunda notificación del mismo pago no cambia estados, stock ni envía otro correo.
      */
     @Transactional(rollbackFor = ErrorServiceException.class)
     public void registrarPago(String idOrden) throws ErrorServiceException {
@@ -114,14 +110,18 @@ public class VentaService {
         if (factura.getEstado() == EstadoFactura.PAGADA) {
             return;
         }
-        // registrarPago valida el estado de origen: una orden sin confirmar o anulada no se puede pagar.
+        if (factura.getEstado() == EstadoFactura.ANULADA) {
+            throw new ErrorServiceException("No se puede registrar el pago de una factura anulada.");
+        }
+
         orden.registrarPago();
-        for (DetalleFactura detalle : factura.getDetalles()) {
+        for (var detalle : factura.getDetalles()) {
             if (!detalle.isEliminado()) {
                 stockService.registrarMovimiento(detalle);
             }
         }
         factura.setEstado(EstadoFactura.PAGADA);
+        factura.setTotalPagado(factura.calcularTotal());
         ordenCompraRepository.save(orden);
         facturaClienteRepository.save(factura);
         notificacionCompraService.notificarCambioEstado(orden);
@@ -129,19 +129,18 @@ public class VentaService {
 
     /**
      * Anula la venta (RF19): la orden y su factura pasan a ANULADA. Quién puede anular y en qué estado lo decide la
-     * orden con puedeAnularse(esAdmin). Si la factura ya estaba PAGADA (solo el admin anula en PENDIENTE_ENVIO), el
-     * stock ya se había descontado y se reingresa con un movimiento inverso por detalle.
+     * orden con puedeAnularse(esAdmin).
      */
     @Transactional(rollbackFor = ErrorServiceException.class)
     public void anularVenta(String idOrden, boolean esAdmin) throws ErrorServiceException {
         OrdenCompra orden = ordenCompraService.buscarPedido(idOrden);
+        FacturaCliente factura = ordenCompraService.buscarFacturaDePedido(idOrden).orElse(null);
+        boolean estabaPagada = factura != null && factura.getEstado() == EstadoFactura.PAGADA;
         // anular verifica con puedeAnularse y, si no corresponde, lanza la excepción con el mensaje del estado.
         orden.anular(esAdmin);
-        ordenCompraRepository.save(orden);
-        FacturaCliente factura = ordenCompraService.buscarFacturaDePedido(idOrden).orElse(null);
         if (factura != null) {
-            if (factura.getEstado() == EstadoFactura.PAGADA) {
-                for (DetalleFactura detalle : factura.getDetalles()) {
+            if (estabaPagada) {
+                for (var detalle : factura.getDetalles()) {
                     if (!detalle.isEliminado()) {
                         stockService.revertirMovimiento(detalle);
                     }
@@ -150,6 +149,13 @@ public class VentaService {
             factura.setEstado(EstadoFactura.ANULADA);
             facturaClienteRepository.save(factura);
         }
+        ordenCompraRepository.save(orden);
+        notificacionCompraService.notificarCambioEstado(orden);
+    }
+
+    private FacturaCliente buscarFactura(String idOrden) throws ErrorServiceException {
+        return ordenCompraService.buscarFacturaDePedido(idOrden)
+                .orElseThrow(() -> new ErrorServiceException("El pedido no tiene una factura asociada."));
     }
 
     /**
@@ -182,11 +188,6 @@ public class VentaService {
             detalle.calcularSubtotal(precioVigente);
         }
         orden.recalcularTotal();
-    }
-
-    private FacturaCliente buscarFactura(String idOrden) throws ErrorServiceException {
-        return ordenCompraService.buscarFacturaDePedido(idOrden)
-                .orElseThrow(() -> new ErrorServiceException("El pedido no tiene factura."));
     }
 
     // Numeración secuencial propia de las ventas, simulando la validada por ARCA.

@@ -633,7 +633,7 @@ para probar la recepción.
 | POST | `/admin/compras/{id}/anular` | Anular una compra pedida |
 | GET | `/admin/productos/{id}` | Detalle del producto con stock e historial |
 
-## Panel de pedidos E4-06
+## Panel de pedidos y acciones E4-06 / E4-07
 
 **Pedidos** (`/admin/pedidos`, `JEFE` y `ADMINISTRATIVO`). Un pedido es una `OrdenCompra` que ya salió del carrito:
 los carritos abiertos (`PENDIENTE_COMPLETAR`) no aparecen.
@@ -648,6 +648,12 @@ los carritos abiertos (`PENDIENTE_COMPLETAR`) no aparecen.
 - **"Registrado por":** el diagrama guarda un solo `Empleado` por `FacturaCliente`, así que se muestra ese (el último
   que registró una acción del panel, E4-07). No hay un empleado por paso.
 - La forma de pago y la factura salen de la `FacturaCliente` del pedido. Si todavía no tiene factura, se muestra "-".
+- **Acciones:** el detalle muestra solamente la transición válida para el estado actual. Efectivo y transferencia
+  permiten confirmar el pago manualmente; luego se puede marcar el pedido como enviado y entregado. Mercado Pago no
+  admite confirmación manual. Cada cambio registra al empleado autenticado, actualiza el seguimiento, muestra un
+  mensaje y solicita el correo de cambio de estado.
+- **Anulación administrativa:** está disponible hasta `PENDIENTE_ENVIO` y exige confirmar la acción e informar
+  un motivo. Si la venta ya estaba pagada, repone el stock en la misma transacción.
 
 ### Para otros issues
 
@@ -679,6 +685,10 @@ tienen el stock inicial, así que no cambian los niveles del reporte de stock de
 |---|---|---|
 | GET | `/admin/pedidos?estado=&formaPago=&desde=&hasta=&cliente=` | Listar pedidos con filtros y tarjetas por estado |
 | GET | `/admin/pedidos/{id}` | Detalle del pedido con la línea de tiempo |
+| POST | `/admin/pedidos/{id}/confirmar-pago` | Confirmar un pago en efectivo o transferencia |
+| POST | `/admin/pedidos/{id}/marcar-enviado` | Pasar el pedido a pendiente de entrega |
+| POST | `/admin/pedidos/{id}/marcar-entregado` | Marcar el pedido como entregado |
+| POST | `/admin/pedidos/{id}/anular` | Anular con motivo y reponer stock si estaba pagado |
 
 ## Mis compras, seguimiento y anulación por el cliente E4-04
 
@@ -744,28 +754,30 @@ Las pruebas están en `VentaServiceTest` y `CheckoutIntegrationTest`.
 
 ## Registro del pago, descuento de stock y anulación de ventas E4-03
 
-Son métodos de `VentaService` sin pantalla propia: los usan el panel de pedidos (E4-07), el webhook de Mercado Pago
-(E4-10) y "Mis compras" (E4-04).
+Son métodos de `VentaService` sin pantalla propia: los usan las acciones del panel de pedidos (E4-07, a través de
+`PedidoAccionService`), el webhook de Mercado Pago (E4-10) y "Mis compras" (E4-04). E4-07 se mergeó antes e incluyó
+la misma implementación, así que este issue suma las pruebas de integración y la documentación.
 
 - **`registrarPago(idOrden)`:** la orden pasa a `PENDIENTE_ENVIO` (`OrdenCompra.registrarPago()`), la factura a
   `PAGADA`, y se descuenta el stock con `StockService.registrarMovimiento` por cada detalle (RF13). El signo negativo
-  lo da `FacturaCliente`. Al final llama a `NotificacionCompraService.notificarCambioEstado(orden)`.
+  lo da `FacturaCliente`, y `totalPagado` se recalcula con los detalles. Al final llama a
+  `NotificacionCompraService.notificarCambioEstado(orden)`.
   - **Una sola transacción:** si un producto se quedó sin stock, `StockService` lanza "No hay stock suficiente de ...:
     hay 2 y se necesitan 3." y se deshace todo, incluidos los movimientos de los otros productos. La orden sigue en
     `PENDIENTE_PAGO`.
   - **Idempotente:** si la factura ya está `PAGADA`, no hace nada, no mueve stock y no manda correo. Mercado Pago
     puede notificar el mismo pago más de una vez.
-  - Rechaza pedidos sin factura ("El pedido no tiene factura.") y órdenes sin confirmar o anuladas (con el mensaje de
-    la transición de E4-01).
+  - Rechaza pedidos sin factura ("El pedido no tiene una factura asociada."), facturas anuladas ("No se puede
+    registrar el pago de una factura anulada.") y órdenes sin confirmar (con el mensaje de la transición de E4-01).
 - **`anularVenta(idOrden, esAdmin)`:** verifica con `puedeAnularse(esAdmin)` y pasa la orden y la factura a `ANULADA`.
   Si la factura ya estaba `PAGADA` (solo el admin anula en `PENDIENTE_ENVIO`), reingresa el stock con
   `StockService.revertirMovimiento` por cada detalle (movimiento inverso con la observación "Anulación").
-  **No manda correo:** en E4-07 lo avisa la acción del panel con `notificarCambioEstado`.
+  Al final llama a `notificarCambioEstado(orden)`, tanto si anula el cliente como el administrador.
 
 ### Para otros issues
 
-- **E4-07 ("Confirmar pago"):** llamar a `registrarPago` y **no** volver a llamar a `notificarCambioEstado`, porque
-  `registrarPago` ya lo hace. **"Anular":** llamar a `anularVenta(idOrden, true)` y después a `notificarCambioEstado`.
+- `registrarPago` y `anularVenta` ya mandan el correo de cambio de estado: quien los llame no tiene que volver a
+  llamar a `notificarCambioEstado` (así lo hace `PedidoAccionService` de E4-07).
 - **E4-10 (webhook):** llamar a `registrarPago` cada vez que llegue un pago aprobado. Es seguro repetirlo.
 
 Las pruebas están en `VentaServiceTest` y en `VentaIntegrationTest`: compra → pago → stock descontado → segundo pago
