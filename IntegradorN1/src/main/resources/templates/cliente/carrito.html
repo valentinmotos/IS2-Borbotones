@@ -45,15 +45,11 @@
                 </div>
 
                 <!-- Carrito vacío -->
-                <div th:if="${#lists.isEmpty(detalles)}" class="text-center py-5 zero-empty-state">
-                    <div class="mb-3">
-                        <i class="fa fa-shopping-cart fa-4x text-muted"></i>
-                    </div>
-                    <h3>Tu carrito está vacío</h3>
-                    <p class="text-muted mb-4">Todavía no agregaste productos a tu carrito de compras.</p>
-                    <a th:href="@{/catalogo}" class="btn btn-primary btn-lg">
-                        <i class="fa fa-search mr-2"></i> Explorar catálogo
-                    </a>
+                <div th:if="${#lists.isEmpty(detalles)}" class="zero-empty-state zero-empty-cart">
+                    <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                    <h2 class="h4">Tu carrito está vacío</h2>
+                    <p>Todavía no agregaste productos a tu carrito de compras.</p>
+                    <a th:href="@{/catalogo}" class="zero-button primary">Explorar catálogo</a>
                 </div>
 
                 <!-- Tabla de productos en el carrito -->
@@ -135,8 +131,8 @@
                                 </div>
                                 <div>
                                     <!-- Checkout (E4-02) -->
-                                    <a th:href="@{/cliente/checkout}" class="btn btn-success btn-lg px-4 font-weight-bold">
-                                        Continuar al pago <i class="fa fa-arrow-right ml-1"></i>
+                                    <a th:href="@{/cliente/checkout}" class="zero-button primary">
+                                        Continuar al pago <i class="fa fa-arrow-right ml-2"></i>
                                     </a>
                                 </div>
                             </div>

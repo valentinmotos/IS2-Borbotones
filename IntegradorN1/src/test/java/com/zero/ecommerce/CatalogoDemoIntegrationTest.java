@@ -56,9 +56,9 @@ class CatalogoDemoIntegrationTest {
     }
 
     @Test
-    void elSeederCargaVeinteProductosConImagenEnLasDoceSubcategorias() throws Exception {
+    void elSeederCargaCuarentaYNueveProductosConImagenEnLasDoceSubcategorias() throws Exception {
         List<Producto> productos = productoService.listarProductoActivo();
-        assertThat(productos).hasSize(20);
+        assertThat(productos).hasSize(49);
         assertThat(productos).allSatisfy(p -> {
             assertThat(p.getImagen()).isNotNull();
             assertThat(p.getImagen().getTipoImagen()).isEqualTo(TipoImagen.PRODUCTO);
@@ -83,11 +83,11 @@ class CatalogoDemoIntegrationTest {
         MockHttpSession sesion = login();
         mvc.perform(get("/admin/productos").session(sesion))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("20 productos")))
+                .andExpect(content().string(containsString("49 productos")))
                 .andExpect(content().string(containsString("BIL-CUE-U")))
                 .andExpect(content().string(containsString("/admin/productos?page=2")));
-        // Orden por nombre: las zapatillas quedan en la segunda página.
-        mvc.perform(get("/admin/productos").session(sesion).param("page", "2"))
+        // Orden por nombre: las zapatillas quedan en la última página.
+        mvc.perform(get("/admin/productos").session(sesion).param("page", "5"))
                 .andExpect(content().string(containsString("ZAP-RUN-42")));
         Producto zapatilla = productoService.buscarProductoPorCodigo("ZAP-RUN-42");
         mvc.perform(get("/imagen/" + zapatilla.getImagen().getId()))

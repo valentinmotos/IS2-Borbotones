@@ -19,16 +19,18 @@
                  th:replace="~{fragments/kpi :: kpi('Clientes', ${dashboard.clientesRegistrados}, 'Registrados', 'zmdi zmdi-accounts')}"></div>
         </div>
 
-        <div class="row g-4 mb-4">
-            <div class="col-lg-8">
-                <div class="zero-panel">
+        <div class="row mb-4">
+            <div class="col-lg-8 mb-4 mb-lg-0">
+                <div class="zero-panel h-100">
                     <h2>Ventas de los últimos 6 meses</h2>
-                    <canvas id="dashboardChart" height="120"></canvas>
+                    <div class="zero-chart">
+                        <canvas id="dashboardChart"></canvas>
+                    </div>
                 </div>
             </div>
 
             <div class="col-lg-4">
-                <div class="zero-panel">
+                <div class="zero-panel h-100">
                     <h2>Top 5 productos</h2>
                     <div th:if="${#lists.isEmpty(dashboard.productosMasVendidos)}" class="text-muted">Todavía no hubo ventas.</div>
                     <div th:unless="${#lists.isEmpty(dashboard.productosMasVendidos)}" class="list-group list-group-flush">
@@ -92,8 +94,9 @@
                         label: 'Ventas',
                         data: chartValues,
                         backgroundColor: '#d7ff3f',
-                        borderRadius: 8,
-                        borderSkipped: false
+                        borderRadius: 6,
+                        borderSkipped: false,
+                        maxBarThickness: 48
                     }]
                 },
                 options: {
@@ -103,6 +106,9 @@
                         legend: { display: false }
                     },
                     scales: {
+                        x: {
+                            grid: { display: false }
+                        },
                         y: {
                             beginAtZero: true,
                             ticks: {
