@@ -1,88 +1,71 @@
 package com.zero.ecommerce.utils;
 
 import java.io.ByteArrayOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 /**
- * Exportador CSV genérico para reportes (E5-02).
- * Genera un archivo CSV en UTF-8 con BOM (Byte Order Mark) para que Microsoft Excel
- * reconozca y muestre correctamente caracteres con tildes y símbolos especiales en español.
+ * Arma el CSV de los reportes (E5-02). Sale en UTF-8 con BOM, separado por punto y coma y con coma decimal, que es lo
+ * que espera Excel con la configuración regional de Argentina: así muestra bien las tildes y cada dato en su columna.
  */
 public final class ExportadorCsv {
 
-    private static final byte[] BOM_UTF8 = new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
+    private static final byte[] BOM_UTF8 = { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
+    private static final String SEPARADOR = ";";
+    private static final String FIN_DE_LINEA = "\r\n";
+    private static final Locale ARGENTINA = Locale.forLanguageTag("es-AR");
+    private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private ExportadorCsv() {
-        // Clase de utilidad no instanciable
     }
 
-    /**
-     * Genera un arreglo de bytes con el contenido CSV en UTF-8 con BOM.
-     *
-     * @param encabezados Lista de nombres de columnas.
-     * @param filas       Lista de filas, donde cada fila es una lista de valores de celdas.
-     * @return Arreglo de bytes del CSV con BOM.
-     */
+    /** Devuelve el CSV con una línea de encabezados y una línea por fila. */
     public static byte[] exportar(List<String> encabezados, List<List<String>> filas) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try {
-            // Escribir el BOM UTF-8 (EF BB BF)
-            baos.write(BOM_UTF8);
-
-            try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8))) {
-                if (encabezados != null && !encabezados.isEmpty()) {
-                    writer.println(convertirFila(encabezados));
-                }
-                if (filas != null) {
-                    for (List<String> fila : filas) {
-                        writer.println(convertirFila(fila));
-                    }
-                }
-                writer.flush();
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException("Error al generar la exportación CSV: " + e.getMessage(), e);
+        StringBuilder csv = new StringBuilder();
+        agregarLinea(csv, encabezados);
+        for (List<String> fila : filas) {
+            agregarLinea(csv, fila);
         }
-        return baos.toByteArray();
+        ByteArrayOutputStream salida = new ByteArrayOutputStream();
+        salida.writeBytes(BOM_UTF8);
+        salida.writeBytes(csv.toString().getBytes(StandardCharsets.UTF_8));
+        return salida.toByteArray();
     }
 
-    /**
-     * Convierte una lista de celdas a una línea formateada en CSV, escapando comillas y caracteres especiales.
-     */
-    private static String convertirFila(List<String> campos) {
-        if (campos == null || campos.isEmpty()) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
+    /** Un monto con dos decimales y coma decimal, por ejemplo "1500,50". */
+    public static String monto(double valor) {
+        return String.format(ARGENTINA, "%.2f", valor);
+    }
+
+    /** Una fecha como dd/MM/yyyy, o vacío si no hay. */
+    public static String fecha(LocalDate fecha) {
+        return fecha == null ? "" : fecha.format(FORMATO_FECHA);
+    }
+
+    private static void agregarLinea(StringBuilder csv, List<String> campos) {
         for (int i = 0; i < campos.size(); i++) {
             if (i > 0) {
-                sb.append(",");
+                csv.append(SEPARADOR);
             }
-            sb.append(escaparCampo(campos.get(i)));
+            csv.append(escapar(campos.get(i)));
         }
-        return sb.toString();
+        csv.append(FIN_DE_LINEA);
     }
 
     /**
-     * Escapa un campo CSV según la especificación RFC 4180:
-     * Si contiene comas, comillas o saltos de línea, lo encierra entre comillas dobles
-     * y duplica las comillas internas.
+     * RFC 4180: si el campo tiene el separador, comillas o saltos de línea, va entre comillas dobles y las comillas
+     * internas se duplican.
      */
-    public static String escaparCampo(String campo) {
+    private static String escapar(String campo) {
         if (campo == null) {
-            return "\"\"";
+            return "";
         }
-        String texto = campo;
-        boolean requiereComillas = texto.contains(",") || texto.contains("\"") || texto.contains("\n") || texto.contains("\r");
-        if (texto.contains("\"")) {
-            texto = texto.replace("\"", "\"\"");
+        if (campo.contains(SEPARADOR) || campo.contains("\"") || campo.contains("\n") || campo.contains("\r")) {
+            return "\"" + campo.replace("\"", "\"\"") + "\"";
         }
-        if (requiereComillas) {
-            return "\"" + texto + "\"";
-        }
-        return texto;
+        return campo;
     }
 }

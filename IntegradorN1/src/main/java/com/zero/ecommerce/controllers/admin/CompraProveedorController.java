@@ -79,14 +79,22 @@ public class CompraProveedorController {
     }
 
     @GetMapping("/nueva")
-    public String nueva(Model model) {
+    public String nueva(@RequestParam(required = false) String proveedor,
+            @RequestParam(required = false) String producto,
+            @RequestParam(required = false) Integer cantidad, Model model) {
         model.addAttribute("pageTitle", "Nueva compra a proveedor");
+        Map<String, String> proveedores = opcionesProveedor();
+        Map<String, String> productos = opcionesProducto();
         if (!model.containsAttribute("compraForm")) {
-            model.addAttribute("compraForm", CompraProveedorForm.nuevo());
+            boolean precargaValida = proveedores.containsKey(proveedor) && productos.containsKey(producto)
+                    && cantidad != null && cantidad > 0;
+            model.addAttribute("compraForm", precargaValida
+                    ? CompraProveedorForm.precargado(proveedor, producto, cantidad)
+                    : CompraProveedorForm.nuevo());
         }
-        model.addAttribute("opcionesProveedor", opcionesProveedor());
+        model.addAttribute("opcionesProveedor", proveedores);
         model.addAttribute("opcionesFormaDePago", opcionesFormaDePago());
-        model.addAttribute("opcionesProducto", opcionesProducto());
+        model.addAttribute("opcionesProducto", productos);
         return "admin/compras/formulario";
     }
 

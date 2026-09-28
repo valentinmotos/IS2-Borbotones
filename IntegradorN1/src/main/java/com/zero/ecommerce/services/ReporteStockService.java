@@ -1,6 +1,7 @@
 package com.zero.ecommerce.services;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import com.zero.ecommerce.entities.Producto;
 import com.zero.ecommerce.entities.Stock;
 import com.zero.ecommerce.entities.enums.EstadoStock;
 import com.zero.ecommerce.exception.ErrorServiceException;
+import com.zero.ecommerce.utils.ExportadorCsv;
 
 /** Construye el reporte de productos y stock de RF29. */
 @Service
@@ -71,40 +73,38 @@ public class ReporteStockService {
                 buenos, regulares, malos, List.copyOf(productos));
     }
 
-    /** Exporta el reporte de stock filtrado a CSV en UTF-8 con BOM (E5-02). */
-    public byte[] exportarCsv(String estado, String categoria) throws ErrorServiceException {
-        EstadoStock estadoSeleccionado = null;
-        if (estado != null && !estado.isBlank()) {
-            try {
-                estadoSeleccionado = EstadoStock.valueOf(estado.strip().toUpperCase());
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-        final EstadoStock estFiltro = estadoSeleccionado;
-        ReporteStockDTO reporte = generar();
-        List<ProductoStockDTO> productos = reporte.productos().stream()
-                .filter(p -> estFiltro == null || p.estado() == estFiltro)
-                .filter(p -> categoria == null || categoria.isBlank() || p.categoriaId().equals(categoria))
+    /** Los productos del reporte con el estado y la categoría elegidos. Un filtro en null o vacío no filtra. */
+    public List<ProductoStockDTO> filtrar(ReporteStockDTO reporte, EstadoStock estado, String idCategoria) {
+        return reporte.productos().stream()
+                .filter(producto -> estado == null || producto.estado() == estado)
+                .filter(producto -> idCategoria == null || idCategoria.isBlank()
+                        || producto.categoriaId().equals(idCategoria))
                 .toList();
+    }
 
-        List<String> encabezados = List.of(
-                "Código", "Producto", "Talle", "Categoría", "Stock actual", "Stock de referencia", "Estado stock"
-        );
-
-        List<List<String>> filas = new ArrayList<>();
-        for (ProductoStockDTO p : productos) {
-            filas.add(List.of(
-                    p.codigo() != null ? p.codigo() : "",
-                    p.nombre() != null ? p.nombre() : "",
-                    p.talle() != null ? p.talle() : "",
-                    (p.categoriaNombre() != null ? p.categoriaNombre() : "") + " / " + (p.subCategoriaNombre() != null ? p.subCategoriaNombre() : ""),
-                    String.valueOf(p.stockActual()),
-                    String.valueOf(p.stockReferencia()),
-                    p.estado() != null ? p.estado().name() : ""
-            ));
+    /** El estado que llega del filtro de la pantalla, o null si viene vacío o no existe. */
+    public EstadoStock convertirEstado(String estado) {
+        if (estado == null || estado.isBlank()) {
+            return null;
         }
+        try {
+            return EstadoStock.valueOf(estado.strip().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
 
-        return com.zero.ecommerce.utils.ExportadorCsv.exportar(encabezados, filas);
+    /** El reporte de stock con los mismos filtros de la pantalla, en CSV (E5-02). */
+    public byte[] exportarCsv(String estado, String idCategoria) throws ErrorServiceException {
+        List<String> encabezados = List.of("Código", "Producto", "Talle", "Categoría", "Subcategoría",
+                "Stock actual", "Stock de referencia", "Porcentaje", "Estado");
+        List<List<String>> filas = new ArrayList<>();
+        for (ProductoStockDTO p : filtrar(generar(), convertirEstado(estado), idCategoria)) {
+            filas.add(Arrays.asList(p.codigo(), p.nombre(), p.talle(), p.categoriaNombre(), p.subCategoriaNombre(),
+                    String.valueOf(p.stockActual()), String.valueOf(p.stockReferencia()), p.porcentaje() + " %",
+                    p.estado().getDescripcion()));
+        }
+        return ExportadorCsv.exportar(encabezados, filas);
     }
 
     private boolean esRecepcion(Stock movimiento) {

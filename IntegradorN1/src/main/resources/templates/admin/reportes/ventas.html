@@ -8,11 +8,8 @@
     <div layout:fragment="content">
         <div th:replace="~{fragments/mensajes :: mensajes}"></div>
 
-        <!-- Encabezado exclusivo para impresión (E5-02) -->
-        <div class="zero-print-header">
-            <h1>E-Commerce Zero — Reporte de ventas</h1>
-            <p>Período del <strong th:text="${#temporals.format(desde, 'dd/MM/yyyy')}"></strong> al <strong th:text="${#temporals.format(hasta, 'dd/MM/yyyy')}"></strong></p>
-        </div>
+        <header th:replace="~{fragments/impresion :: encabezado('Reporte de ventas',
+                ${'Período del ' + #temporals.format(desde, 'dd/MM/yyyy') + ' al ' + #temporals.format(hasta, 'dd/MM/yyyy')})}"></header>
 
         <!-- Tarjetas KPI -->
         <div th:if="${reporte != null}" class="zero-kpi-grid zero-kpi-grid-estados mb-4">
@@ -50,13 +47,13 @@
                         <strong th:text="${#temporals.format(desde, 'dd/MM/yyyy')}"></strong> y
                         <strong th:text="${#temporals.format(hasta, 'dd/MM/yyyy')}"></strong>.
                     </span>
-                    <div class="d-flex gap-2 align-items-center no-print">
+                    <div class="d-flex align-items-center no-print">
                         <span class="text-muted mr-3"
                               th:text="${reporte.detalle.size() == 1 ? '1 línea' : reporte.detalle.size() + ' líneas'}">0 líneas</span>
-                        <a th:href="@{/admin/reportes/ventas/exportar(desde=${desde},hasta=${hasta})}" class="zero-button secondary no-print">
+                        <a th:href="@{/admin/reportes/ventas/exportar(desde=${desde},hasta=${hasta})}" class="zero-button secondary">
                             <i class="fa fa-file-excel-o" aria-hidden="true"></i> Exportar CSV
                         </a>
-                        <button type="button" onclick="window.print()" class="zero-button secondary no-print ml-2">
+                        <button type="button" onclick="window.print()" class="zero-button secondary ml-2">
                             <i class="fa fa-print" aria-hidden="true"></i> Imprimir
                         </button>
                     </div>

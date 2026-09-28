@@ -1,6 +1,7 @@
 package com.zero.ecommerce.services;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,6 +20,7 @@ import com.zero.ecommerce.entities.Producto;
 import com.zero.ecommerce.entities.Proveedor;
 import com.zero.ecommerce.entities.SubCategoria;
 import com.zero.ecommerce.entities.enums.EstadoFactura;
+import com.zero.ecommerce.utils.ExportadorCsv;
 import com.zero.ecommerce.utils.TextoUtils;
 
 /**
@@ -72,27 +74,20 @@ public class ReporteProveedoresService {
         return new ReporteProveedoresDTO(filas.size(), proveedores, conVariosProveedores, filas);
     }
 
-    /** Exporta el reporte de proveedores filtrado a CSV en UTF-8 con BOM (E5-02). */
+    /** El reporte de proveedores filtrado, en CSV (E5-02). */
     public byte[] exportarCsv(String texto, String idCategoria) {
         ReporteProveedoresDTO reporte = generar(texto, idCategoria);
-        List<String> encabezados = List.of(
-                "Código", "Producto", "Talle", "Categoría", "Proveedor recomendado", "Precio de costo más bajo", "Fecha de compra"
-        );
-        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        List<String> encabezados = List.of("Código", "Producto", "Talle", "Categoría", "Subcategoría",
+                "Proveedor recomendado", "Precio de costo más bajo", "Fecha de compra");
         List<List<String>> filas = new ArrayList<>();
         for (ProductoProveedorDTO p : reporte.productos()) {
-            PrecioProveedorDTO rec = p.recomendado();
-            filas.add(List.of(
-                    p.codigo() != null ? p.codigo() : "",
-                    p.nombre() != null ? p.nombre() : "",
-                    p.talle() != null ? p.talle() : "",
-                    (p.categoria() != null ? p.categoria() : "") + " / " + (p.subCategoria() != null ? p.subCategoria() : ""),
-                    rec != null && rec.razonSocial() != null ? rec.razonSocial() : "",
-                    rec != null ? String.format(java.util.Locale.US, "%.2f", rec.precioCosto()) : "",
-                    rec != null && rec.fechaCompra() != null ? rec.fechaCompra().format(fmt) : ""
-            ));
+            PrecioProveedorDTO recomendado = p.recomendado();
+            filas.add(Arrays.asList(p.codigo(), p.nombre(), p.talle(), p.categoria(), p.subCategoria(),
+                    recomendado == null ? "" : recomendado.razonSocial(),
+                    recomendado == null ? "" : ExportadorCsv.monto(recomendado.precioCosto()),
+                    recomendado == null ? "" : ExportadorCsv.fecha(recomendado.fechaCompra())));
         }
-        return com.zero.ecommerce.utils.ExportadorCsv.exportar(encabezados, filas);
+        return ExportadorCsv.exportar(encabezados, filas);
     }
 
     /**

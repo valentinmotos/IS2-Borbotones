@@ -2,6 +2,7 @@ package com.zero.ecommerce.services;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import com.zero.ecommerce.entities.SubCategoria;
 import com.zero.ecommerce.entities.enums.EstadoFactura;
 import com.zero.ecommerce.exception.ErrorServiceException;
 import com.zero.ecommerce.repositories.FacturaClienteRepository;
+import com.zero.ecommerce.utils.ExportadorCsv;
 
 /**
  * Reporte de ventas (RF28, E5-01): FacturaCliente en PAGADA filtradas por rango de fechaFactura.
@@ -105,40 +107,18 @@ public class ReporteVentasService {
                 List.copyOf(detalle), subtotales);
     }
 
-    /**
-     * Exporta el reporte de ventas a formato CSV en UTF-8 con BOM (E5-02).
-     */
+    /** El detalle del reporte de ventas del período en CSV (E5-02). */
     public byte[] exportarCsv(LocalDate desde, LocalDate hasta) throws ErrorServiceException {
         ReporteVentasDTO reporte = generar(desde, hasta);
-
-        List<String> encabezados = List.of(
-                "Fecha de compra",
-                "Producto",
-                "Categoría",
-                "Cantidad",
-                "Precio unitario",
-                "Subtotal",
-                "ID Compra",
-                "Forma de pago"
-        );
-
-        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        List<String> encabezados = List.of("Fecha de compra", "Producto", "Categoría", "Cantidad", "Precio unitario",
+                "Subtotal", "ID Compra", "Forma de pago");
         List<List<String>> filas = new ArrayList<>();
-
         for (DetalleVentaDTO d : reporte.detalle()) {
-            filas.add(List.of(
-                    d.fechaCompra() != null ? d.fechaCompra().format(fmt) : "",
-                    d.producto() != null ? d.producto() : "",
-                    d.categoria() != null ? d.categoria() : "",
-                    String.valueOf(d.cantidad()),
-                    String.format(java.util.Locale.US, "%.2f", d.precioUnitario()),
-                    String.format(java.util.Locale.US, "%.2f", d.subtotal()),
-                    d.identificadorCompra() != null ? d.identificadorCompra() : "",
-                    d.formaPago() != null ? d.formaPago() : ""
-            ));
+            filas.add(Arrays.asList(ExportadorCsv.fecha(d.fechaCompra()), d.producto(), d.categoria(),
+                    String.valueOf(d.cantidad()), ExportadorCsv.monto(d.precioUnitario()),
+                    ExportadorCsv.monto(d.subtotal()), d.identificadorCompra(), d.formaPago()));
         }
-
-        return com.zero.ecommerce.utils.ExportadorCsv.exportar(encabezados, filas);
+        return ExportadorCsv.exportar(encabezados, filas);
     }
 
     // --------------- helpers privados ---------------

@@ -1,8 +1,12 @@
 package com.zero.ecommerce.controllers.admin;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.zero.ecommerce.entities.Categoria;
+import com.zero.ecommerce.exception.ErrorServiceException;
 import com.zero.ecommerce.services.CategoriaService;
+import com.zero.ecommerce.services.EmpresaService;
 import com.zero.ecommerce.services.ReporteProveedoresService;
 
 /** Reporte de proveedores (E5-05): el proveedor más económico de cada producto y la comparación entre proveedores. */
@@ -21,10 +27,13 @@ public class ReporteProveedoresController {
 
     private final ReporteProveedoresService service;
     private final CategoriaService categoriaService;
+    private final EmpresaService empresaService;
 
-    public ReporteProveedoresController(ReporteProveedoresService service, CategoriaService categoriaService) {
+    public ReporteProveedoresController(ReporteProveedoresService service, CategoriaService categoriaService,
+            EmpresaService empresaService) {
         this.service = service;
         this.categoriaService = categoriaService;
+        this.empresaService = empresaService;
     }
 
     @ModelAttribute("menuActivo")
@@ -34,8 +43,9 @@ public class ReporteProveedoresController {
 
     @GetMapping
     public String reporte(@RequestParam(defaultValue = "") String buscar,
-            @RequestParam(defaultValue = "") String categoria, Model model) {
+            @RequestParam(defaultValue = "") String categoria, Model model) throws ErrorServiceException {
         model.addAttribute("pageTitle", "Reporte de proveedores");
+        model.addAttribute("empresa", empresaService.buscarSedeCentral());
         model.addAttribute("reporte", service.generar(buscar, categoria));
         model.addAttribute("opcionesCategoria", opcionesCategoria());
         model.addAttribute("buscar", buscar);
@@ -52,16 +62,14 @@ public class ReporteProveedoresController {
     }
 
     @GetMapping("/exportar")
-    public org.springframework.http.ResponseEntity<byte[]> exportarCsv(
-            @RequestParam(defaultValue = "") String buscar,
+    public ResponseEntity<byte[]> exportarCsv(@RequestParam(defaultValue = "") String buscar,
             @RequestParam(defaultValue = "") String categoria) {
-
         byte[] contenido = service.exportarCsv(buscar, categoria);
-        String filename = "reporte_proveedores.csv";
+        String nombreArchivo = "reporte_proveedores_" + LocalDate.now() + ".csv";
 
-        return org.springframework.http.ResponseEntity.ok()
-                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .contentType(org.springframework.http.MediaType.parseMediaType("text/csv; charset=UTF-8"))
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombreArchivo + "\"")
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
                 .body(contenido);
     }
 }

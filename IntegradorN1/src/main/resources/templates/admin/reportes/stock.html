@@ -6,11 +6,8 @@
         <span>Reportes</span><span class="breadcrumb-separator">/</span><span>Stock</span>
     </div>
     <div layout:fragment="content">
-        <!-- Encabezado exclusivo para impresión (E5-02) -->
-        <div class="zero-print-header">
-            <h1>E-Commerce Zero — Reporte de productos y stock</h1>
-            <p th:text="${'Sucursal: ' + reporte.sucursal}">Sucursal Central</p>
-        </div>
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <header th:replace="~{fragments/impresion :: encabezado('Reporte de productos y stock', ${'Stock al ' + #temporals.format(#temporals.createToday(), 'dd/MM/yyyy')})}"></header>
 
         <div class="zero-kpi-grid zero-kpi-grid-estados mb-4">
             <div th:replace="~{fragments/kpi :: kpiEnlace('Unidades en stock', ${reporte.totalUnidades},
@@ -39,11 +36,11 @@
                     <a th:href="@{/admin/reportes/stock}" class="zero-button secondary">Limpiar</a>
                 </form>
 
-                <div class="d-flex gap-2 align-items-center no-print">
-                    <a th:href="@{/admin/reportes/stock/exportar(estado=${estado},categoria=${categoria})}" class="zero-button secondary no-print">
+                <div class="d-flex align-items-center no-print">
+                    <a th:href="@{/admin/reportes/stock/exportar(estado=${estado},categoria=${categoria})}" class="zero-button secondary">
                         <i class="fa fa-file-excel-o" aria-hidden="true"></i> Exportar CSV
                     </a>
-                    <button type="button" onclick="window.print()" class="zero-button secondary no-print ml-2">
+                    <button type="button" onclick="window.print()" class="zero-button secondary ml-2">
                         <i class="fa fa-print" aria-hidden="true"></i> Imprimir
                     </button>
                 </div>
@@ -66,6 +63,7 @@
                             <th>Referencia</th>
                             <th>Nivel de stock</th>
                             <th>Estado</th>
+                            <th class="no-print">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -96,11 +94,79 @@
                                       th:classappend="| estado-${#strings.toLowerCase(producto.estado.name())}|"
                                       th:text="${producto.estado.descripcion}">Malo</span>
                             </td>
+                            <td class="zero-table-actions no-print">
+                                <th:block th:if="${producto.estado.name() == 'MALO'}"
+                                          th:with="reposicion=${reposiciones[producto.productoId]}">
+                                    <th:block th:if="${reposicion.tieneProveedorRecomendado()}">
+                                        <a th:href="@{/admin/reportes/stock/reposicion/{id}/whatsapp(id=${producto.productoId})}"
+                                           target="_blank" rel="noopener noreferrer" class="btn btn-sm zero-btn-whatsapp"
+                                           th:attr="aria-label=|Pedir ${reposicion.unidades} unidades de ${producto.nombre} por WhatsApp a ${reposicion.proveedorNombre}|">
+                                            <i class="fa fa-whatsapp" aria-hidden="true"></i> Pedir reposición
+                                        </a>
+                                        <a th:href="@{/admin/compras/nueva(proveedor=${reposicion.proveedorId},producto=${producto.productoId},cantidad=${reposicion.unidades})}"
+                                           class="btn btn-sm btn-outline-dark">Crear compra</a>
+                                    </th:block>
+                                    <button th:unless="${reposicion.tieneProveedorRecomendado()}" type="button"
+                                            class="btn btn-sm zero-btn-whatsapp" data-toggle="modal"
+                                            th:attr="data-target=|#proveedor-reposicion-${producto.productoId}|">
+                                        <i class="fa fa-whatsapp" aria-hidden="true"></i> Pedir reposición
+                                    </button>
+                                    <button th:unless="${reposicion.tieneProveedorRecomendado()}" type="button"
+                                            class="btn btn-sm btn-outline-dark" data-toggle="modal"
+                                            th:attr="data-target=|#proveedor-reposicion-${producto.productoId}|">Crear compra</button>
+                                </th:block>
+                                <span th:unless="${producto.estado.name() == 'MALO'}" class="text-muted">-</span>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
+
+        <th:block th:each="producto : ${productos}" th:if="${producto.estado.name() == 'MALO'}"
+                  th:with="reposicion=${reposiciones[producto.productoId]}">
+            <div th:unless="${reposicion.tieneProveedorRecomendado()}" class="modal fade"
+                 th:id="|proveedor-reposicion-${producto.productoId}|" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content zero-modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Elegir proveedor</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <form method="get" class="zero-form">
+                            <div class="modal-body">
+                                <p th:text="|No hay compras previas de ${producto.nombre} a un proveedor activo. Elegí a quién pedirle ${reposicion.unidades} unidades.|">
+                                    Elegí un proveedor.
+                                </p>
+                                <div class="form-group mb-0">
+                                    <label th:for="|proveedor-${producto.productoId}|">Proveedor</label>
+                                    <select th:id="|proveedor-${producto.productoId}|" name="proveedor"
+                                            class="form-control" required>
+                                        <option value="">Seleccionar proveedor</option>
+                                        <option th:each="opcion : ${proveedores}" th:value="${opcion.id}"
+                                                th:text="${opcion.razonSocial}">Proveedor</option>
+                                    </select>
+                                </div>
+                                <input type="hidden" name="producto" th:value="${producto.productoId}">
+                                <input type="hidden" name="cantidad" th:value="${reposicion.unidades}">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn zero-btn-whatsapp" formtarget="_blank"
+                                        th:formaction="@{/admin/reportes/stock/reposicion/{id}/whatsapp(id=${producto.productoId})}">
+                                    <i class="fa fa-whatsapp" aria-hidden="true"></i> Abrir WhatsApp
+                                </button>
+                                <button type="submit" class="btn btn-dark" th:formaction="@{/admin/compras/nueva}">
+                                    Crear compra
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </th:block>
     </div>
 </body>
 </html>
