@@ -1,5 +1,7 @@
 package com.zero.ecommerce.controllers.cliente;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -88,16 +90,37 @@ public class CarritoController {
             flash.addFlashAttribute("error", e.getMessage());
         }
 
-        if (returnUrl != null && !returnUrl.isBlank() && !returnUrl.contains("/login")) {
-            return "redirect:" + returnUrl;
+        String destino = rutaInterna(returnUrl);
+        if (destino != null && !destino.contains("/login")) {
+            return "redirect:" + destino;
         }
 
-        String referer = request.getHeader("Referer");
-        if (referer != null && !referer.isBlank() && !referer.contains("/login") && !referer.contains("/carrito")) {
+        String referer = rutaInterna(request.getHeader("Referer"));
+        if (referer != null && !referer.contains("/login") && !referer.contains("/carrito")) {
             return "redirect:" + referer;
         }
 
         return "redirect:" + RUTA_CARRITO;
+    }
+
+    /**
+     * Devuelve solo la ruta (y query) de la URL, o null si no es válida, para no redirigir nunca
+     * fuera de la aplicación.
+     */
+    private String rutaInterna(String url) {
+        if (url == null || url.isBlank()) {
+            return null;
+        }
+        try {
+            URI uri = new URI(url);
+            String ruta = uri.getRawPath();
+            if (ruta == null || !ruta.startsWith("/") || ruta.startsWith("//")) {
+                return null;
+            }
+            return uri.getRawQuery() == null ? ruta : ruta + "?" + uri.getRawQuery();
+        } catch (URISyntaxException e) {
+            return null;
+        }
     }
 
     /**
