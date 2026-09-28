@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!-- Encabezado que solo aparece al imprimir un reporte (E5-02): datos de la empresa y el rango o la fecha. -->
+    <header th:fragment="encabezado(titulo, detalle)" class="zero-print-header">
+        <h1 th:text="${titulo}">Reporte</h1>
+        <p th:if="${empresa != null}"
+           th:text="|${empresa.razonSocial} · CUIT ${empresa.cuit}${empresa.direccion != null ? ' · ' + empresa.direccion.describir() : ''}|">
+            Zero · CUIT 30-00000000-0 · San Martín 1250, Mendoza
+        </p>
+        <p th:text="${detalle}">Período</p>
+    </header>
+</body>
+</html>

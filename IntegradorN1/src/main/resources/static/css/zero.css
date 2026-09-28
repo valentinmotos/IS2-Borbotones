@@ -1657,3 +1657,72 @@ a, a:hover {
         height: 290px;
     }
 }
+
+/* E5-02: Hoja de estilos de impresión */
+.zero-print-header {
+    display: none;
+}
+
+@media print {
+    /* Ocultar elementos del panel administrativo que no deben salir impresos */
+    .admin-sidebar,
+    .admin-topbar,
+    .admin-page-header,
+    .breadcrumb,
+    .zero-filters,
+    .zero-filters-acciones,
+    .no-print,
+    .zero-button {
+        display: none !important;
+    }
+
+    /* Formato de hoja limpia */
+    body,
+    .admin-layout,
+    .admin-main,
+    .admin-content,
+    .zero-panel {
+        background: #ffffff !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Mostrar encabezado con datos de la empresa y rango del reporte */
+    .zero-print-header {
+        border-bottom: 2px solid #333333;
+        display: block !important;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+    }
+
+    .zero-print-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .zero-print-header p {
+        color: #444444;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    /* Tablas en impresión */
+    .table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+
+    .table th,
+    .table td {
+        border: 1px solid #dddddd !important;
+        color: #000000 !important;
+        padding: 6px 8px !important;
+    }
+}
+

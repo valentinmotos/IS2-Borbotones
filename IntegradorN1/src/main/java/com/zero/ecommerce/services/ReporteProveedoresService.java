@@ -1,6 +1,7 @@
 package com.zero.ecommerce.services;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,6 +20,7 @@ import com.zero.ecommerce.entities.Producto;
 import com.zero.ecommerce.entities.Proveedor;
 import com.zero.ecommerce.entities.SubCategoria;
 import com.zero.ecommerce.entities.enums.EstadoFactura;
+import com.zero.ecommerce.utils.ExportadorCsv;
 import com.zero.ecommerce.utils.TextoUtils;
 
 /**
@@ -70,6 +72,22 @@ public class ReporteProveedoresService {
                 .count();
         int conVariosProveedores = (int) filas.stream().filter(fila -> fila.proveedores().size() > 1).count();
         return new ReporteProveedoresDTO(filas.size(), proveedores, conVariosProveedores, filas);
+    }
+
+    /** El reporte de proveedores filtrado, en CSV (E5-02). */
+    public byte[] exportarCsv(String texto, String idCategoria) {
+        ReporteProveedoresDTO reporte = generar(texto, idCategoria);
+        List<String> encabezados = List.of("Código", "Producto", "Talle", "Categoría", "Subcategoría",
+                "Proveedor recomendado", "Precio de costo más bajo", "Fecha de compra");
+        List<List<String>> filas = new ArrayList<>();
+        for (ProductoProveedorDTO p : reporte.productos()) {
+            PrecioProveedorDTO recomendado = p.recomendado();
+            filas.add(Arrays.asList(p.codigo(), p.nombre(), p.talle(), p.categoria(), p.subCategoria(),
+                    recomendado == null ? "" : recomendado.razonSocial(),
+                    recomendado == null ? "" : ExportadorCsv.monto(recomendado.precioCosto()),
+                    recomendado == null ? "" : ExportadorCsv.fecha(recomendado.fechaCompra())));
+        }
+        return ExportadorCsv.exportar(encabezados, filas);
     }
 
     /**

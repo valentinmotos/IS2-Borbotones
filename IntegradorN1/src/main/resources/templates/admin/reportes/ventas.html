@@ -8,6 +8,9 @@
     <div layout:fragment="content">
         <div th:replace="~{fragments/mensajes :: mensajes}"></div>
 
+        <header th:replace="~{fragments/impresion :: encabezado('Reporte de ventas',
+                ${'Período del ' + #temporals.format(desde, 'dd/MM/yyyy') + ' al ' + #temporals.format(hasta, 'dd/MM/yyyy')})}"></header>
+
         <!-- Tarjetas KPI -->
         <div th:if="${reporte != null}" class="zero-kpi-grid zero-kpi-grid-estados mb-4">
             <article th:replace="~{fragments/kpi :: kpi('Compras', ${reporte.cantidadCompras},
@@ -44,8 +47,16 @@
                         <strong th:text="${#temporals.format(desde, 'dd/MM/yyyy')}"></strong> y
                         <strong th:text="${#temporals.format(hasta, 'dd/MM/yyyy')}"></strong>.
                     </span>
-                    <span class="text-muted"
-                          th:text="${reporte.detalle.size() == 1 ? '1 línea' : reporte.detalle.size() + ' líneas'}">0 líneas</span>
+                    <div class="d-flex align-items-center no-print">
+                        <span class="text-muted mr-3"
+                              th:text="${reporte.detalle.size() == 1 ? '1 línea' : reporte.detalle.size() + ' líneas'}">0 líneas</span>
+                        <a th:href="@{/admin/reportes/ventas/exportar(desde=${desde},hasta=${hasta})}" class="zero-button secondary">
+                            <i class="fa fa-file-excel-o" aria-hidden="true"></i> Exportar CSV
+                        </a>
+                        <button type="button" onclick="window.print()" class="zero-button secondary ml-2">
+                            <i class="fa fa-print" aria-hidden="true"></i> Imprimir
+                        </button>
+                    </div>
                 </div>
 
                 <div class="table-responsive zero-table-wrap">

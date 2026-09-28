@@ -7,6 +7,10 @@
     </div>
     <div layout:fragment="content">
         <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+
+        <header th:replace="~{fragments/impresion :: encabezado('Reporte de proveedores',
+                ${'Precios de costo al ' + #temporals.format(#temporals.createToday(), 'dd/MM/yyyy')})}"></header>
+
         <div class="zero-kpi-grid zero-kpi-grid-estados mb-4">
             <article th:replace="~{fragments/kpi :: kpi('Productos', ${reporte.cantidadProductos},
                      'Con compras recibidas', 'fa fa-cube')}"></article>
@@ -26,8 +30,16 @@
             </form>
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
                 <span class="text-muted">Precios de costo de las compras recibidas. Se compara el último precio de cada proveedor.</span>
-                <span class="text-muted"
-                      th:text="${reporte.cantidadProductos == 1 ? '1 producto' : reporte.cantidadProductos + ' productos'}">0 productos</span>
+                <div class="d-flex align-items-center no-print">
+                    <span class="text-muted mr-3"
+                          th:text="${reporte.cantidadProductos == 1 ? '1 producto' : reporte.cantidadProductos + ' productos'}">0 productos</span>
+                    <a th:href="@{/admin/reportes/proveedores/exportar(buscar=${buscar},categoria=${categoria})}" class="zero-button secondary">
+                        <i class="fa fa-file-excel-o" aria-hidden="true"></i> Exportar CSV
+                    </a>
+                    <button type="button" onclick="window.print()" class="zero-button secondary ml-2">
+                        <i class="fa fa-print" aria-hidden="true"></i> Imprimir
+                    </button>
+                </div>
             </div>
             <!-- Misma estructura que fragments/tabla :: tablaRegistros, con una fila desplegable por producto (collapse
                  de Bootstrap) que el fragment no soporta. Sin rayas, porque las filas ocultas cortarían la alternancia. -->
