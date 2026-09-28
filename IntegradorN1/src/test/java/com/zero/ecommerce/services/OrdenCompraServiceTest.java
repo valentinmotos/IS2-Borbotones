@@ -85,6 +85,16 @@ class OrdenCompraServiceTest {
     }
 
     @Test
+    void listarPedidoFiltraPorNumeroSinImportarMayusculas() throws Exception {
+        when(repository.findByEliminadoFalseOrderByFechaDesc()).thenReturn(List.of(pendientePago, entregado));
+
+        assertThat(service.listarPedido(null, null, null, null, null, "ord-o2"))
+                .extracting(PedidoDTO::id).containsExactly("o2");
+        assertThat(service.listarPedido(null, null, null, null, null, "o1"))
+                .extracting(PedidoDTO::id).containsExactly("o1");
+    }
+
+    @Test
     void listarPedidoFiltraPorFormaDePagoYMuestraLaDeLaFactura() throws Exception {
         when(repository.findByEliminadoFalseOrderByFechaDesc()).thenReturn(List.of(pendientePago, entregado));
         when(facturaClienteRepository.findByOrdenCompraIsNotNullAndEliminadoFalse())

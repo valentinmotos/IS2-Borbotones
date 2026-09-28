@@ -50,18 +50,27 @@ public class OrdenCompraService {
                 .toList();
     }
 
-    /**
-     * Pedidos filtrados por estado, forma de pago, rango de fechas y cliente (parte del nombre, apellido o correo, sin
-     * importar mayúsculas ni tildes). Cada filtro es opcional (null o vacío).
-     */
     public List<PedidoDTO> listarPedido(EstadoOrdenCompra estado, String idFormaDePago, LocalDate desde,
             LocalDate hasta, String cliente) throws ErrorServiceException {
+        return listarPedido(estado, idFormaDePago, desde, hasta, cliente, null);
+    }
+
+    /**
+     * Pedidos filtrados por estado, forma de pago, rango de fechas, cliente (parte del nombre, apellido o correo, sin
+     * importar mayúsculas ni tildes) y número (parte del identificador, por ejemplo "CD339"). Cada filtro es opcional
+     * (null o vacío).
+     */
+    public List<PedidoDTO> listarPedido(EstadoOrdenCompra estado, String idFormaDePago, LocalDate desde,
+            LocalDate hasta, String cliente, String numero) throws ErrorServiceException {
         if (desde != null && hasta != null && desde.isAfter(hasta)) {
             throw new ErrorServiceException("La fecha desde no puede ser posterior a la fecha hasta.");
         }
         Map<String, FacturaCliente> facturas = facturasPorOrden();
         String textoCliente = cliente == null || cliente.isBlank() ? null : TextoUtils.normalizar(cliente);
+        String textoNumero = numero == null || numero.isBlank() ? null : TextoUtils.normalizar(numero);
         return listarPedidoActivo().stream()
+                .filter(o -> textoNumero == null || (o.getIdentificadorCompra() != null
+                        && TextoUtils.normalizar(o.getIdentificadorCompra()).contains(textoNumero)))
                 .filter(o -> estado == null || o.getEstadoOrdenCompra() == estado)
                 .filter(o -> desde == null || (o.getFecha() != null && !o.getFecha().isBefore(desde)))
                 .filter(o -> hasta == null || (o.getFecha() != null && !o.getFecha().isAfter(hasta)))

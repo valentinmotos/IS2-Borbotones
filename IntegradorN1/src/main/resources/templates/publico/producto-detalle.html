@@ -15,50 +15,54 @@
 
             <div class="zero-product-detail">
                 <div class="zero-product-detail-image">
-                    <span th:if="${producto.enOferta}" class="badge badge-danger zero-detail-offer">Oferta</span>
-                    <img th:src="${producto.imagenId != null ? '/imagen/' + producto.imagenId : '/img/default-image.png'}"
+                    <span class="badge badge-danger zero-detail-offer" id="detalleOferta" th:hidden="${!producto.enOferta}">Oferta</span>
+                    <img id="detalleImagen" th:src="${producto.imagenId != null ? '/imagen/' + producto.imagenId : '/img/default-image.png'}"
                          th:alt="${producto.nombre}">
                 </div>
 
                 <div class="zero-product-detail-info">
-                    <p class="zero-product-code" th:text="${'Código ' + producto.codigo}">Código</p>
+                    <p class="zero-product-code" id="detalleCodigo" th:text="${'Código ' + producto.codigo}">Código</p>
                     <h1 th:text="${producto.nombre}">Producto</h1>
-                    <p class="zero-product-price" th:text="${producto.precioFormateado}">$0</p>
+                    <p class="zero-product-price" id="detallePrecio" th:text="${producto.precioFormateado}">$0</p>
                     <p class="zero-product-description" th:text="${producto.descripcion}">Descripción</p>
 
                     <div class="zero-detail-block">
                         <strong>Talle</strong>
                         <div class="zero-size-list" aria-label="Talles disponibles">
                             <a th:each="variante : ${talles}" th:href="@{/producto/{id}(id=${variante.id})}"
-                               th:text="${variante.talle}"
+                               th:text="${variante.talle}" data-talle
+                               th:data-id="${variante.id}" th:data-codigo="${variante.codigo}"
+                               th:data-precio="${variante.precioFormateado}" th:data-stock="${variante.stock}"
+                               th:data-oferta="${variante.enOferta}"
+                               th:data-imagen="${variante.imagenId != null ? '/imagen/' + variante.imagenId : '/img/default-image.png'}"
                                th:class="${variante.id == producto.id ? 'zero-size active' : 'zero-size'}"
                                th:attr="aria-current=${variante.id == producto.id ? 'true' : null}">M</a>
                         </div>
                     </div>
 
-                    <p class="zero-stock" th:text="${producto.stock == 1 ? 'Última unidad disponible' : producto.stock + ' unidades disponibles'}">
+                    <p class="zero-stock" id="detalleStock" th:text="${producto.stock == 1 ? 'Última unidad disponible' : producto.stock + ' unidades disponibles'}">
                         Stock disponible
                     </p>
 
                     <form class="zero-add-cart" th:action="@{/cliente/carrito/agregar}" method="post"
                           sec:authorize="hasRole('CLIENTE')">
-                        <input type="hidden" name="idProducto" th:value="${producto.id}">
-                        <input type="hidden" name="returnUrl" th:value="@{/producto/{id}(id=${producto.id})}">
+                        <input type="hidden" name="idProducto" th:value="${producto.id}" data-producto-id>
+                        <input type="hidden" name="returnUrl" th:value="@{/producto/{id}(id=${producto.id})}" data-producto-url>
                         <div class="form-group">
                             <label for="cantidad">Cantidad</label>
                             <input id="cantidad" name="cantidad" type="number" class="form-control"
-                                   value="1" min="1" th:max="${producto.stock}" inputmode="numeric" required>
+                                   value="1" min="1" th:max="${producto.stock}" inputmode="numeric" required data-producto-cantidad>
                         </div>
                         <button type="submit" class="zero-button primary">Agregar al carrito</button>
                     </form>
                     <form class="zero-add-cart" th:action="@{/login}" method="get"
                           sec:authorize="isAnonymous()">
-                        <input type="hidden" name="idProducto" th:value="${producto.id}">
-                        <input type="hidden" name="retorno" th:value="@{/producto/{id}(id=${producto.id})}">
+                        <input type="hidden" name="idProducto" th:value="${producto.id}" data-producto-id>
+                        <input type="hidden" name="retorno" th:value="@{/producto/{id}(id=${producto.id})}" data-producto-url>
                         <div class="form-group">
                             <label for="cantidadVisitante">Cantidad</label>
                             <input id="cantidadVisitante" name="cantidad" type="number" class="form-control"
-                                   value="1" min="1" th:max="${producto.stock}" inputmode="numeric" required>
+                                   value="1" min="1" th:max="${producto.stock}" inputmode="numeric" required data-producto-cantidad>
                         </div>
                         <button type="submit" class="zero-button primary">Agregar al carrito</button>
                     </form>
@@ -85,5 +89,9 @@
         </div>
     </section>
 </div>
+
+<th:block layout:fragment="scripts">
+    <script th:src="@{/js/producto-talles.js}"></script>
+</th:block>
 </body>
 </html>

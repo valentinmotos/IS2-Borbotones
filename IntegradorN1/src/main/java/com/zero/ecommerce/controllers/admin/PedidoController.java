@@ -54,10 +54,11 @@ public class PedidoController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
             @RequestParam(defaultValue = "") String cliente,
+            @RequestParam(defaultValue = "") String numero,
             Model model) {
         List<PedidoDTO> pedidos;
         try {
-            pedidos = service.listarPedido(service.convertirEstado(estado), formaPago, desde, hasta, cliente);
+            pedidos = service.listarPedido(service.convertirEstado(estado), formaPago, desde, hasta, cliente, numero);
         } catch (ErrorServiceException e) {
             model.addAttribute("error", e.getMessage());
             pedidos = List.of();
@@ -73,6 +74,7 @@ public class PedidoController {
         model.addAttribute("desde", desde);
         model.addAttribute("hasta", hasta);
         model.addAttribute("cliente", cliente);
+        model.addAttribute("numero", numero);
         return "admin/pedidos/listado";
     }
 

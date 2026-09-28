@@ -56,13 +56,13 @@ class CatalogoPublicoIntegrationTest {
         mockMvc.perform(get("/catalogo/{categoriaId}", categoriaId))
                 .andExpect(status().isOk())
                 .andExpect(view().name("publico/catalogo"))
-                .andExpect(content().string(containsString("Gorra Zero Training")))
-                .andExpect(content().string(not(containsString("Zapatilla Zero Run"))));
+                .andExpect(content().string(containsString("Gorra Zero Training")));
 
         mockMvc.perform(get("/catalogo/{categoriaId}/{subCategoriaId}", categoriaId, subCategoriaId))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Gorra Zero Training")))
-                .andExpect(content().string(containsString("Oferta")));
+                .andExpect(content().string(containsString("Oferta")))
+                .andExpect(content().string(not(containsString("Zapatilla Zero Run"))));
     }
 
     @Test
@@ -72,18 +72,17 @@ class CatalogoPublicoIntegrationTest {
     }
 
     @Test
-    void paginaElCatalogoYRespetaElParametroPage() throws Exception {
-        Producto referencia = productoService.buscarProductoPorCodigo("REM-DRY-H-M");
-        String categoriaId = referencia.getSubCategoria().getCategoria().getId();
-        productoService.listarProductoActivo().stream()
-                .filter(producto -> categoriaId.equals(producto.getSubCategoria().getCategoria().getId()))
-                .forEach(producto -> registrarStock(producto, 5));
+    void paginaLaBusquedaYRespetaElParametroPage() throws Exception {
+        var productos = productoService.listarProductoActivo();
+        productos.forEach(producto -> registrarStock(producto, 5));
+        long modelos = productos.stream().map(producto -> producto.getNombre().toLowerCase()).distinct().count();
+        int totalPaginas = (int) Math.ceil(modelos / 16.0);
 
-        mockMvc.perform(get("/catalogo/{categoriaId}", categoriaId).param("page", "2"))
+        mockMvc.perform(get("/buscar").param("q", "zero").param("page", "2"))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("paginaActual", 2))
-                .andExpect(model().attribute("totalPaginas", 2))
-                .andExpect(content().string(containsString("?page=1")));
+                .andExpect(model().attribute("totalPaginas", totalPaginas))
+                .andExpect(content().string(containsString("page=1")));
     }
 
     @Test

@@ -11,13 +11,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.zero.ecommerce.dto.CatalogoFiltro;
+import com.zero.ecommerce.dto.ModeloCatalogoDTO;
 import com.zero.ecommerce.dto.ProductoCatalogoDTO;
 import com.zero.ecommerce.services.CatalogoService;
 
 @Controller
 public class BusquedaController {
 
-    private static final int TAMANIO_PAGINA = 12;
+    private static final int TAMANIO_PAGINA = 16;
 
     private final CatalogoService catalogoService;
 
@@ -46,7 +47,7 @@ public class BusquedaController {
                 minimo, maximo, talleNormalizado, ofertas, ordenNormalizado);
         List<ProductoCatalogoDTO> todos = catalogoService.buscar(termino, filtro);
 
-        Page<ProductoCatalogoDTO> resultado = paginar(todos, pagina);
+        Page<ModeloCatalogoDTO> resultado = paginar(catalogoService.agruparPorModelo(todos), pagina);
         String baseUrl = construirBaseUrl(termino, minimo, maximo, talleNormalizado, ofertas, ordenNormalizado);
 
         model.addAttribute("productos", resultado);
@@ -66,7 +67,7 @@ public class BusquedaController {
         return "publico/buscar";
     }
 
-    private Page<ProductoCatalogoDTO> paginar(List<ProductoCatalogoDTO> productos, int pagina) {
+    private <T> Page<T> paginar(List<T> productos, int pagina) {
         int totalPaginas = Math.max(1, (int) Math.ceil((double) productos.size() / TAMANIO_PAGINA));
         int actual = Math.min(Math.max(pagina, 1), totalPaginas);
         int desde = Math.min((actual - 1) * TAMANIO_PAGINA, productos.size());

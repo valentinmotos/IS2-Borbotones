@@ -3,8 +3,10 @@ package com.zero.ecommerce.services;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.zero.ecommerce.dto.CatalogoFiltro;
 import com.zero.ecommerce.dto.FiltroCatalogoDTO;
+import com.zero.ecommerce.dto.ModeloCatalogoDTO;
 import com.zero.ecommerce.dto.ProductoCatalogoDTO;
 import com.zero.ecommerce.entities.Producto;
 import com.zero.ecommerce.exception.ErrorServiceException;
@@ -24,6 +27,23 @@ import com.zero.ecommerce.utils.TextoUtils;
 @Service
 @Transactional(readOnly = true)
 public class CatalogoService {
+
+    private static final List<String> TALLES_LETRA = List.of("XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL");
+
+    /** Ordena los talles numéricos por valor (8 antes que 10) y los de letra de menor a mayor. */
+    static final Comparator<String> COMPARADOR_TALLES = (a, b) -> {
+        boolean numeroA = a.strip().matches("\\d+");
+        boolean numeroB = b.strip().matches("\\d+");
+        if (numeroA && numeroB) {
+            return Integer.compare(Integer.parseInt(a.strip()), Integer.parseInt(b.strip()));
+        }
+        int letraA = TALLES_LETRA.indexOf(a.strip().toUpperCase(Locale.ROOT));
+        int letraB = TALLES_LETRA.indexOf(b.strip().toUpperCase(Locale.ROOT));
+        if (letraA >= 0 && letraB >= 0) {
+            return Integer.compare(letraA, letraB);
+        }
+        return String.CASE_INSENSITIVE_ORDER.compare(a, b);
+    };
 
     private final ProductoService productoService;
     private final StockService stockService;
@@ -275,6 +295,64 @@ public class CatalogoService {
             int pagina,
             int tamanio) {
 
+        return paginar(
+                filtrarOfertas(filtro),
+                pagina,
+                tamanio);
+    }
+
+    /** Como listarOfertas, pero con un elemento por modelo (todos sus talles en una sola card). */
+    public Page<ModeloCatalogoDTO> listarOfertasPorModelo(
+            FiltroCatalogoDTO filtro,
+            int pagina,
+            int tamanio) {
+
+        return paginar(
+                agruparPorModelo(filtrarOfertas(filtro)),
+                pagina,
+                tamanio);
+    }
+
+    /**
+     * Agrupa los productos del mismo modelo (mismo nombre, un producto por talle) conservando el orden
+     * del listado. Si los talles tienen precios distintos, el precio se muestra "Desde" el menor.
+     */
+    public List<ModeloCatalogoDTO> agruparPorModelo(
+            List<ProductoCatalogoDTO> productos) {
+
+        Map<String, List<ProductoCatalogoDTO>> porModelo = new LinkedHashMap<>();
+        for (ProductoCatalogoDTO producto : productos) {
+            String clave = producto.nombre() == null
+                    ? producto.id()
+                    : producto.nombre().strip().toLowerCase(Locale.ROOT);
+            porModelo.computeIfAbsent(clave, k -> new ArrayList<>()).add(producto);
+        }
+
+        List<ModeloCatalogoDTO> modelos = new ArrayList<>();
+        for (List<ProductoCatalogoDTO> variantes : porModelo.values()) {
+            List<String> talles = variantes.stream()
+                    .map(ProductoCatalogoDTO::talle)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .sorted(COMPARADOR_TALLES)
+                    .toList();
+            ProductoCatalogoDTO masBarato = variantes.stream()
+                    .min(Comparator.comparingDouble(ProductoCatalogoDTO::precio))
+                    .orElseThrow();
+            boolean mismoPrecio = variantes.stream().allMatch(v -> v.precio() == masBarato.precio());
+            modelos.add(new ModeloCatalogoDTO(
+                    variantes.get(0),
+                    talles,
+                    mismoPrecio
+                            ? variantes.get(0).precioFormateado()
+                            : "Desde " + masBarato.precioFormateado()));
+        }
+        return modelos;
+    }
+
+    private List<ProductoCatalogoDTO> filtrarOfertas(
+            FiltroCatalogoDTO filtro) {
+
         FiltroCatalogoDTO seguro =
                 filtro == null
                         ? new FiltroCatalogoDTO(
@@ -315,10 +393,7 @@ public class CatalogoService {
 
                         .toList();
 
-        return paginar(
-                ofertas,
-                pagina,
-                tamanio);
+        return ofertas;
     }
 
     public ProductoCatalogoDTO buscarDetalle(
@@ -364,7 +439,7 @@ public class CatalogoService {
                         Comparator.comparing(
                                 ProductoCatalogoDTO::talle,
                                 Comparator.nullsLast(
-                                        String.CASE_INSENSITIVE_ORDER)))
+                                        COMPARADOR_TALLES)))
 
                 .toList();
     }
@@ -607,8 +682,8 @@ public class CatalogoService {
         };
     }
 
-    private Page<ProductoCatalogoDTO> paginar(
-            List<ProductoCatalogoDTO> productos,
+    private <T> Page<T> paginar(
+            List<T> productos,
             int pagina,
             int tamanio) {
 

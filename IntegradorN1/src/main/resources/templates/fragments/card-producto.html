@@ -12,48 +12,24 @@
         </div>
     </article>
 
-    <!-- Card navegable usada por las grillas reales del catalogo. -->
+    <!-- Card navegable usada por las grillas reales del catalogo. Recibe un ModeloCatalogoDTO: todos los talles
+         del modelo en una sola card. Desde el listado no se agrega al carrito: hay que entrar al detalle para
+         elegir el talle. -->
     <article th:fragment="cardCatalogo(producto)" class="zero-product-card">
         <a class="zero-product-card-link" th:href="@{/producto/{id}(id=${producto.id})}">
             <div class="image-wrap">
+                <span th:if="${producto.enOferta}" class="badge badge-danger zero-offer-badge">Oferta</span>
                 <img th:src="${producto.imagenId != null ? '/imagen/' + producto.imagenId : '/img/default-image.png'}"
                      th:alt="${producto.nombre}" loading="lazy">
             </div>
             <div class="zero-product-card-body">
-                <span th:if="${producto.enOferta}" class="badge badge-danger zero-offer-badge">Oferta</span>
                 <h3 th:text="${producto.nombre}">Producto</h3>
-                <p class="zero-product-meta" th:text="${'Talle ' + producto.talle}">Talle M</p>
+                <p class="zero-product-meta"
+                   th:text="${(producto.variosTalles ? 'Talles ' : 'Talle ') + #strings.listJoin(producto.talles, ' · ')}">Talle M</p>
                 <span class="price" th:text="${producto.precioFormateado}">$0</span>
+                <span class="zero-product-card-cta"><span class="zero-product-card-cta-texto">Ver producto</span></span>
             </div>
         </a>
-        <div class="zero-product-card-body pt-0">
-            <div class="mt-2">
-                <!-- Cliente logueado: agrega directamente -->
-                <form th:action="@{/cliente/carrito/agregar}" method="post" sec:authorize="hasRole('CLIENTE')">
-                    <input type="hidden" name="idProducto" th:value="${producto.id}">
-                    <input type="hidden" name="cantidad" value="1">
-                    <input type="hidden" name="returnUrl" th:value="@{/producto/{id}(id=${producto.id})}">
-                    <button type="submit" class="btn btn-sm btn-dark btn-block">
-                        <i class="fa fa-shopping-cart mr-1"></i> Agregar al carrito
-                    </button>
-                </form>
-                <!-- Visitante anónimo: guarda el producto y el retorno al abrir el login. -->
-                <form th:action="@{/login}" method="get" sec:authorize="isAnonymous()">
-                    <input type="hidden" name="idProducto" th:value="${producto.id}">
-                    <input type="hidden" name="cantidad" value="1">
-                    <input type="hidden" name="retorno" th:value="@{/producto/{id}(id=${producto.id})}">
-                    <button type="submit" class="btn btn-sm btn-outline-dark btn-block" title="Ingresá para agregar al carrito">
-                        <i class="fa fa-shopping-cart mr-1"></i> Agregar al carrito
-                    </button>
-                </form>
-                <!-- Empleados: no pueden usar el carrito (E3-08) -->
-                <button type="button" class="btn btn-sm btn-secondary btn-block" disabled
-                        sec:authorize="hasAnyRole('JEFE', 'ADMINISTRATIVO')"
-                        title="Los empleados no pueden utilizar el carrito de compras">
-                    <i class="fa fa-shopping-cart mr-1"></i> Solo clientes
-                </button>
-            </div>
-        </div>
     </article>
 </body>
 

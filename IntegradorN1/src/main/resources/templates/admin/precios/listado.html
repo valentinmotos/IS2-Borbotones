@@ -7,89 +7,114 @@
     </div>
     <div layout:fragment="content">
         <div th:replace="~{fragments/mensajes :: mensajes}"></div>
-        <div class="zero-panel">
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                <h2 class="mb-0">Precios con vigencias</h2>
-                <a th:href="@{/admin/precios/actualizacion}" class="zero-button secondary">Actualización por inflación</a>
+
+        <div class="zero-toolbar mb-4">
+            <p class="text-muted mb-0">Elegí un producto para ver su precio vigente, cargar una nueva vigencia y revisar el historial.</p>
+            <div class="zero-toolbar-actions">
+                <a th:href="@{/admin/precios/alertas}" class="zero-button secondary">Alertas</a>
+                <a th:href="@{/admin/precios/actualizacion}" class="zero-button primary">Actualización por inflación</a>
+            </div>
+        </div>
+
+        <div class="zero-price-layout">
+            <aside class="zero-panel zero-price-products">
+                <h2>Productos</h2>
+                <input type="search" id="buscarProducto" class="form-control mb-3" placeholder="Buscar por nombre o talle"
+                       aria-label="Buscar producto">
+                <div th:if="${#lists.isEmpty(productos)}" class="text-muted">No hay productos cargados.</div>
+                <nav class="zero-price-list" id="listaProductos">
+                    <a th:each="producto : ${productos}"
+                       th:href="@{/admin/precios(productoId=${producto.id})}"
+                       class="zero-price-item"
+                       th:classappend="${productoSeleccionado != null and productoSeleccionado.id == producto.id ? 'active' : ''}">
+                        <strong th:text="${producto.nombre}">Producto</strong>
+                        <span class="zero-price-talle" th:text="${producto.talle}">M</span>
+                    </a>
+                </nav>
+            </aside>
+
+            <div th:if="${productoSeleccionado == null}" class="zero-empty-state">
+                <i class="zmdi zmdi-money-box" aria-hidden="true"></i>
+                <h2 class="h5">Seleccioná un producto</h2>
+                <p class="mb-0">Vas a ver su precio vigente y el historial de vigencias.</p>
             </div>
 
-            <div class="row">
-                <div class="col-lg-5">
-                    <div class="list-group">
-                        <a th:each="producto : ${productos}"
-                           th:href="@{/admin/precios(productoId=${producto.id})}"
-                           class="list-group-item list-group-item-action"
-                           th:classappend="${productoSeleccionado != null and productoSeleccionado.id == producto.id ? 'active' : ''}">
-                            <div class="d-flex justify-content-between align-items-center gap-3">
-                                <div>
-                                    <strong th:text="${producto.nombre}">Producto</strong><br>
-                                    <small th:text="${producto.talle}">Talle</small>
-                                </div>
-                                <span th:if="${vigenciaActual != null and productoSeleccionado != null and productoSeleccionado.id == producto.id}"
-                                      class="badge badge-success">$<span th:text="${#numbers.formatDecimal(vigenciaActual.precio, 0, 'POINT', 0, 'COMMA')}">0</span></span>
-                            </div>
-                        </a>
+            <div th:if="${productoSeleccionado != null}" class="zero-price-detail">
+                <div class="zero-panel zero-price-summary">
+                    <div>
+                        <div class="zero-product-code" th:text="${'Código ' + productoSeleccionado.codigo}">Código 000</div>
+                        <h2 class="mb-1" th:text="${productoSeleccionado.nombre}">Producto</h2>
+                        <span class="zero-price-talle" th:text="${'Talle ' + productoSeleccionado.talle}">Talle M</span>
+                    </div>
+                    <div class="zero-price-current">
+                        <span>Precio vigente</span>
+                        <strong th:if="${vigenciaActual != null}"
+                                th:text="${'$ ' + #numbers.formatDecimal(vigenciaActual.precio, 1, 'POINT', 0, 'COMMA')}">$ 0</strong>
+                        <strong th:unless="${vigenciaActual != null}" class="text-muted">Sin precio</strong>
                     </div>
                 </div>
 
-                <div class="col-lg-7" th:if="${productoSeleccionado != null}">
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-body">
-                            <h3 class="h5 mb-3" th:text="${productoSeleccionado.nombre}">Producto</h3>
-                            <p class="mb-1"><strong>Código:</strong> <span th:text="${productoSeleccionado.codigo}">-</span></p>
-                            <p class="mb-1"><strong>Talle:</strong> <span th:text="${productoSeleccionado.talle}">-</span></p>
-                            <p class="mb-3"><strong>Precio vigente:</strong>
-                                <span th:if="${vigenciaActual != null}">$<span th:text="${#numbers.formatDecimal(vigenciaActual.precio, 0, 'POINT', 0, 'COMMA')}">0</span></span>
-                                <span th:unless="${vigenciaActual != null}" class="text-muted">Sin precio</span>
-                            </p>
-
-                            <form th:action="@{/admin/precios}" method="post" class="zero-form">
-                                <input type="hidden" name="productoId" th:value="${productoSeleccionado.id}">
-                                <div class="form-group">
-                                    <label for="fechaDesde">Fecha desde</label>
-                                    <input id="fechaDesde" name="fechaDesde" type="date" class="form-control" th:value="${#temporals.format(T(java.time.LocalDate).now(), 'yyyy-MM-dd')}" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="precio">Precio</label>
-                                    <input id="precio" name="precio" type="number" min="1" step="1" class="form-control" placeholder="1500" required>
-                                </div>
-                                <button type="submit" class="zero-button primary">Guardar vigencia</button>
-                            </form>
+                <div class="zero-panel">
+                    <h2>Nueva vigencia</h2>
+                    <form th:action="@{/admin/precios}" method="post" class="zero-form zero-price-form">
+                        <input type="hidden" name="productoId" th:value="${productoSeleccionado.id}">
+                        <div class="form-group">
+                            <label for="fechaDesde">Fecha desde</label>
+                            <input id="fechaDesde" name="fechaDesde" type="date" class="form-control" th:value="${#temporals.format(T(java.time.LocalDate).now(), 'yyyy-MM-dd')}" required>
                         </div>
-                    </div>
-
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body">
-                            <h4 class="h6 mb-3">Historial</h4>
-                            <div th:if="${historial == null or #lists.isEmpty(historial)}" class="text-muted">No hay vigencias registradas.</div>
-                            <div th:unless="${historial == null or #lists.isEmpty(historial)}" class="table-responsive">
-                                <table class="table table-sm table-striped mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Desde</th>
-                                            <th>Hasta</th>
-                                            <th>Precio</th>
-                                            <th>Estado</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr th:each="vigencia : ${historial}">
-                                            <td th:text="${vigencia.fechaDesde}">-</td>
-                                            <td th:text="${vigencia.fechaHasta != null ? vigencia.fechaHasta : 'Vigente'}">-</td>
-                                            <td>$<span th:text="${#numbers.formatDecimal(vigencia.precio, 0, 'POINT', 0, 'COMMA')}">0</span></td>
-                                            <td>
-                                                <span th:if="${vigencia.fechaHasta == null}" class="badge badge-success">Vigente</span>
-                                                <span th:unless="${vigencia.fechaHasta == null}" class="badge badge-secondary">Cerrada</span>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                        <div class="form-group">
+                            <label for="precio">Precio</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                                <input id="precio" name="precio" type="number" min="1" step="1" class="form-control" placeholder="1500" required>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <button type="submit" class="zero-button primary">Guardar vigencia</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="zero-panel">
+                    <h2>Historial</h2>
+                    <div th:if="${historial == null or #lists.isEmpty(historial)}" class="text-muted">No hay vigencias registradas.</div>
+                    <div th:unless="${historial == null or #lists.isEmpty(historial)}" class="table-responsive zero-table-wrap mt-3">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Desde</th>
+                                    <th>Hasta</th>
+                                    <th class="text-right">Precio</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="vigencia : ${historial}">
+                                    <td th:text="${#temporals.format(vigencia.fechaDesde, 'dd/MM/yyyy')}">01/01/2026</td>
+                                    <td th:text="${vigencia.fechaHasta != null ? #temporals.format(vigencia.fechaHasta, 'dd/MM/yyyy') : '-'}">-</td>
+                                    <td class="text-right" th:text="${'$ ' + #numbers.formatDecimal(vigencia.precio, 1, 'POINT', 0, 'COMMA')}">$ 0</td>
+                                    <td>
+                                        <span th:if="${vigencia.fechaHasta == null}" class="badge badge-success">Vigente</span>
+                                        <span th:unless="${vigencia.fechaHasta == null}" class="badge badge-secondary">Cerrada</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <th:block layout:fragment="scripts">
+        <script>
+            document.getElementById('buscarProducto').addEventListener('input', function () {
+                const texto = this.value.trim().toLowerCase();
+                document.querySelectorAll('#listaProductos .zero-price-item').forEach(function (item) {
+                    item.style.display = item.textContent.toLowerCase().includes(texto) ? '' : 'none';
+                });
+            });
+        </script>
+    </th:block>
 </body>
 </html>

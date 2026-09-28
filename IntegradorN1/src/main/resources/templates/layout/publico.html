@@ -27,22 +27,6 @@
 <body class="animsition">
     <header>
         <div class="container-menu-desktop">
-            <div class="top-bar">
-                <div class="content-topbar flex-sb-m h-full container">
-                    <div class="left-top-bar">
-                        Envíos gratis en compras mayores a $50.000
-                    </div>
-
-                    <div class="right-top-bar flex-w h-full">
-                        <a th:href="@{/ofertas}" class="flex-c-m trans-04 p-lr-25">Ofertas</a>
-                        <a th:href="@{/login}" class="flex-c-m trans-04 p-lr-25" sec:authorize="isAnonymous()">Ingresar</a>
-                        <a th:href="@{/registro}" class="flex-c-m trans-04 p-lr-25" sec:authorize="isAnonymous()">Crear cuenta</a>
-                        <span class="flex-c-m trans-04 p-lr-25" sec:authorize="isAuthenticated()" th:text="${nombreMostrar}">Usuario</span>
-                        <a th:href="@{/admin}" class="flex-c-m trans-04 p-lr-25" sec:authorize="hasAnyRole('JEFE', 'ADMINISTRATIVO')">Ir al panel</a>
-                    </div>
-                </div>
-            </div>
-
             <div class="wrap-menu-desktop">
                 <nav class="limiter-menu-desktop container">
                     <a th:href="@{/}" class="logo">
@@ -142,23 +126,9 @@
         </div>
 
         <div class="menu-mobile">
-            <ul class="topbar-mobile">
-                <li>
-                    <div class="left-top-bar">Envíos gratis en compras mayores a $50.000</div>
-                </li>
-                <li>
-                    <div class="right-top-bar flex-w h-full">
-                        <a th:href="@{/ofertas}" class="flex-c-m p-lr-10 trans-04">Ofertas</a>
-                        <a th:href="@{/login}" class="flex-c-m p-lr-10 trans-04" sec:authorize="isAnonymous()">Ingresar</a>
-                        <a th:href="@{/registro}" class="flex-c-m p-lr-10 trans-04" sec:authorize="isAnonymous()">Crear cuenta</a>
-                        <span class="flex-c-m p-lr-10 trans-04" sec:authorize="isAuthenticated()" th:text="${nombreMostrar}">Usuario</span>
-                        <a th:href="@{/admin}" class="flex-c-m p-lr-10 trans-04" sec:authorize="hasAnyRole('JEFE', 'ADMINISTRATIVO')">Ir al panel</a>
-                    </div>
-                </li>
-            </ul>
-
             <ul class="main-menu-m">
                 <li><a th:href="@{/}">Inicio</a></li>
+                <li><a th:href="@{/ofertas}">Ofertas</a></li>
                 <li th:each="categoria : ${categoriasCatalogo}">
                     <a th:href="@{/catalogo/{id}(id=${categoria.id})}"
                        th:text="${categoria.nombre}">Categoría</a>
@@ -173,20 +143,22 @@
             </ul>
         </div>
 
-        <div class="modal-search-header flex-c-m trans-04 js-hide-modal-search">
-            <div class="container-search-header">
-                <button class="flex-c-m btn-hide-modal-search trans-04 js-hide-modal-search">
-                    <img th:src="@{/vendor/template/images/icons/icon-close2.png}" alt="CLOSE">
-                </button>
+        <div class="modal-search-header zero-search-modal trans-04 js-hide-modal-search">
+            <div class="container-search-header zero-search-box">
+                <div class="zero-search-top">
+                    <span class="zero-kicker">Buscar en Zero</span>
+                    <button type="button" class="btn-hide-modal-search zero-search-close trans-04 js-hide-modal-search" aria-label="Cerrar búsqueda">
+                        <i class="zmdi zmdi-close" aria-hidden="true"></i>
+                    </button>
+                </div>
 
                 <!-- E3-02: acción conectada a /buscar?q= -->
-                <form class="wrap-search-header flex-w p-l-15" th:action="@{/buscar}" method="get">
-                    <button class="flex-c-m trans-04" type="submit">
-                        <i class="zmdi zmdi-search"></i>
-                    </button>
-                    <input id="busqueda-q" class="plh3" type="text" name="q"
-                           placeholder="Buscar productos..." autocomplete="off"
+                <form class="wrap-search-header zero-search-form" th:action="@{/buscar}" method="get">
+                    <i class="zmdi zmdi-search zero-search-icon" aria-hidden="true"></i>
+                    <input id="busqueda-q" type="text" name="q"
+                           placeholder="Buscar productos..." autocomplete="off" aria-label="Buscar productos"
                            th:value="${terminoBuscado}">
+                    <button class="zero-button primary" type="submit">Buscar</button>
                 </form>
             </div>
         </div>

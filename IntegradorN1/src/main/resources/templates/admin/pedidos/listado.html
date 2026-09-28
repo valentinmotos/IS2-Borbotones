@@ -20,6 +20,7 @@
                 <div th:replace="~{fragments/filtros :: campoFiltroSelect('formaPago', 'Forma de pago', ${opcionesFormaPago}, ${formaPago})}"></div>
                 <div th:replace="~{fragments/filtros :: campoFiltroFecha('desde', 'Desde', ${desde})}"></div>
                 <div th:replace="~{fragments/filtros :: campoFiltroFecha('hasta', 'Hasta', ${hasta})}"></div>
+                <div th:replace="~{fragments/filtros :: campoFiltroTexto('numero', 'Número', ${numero}, 'Número o parte del número')}"></div>
                 <div th:replace="~{fragments/filtros :: campoFiltroTexto('cliente', 'Cliente', ${cliente}, 'Nombre o correo')}"></div>
                 <div class="zero-filters-acciones">
                     <button type="submit" class="zero-button primary">Buscar</button>

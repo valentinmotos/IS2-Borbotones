@@ -342,7 +342,7 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
-    // E2-02: 20 productos de demostración en las 12 subcategorías, algunos en oferta y algunos en varios
+    // E2-02: 49 productos de demostración en las 12 subcategorías, algunos en oferta y algunos en varios
     // talles (cada talle es un producto). Las fotos están en resources/seed/img (ver CREDITOS.md) y se
     // cargan con ImagenService; cada producto tiene su propia Imagen aunque compartan la foto.
     // Columnas: código, nombre, talle, categoría, subcategoría, en oferta, foto, descripción.
@@ -386,7 +386,65 @@ public class DataSeeder implements CommandLineRunner {
             { "REL-SPT-U", "Reloj Zero Sport", "Único", "Accesorios", "Joyas", "si", "reloj-sport.jpg",
                     "Reloj deportivo resistente al agua, con malla de silicona." },
             { "BIL-CUE-U", "Billetera Zero de Cuero", "Único", "Accesorios", "Marroquinería", "no", "billetera-cuero.jpg",
-                    "Billetera de cuero negro con tarjetero y monedero." }
+                    "Billetera de cuero negro con tarjetero y monedero." },
+            { "BUZ-HOO-H-M", "Buzo Zero Hoodie Hombre", "M", "Hombres", "Ropa", "no", "buzo-hoodie-hombre.jpg",
+                    "Buzo con capucha de frisa liviana y bolsillo canguro." },
+            { "BUZ-HOO-H-L", "Buzo Zero Hoodie Hombre", "L", "Hombres", "Ropa", "no", "buzo-hoodie-hombre.jpg",
+                    "Buzo con capucha de frisa liviana y bolsillo canguro." },
+            { "CAM-WND-H-L", "Campera Zero Wind Hombre", "L", "Hombres", "Ropa", "si", "campera-wind-hombre.jpg",
+                    "Campera rompeviento impermeable, liviana y plegable." },
+            { "BOT-TRL-42", "Botín Zero Trail", "42", "Hombres", "Calzado", "no", "botin-trail-hombre.jpg",
+                    "Calzado de trail con suela de alto agarre y puntera reforzada." },
+            { "BOT-TRL-43", "Botín Zero Trail", "43", "Hombres", "Calzado", "no", "botin-trail-hombre.jpg",
+                    "Calzado de trail con suela de alto agarre y puntera reforzada." },
+            { "OJO-SLD-42", "Ojotas Zero Slide", "42", "Hombres", "Calzado", "si", "ojotas-slide.jpg",
+                    "Ojotas de goma acolchada para después del entrenamiento." },
+            { "MED-RUN-U", "Medias Zero Run", "Único", "Hombres", "Accesorios", "no", "medias-running.jpg",
+                    "Pack de medias deportivas con zonas acolchadas y tejido respirable." },
+            { "BOT-HYD-U", "Botella Zero Hydro", "Único", "Hombres", "Accesorios", "no", "botella-deportiva.jpg",
+                    "Botella deportiva de 750 ml, libre de BPA y con pico antiderrame." },
+            { "MUS-BRZ-S", "Musculosa Zero Breeze", "S", "Mujeres", "Ropa", "no", "musculosa-mujer.jpg",
+                    "Musculosa de tela liviana y secado rápido para entrenar con calor." },
+            { "MUS-BRZ-M", "Musculosa Zero Breeze", "M", "Mujeres", "Ropa", "no", "musculosa-mujer.jpg",
+                    "Musculosa de tela liviana y secado rápido para entrenar con calor." },
+            { "CAM-LGT-M-M", "Campera Zero Light Mujer", "M", "Mujeres", "Ropa", "si", "campera-mujer.jpg",
+                    "Campera liviana con cierre completo y bolsillos laterales." },
+            { "ZAP-STD-37", "Zapatilla Zero Studio Mujer", "37", "Mujeres", "Calzado", "no", "zapatilla-studio-mujer.jpg",
+                    "Zapatilla de entrenamiento con base estable para clases funcionales." },
+            { "ZAP-STD-38", "Zapatilla Zero Studio Mujer", "38", "Mujeres", "Calzado", "no", "zapatilla-studio-mujer.jpg",
+                    "Zapatilla de entrenamiento con base estable para clases funcionales." },
+            { "SAN-WLK-38", "Sandalia Zero Walk", "38", "Mujeres", "Calzado", "no", "sandalia-walk-mujer.jpg",
+                    "Sandalia deportiva con tiras regulables y plantilla acolchada." },
+            { "VIN-SPT-U", "Vincha Zero Sport", "Único", "Mujeres", "Accesorios", "no", "vincha-deportiva.jpg",
+                    "Vincha elástica que absorbe la transpiración y no se resbala." },
+            { "MAN-2KG-U", "Mancuernas Zero 2 kg", "Único", "Mujeres", "Accesorios", "si", "mancuernas.jpg",
+                    "Par de mancuernas de 2 kg con recubrimiento antideslizante." },
+            { "REM-KID-8", "Remera Zero Kids", "8", "Niños", "Ropa", "no", "remera-kids.jpg",
+                    "Remera de algodón suave para la escuela y el deporte." },
+            { "REM-KID-10", "Remera Zero Kids", "10", "Niños", "Ropa", "no", "remera-kids.jpg",
+                    "Remera de algodón suave para la escuela y el deporte." },
+            { "SHO-KID-8", "Short Zero Kids", "8", "Niños", "Ropa", "no", "short-kids.jpg",
+                    "Short liviano con cintura elástica y cordón." },
+            { "ZAP-KLT-26", "Zapatilla Zero Kids Light", "26", "Niños", "Calzado", "si", "zapatilla-kids-light.jpg",
+                    "Zapatilla infantil liviana con cordones elásticos." },
+            { "BOT-LLV-26", "Botas de Lluvia Zero Kids", "26", "Niños", "Calzado", "no", "botas-lluvia-kids.jpg",
+                    "Botas de lluvia de goma con plantilla removible." },
+            { "GOR-KID-U", "Gorra Zero Kids", "Único", "Niños", "Accesorios", "no", "gorra-kids.jpg",
+                    "Gorra infantil con visera y cierre regulable." },
+            { "PEL-FUT-U", "Pelota Zero Fútbol", "Único", "Niños", "Accesorios", "no", "pelota-futbol.jpg",
+                    "Pelota de fútbol número 4, ideal para chicos." },
+            { "RIN-RUN-U", "Riñonera Zero Run", "Único", "Accesorios", "Bolsos", "no", "rinonera.jpg",
+                    "Riñonera ajustable con bolsillo para celular y llaves." },
+            { "MOC-TRK-U", "Mochila Zero Trek", "Único", "Accesorios", "Bolsos", "si", "mochila-trek.jpg",
+                    "Mochila de 30 litros con espalda ventilada para trekking." },
+            { "REL-CLS-U", "Reloj Zero Classic", "Único", "Accesorios", "Joyas", "no", "reloj-classic.jpg",
+                    "Reloj analógico con malla de acero y caja de 40 mm." },
+            { "ANT-SPT-U", "Anteojos Zero Sport", "Único", "Accesorios", "Joyas", "no", "anteojos-sol.jpg",
+                    "Anteojos de sol deportivos con protección UV400." },
+            { "CIN-CUE-U", "Cinturón Zero de Cuero", "Único", "Accesorios", "Marroquinería", "no", "cinturon-cuero.jpg",
+                    "Cinturón de cuero con hebilla metálica." },
+            { "TAR-CUE-U", "Tarjetero Zero de Cuero", "Único", "Accesorios", "Marroquinería", "no", "tarjetero-cuero.jpg",
+                    "Tarjetero de cuero fino con cuatro ranuras." }
     };
 
     private void cargarCatalogo() {

@@ -5,34 +5,105 @@
 </head>
 <body>
     <div layout:fragment="content">
-        <section class="zero-section">
-            <div class="container">
-                <div th:if="${perfilIncompleto}" class="alert alert-warning" role="alert">
-                    Tu perfil está incompleto. <a th:href="@{/cliente/perfil}">Completalo</a> para poder confirmar tus compras.
-                </div>
-                <div class="zero-banner">
-                    <div class="container zero-banner-content">
-                        <div class="zero-kicker">Nueva temporada</div>
-                        <h1>Ropa y accesorios<br>para mover la energía</h1>
-                        <p>Encontrá indumentaria, calzado y accesorios para cada entrenamiento.</p>
-                        <a th:if="${!categoriasDestacadas.isEmpty()}"
-                           th:href="@{/catalogo/{id}(id=${categoriasDestacadas[0].id})}"
-                           class="zero-button primary">Ver colección</a>
+        <div class="zero-notice" th:if="${perfilIncompleto}" role="alert">
+            <div class="container zero-notice-content">
+                <i class="zmdi zmdi-account-circle" aria-hidden="true"></i>
+                <span>Tu perfil está incompleto. Completalo para poder confirmar tus compras.</span>
+                <a th:href="@{/cliente/perfil}" class="zero-notice-link">Completar perfil</a>
+            </div>
+        </div>
+
+        <section class="zero-hero">
+            <div class="wrap-slick1 zero-slider">
+                <div class="slick1">
+                    <div class="item-slick1 zero-slide">
+                        <div class="container h-full">
+                            <div class="zero-slide-grid h-full">
+                                <div class="zero-slide-text">
+                                    <div class="layer-slick1 animated visible-false" data-appear="fadeInDown" data-delay="0">
+                                        <span class="zero-kicker">Nueva temporada</span>
+                                    </div>
+                                    <div class="layer-slick1 animated visible-false" data-appear="fadeInUp" data-delay="200">
+                                        <h1>Ropa y accesorios<br>para mover la energía</h1>
+                                        <p>Encontrá indumentaria, calzado y accesorios para cada entrenamiento.</p>
+                                    </div>
+                                    <div class="layer-slick1 animated visible-false" data-appear="zoomIn" data-delay="400">
+                                        <a th:href="${categoriasDestacadas.isEmpty()} ? @{/buscar} : @{/catalogo/{id}(id=${categoriasDestacadas[0].id})}"
+                                           class="zero-button primary">Ver colección</a>
+                                    </div>
+                                </div>
+                                <div class="layer-slick1 animated visible-false zero-slide-image" data-appear="fadeInRight" data-delay="0">
+                                    <img th:src="@{/img/home/slide-training.png}" alt="Indumentaria deportiva Zero" fetchpriority="high">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="item-slick1 zero-slide">
+                        <div class="container h-full">
+                            <div class="zero-slide-grid h-full">
+                                <div class="zero-slide-text">
+                                    <div class="layer-slick1 animated visible-false" data-appear="rollIn" data-delay="0">
+                                        <span class="zero-kicker">Running</span>
+                                    </div>
+                                    <div class="layer-slick1 animated visible-false" data-appear="lightSpeedIn" data-delay="200">
+                                        <h2>Corré más lejos<br>con menos peso</h2>
+                                        <p>Zapatillas livianas y con amortiguación para cada kilómetro.</p>
+                                    </div>
+                                    <div class="layer-slick1 animated visible-false" data-appear="slideInUp" data-delay="400">
+                                        <a th:href="@{/buscar(q='zapatilla')}" class="zero-button primary">Ver zapatillas</a>
+                                    </div>
+                                </div>
+                                <div class="layer-slick1 animated visible-false zero-slide-image" data-appear="zoomIn" data-delay="0">
+                                    <img th:src="@{/img/home/slide-running.png}" alt="Zapatilla de running Zero">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="item-slick1 zero-slide">
+                        <div class="container h-full">
+                            <div class="zero-slide-grid h-full">
+                                <div class="zero-slide-text">
+                                    <div class="layer-slick1 animated visible-false" data-appear="rotateInDownLeft" data-delay="0">
+                                        <span class="zero-kicker">Accesorios</span>
+                                    </div>
+                                    <div class="layer-slick1 animated visible-false" data-appear="rotateInUpRight" data-delay="200">
+                                        <h2>Todo lo que llevás<br>al entrenamiento</h2>
+                                        <p>Mochilas, bolsos y accesorios en oferta para tu rutina.</p>
+                                    </div>
+                                    <div class="layer-slick1 animated visible-false" data-appear="rotateIn" data-delay="400">
+                                        <a th:href="@{/ofertas}" class="zero-button primary">Ver ofertas</a>
+                                    </div>
+                                </div>
+                                <div class="layer-slick1 animated visible-false zero-slide-image" data-appear="fadeInUp" data-delay="0">
+                                    <img th:src="@{/img/home/slide-accesorios.png}" alt="Mochila Zero">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="zero-section zero-section-compact">
+        <section class="zero-section">
             <div class="container">
                 <div class="zero-section-heading">
                     <div><span class="zero-kicker">Explorá</span><h2>Categorías</h2></div>
                 </div>
                 <div class="zero-category-grid">
                     <a class="zero-category-card" th:each="categoria : ${categoriasDestacadas}"
-                       th:href="@{/catalogo/{id}(id=${categoria.id})}">
-                        <span th:text="${categoria.nombre}">Categoría</span>
-                        <small th:text="${categoria.subCategorias.size() + ' colecciones'}">3 colecciones</small>
+                       th:href="@{/catalogo/{id}(id=${categoria.id})}"
+                       th:with="imagenId=${imagenesCategoria[categoria.id]}">
+                        <img class="zero-category-img" th:if="${imagenId != null}"
+                             th:src="@{/imagen/{id}(id=${imagenId})}" th:alt="${categoria.nombre}" loading="lazy">
+                        <div class="zero-category-info">
+                            <span th:text="${categoria.nombre}">Categoría</span>
+                            <small th:text="${categoria.subCategorias.size() + ' colecciones'}">3 colecciones</small>
+                        </div>
+                        <div class="zero-category-cta">
+                            <span class="zero-category-link">Ver productos</span>
+                        </div>
                     </a>
                 </div>
             </div>
@@ -42,8 +113,9 @@
             <div class="container">
                 <div class="zero-section-heading">
                     <div><span class="zero-kicker">Elegidos</span><h2>Productos en oferta</h2></div>
+                    <a th:href="@{/ofertas}" class="zero-button secondary">Ver todo</a>
                 </div>
-                <div class="zero-product-carousel">
+                <div class="zero-product-grid">
                     <th:block th:each="producto : ${productosOferta}">
                         <div th:replace="~{fragments/card-producto :: cardCatalogo(${producto})}"></div>
                     </th:block>
@@ -67,5 +139,9 @@
             </div>
         </section>
     </div>
+
+    <th:block layout:fragment="scripts">
+        <script th:src="@{/js/home-slider.js}"></script>
+    </th:block>
 </body>
 </html>

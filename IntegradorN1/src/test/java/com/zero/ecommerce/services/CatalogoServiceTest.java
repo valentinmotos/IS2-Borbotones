@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.zero.ecommerce.dto.CatalogoFiltro;
+import com.zero.ecommerce.dto.ModeloCatalogoDTO;
+import com.zero.ecommerce.dto.ProductoCatalogoDTO;
 import com.zero.ecommerce.entities.Categoria;
 import com.zero.ecommerce.entities.Imagen;
 import com.zero.ecommerce.entities.Producto;
@@ -70,6 +72,22 @@ class CatalogoServiceTest {
     }
 
     @Test
+    void agrupaLosTallesDeUnMismoModeloEnUnaSolaCard() {
+        ProductoCatalogoDTO talle10 = dto("p1", "Conjunto Kids", "10", 12000);
+        ProductoCatalogoDTO talle8 = dto("p2", "Conjunto Kids", "8", 10000);
+        ProductoCatalogoDTO gorra = dto("p3", "Gorra", "Único", 5000);
+
+        List<ModeloCatalogoDTO> modelos = service.agruparPorModelo(List.of(talle10, gorra, talle8));
+
+        assertThat(modelos).extracting(ModeloCatalogoDTO::id).containsExactly("p1", "p3");
+        assertThat(modelos.get(0).talles()).containsExactly("8", "10");
+        assertThat(modelos.get(0).variosTalles()).isTrue();
+        assertThat(modelos.get(0).precioFormateado()).isEqualTo("Desde $10000");
+        assertThat(modelos.get(1).talles()).containsExactly("Único");
+        assertThat(modelos.get(1).precioFormateado()).isEqualTo("$5000");
+    }
+
+    @Test
     void unFiltroNuloEquivaleATodoElCatalogo() throws Exception {
         Producto producto = producto("p1", "Producto", "cat-1", "sub-1", false);
         when(productoService.listarProductoActivo()).thenReturn(List.of(producto));
@@ -119,6 +137,11 @@ class CatalogoServiceTest {
         assertThat(service.buscar(null, CatalogoFiltro.busqueda(null, null, null, null, "novedades")))
                 .extracting(dto -> dto.id())
                 .containsExactly("p2", "p1");
+    }
+
+    private ProductoCatalogoDTO dto(String id, String nombre, String talle, double precio) {
+        return new ProductoCatalogoDTO(id, id.toUpperCase(), nombre, null, talle, null, precio, "$" + (int) precio,
+                false, 5, "Categoría", "Subcategoría", "sub-1");
     }
 
     private Producto producto(String id, String nombre, String categoriaId, String subCategoriaId, boolean oferta) {
