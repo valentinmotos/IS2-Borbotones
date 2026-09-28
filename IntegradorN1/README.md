@@ -32,7 +32,8 @@ Para compilar y correr los tests:
 - Hibernate crea y actualiza las tablas solo (`ddl-auto=update`).
 - Al arrancar con la base vacía, el `DataSeeder` (`config/DataSeeder.java`) carga los datos iniciales. Si la base ya tiene datos, no carga nada.
 - **Resetear la base:** frenar la app, borrar `data/zero.db` y volver a levantarla. Hay que hacerlo cuando cambia una entidad de forma incompatible o cuando alguien agrega datos nuevos al seeder.
-- Los tests usan una base en memoria y no tocan `data/zero.db`.
+- Los tests usan una base en memoria y no tocan `data/zero.db`. La excepción son los tests de integración de los
+  flujos principales (E5-08), que usan el perfil `test` con una base en `target/zero-test.db` que se borra sola.
 
 ## Estructura
 
@@ -989,3 +990,20 @@ La preferencia se crea con `notification_url` = `APP_URL_BASE` + `/webhooks/merc
 > (`APP_URL_BASE/webhooks/mercadopago`) en *Tus integraciones > app > Webhooks*, con el evento **Pagos**, y usar el botón
 > **Simular**. Igual, al volver de Mercado Pago la página de resultado consulta el pago a la API y lo registra, así que
 > el flujo completo funciona aunque la notificación no llegue.
+
+## Tests de integración de los flujos principales E5-08
+
+`FlujosPrincipalesIntegrationTest` recorre de punta a punta los flujos que se muestran en la exposición. Corre con el
+perfil `test` (`src/test/resources/application-test.properties`): una base SQLite en `target/zero-test.db` que se borra
+antes de empezar, así el `DataSeeder` parte de una base vacía, y al terminar. El `EmailService` y los clientes de
+Mercado Pago (`PaymentClient`, `PreferenceClient`, `PaymentRefundClient`) son mocks: no salen correos ni pagos reales.
+
+| Test | Flujo |
+|---|---|
+| `registroActivacionYLogin` | Registro → código por correo → login rechazado → activación → login |
+| `carritoConfirmacionPagoDescuentoDeStockYFacturaPagada` | Carrito → checkout con Mercado Pago → webhook aprobado **dos veces** → stock descontado una sola vez y factura pagada |
+| `compraAProveedorRecepcionYAumentoDeStock` | Compra a proveedor → recepción → stock aumentado (recibir de nuevo no suma) |
+| `anulacionPorElClienteAntesDelPagoYPorElAdminDespuesDelPagoConReingresoDeStock` | El cliente anula sin pagar; el admin confirma el pago, el cliente ya no puede anular y el admin sí, con reingreso de stock |
+| `unClienteNoPuedeEntrarAlPanelDeAdministracion` | `/admin` con un cliente da 403 (MockMvc) y sin sesión manda al login |
+
+Para correr solo estos tests: `mvnw.cmd test -Dtest=FlujosPrincipalesIntegrationTest` (o `./mvnw ...` en Linux o Mac).

@@ -28,7 +28,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.ignoringRequestMatchers("/webhooks/**"))
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/admin/usuarios", "/admin/usuarios/**",
-                            "/admin/configuracion", "/admin/configuracion/**").hasRole("JEFE")
+                            "/admin/configuracion", "/admin/configuracion/**", "/dev/**").hasRole("JEFE")
                     .requestMatchers("/admin", "/admin/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
                     .requestMatchers("/cliente/**").hasRole("CLIENTE")
                     .anyRequest().permitAll())
