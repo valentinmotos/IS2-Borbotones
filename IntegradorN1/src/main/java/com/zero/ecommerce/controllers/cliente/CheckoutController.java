@@ -32,8 +32,7 @@ import com.zero.ecommerce.services.VentaService;
 
 /**
  * Checkout del cliente (E4-02 / RF18): resumen del carrito, dirección de entrega, forma de pago y confirmación. Con
- * Mercado Pago redirige a la URL de pago del contrato con E4-10; con efectivo o transferencia muestra "Compra
- * registrada" con las instrucciones de pago.
+ * Todas las formas de pago muestran la compra registrada, pendiente de confirmación administrativa.
  */
 @Controller
 @RequestMapping("/cliente/checkout")
@@ -112,14 +111,10 @@ public class CheckoutController {
             return "redirect:" + BASE;
         }
         String idOrden = factura.getOrdenCompra().getId();
-        if (factura.getFormaDePago().getTipoPago() == TipoPago.BILLETERA_VIRTUAL) {
-            // URL del contrato con E4-10: crea la preferencia de pago y redirige a Mercado Pago.
-            return "redirect:/cliente/pago/" + idOrden;
-        }
         return "redirect:" + BASE + "/registrada/" + idOrden;
     }
 
-    /** "Compra registrada" para efectivo y transferencia: número de compra e instrucciones de pago. */
+    /** Número de compra e instrucciones para la forma de pago seleccionada. */
     @GetMapping("/registrada/{idOrden}")
     public String registrada(@PathVariable String idOrden, Model model) {
         OrdenCompra compra;
@@ -145,7 +140,10 @@ public class CheckoutController {
     private Map<String, String> opcionesFormaDePago() {
         Map<String, String> opciones = new LinkedHashMap<>();
         for (FormaDePago forma : formaDePagoService.listarFormaDePagoActivo()) {
-            opciones.put(forma.getId(), forma.getObservacion() + " (" + forma.getTipoPago().getDescripcion() + ")");
+            String etiqueta = forma.getTipoPago() == TipoPago.BILLETERA_VIRTUAL
+                    ? "Mercado Pago (Billetera Virtual)"
+                    : forma.getObservacion() + " (" + forma.getTipoPago().getDescripcion() + ")";
+            opciones.put(forma.getId(), etiqueta);
         }
         return opciones;
     }

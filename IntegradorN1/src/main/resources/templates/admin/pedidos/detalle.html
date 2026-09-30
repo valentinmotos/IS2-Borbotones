@@ -47,7 +47,8 @@
                 <form th:if="${pedido.estadoOrdenCompra.name() == 'PENDIENTE_PAGO'
                         and factura != null and factura.formaDePago != null
                         and (factura.formaDePago.tipoPago.name() == 'EFECTIVO'
-                        or factura.formaDePago.tipoPago.name() == 'TRANSFERENCIA')}"
+                        or factura.formaDePago.tipoPago.name() == 'TRANSFERENCIA'
+                        or factura.formaDePago.tipoPago.name() == 'BILLETERA_VIRTUAL')}"
                       th:action="@{'/admin/pedidos/' + ${pedido.id} + '/confirmar-pago'}" method="post">
                     <button type="submit" class="zero-button primary">Confirmar pago</button>
                 </form>

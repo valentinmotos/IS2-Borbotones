@@ -76,8 +76,8 @@ class NotificacionCompraServiceTest {
                 .containsEntry("total", "$20.000")
                 .containsEntry("numeroFactura", "8")
                 .containsEntry("formaDePago", "Transferencia")
-                .containsEntry("urlSeguimiento", "https://zero.example/cliente/compras/orden-1")
-                .containsEntry("urlPago", null);
+                .containsEntry("urlSeguimiento", "https://zero.example/cliente/compras/orden-1");
+        assertThat(variables.getValue()).doesNotContainKey("urlPago");
         assertThat((List<ItemCorreoCompraDTO>) variables.getValue().get("items"))
                 .containsExactly(new ItemCorreoCompraDTO("Remera Dry Fit (talle M)", 2, "$10.000", "$20.000"));
         assertThat((String) variables.getValue().get("instruccionesPago")).contains("transferencia");
@@ -85,7 +85,7 @@ class NotificacionCompraServiceTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void conMercadoPagoPendienteIncluyeElLinkDePago() {
+    void conMercadoPagoPendienteAclaraQueEsSimulado() {
         when(ordenCompraService.buscarFacturaDePedido("orden-1"))
                 .thenReturn(Optional.of(factura(TipoPago.BILLETERA_VIRTUAL, "Mercado Pago")));
 
@@ -93,7 +93,9 @@ class NotificacionCompraServiceTest {
 
         ArgumentCaptor<Map<String, Object>> variables = ArgumentCaptor.forClass(Map.class);
         verify(emailService).enviar(any(), any(), any(), variables.capture());
-        assertThat(variables.getValue()).containsEntry("urlPago", "https://zero.example/cliente/pago/orden-1");
+        assertThat(variables.getValue()).doesNotContainKey("urlPago");
+        assertThat((String) variables.getValue().get("instruccionesPago"))
+                .contains("Mercado Pago simulado", "confirmación administrativa");
     }
 
     @Test

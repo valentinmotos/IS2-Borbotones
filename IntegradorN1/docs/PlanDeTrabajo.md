@@ -101,14 +101,9 @@ El diagrama muestra el flujo de la `OrdenCompra`, que es lineal para no agregar 
 | --- | --- |
 | `EFECTIVO` | El administrador confirma el cobro desde el panel de pedidos. |
 | `TRANSFERENCIA` | El administrador confirma la acreditación desde el panel de pedidos. |
-| `BILLETERA_VIRTUAL` (Mercado Pago) | Checkout Pro: el cliente paga en Mercado Pago y el webhook confirma el pago automáticamente. |
+| `BILLETERA_VIRTUAL` (Mercado Pago simulado) | La compra queda pendiente; el administrador confirma la acreditación simulada desde el panel. |
 
-Se integra la **API real de Mercado Pago** con **Checkout Pro** y el SDK oficial para Java, en modo de prueba (sandbox) con cuentas y tarjetas de prueba.
-
-- **Vínculo con la orden:** el pago se asocia con la orden por el `external_reference` de Mercado Pago, que se completa con el `identificadorCompra` de `OrdenCompra`. Ese atributo ya está en el diagrama, así que no se agrega nada.
-- **Confirmación:** la da el **webhook** de Mercado Pago, no la vuelta del cliente al sitio. El sistema consulta el pago a la API y, si está aprobado, registra el pago.
-- **Idempotencia:** Mercado Pago puede notificar varias veces el mismo pago, así que registrar un pago ya registrado no hace nada.
-- **Pago rechazado o abandonado:** la orden sigue en `PENDIENTE_PAGO` y el cliente puede reintentar.
+Mercado Pago se simula dentro del sistema. El pedido y la factura quedan pendientes hasta que un administrador confirma el pago; entonces se registra la factura y se descuenta el stock una sola vez. No se realiza ningún cobro real.
 
 ### Reporte de stock (RF29)
 
@@ -152,7 +147,7 @@ Estas reglas se definen en la Etapa 0 y no se cambian durante el proyecto. El re
 - **Vista:** Thymeleaf Layout Dialect y Thymeleaf Extras Spring Security.
 - **Base de datos:** SQLite con `sqlite-jdbc` y `hibernate-community-dialects`, usando `spring.jpa.database-platform=org.hibernate.community.dialect.SQLiteDialect` y `ddl-auto=update`.
 - **Un solo repositorio** para todo el proyecto. El archivo de la base va en `./data/zero.db` y está en el `.gitignore`: cada uno tiene su base local, que el `DataSeeder` puebla al arrancar.
-- **Mercado Pago:** SDK oficial `com.mercadopago:sdk-java`. El access token de prueba se lee de la variable de entorno `MP_ACCESS_TOKEN` y nunca se sube al repositorio.
+- **Mercado Pago simulado:** conserva `BILLETERA_VIRTUAL` sin SDK, credenciales ni servicio externo.
 
 ### Estructura de paquetes
 
@@ -364,7 +359,7 @@ Esta etapa construye las piezas que usan todas las siguientes: seguridad, ubicac
 
 - `EmailService.enviar(destinatario, asunto, template, Map variables)`.
 - URL de imágenes: `GET /imagen/{id}`.
-- Endpoints JSON de ubicación y nombre del fragment de dirección: `fragments/direccion`.
+- Opciones de ubicación renderizadas en HTML y nombre del fragment de dirección: `fragments/direccion`.
 - `UsuarioService.usuarioActual()`, que devuelve el usuario logueado.
 
 | ID | Issue | Responsable | Tipo |
@@ -427,12 +422,7 @@ Esta etapa construye las piezas que usan todas las siguientes: seguridad, ubicac
 
 **ESPERAR a E1-03** (Diego): los services de ubicación.
 
-- Endpoints JSON públicos, en un controller `/api/ubicacion`:
-  - `/provincias?pais=`
-  - `/departamentos?provincia=`
-  - `/localidades?departamento=`
-
-  Cada uno devuelve un DTO con `id` y `nombre`, y el de localidades también el código postal.
+- Los servicios de ubicación entregan las opciones activas para renderizarlas en HTML. El JavaScript local filtra país, provincia, departamento y localidad sin solicitudes JSON y completa el código postal.
 - `DireccionService` con los métodos del diagrama: crear, validar, modificar y eliminar.
 - Fragment `fragments/direccion.html`:
   - Selects en cascada en JavaScript: al elegir la provincia se cargan sus departamentos, y así sucesivamente.
@@ -803,7 +793,7 @@ Esta etapa cierra el circuito de venta: checkout, pago, factura, seguimiento, an
 - **En `OrdenCompra` (E4-01, lo sube primero Maxi):** `confirmar()`, `registrarPago()`, `marcarEnviado()`, `marcarEntregado()`, `anular(boolean esAdmin)`, `puedeAnularse(boolean esAdmin)` y `pasosSeguimiento()`.
 - **En `VentaService` (Manu):** `confirmarCompra(idCliente, idFormaPago)`, `registrarPago(idOrden)` (idempotente) y `anularVenta(idOrden, esAdmin)`.
 - **En `NotificacionCompraService` (Diego):** `enviarConfirmacion(orden)` y `notificarCambioEstado(orden)`.
-- **URL de pago con Mercado Pago (Diego, E4-10):** `GET /cliente/pago/{idOrden}` crea la preferencia de pago y redirige a Mercado Pago. El checkout (E4-02) y el seguimiento (E4-04) solo enlazan a esa URL, así que no necesitan esperar a E4-10.
+- **Mercado Pago simulado (E4-10):** el checkout registra la compra como pendiente; el panel confirma el pago manualmente.
 
 | ID | Issue | Responsable | Tipo |
 | --- | --- | --- | --- |
@@ -816,7 +806,7 @@ Esta etapa cierra el circuito de venta: checkout, pago, factura, seguimiento, an
 | E4-07 | Acciones sobre pedidos desde el panel | Maxi | Back + Front |
 | E4-08 | Newsletter de ofertas | Valen | Back + Front |
 | E4-09 | Alertas de actualización de precios | Valen | Back + Front |
-| E4-10 | Integración con Mercado Pago | Diego | Back + Front |
+| E4-10 | Mercado Pago simulado | Diego | Back + Front |
 
 ### E4-01 · Estados y transiciones de la orden
 
@@ -851,7 +841,7 @@ Esta etapa cierra el circuito de venta: checkout, pago, factura, seguimiento, an
   - Elección de la forma de pago entre las activas.
   - Botón "Confirmar compra".
 - Después de confirmar, según la forma de pago:
-  - **Mercado Pago:** redirige a `GET /cliente/pago/{idOrden}`, la URL del contrato que implementa Diego en E4-10.
+  - **Mercado Pago simulado:** muestra la compra registrada y pendiente de confirmación administrativa.
   - **Efectivo o transferencia:** muestra la página "Compra registrada", con las instrucciones de pago y el número de compra.
 
 **Criterio de aceptación:** al confirmar, la orden queda en pendiente de pago, la factura tiene los detalles con los precios del momento y el carrito queda vacío para una próxima compra.
@@ -866,9 +856,9 @@ Esta etapa cierra el circuito de venta: checkout, pago, factura, seguimiento, an
   - La factura pasa a `PAGADA` y la orden, a `PENDIENTE_ENVIO`, con `registrarPago()`.
   - Descuenta el stock con `registrarMovimiento` por cada detalle (RF13). El signo negativo lo da `FacturaCliente`.
   - Todo en una transacción: si un producto se quedó sin stock, no se aplica nada y se informa.
-  - **Es idempotente:** si la factura ya está en `PAGADA`, no hace nada. Esto es clave porque Mercado Pago puede notificar el mismo pago más de una vez.
+  - **Es idempotente:** si la factura ya está en `PAGADA`, no vuelve a descontar stock ni enviar avisos.
   - Llama a `notificarCambioEstado(orden)`.
-  - Lo usan el panel de pedidos para efectivo y transferencia (E4-07) y el webhook de Mercado Pago (E4-10).
+  - Lo usa el panel de pedidos para efectivo, transferencia y Mercado Pago simulado (E4-07/E4-10).
 - `VentaService.anularVenta(idOrden, esAdmin)`:
   - Verifica con `puedeAnularse`.
   - Pasa la orden a `ANULADA` y la factura, a `ANULADA`.
@@ -888,7 +878,7 @@ Esta etapa cierra el circuito de venta: checkout, pago, factura, seguimiento, an
 - Pantalla de detalle y seguimiento en `/cliente/compras/{id}` (RF22 y RF23):
   - Línea de tiempo visual con `pasosSeguimiento()`, que resalta el estado actual y los pasos cumplidos.
   - Ítems con precio y subtotal, total, forma de pago, número de factura y dirección de entrega.
-  - Si la orden está pendiente de pago con Mercado Pago, un botón "Pagar ahora" que lleva a `/cliente/pago/{idOrden}`, la URL del contrato con E4-10.
+  - Si la orden está pendiente de pago con Mercado Pago simulado, informa que espera confirmación administrativa.
   - Botón "Anular compra" (RF19): se muestra solo si `puedeAnularse(false)`, pide confirmación con el modal del kit y llama a `anularVenta(idOrden, false)`.
 - Un cliente no puede ver ni anular compras de otro cliente: devuelve 403.
 - Para probar todos los estados, cargar en el seeder órdenes en cada uno.
@@ -930,7 +920,7 @@ Esta etapa cierra el circuito de venta: checkout, pago, factura, seguimiento, an
 
 Botones en el detalle del pedido, visibles solo cuando la transición es válida:
 
-- **"Confirmar pago":** para efectivo y transferencia. Llama a `registrarPago`.
+- **"Confirmar pago":** para efectivo, transferencia y Mercado Pago simulado. Llama a `registrarPago`.
 - **"Marcar como enviado":** llama a `marcarEnviado()`.
 - **"Marcar como entregado":** llama a `marcarEntregado()`.
 - **"Anular":** llama a `anularVenta(idOrden, true)`. Pide confirmación y una observación con el motivo.
@@ -970,33 +960,16 @@ Cada acción:
 
 **Criterio de aceptación:** un producto con precio de hace 70 días aparece en las alertas, y desde ahí se llega a la actualización masiva con el filtro aplicado.
 
-### E4-10 · Integración con Mercado Pago
+### E4-10 · Mercado Pago simulado
 
-**Responsable:** Diego · **Tipo:** Back + Front · **Depende de:** E1-01, E0-05
+**Responsable:** Diego · **Tipo:** Back + Front · **Depende de:** E4-02, E4-03, E4-07
 
-**ESPERAR firma de E4-03** (Manu): `registrarPago(idOrden)`.
+- Mantener `BILLETERA_VIRTUAL` como opción de checkout sin SDK, credenciales, pasarela ni webhook.
+- Al confirmar, mostrar la compra registrada e informar que espera confirmación administrativa.
+- Permitir confirmar el pago solo desde el panel y solo para pedidos pendientes; reutilizar `registrarPago`.
+- Mantener la anulación y la idempotencia del registro del pago.
 
-- **Configuración:**
-  - Dependencia `com.mercadopago:sdk-java`.
-  - Propiedades `mercadopago.access-token=${MP_ACCESS_TOKEN}` y `app.url-base`, con la URL pública del sitio.
-  - Crear en Mercado Pago las cuentas de prueba de vendedor y comprador, y documentar en el `README` cómo obtener el access token y qué tarjetas de prueba usar.
-- **`MercadoPagoService.crearPreferencia(orden)`:**
-  - Un ítem por cada `DetalleFactura`, con título, cantidad y precio unitario.
-  - `external_reference` igual al `identificadorCompra` de la orden.
-  - `back_urls` de éxito, pendiente y fallo hacia `/cliente/pago/resultado`, con `auto_return` para pagos aprobados.
-  - `notification_url` igual a `app.url-base` + `/webhooks/mercadopago`.
-  - Devuelve la URL de pago de la preferencia.
-- **`GET /cliente/pago/{idOrden}`** (la URL del contrato): verifica que la orden sea del cliente logueado y esté en `PENDIENTE_PAGO`, crea la preferencia y redirige a Mercado Pago. Cada reintento crea una preferencia nueva.
-- **Webhook `POST /webhooks/mercadopago`:**
-  - Público y sin CSRF: agregar la excepción en la configuración de seguridad de E1-01.
-  - Toma el id del pago de la notificación y **consulta el pago a la API**. Nunca confía en los datos que llegan en la notificación.
-  - Si el pago está aprobado, busca la orden por `external_reference` y llama a `registrarPago`. Si está pendiente o rechazado, no cambia nada.
-  - Responde siempre 200 rápido, para que Mercado Pago no reintente de más, y registra en el log cada notificación.
-- **Página `/cliente/pago/resultado`:** muestra el resultado que informa Mercado Pago al volver (aprobado, pendiente o rechazado), con un link al seguimiento. Si fue aprobado, aclara que la confirmación puede tardar unos segundos, porque el estado real lo pone el webhook.
-- **Desarrollo local:** Mercado Pago no puede llamar a `localhost`, así que el webhook se prueba con un túnel como ngrok apuntando a la app. Documentarlo en el `README`.
-- Para probar sin E4-02, cargar en el seeder una orden en `PENDIENTE_PAGO` con su factura.
-
-**Criterio de aceptación:** con el comprador de prueba y una tarjeta de prueba aprobada, el webhook deja la factura pagada, la orden en pendiente de envío y el stock descontado. Repetir la notificación no cambia nada, y un pago rechazado deja la orden en pendiente de pago, lista para reintentar.
+**Criterio de aceptación:** el checkout no cobra ni mueve stock; la confirmación administrativa paga la factura, pasa la orden a pendiente de envío y descuenta stock una sola vez.
 
 ## Etapa 5 – Reportes y dashboard
 
@@ -1138,7 +1111,7 @@ Tests con `@SpringBootTest` sobre una base SQLite de test (`application-test.pro
 - Anulación por el cliente antes del pago y por el admin después del pago, con reingreso de stock.
 - Acceso denegado a `/admin` para un cliente, con MockMvc.
 
-El `EmailService` y la API de Mercado Pago se reemplazan por mocks, para no mandar correos ni pagos reales. También se prueba el webhook con una notificación de pago aprobado repetida, que no tiene que descontar el stock dos veces. Estos tests son los que se muestran en la exposición como pruebas de software.
+El `EmailService` se reemplaza por un mock para no mandar correos reales. Se prueba que repetir la confirmación administrativa no descuente stock dos veces. Estos tests son los que se muestran en la exposición como pruebas de software.
 
 **Criterio de aceptación:** `mvn test` corre todos los tests en verde desde una base vacía.
 
@@ -1226,7 +1199,7 @@ Cada uno explica en el informe los patrones que aplicó en sus issues, con un fr
 **ESPERAR a E6-01** (los cuatro) y **a E6-03** (Diego): el sistema probado y los datos de demostración.
 
 - Merge final de `develop` a `main` con el tag `v1.0`.
-- Verificar, con las credenciales de prueba de Mercado Pago y el túnel del webhook configurados, que el proyecto corre desde un clon limpio siguiendo solo el `README`.
+- Verificar que el proyecto corre desde un clon limpio siguiendo solo el `README`, sin credenciales ni túnel de pagos.
 - Armar el guion de la demo: qué muestra cada uno, en qué orden y con qué usuario, siguiendo los puntos de la presentación del enunciado (caso de uso crítico, diagramas, demo, patrones, pruebas y tablero Trello).
 
 **Criterio de aceptación:** el guion está acordado por los cuatro y la demo completa se ensayó al menos una vez de principio a fin.

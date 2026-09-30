@@ -643,7 +643,7 @@ public class DataSeeder implements CommandLineRunner {
                     Map.of("SHO-RUN-H-M", 1));
             cargarPedidoDemo(7, "ORD-DEMO0005", martin, mercadoPago, null, 8, EstadoOrdenCompra.ANULADA,
                     Map.of("REM-DRY-H-M", 1));
-            // E4-04: pendiente de pago con Mercado Pago, para el botón "Pagar ahora" del seguimiento.
+            // E4-04: pendiente de confirmación administrativa con Mercado Pago simulado.
             cargarPedidoDemo(8, "ORD-DEMO0007", martin, mercadoPago, null, 2, EstadoOrdenCompra.PENDIENTE_PAGO,
                     Map.of("GOR-TRN-U", 2));
 

@@ -323,7 +323,7 @@ Se incluye con una línea dentro de un `<form class="zero-form">`:
   al editar, o el mismo objeto recibido con `@ModelAttribute` para volver al formulario después de un error.
 - Envía `calle`, `numeracion`, `barrio`, `manzanaPiso`, `casaDepartamento`, `referencia` y `localidadId`
   (más `paisId`, `provinciaId` y `departamentoId`, que solo sirven para precargar los selects).
-- Los selects se cargan en cascada con `static/js/ubicacion-cascada.js`. El código postal se completa solo
+- Los selects se filtran en cascada, sin solicitudes JSON, con `static/js/ubicacion-cascada.js`. El código postal se completa solo
   al elegir la localidad y no se envía.
 - `DireccionService` tiene `crearDireccion` (devuelve la `Direccion` para asociarla), `modificarDireccion`,
   `eliminarDireccion` (baja lógica), `buscarDireccion` y `buscarDireccionPorCalleNumeracion`. Calle,
@@ -332,14 +332,7 @@ Se incluye con una línea dentro de un `<form class="zero-form">`:
   `fragments/ubicacion :: cascada(hasta, paisId, provinciaId, departamentoId, localidadId)`, con `hasta`
   igual a `'departamento'` o `'localidad'`. Lo usa el formulario de Localidad.
 
-Endpoints JSON públicos (solo registros activos; un id vacío o inexistente devuelve `[]`):
-
-| Endpoint | Devuelve |
-|---|---|
-| `GET /api/ubicacion/paises` | `[{id, nombre}]` |
-| `GET /api/ubicacion/provincias?pais={id}` | `[{id, nombre}]` |
-| `GET /api/ubicacion/departamentos?provincia={id}` | `[{id, nombre}]` |
-| `GET /api/ubicacion/localidades?departamento={id}` | `[{id, nombre, codigoPostal}]` |
+Las opciones activas de ubicación se renderizan en el HTML. El JavaScript local filtra cada nivel por su padre y completa el código postal sin llamar a una API.
 
 La página de prueba `/dev/direccion` guarda una dirección real y, al guardar, se recarga con `?id=` para
 mostrar los selects precargados.
@@ -447,7 +440,7 @@ solo de test): verifican el envío, el HTML y el logo sin que salga nada de la m
 - `enviarConfirmacion(orden)` (RF20), template `email/confirmacion-compra.html`: número de compra, fecha, ítems con
   cantidad, precio unitario y subtotal, total, número de factura, forma de pago y un botón "Seguir mi compra". Si la
   orden está pendiente de pago, suma las instrucciones de pago según el `TipoPago` (texto fijo, porque el diagrama no
-  guarda datos de cobro) y, con Mercado Pago, un botón a `/cliente/pago/{idOrden}` (E4-10).
+  guarda datos de cobro). Con Mercado Pago simulado, la compra queda pendiente de confirmación administrativa.
 - `notificarCambioEstado(orden)`, template `email/cambio-estado.html`: el nuevo estado, un mensaje y el link al
   seguimiento.
 - Los links son absolutos, a `app.url-base` + `/cliente/compras/{idOrden}` (pantalla de E4-04).
@@ -665,9 +658,9 @@ los carritos abiertos (`PENDIENTE_COMPLETAR`) no aparecen.
 - **"Registrado por":** el diagrama guarda un solo `Empleado` por `FacturaCliente`, así que se muestra ese (el último
   que registró una acción del panel, E4-07). No hay un empleado por paso.
 - La forma de pago y la factura salen de la `FacturaCliente` del pedido. Si todavía no tiene factura, se muestra "-".
-- **Acciones:** el detalle muestra solamente la transición válida para el estado actual. Efectivo y transferencia
-  permiten confirmar el pago manualmente; luego se puede marcar el pedido como enviado y entregado. Mercado Pago no
-  admite confirmación manual. Cada cambio registra al empleado autenticado, actualiza el seguimiento, muestra un
+- **Acciones:** el detalle muestra solamente la transición válida para el estado actual. Efectivo, transferencia y
+  Mercado Pago simulado permiten confirmar el pago manualmente; luego se puede marcar el pedido como enviado y entregado.
+  Cada cambio registra al empleado autenticado, actualiza el seguimiento, muestra un
   mensaje y solicita el correo de cambio de estado.
 - **Anulación administrativa:** está disponible hasta `PENDIENTE_ENVIO` y exige confirmar la acción e informar
   un motivo. Si la venta ya estaba pagada, repone el stock en la misma transacción.
@@ -694,7 +687,7 @@ tienen el stock inicial, así que no cambian los niveles del reporte de stock de
 | ORD-DEMO0004 | Martín Pérez | Entregado | Transferencia | N.º 6, pagada (Jefa) |
 | ORD-DEMO0005 | Martín Pérez | Anulada | Mercado Pago | N.º 7, anulada |
 | ORD-DEMO0006 | Lucía Gómez | Carrito abierto | - | - (no aparece en el panel) |
-| ORD-DEMO0007 | Martín Pérez | Pendiente de pago | Mercado Pago | N.º 8, sin definir (para "Pagar ahora", E4-04) |
+| ORD-DEMO0007 | Martín Pérez | Pendiente de pago | Mercado Pago | N.º 8, sin definir (pago simulado pendiente) |
 
 **Para verlos en una base que ya existe** hay que borrar `data/zero.db` y volver a levantar la app.
 
@@ -702,7 +695,7 @@ tienen el stock inicial, así que no cambian los niveles del reporte de stock de
 |---|---|---|
 | GET | `/admin/pedidos?estado=&formaPago=&desde=&hasta=&cliente=` | Listar pedidos con filtros y tarjetas por estado |
 | GET | `/admin/pedidos/{id}` | Detalle del pedido con la línea de tiempo |
-| POST | `/admin/pedidos/{id}/confirmar-pago` | Confirmar un pago en efectivo o transferencia |
+| POST | `/admin/pedidos/{id}/confirmar-pago` | Confirmar manualmente efectivo, transferencia o Mercado Pago simulado |
 | POST | `/admin/pedidos/{id}/marcar-enviado` | Pasar el pedido a pendiente de entrega |
 | POST | `/admin/pedidos/{id}/marcar-entregado` | Marcar el pedido como entregado |
 | POST | `/admin/pedidos/{id}/anular` | Anular con motivo y reponer stock si estaba pagado |
@@ -716,8 +709,7 @@ los clientes del seeder de E4-06: `lucia.gomez@mail.com` o `martin.perez@mail.co
   nueva a la más vieja. No incluye el carrito abierto.
 - **Detalle y seguimiento (RF22 y RF23):** línea de tiempo con `pasosSeguimiento()` (fragment `seguimiento :: linea`),
   datos de la compra, número de factura, dirección de entrega y productos con precio y subtotal.
-- **"Pagar ahora":** solo si la compra está pendiente de pago con Mercado Pago. Lleva a `/cliente/pago/{idOrden}`, la
-  URL del contrato con E4-10.
+- **Mercado Pago simulado pendiente:** el detalle informa que no se realizó un cobro real y que falta la confirmación administrativa.
 - **"Anular compra" (RF19):** solo si `puedeAnularse(false)`, es decir, antes del pago. Pide confirmación con el modal
   del kit y llama a `VentaService.anularVenta(idOrden, false)`: la compra y su factura pasan a `ANULADA`.
 - Un cliente no puede ver ni anular compras de otro: devuelve 403.
@@ -744,8 +736,7 @@ Desde el carrito, **"Continuar al pago"** lleva a `/cliente/checkout` (solo `CLI
 - **Perfil obligatorio:** sin perfil completo (`ClienteService.perfilCompleto`) el checkout redirige a `/cliente/perfil`
   con un mensaje, y `confirmarCompra` también lo rechaza.
 - Al abrir el checkout se sincroniza el carrito como en E3-07. Si hubo ajustes de stock, vuelve al carrito con el aviso.
-- **Después de confirmar:** con Mercado Pago (`BILLETERA_VIRTUAL`) redirige a `/cliente/pago/{idOrden}` (E4-10); con
-  efectivo o transferencia muestra "Compra registrada" con el número de compra y las instrucciones de pago.
+- **Después de confirmar:** todas las formas de pago muestran la compra registrada. Mercado Pago queda pendiente de confirmación administrativa.
 
 ### `VentaService.confirmarCompra(idCliente, idFormaPago)`
 
@@ -772,8 +763,7 @@ Las pruebas están en `VentaServiceTest` y `CheckoutIntegrationTest`.
 ## Registro del pago, descuento de stock y anulación de ventas E4-03
 
 Son métodos de `VentaService` sin pantalla propia: los usan las acciones del panel de pedidos (E4-07, a través de
-`PedidoAccionService`), el webhook de Mercado Pago (E4-10) y "Mis compras" (E4-04). E4-07 se mergeó antes e incluyó
-la misma implementación, así que este issue suma las pruebas de integración y la documentación.
+`PedidoAccionService`) y "Mis compras" (E4-04).
 
 - **`registrarPago(idOrden)`:** la orden pasa a `PENDIENTE_ENVIO` (`OrdenCompra.registrarPago()`), la factura a
   `PAGADA`, y se descuenta el stock con `StockService.registrarMovimiento` por cada detalle (RF13). El signo negativo
@@ -782,8 +772,8 @@ la misma implementación, así que este issue suma las pruebas de integración y
   - **Una sola transacción:** si un producto se quedó sin stock, `StockService` lanza "No hay stock suficiente de ...:
     hay 2 y se necesitan 3." y se deshace todo, incluidos los movimientos de los otros productos. La orden sigue en
     `PENDIENTE_PAGO`.
-  - **Idempotente:** si la factura ya está `PAGADA`, no hace nada, no mueve stock y no manda correo. Mercado Pago
-    puede notificar el mismo pago más de una vez.
+  - **Idempotente:** si la factura ya está `PAGADA`, no hace nada, no mueve stock y no manda correo.
+
   - Rechaza pedidos sin factura ("El pedido no tiene una factura asociada."), facturas anuladas ("No se puede
     registrar el pago de una factura anulada.") y órdenes sin confirmar (con el mensaje de la transición de E4-01).
 - **`anularVenta(idOrden, esAdmin)`:** verifica con `puedeAnularse(esAdmin)` y pasa la orden y la factura a `ANULADA`.
@@ -795,7 +785,6 @@ la misma implementación, así que este issue suma las pruebas de integración y
 
 - `registrarPago` y `anularVenta` ya mandan el correo de cambio de estado: quien los llame no tiene que volver a
   llamar a `notificarCambioEstado` (así lo hace `PedidoAccionService` de E4-07).
-- **E4-10 (webhook):** llamar a `registrarPago` cada vez que llegue un pago aprobado. Es seguro repetirlo.
 
 Las pruebas están en `VentaServiceTest` y en `VentaIntegrationTest`: compra → pago → stock descontado → segundo pago
 sin efecto → anulación del admin → stock reingresado, y un pago sin stock que no aplica nada. Este último test no es
@@ -923,85 +912,23 @@ La URL que arma el mensaje es
 existe una recomendación. La cantidad se recalcula en el servidor antes de redirigir, para no confiar en datos de
 la URL.
 
-## Integración con Mercado Pago (E4-10)
+## Mercado Pago simulado (E4-10)
 
-### Credenciales (`.env`)
-Las credenciales **nunca** van en `application.properties` ni en el repo. La app las lee de variables de entorno o de
-un archivo `.env` en la carpeta `IntegradorN1`, que está en el `.gitignore`:
+El cliente puede elegir Mercado Pago como forma de pago. La compra queda en `PENDIENTE_PAGO` y la factura en `SIN_DEFINIR`; no se realiza un cobro. La página de compra registrada, el seguimiento y el correo indican que espera confirmación administrativa.
 
-1. Copiar `.env.example` como `.env`.
-2. Completar:
-   - `MP_ACCESS_TOKEN`: access token de prueba del vendedor. En Checkout Pro las credenciales de prueba empiezan con
-     `APP_USR-`, así que ese prefijo no significa que sean de producción.
-   - `MP_WEBHOOK_SECRET`: clave secreta de Webhooks, en *Tus integraciones > app > Webhooks > Configurar notificaciones*.
-     Con ella se valida la firma (`x-signature`) de cada notificación. Si falta, la firma no se valida (solo sirve
-     para desarrollo).
-   - `APP_URL_BASE`: URL pública **HTTPS** del sitio (ver ngrok más abajo). Por defecto es `http://localhost:8080`.
-
-Las variables de entorno del sistema tienen prioridad sobre el `.env`.
-
-### Cuentas de prueba
-En [Tus integraciones](https://www.mercadopago.com.ar/developers/panel/app) > app > *Cuentas de prueba* hay un
-**vendedor** (dueño de las credenciales) y un **comprador**. Tienen que ser usuarios distintos y del mismo país. Para
-pagar, iniciar sesión en Mercado Pago **con el comprador de prueba, en una ventana de incógnito**.
-
-### Tarjetas de prueba (Argentina)
-| Tarjeta | Número | CVV | Vencimiento |
-|---|---|---|---|
-| Mastercard crédito | `5031 7557 3453 0604` | `123` | `11/30` |
-| Visa crédito | `4509 9535 6623 3704` | `123` | `11/30` |
-| American Express | `3711 803032 57522` | `1234` | `11/30` |
-| Mastercard débito | `5287 3383 1025 3304` | `123` | `11/30` |
-| Visa débito | `4002 7686 9439 5619` | `123` | `11/30` |
-
-El **nombre del titular** define el resultado; documento DNI `12345678`:
-- `APRO`: aprobado.
-- `OTHE`: rechazado por error general.
-- `CONT`: pendiente de pago.
-- `FUND`: rechazado por monto insuficiente.
-- `SECU`: rechazado por código de seguridad inválido.
-
-### Cómo se confirma el pago
-- La **fuente de verdad** es siempre la API: el webhook (`POST /webhooks/mercadopago`) y la página de vuelta
-  (`/cliente/pago/resultado`) solo toman el id del pago y lo consultan con `GET /v1/payments/{id}`. Nunca se confía en
-  los datos que llegan en la notificación o en la URL.
-- Si el pago está `approved` y el monto y la moneda coinciden con la factura, se registra el pago (E4-03). Registrar
-  un pago ya registrado no hace nada.
-- Si la orden no admite el pago (por ejemplo, se quedó sin stock mientras el cliente pagaba), se **devuelve el
-  dinero** automáticamente y se anula la orden.
-- Si un pago aprobado pasa a `refunded` o `charged_back`, la orden pagada (pendiente de envío) se anula y el stock
-  vuelve. Si ya se envió, solo queda registrado en el log para revisarla a mano.
-- `pending`, `in_process`, `rejected`: la orden sigue en pendiente de pago, lista para reintentar.
-
-### Pruebas de Webhook en Desarrollo Local con ngrok
-Mercado Pago descarta las `back_urls` y la `notification_url` que no son **HTTPS públicas** (no acepta `localhost`), así
-que en desarrollo hay que exponer la app con un túnel como **ngrok**:
-
-1. Una sola vez: `ngrok config add-authtoken <NGROK_AUTHTOKEN>`.
-2. En otra terminal: `ngrok http 8080`.
-3. Copiar la URL pública generada (ejemplo: `https://a1b2-c3d4.ngrok-free.app`) en `APP_URL_BASE` del `.env`.
-4. Levantar la app: `mvnw.cmd spring-boot:run` (Windows) o `./mvnw spring-boot:run` (Linux o Mac).
-
-La preferencia se crea con `notification_url` = `APP_URL_BASE` + `/webhooks/mercadopago?source_news=webhooks` y con
-`auto_return` para volver solo al sitio cuando el pago se aprueba.
-
-> **Importante:** según la documentación de Mercado Pago, los pagos hechos con credenciales de prueba **no envían
-> notificaciones** a la `notification_url` de la preferencia. Para probar el webhook, configurar la URL
-> (`APP_URL_BASE/webhooks/mercadopago`) en *Tus integraciones > app > Webhooks*, con el evento **Pagos**, y usar el botón
-> **Simular**. Igual, al volver de Mercado Pago la página de resultado consulta el pago a la API y lo registra, así que
-> el flujo completo funciona aunque la notificación no llegue.
+Un usuario `JEFE` o `ADMINISTRATIVO` confirma el pago desde `/admin/pedidos/{id}`. El sistema registra al empleado, pasa la factura a `PAGADA`, deja el pedido en `PENDIENTE_ENVIO` y descuenta el stock una sola vez. No se necesitan credenciales, cuentas de prueba, tarjetas ni túneles.
 
 ## Tests de integración de los flujos principales E5-08
 
 `FlujosPrincipalesIntegrationTest` recorre de punta a punta los flujos que se muestran en la exposición. Corre con el
 perfil `test` (`src/test/resources/application-test.properties`): una base SQLite en `target/zero-test.db` que se borra
-antes de empezar, así el `DataSeeder` parte de una base vacía, y al terminar. El `EmailService` y los clientes de
-Mercado Pago (`PaymentClient`, `PreferenceClient`, `PaymentRefundClient`) son mocks: no salen correos ni pagos reales.
+antes de empezar, así el `DataSeeder` parte de una base vacía, y al terminar. `EmailService` se reemplaza por un mock
+para evitar correos reales; Mercado Pago se simula y no realiza cobros.
 
 | Test | Flujo |
 |---|---|
 | `registroActivacionYLogin` | Registro → código por correo → login rechazado → activación → login |
-| `carritoConfirmacionPagoDescuentoDeStockYFacturaPagada` | Carrito → checkout con Mercado Pago → webhook aprobado **dos veces** → stock descontado una sola vez y factura pagada |
+| `carritoConfirmacionPagoDescuentoDeStockYFacturaPagada` | Carrito → checkout con Mercado Pago → confirmación administrativa repetida → stock descontado una sola vez y factura pagada |
 | `compraAProveedorRecepcionYAumentoDeStock` | Compra a proveedor → recepción → stock aumentado (recibir de nuevo no suma) |
 | `anulacionPorElClienteAntesDelPagoYPorElAdminDespuesDelPagoConReingresoDeStock` | El cliente anula sin pagar; el admin confirma el pago, el cliente ya no puede anular y el admin sí, con reingreso de stock |
 | `unClienteNoPuedeEntrarAlPanelDeAdministracion` | `/admin` con un cliente da 403 (MockMvc) y sin sesión manda al login |

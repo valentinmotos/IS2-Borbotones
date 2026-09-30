@@ -66,7 +66,7 @@ public class CompraClienteController {
         model.addAttribute("factura", factura);
         model.addAttribute("pasos", compra.pasosSeguimiento());
         model.addAttribute("puedeAnularse", compra.puedeAnularse(false));
-        model.addAttribute("pagarConMercadoPago", compra.getEstadoOrdenCompra() == EstadoOrdenCompra.PENDIENTE_PAGO
+        model.addAttribute("mercadoPagoSimuladoPendiente", compra.getEstadoOrdenCompra() == EstadoOrdenCompra.PENDIENTE_PAGO
                 && factura != null && factura.getFormaDePago() != null
                 && factura.getFormaDePago().getTipoPago() == TipoPago.BILLETERA_VIRTUAL);
         return "cliente/compras/detalle";

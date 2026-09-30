@@ -73,6 +73,7 @@ class CheckoutIntegrationTest {
                 .andExpect(content().string(containsString("San Martín 1250, Ciudad de Mendoza")))
                 .andExpect(content().string(containsString("href=\"/cliente/perfil\"")))
                 .andExpect(content().string(containsString("Transferencia")))
+                .andExpect(content().string(containsString("Mercado Pago (Billetera Virtual)")))
                 .andExpect(content().string(containsString("Confirmar compra")));
     }
 
@@ -109,12 +110,15 @@ class CheckoutIntegrationTest {
     }
 
     @Test
-    void confirmarConMercadoPagoRedirigeALaUrlDePago() throws Exception {
+    void confirmarConMercadoPagoSimuladoMuestraCompraRegistrada() throws Exception {
         MockHttpSession lucia = login("lucia.gomez@mail.com");
         String idCarrito = idCarritoDeLucia();
 
         mvc.perform(postConCsrf(lucia).param("idFormaPago", idFormaDePago(TipoPago.BILLETERA_VIRTUAL)))
-                .andExpect(redirectedUrl("/cliente/pago/" + idCarrito));
+                .andExpect(redirectedUrl(BASE + "/registrada/" + idCarrito));
+        mvc.perform(get(BASE + "/registrada/" + idCarrito).session(lucia))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Mercado Pago simulado")));
     }
 
     @Test

@@ -85,13 +85,13 @@ class CompraClienteIntegrationTest {
     }
 
     @Test
-    void unaCompraSinPagarConMercadoPagoTieneElBotonPagarAhora() throws Exception {
+    void unaCompraSinPagarConMercadoPagoInformaLaSimulacion() throws Exception {
         MockHttpSession martin = login("martin.perez@mail.com", "Cliente123!");
         String id = idPedido("ORD-DEMO0007");
 
         mvc.perform(get(BASE + "/" + id).session(martin)).andExpect(status().isOk())
-                .andExpect(content().string(containsString("Pagar ahora")))
-                .andExpect(content().string(containsString("href=\"/cliente/pago/" + id + "\"")));
+                .andExpect(content().string(containsString("Mercado Pago simulado")))
+                .andExpect(content().string(not(containsString("Pagar ahora"))));
     }
 
     @Test
