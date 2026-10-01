@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="15.1"><zoom_level>10</zoom_level>
+<element><id>UMLClass</id><coordinates><x>20</x><y>60</y><w>544</w><h>129</h></coordinates><panel_attributes>«controller»
+CalendarioController
+--
+- calendarioService: CalendarioService
+--
++ mostrar(anio: Integer, mes: Integer, model: Model): String
++ verDia(fecha: LocalDate, model: Model): String
++ reprogramarLlegada(id: String, fecha: LocalDate, flash: RedirectAttributes): String
++ reprogramarEnvio(id: String, fecha: LocalDate, flash: RedirectAttributes): String
+bg=#DFF2DF</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>20</x><y>300</y><w>255</w><h>84</h></coordinates><panel_attributes>«controllerAdvice»
+CalendarioAdvice
+--
+- calendarioService: CalendarioService
+--
++ cantidadEventosHoy(): long
+bg=#DFF2DF</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>20</x><y>470</y><w>261</w><h>157</h></coordinates><panel_attributes>«record»
+CalendarioMesDTO
+--
+- anio: int
+- mes: int
+- nombreMes: String
+- semanas: List&lt;List&lt;DiaCalendarioDTO&gt;&gt;
+- cantidadLlegadas: int
+- cantidadEnvios: int
+- atrasados: List&lt;EventoCalendarioDTO&gt;
+--
+
+bg=#DFF2DF</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>20</x><y>730</y><w>243</w><h>112</h></coordinates><panel_attributes>«record»
+DiaCalendarioDTO
+--
+- fecha: LocalDate
+- delMes: boolean
+- esHoy: boolean
+- eventos: List&lt;EventoCalendarioDTO&gt;
+--
+
+bg=#DFF2DF</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>20</x><y>930</y><w>501</w><h>144</h></coordinates><panel_attributes>«record»
+EventoCalendarioDTO
+--
+- id: String
+- tipo: TipoEventoCalendario
+- fecha: LocalDate
+- descripcion: String
+- atrasado: boolean
+--
++ desde(evento: EventoAgendable, hoy: LocalDate): EventoCalendarioDTO {static}
+bg=#DFF2DF</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>720</x><y>60</y><w>643</w><h>219</h></coordinates><panel_attributes>«service»
+CalendarioService
+--
+- facturaProveedorService: FacturaProveedorService
+- ordenCompraService: OrdenCompraService
+--
++ generarMes(anio: int, mes: int): CalendarioMesDTO
++ listarEventos(desde: LocalDate, hasta: LocalDate): List&lt;EventoCalendarioDTO&gt;
++ listarEventosDelDia(fecha: LocalDate): List&lt;EventoCalendarioDTO&gt;
++ listarEventosAtrasados(hoy: LocalDate): List&lt;EventoCalendarioDTO&gt;
++ contarEventosHoy(): long
++ reprogramarLlegada(idCompra: String, fecha: LocalDate): void
++ reprogramarEnvio(idOrden: String, fecha: LocalDate): void
++ validar(anio: int, mes: int): void
+- armarSemanas(anio: int, mes: int, eventos: List&lt;EventoCalendarioDTO&gt;): List&lt;List&lt;DiaCalendarioDTO&gt;&gt;
+bg=#DFF2DF</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1440</x><y>60</y><w>587</w><h>189</h></coordinates><panel_attributes>«service»
+FacturaProveedorService
+--
+- repository: FacturaProveedorRepository
+--
++ crearFactura(idProveedor: String, idFormaDePago: String, fechaEntregaEstimada: LocalDate,
+      detalles: List&lt;DetalleFacturaItemDTO&gt;): FacturaProveedor {modificado}
++ validar(idProveedor: String, idFormaDePago: String, fechaEntregaEstimada: LocalDate,
+      detalles: List&lt;DetalleFacturaItemDTO&gt;): void {modificado}
++ recibirFactura(id: String): FacturaProveedor
++ reprogramarEntrega(id: String, fecha: LocalDate): FacturaProveedor {nuevo}
++ listarComprasAEntregar(desde: LocalDate, hasta: LocalDate): List&lt;FacturaProveedor&gt; {nuevo}
++ listarComprasAtrasadas(hoy: LocalDate): List&lt;FacturaProveedor&gt; {nuevo}
+bg=#FFF4CC</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1440</x><y>330</y><w>544</w><h>129</h></coordinates><panel_attributes>«service»
+OrdenCompraService
+--
+- repository: OrdenCompraRepository
+--
++ buscarPedido(id: String): OrdenCompra
++ listarPedidosAEnviar(desde: LocalDate, hasta: LocalDate): List&lt;OrdenCompra&gt; {nuevo}
++ listarPedidosAtrasados(hoy: LocalDate): List&lt;OrdenCompra&gt; {nuevo}
++ reprogramarEnvio(idOrden: String, fecha: LocalDate): OrdenCompra {nuevo}
+bg=#FFF4CC</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1440</x><y>520</y><w>335</w><h>99</h></coordinates><panel_attributes>«service»
+VentaService
+--
+- ordenCompraService: OrdenCompraService
+- empresaService: EmpresaService {nuevo}
+--
++ registrarPago(idOrden: String): void {modificado}
+bg=#FFF4CC</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1440</x><y>690</y><w>206</w><h>67</h></coordinates><panel_attributes>«service»
+EmpresaService
+--
+--
++ buscarSedeCentral(): Empresa
+bg=#FFFFFF</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>2230</x><y>60</y><w>612</w><h>127</h></coordinates><panel_attributes>«repository»
+FacturaProveedorRepository
+--
+--
++ findByIdAndEliminadoFalse(id: String): Optional&lt;FacturaProveedor&gt;
++ findByEstadoAndFechaEntregaEstimadaBetweenAndEliminadoFalseOrderByFechaEntregaEstimadaAsc(
+      estado: EstadoFactura, desde: LocalDate, hasta: LocalDate): List&lt;FacturaProveedor&gt; {nuevo}
++ findByEstadoAndFechaEntregaEstimadaBeforeAndEliminadoFalse(
+      estado: EstadoFactura, fecha: LocalDate): List&lt;FacturaProveedor&gt; {nuevo}
+bg=#FFF4CC</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>2230</x><y>330</y><w>606</w><h>127</h></coordinates><panel_attributes>«repository»
+OrdenCompraRepository
+--
+--
++ findByIdAndEliminadoFalse(id: String): Optional&lt;OrdenCompra&gt;
++ findByEstadoOrdenCompraAndFechaLimiteEnvioBetweenAndEliminadoFalseOrderByFechaLimiteEnvioAsc(
+      estado: EstadoOrdenCompra, desde: LocalDate, hasta: LocalDate): List&lt;OrdenCompra&gt; {nuevo}
++ findByEstadoOrdenCompraAndFechaLimiteEnvioBeforeAndEliminadoFalse(
+      estado: EstadoOrdenCompra, fecha: LocalDate): List&lt;OrdenCompra&gt; {nuevo}
+bg=#FFF4CC</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>720</x><y>560</y><w>261</w><h>127</h></coordinates><panel_attributes>«interface»
+EventoAgendable
+--
+--
++ getId(): String
++ getFechaAgenda(): LocalDate
++ getTipoEvento(): TipoEventoCalendario
++ describirEvento(): String
++ estaAtrasado(hoy: LocalDate): boolean
+bg=#DFF2DF</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>720</x><y>930</y><w>145</w><h>82</h></coordinates><panel_attributes>«enumeration»
+TipoEventoCalendario
+--
+LLEGADA_PROVEEDOR
+ENVIO_CLIENTE
+--
+
+bg=#DFF2DF</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1440</x><y>860</y><w>224</w><h>129</h></coordinates><panel_attributes>«abstract»
+Factura
+--
+- numeroFactura: long
+- fechaFactura: LocalDate
+- estado: EstadoFactura
+--
++ getSignoStock(): int {abstract}
++ describir(): String {abstract}
+bg=#FFFFFF</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1150</x><y>1120</y><w>341</w><h>174</h></coordinates><panel_attributes>FacturaProveedor
+--
+- proveedor: Proveedor
+- fechaEntregaEstimada: LocalDate {nuevo}
+--
++ getSignoStock(): int
++ describir(): String
++ getFechaAgenda(): LocalDate {nuevo}
++ getTipoEvento(): TipoEventoCalendario {nuevo}
++ describirEvento(): String {nuevo}
++ estaAtrasado(hoy: LocalDate): boolean {nuevo}
++ reprogramarEntrega(fecha: LocalDate): void {nuevo}
+bg=#FFF4CC</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1800</x><y>1120</y><w>347</w><h>219</h></coordinates><panel_attributes>OrdenCompra
+--
+- identificadorCompra: String
+- fecha: LocalDate
+- total: double
+- estadoOrdenCompra: EstadoOrdenCompra
+- fechaLimiteEnvio: LocalDate {nuevo}
+--
++ registrarPago(diasDespacho: int): void {modificado}
++ marcarEnviado(): void
++ getFechaAgenda(): LocalDate {nuevo}
++ getTipoEvento(): TipoEventoCalendario {nuevo}
++ describirEvento(): String {nuevo}
++ estaAtrasado(hoy: LocalDate): boolean {nuevo}
++ reprogramarEnvio(fecha: LocalDate): void {nuevo}
+bg=#FFF4CC</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>2230</x><y>690</y><w>188</w><h>97</h></coordinates><panel_attributes>Empresa
+--
+- razonSocial: String
+- cuit: String
+- tipoSucursal: TipoEmpresa
+- diasDespacho: int {nuevo}
+--
+
+bg=#FFF4CC</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>554</x><y>83</y><w>176</w><h>26</h></coordinates><panel_attributes>lt=-&gt;
+m2=1</panel_attributes><additional_attributes>10;16;166;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>265</x><y>160</y><w>465</w><h>192</h></coordinates><panel_attributes>lt=-&gt;
+m2=1</panel_attributes><additional_attributes>10;182;395;182;395;10;455;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1353</x><y>73</y><w>97</w><h>23</h></coordinates><panel_attributes>lt=-&gt;
+m2=1</panel_attributes><additional_attributes>10;13;87;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1353</x><y>181</y><w>97</w><h>198</h></coordinates><panel_attributes>lt=-&gt;
+m2=1</panel_attributes><additional_attributes>10;10;47;10;47;188;87;188</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>271</x><y>269</y><w>536</w><h>242</h></coordinates><panel_attributes>lt=.&gt;
+«create»</panel_attributes><additional_attributes>526;10;526;232;10;232</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>788</x><y>269</y><w>135</w><h>301</h></coordinates><panel_attributes>lt=.&gt;
+«use»</panel_attributes><additional_attributes>125;10;10;291</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>83</x><y>617</y><w>25</w><h>123</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;&lt;&lt;-
+m1=1
+m2=*</panel_attributes><additional_attributes>15;10;10;113</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>83</x><y>832</y><w>97</w><h>108</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;&lt;&lt;-
+m1=1
+m2=*</panel_attributes><additional_attributes>10;10;87;98</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>511</x><y>953</y><w>219</w><h>45</h></coordinates><panel_attributes>lt=-&gt;
+m2=1</panel_attributes><additional_attributes>10;35;209;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>511</x><y>658</y><w>219</w><h>299</h></coordinates><panel_attributes>lt=.&gt;
+«use»</panel_attributes><additional_attributes>10;289;209;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>754</x><y>677</y><w>54</w><h>263</h></coordinates><panel_attributes>lt=.&gt;
+«use»</panel_attributes><additional_attributes>44;10;10;253</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>2017</x><y>69</y><w>223</w><h>29</h></coordinates><panel_attributes>lt=-&gt;
+m2=1</panel_attributes><additional_attributes>10;19;213;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1974</x><y>352</y><w>266</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+m2=1</panel_attributes><additional_attributes>10;10;256;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1390</x><y>423</y><w>60</w><h>137</h></coordinates><panel_attributes>lt=-&gt;
+m2=1</panel_attributes><additional_attributes>50;127;10;127;10;10;50;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1492</x><y>609</y><w>58</w><h>91</h></coordinates><panel_attributes>lt=-&gt;
+m2=1</panel_attributes><additional_attributes>48;10;10;81</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1636</x><y>714</y><w>604</w><h>34</h></coordinates><panel_attributes>lt=.&gt;
+«use»</panel_attributes><additional_attributes>10;10;594;24</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1379</x><y>979</y><w>161</w><h>151</h></coordinates><panel_attributes>lt=-&gt;&gt;</panel_attributes><additional_attributes>10;141;10;81;151;81;151;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>906</x><y>677</y><w>254</w><h>497</h></coordinates><panel_attributes>lt=.&gt;&gt;</panel_attributes><additional_attributes>244;487;10;487;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>932</x><y>677</y><w>1052</w><h>833</h></coordinates><panel_attributes>lt=.&gt;&gt;</panel_attributes><additional_attributes>1042;662;1042;823;10;823;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1454</x><y>177</y><w>908</w><h>953</h></coordinates><panel_attributes>lt=.&gt;
+«use»</panel_attributes><additional_attributes>898;10;898;113;736;113;736;913;10;913;10;943</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1990</x><y>447</y><w>280</w><h>683</h></coordinates><panel_attributes>lt=.&gt;
+«use»</panel_attributes><additional_attributes>270;10;270;193;10;193;10;673</additional_attributes></element>
+<element><id>UMLNote</id><coordinates><x>20</x><y>1200</y><w>380</w><h>130</h></coordinates><panel_attributes>Leyenda
+
+Verde: clase nueva
+Amarillo: clase existente que se modifica
+Blanco: clase existente sin cambios
+{nuevo} / {modificado}: miembro agregado o cambiado
+bg=#FFFFE0</panel_attributes><additional_attributes></additional_attributes></element>
+</diagram>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="15.1"><zoom_level>10</zoom_level>
+<element><id>Text</id><coordinates><x>40</x><y>15</y><w>2060</w><h>30</h></coordinates><panel_attributes>*CU03 · Actualizar stock: recibir compra a proveedor*
+fontsize=16</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLActor</id><coordinates><x>105</x><y>40</y><w>80</w><h>80</h></coordinates><panel_attributes>Administrativo</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>135</x><y>110</y><w>20</w><h>1096</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1086</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>258</x><y>70</y><w>194</w><h>50</h></coordinates><panel_attributes>:CompraProveedorController
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>345</x><y>110</y><w>20</w><h>1096</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1086</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>468</x><y>70</y><w>194</w><h>50</h></coordinates><panel_attributes>:FacturaProveedorService
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>555</x><y>110</y><w>20</w><h>1096</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1086</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>678</x><y>70</y><w>194</w><h>50</h></coordinates><panel_attributes>:FacturaProveedorRepository
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>765</x><y>110</y><w>20</w><h>1096</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1086</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>888</x><y>70</y><w>194</w><h>50</h></coordinates><panel_attributes>:FacturaProveedor
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>975</x><y>110</y><w>20</w><h>1096</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1086</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1098</x><y>70</y><w>194</w><h>50</h></coordinates><panel_attributes>:StockService
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1185</x><y>110</y><w>20</w><h>1096</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1086</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1308</x><y>70</y><w>194</w><h>50</h></coordinates><panel_attributes>:StockRepository
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1395</x><y>110</y><w>20</w><h>1096</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1086</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1518</x><y>70</y><w>194</w><h>50</h></coordinates><panel_attributes>:Stock
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1605</x><y>110</y><w>20</w><h>1096</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1086</additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>139</x><y>144</y><w>12</w><h>1004</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>349</x><y>144</y><w>12</w><h>1004</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>559</x><y>226</y><w>12</w><h>888</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>769</x><y>308</y><w>12</w><h>772</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>979</x><y>424</y><w>12</w><h>258</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>1189</x><y>486</y><w>12</w><h>542</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>1399</x><y>800</y><w>12</w><h>194</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>1609</x><y>948</y><w>12</w><h>12</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLFrame</id><coordinates><x>464</x><y>864</y><w>832</w><h>72</h></coordinates><panel_attributes>opt
+[nuevoSaldo &lt; 0]</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLFrame</id><coordinates><x>464</x><y>454</y><w>1252</w><h>602</h></coordinates><panel_attributes>loop
+[por cada DetalleFactura activo]</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>141</x><y>140</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+POST /admin/compras/{id}/recibir</panel_attributes><additional_attributes>10;10;208;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>351</x><y>174</y><w>54</w><h>34</h></coordinates><panel_attributes>lt=-&gt;
+buscarO404(id)</panel_attributes><additional_attributes>10;10;44;10;44;24;10;24</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>351</x><y>222</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+recibirFactura(id)</panel_attributes><additional_attributes>10;10;208;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>561</x><y>256</y><w>54</w><h>34</h></coordinates><panel_attributes>lt=-&gt;
+buscarFactura(id)</panel_attributes><additional_attributes>10;10;44;10;44;24;10;24</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>561</x><y>304</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+findByIdAndEliminadoFalse(id)</panel_attributes><additional_attributes>10;10;208;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>561</x><y>338</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+factura</panel_attributes><additional_attributes>208;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>561</x><y>372</y><w>54</w><h>34</h></coordinates><panel_attributes>lt=-&gt;
+validarPedida(factura, "recibir")</panel_attributes><additional_attributes>10;10;44;10;44;24;10;24</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>561</x><y>420</y><w>428</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+setEstado(EstadoFactura.PAGADA)</panel_attributes><additional_attributes>10;10;418;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>561</x><y>482</y><w>638</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+registrarMovimiento(detalle)</panel_attributes><additional_attributes>10;10;628;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1191</x><y>516</y><w>54</w><h>34</h></coordinates><panel_attributes>lt=-&gt;
+validar(detalle)</panel_attributes><additional_attributes>10;10;44;10;44;24;10;24</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>981</x><y>564</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+getSignoStock()</panel_attributes><additional_attributes>208;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>981</x><y>598</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
++1  (FacturaCliente devuelve −1)</panel_attributes><additional_attributes>10;10;208;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>981</x><y>632</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+describir()</panel_attributes><additional_attributes>208;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>981</x><y>666</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+"Compra N.º 3"</panel_attributes><additional_attributes>10;10;208;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1191</x><y>700</y><w>54</w><h>34</h></coordinates><panel_attributes>lt=-&gt;
+crearMovimiento(detalle, cantidad × signo, observacion)</panel_attributes><additional_attributes>10;10;44;10;44;24;10;24</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1191</x><y>748</y><w>54</w><h>34</h></coordinates><panel_attributes>lt=-&gt;
+buscarStockActual(idProducto)</panel_attributes><additional_attributes>10;10;44;10;44;24;10;24</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1191</x><y>796</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+findFirstByProducto_IdAndEliminadoFalseOrderByFechaDesc(idProducto)</panel_attributes><additional_attributes>10;10;208;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1191</x><y>830</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+último movimiento (saldoActual)</panel_attributes><additional_attributes>208;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>561</x><y>892</y><w>638</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+ErrorServiceException("No hay stock suficiente...") → rollback</panel_attributes><additional_attributes>628;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1191</x><y>944</y><w>428</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+«create» detalle, producto, cantidadActual = nuevoSaldo, observacion, fecha</panel_attributes><additional_attributes>10;10;418;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1191</x><y>978</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+save(stock)</panel_attributes><additional_attributes>10;10;208;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>561</x><y>1012</y><w>638</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+stock</panel_attributes><additional_attributes>628;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>561</x><y>1064</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+save(factura)</panel_attributes><additional_attributes>10;10;208;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>351</x><y>1098</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+factura</panel_attributes><additional_attributes>208;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>141</x><y>1132</y><w>218</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+redirect /admin/compras/{id} (flash "Compra N.º 3 recibida: se sumó la mercadería al stock.")</panel_attributes><additional_attributes>208;10;10;10</additional_attributes></element>
+</diagram>
