@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="620" viewBox="0 0 1160 620" font-family="Arial, sans-serif">
+<defs><marker id="o" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#000" stroke-width="1.2"/></marker><marker id="g" viewBox="0 0 12 12" refX="12" refY="6" markerWidth="14" markerHeight="14" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#fff" stroke="#000"/></marker></defs>
+<rect width="1160" height="620" fill="#fff"/>
+<text x="580.0" y="28" font-size="17" font-weight="bold" text-anchor="middle">CU01 · Generar orden de compra</text>
+<rect x="220" y="50" width="900" height="540" fill="none" stroke="#000"/>
+<text x="228" y="68" font-size="13" font-weight="bold">Sistema E-Commerce Zero</text>
+<line x1="128" y1="295" x2="300" y2="292" stroke="#000"/>
+<line x1="464" y1="259" x2="684" y2="152" stroke="#000" stroke-dasharray="6,4" marker-end="url(#o)"/>
+<text x="574.0" y="200.5" font-size="11" text-anchor="middle" style="paint-order:stroke" stroke="#fff" stroke-width="4">«include»</text>
+<line x1="500" y1="290" x2="620" y2="290" stroke="#000" stroke-dasharray="6,4" marker-end="url(#o)"/>
+<text x="560.0" y="285.0" font-size="11" text-anchor="middle" style="paint-order:stroke" stroke="#fff" stroke-width="4">«include»</text>
+<line x1="820" y1="290" x2="880" y2="290" stroke="#000" stroke-dasharray="6,4" marker-end="url(#o)"/>
+<text x="850.0" y="285.0" font-size="11" text-anchor="middle" style="paint-order:stroke" stroke="#fff" stroke-width="4">«include»</text>
+<line x1="388" y1="450" x2="397" y2="330" stroke="#000" stroke-dasharray="6,4" marker-end="url(#o)"/>
+<text x="392.5" y="385.0" font-size="11" text-anchor="middle" style="paint-order:stroke" stroke="#fff" stroke-width="4">«extend»</text>
+<line x1="591" y1="473" x2="439" y2="327" stroke="#000" stroke-dasharray="6,4" marker-end="url(#o)"/>
+<text x="515.0" y="395.0" font-size="11" text-anchor="middle" style="paint-order:stroke" stroke="#fff" stroke-width="4">«extend»</text>
+<line x1="805" y1="460" x2="469" y2="319" stroke="#000" stroke-dasharray="6,4" marker-end="url(#o)"/>
+<text x="637.0" y="384.5" font-size="11" text-anchor="middle" style="paint-order:stroke" stroke="#fff" stroke-width="4">«extend»</text>
+<circle cx="100" cy="262" r="11" fill="#fff" stroke="#000"/><line x1="100" y1="273" x2="100" y2="308" stroke="#000"/><line x1="82" y1="285" x2="118" y2="285" stroke="#000"/><line x1="100" y1="308" x2="85" y2="335" stroke="#000"/><line x1="100" y1="308" x2="115" y2="335" stroke="#000"/>
+<text x="100" y="353" font-size="12.5" text-anchor="middle">Cliente</text>
+<ellipse cx="400.0" cy="290.0" rx="100.0" ry="40.0" fill="#fff" stroke="#000"/>
+<text x="400.0" y="286.5" font-size="12.5" text-anchor="middle">Generar orden</text>
+<text x="400.0" y="301.5" font-size="12.5" text-anchor="middle">de compra</text>
+<ellipse cx="740.0" cy="125.0" rx="90.0" ry="35.0" fill="#fff" stroke="#000"/>
+<text x="740.0" y="129.0" font-size="12.5" text-anchor="middle">Iniciar sesión</text>
+<ellipse cx="720.0" cy="290.0" rx="100.0" ry="40.0" fill="#fff" stroke="#000"/>
+<text x="720.0" y="286.5" font-size="12.5" text-anchor="middle">Agregar producto</text>
+<text x="720.0" y="301.5" font-size="12.5" text-anchor="middle">al carrito</text>
+<ellipse cx="980.0" cy="290.0" rx="100.0" ry="40.0" fill="#fff" stroke="#000"/>
+<text x="980.0" y="286.5" font-size="12.5" text-anchor="middle">Verificar stock y</text>
+<text x="980.0" y="301.5" font-size="12.5" text-anchor="middle">precio vigente</text>
+<ellipse cx="385.0" cy="485.0" rx="95.0" ry="35.0" fill="#fff" stroke="#000"/>
+<text x="385.0" y="489.0" font-size="12.5" text-anchor="middle">Modificar cantidad</text>
+<ellipse cx="625.0" cy="505.0" rx="85.0" ry="35.0" fill="#fff" stroke="#000"/>
+<text x="625.0" y="509.0" font-size="12.5" text-anchor="middle">Quitar producto</text>
+<ellipse cx="865.0" cy="485.0" rx="85.0" ry="35.0" fill="#fff" stroke="#000"/>
+<text x="865.0" y="489.0" font-size="12.5" text-anchor="middle">Vaciar carrito</text>
+</svg>
