@@ -67,9 +67,6 @@ public class NotificacionCompraService {
         variables.put("numeroFactura", factura.map(f -> String.valueOf(f.getNumeroFactura())).orElse(null));
         variables.put("formaDePago", formaDePago == null ? "-" : formaDePago.getObservacion());
         variables.put("instruccionesPago", instruccionesPago(orden, formaDePago));
-        variables.put("urlPago", esPagoPendienteConMercadoPago(orden, formaDePago)
-                ? urlBase + "/cliente/pago/" + orden.getId()
-                : null);
         emailService.enviar(destinatario, ASUNTO_CONFIRMACION, "confirmacion-compra", variables);
     }
 
@@ -134,14 +131,9 @@ public class NotificacionCompraService {
                     + "Cuando registremos el pago te avisamos por correo y preparamos tu pedido.";
             case TRANSFERENCIA -> "Hacé una transferencia por el total y enviá el comprobante respondiendo este correo, "
                     + "con el número de compra. Cuando se acredite te avisamos y preparamos tu pedido.";
-            case BILLETERA_VIRTUAL -> "Completá el pago con Mercado Pago desde el botón de abajo. Si ya pagaste, "
-                    + "no hace falta hacer nada: te avisamos cuando se acredite.";
+            case BILLETERA_VIRTUAL -> "Mercado Pago simulado: el pago está pendiente de confirmación administrativa. "
+                    + "No se realiza ningún cobro real.";
         };
-    }
-
-    private boolean esPagoPendienteConMercadoPago(OrdenCompra orden, FormaDePago formaDePago) {
-        return orden.getEstadoOrdenCompra() == EstadoOrdenCompra.PENDIENTE_PAGO && formaDePago != null
-                && formaDePago.getTipoPago() == TipoPago.BILLETERA_VIRTUAL;
     }
 
     private String describirEstado(EstadoOrdenCompra estado) {

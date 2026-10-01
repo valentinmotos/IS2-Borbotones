@@ -185,15 +185,17 @@ class PedidoIntegrationTest {
     }
 
     @Test
-    void mercadoPagoNoPermiteConfirmacionManual() throws Exception {
+    void mercadoPagoSimuladoPermiteConfirmacionManual() throws Exception {
         String id = idPedido("ORD-DEMO0007");
         mvc.perform(get(BASE + "/" + id).session(sesion)).andExpect(status().isOk())
-                .andExpect(content().string(not(containsString("Confirmar pago"))));
+                .andExpect(content().string(containsString("Confirmar pago")));
 
         mvc.perform(post(BASE + "/" + id + "/confirmar-pago").with(csrf()).session(sesion))
                 .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl(BASE + "/" + id));
         assertThat(ordenCompraService.buscarPedido(id).getEstadoOrdenCompra())
-                .isEqualTo(EstadoOrdenCompra.PENDIENTE_PAGO);
+                .isEqualTo(EstadoOrdenCompra.PENDIENTE_ENVIO);
+        assertThat(ordenCompraService.buscarFacturaDePedido(id).orElseThrow().getEstado())
+                .isEqualTo(EstadoFactura.PAGADA);
     }
 
     @Test

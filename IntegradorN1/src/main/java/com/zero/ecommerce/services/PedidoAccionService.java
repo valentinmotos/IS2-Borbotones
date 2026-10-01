@@ -41,9 +41,13 @@ public class PedidoAccionService {
         OrdenCompra orden = ordenCompraService.buscarPedido(idOrden);
         FacturaCliente factura = buscarFactura(idOrden);
         TipoPago tipoPago = factura.getFormaDePago() == null ? null : factura.getFormaDePago().getTipoPago();
-        if (tipoPago != TipoPago.EFECTIVO && tipoPago != TipoPago.TRANSFERENCIA) {
+        if (tipoPago != TipoPago.EFECTIVO && tipoPago != TipoPago.TRANSFERENCIA
+                && tipoPago != TipoPago.BILLETERA_VIRTUAL) {
             throw new ErrorServiceException(
-                    "Solo se puede confirmar manualmente un pago en efectivo o por transferencia.");
+                    "La forma de pago del pedido no admite confirmación manual.");
+        }
+        if (orden.getEstadoOrdenCompra() != com.zero.ecommerce.entities.enums.EstadoOrdenCompra.PENDIENTE_PAGO) {
+            throw new ErrorServiceException("Solo se puede confirmar un pedido pendiente de pago.");
         }
         asociarEmpleado(factura, correoEmpleado);
         ventaService.registrarPago(idOrden);

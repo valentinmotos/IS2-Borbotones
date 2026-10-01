@@ -4,7 +4,7 @@
 
 E-commerce web para la tienda de ropa deportiva "Zero" (Mendoza). Lo desarrollamos cuatro personas (Maxi, Valen, Manu y Diego), todas hacen back y front. El trabajo está dividido en **issues** con ID `Ex-yy` (ej: `E2-06`), organizados por etapas.
 
-- **Stack:** Java 21 + Spring Boot 3, Thymeleaf (Layout Dialect + Extras Spring Security), Spring Data JPA con Hibernate, SQLite (`hibernate-community-dialects`), Spring Security con BCrypt, Spring Mail, Bootstrap 5 (template del equipo), SDK de Mercado Pago.
+- **Stack:** Java 21 + Spring Boot 3, Thymeleaf (Layout Dialect + Extras Spring Security), Spring Data JPA con Hibernate, SQLite (`hibernate-community-dialects`), Spring Security con BCrypt, Spring Mail, Bootstrap 5 (template del equipo).
 - **Arquitectura:** un solo proyecto (sin back y front separados). MVC en capas: controller → service → repository (DAO), con DTOs para reportes, dashboard y catálogo.
 - Esta carpeta (`IntegradorN1`) es la raíz del proyecto, pero **no la raíz del repositorio Git**, que está un nivel más arriba.
 
@@ -68,8 +68,8 @@ Seguí estos pasos en orden, sin esperar a que te los repita:
 
 - **Capas.** Un controller nunca usa un repository: siempre pasa por un service. Los services no saben nada de la vista.
 - **Un service por entidad**, con los métodos del diagrama (`crearX`, `validar`, `modificarX`, `eliminarX`, `buscarX`, `listarX`, `listarXActivo`…). Para validar un padre se usa el service del padre, no su repository.
-- **Controllers:** uno por pantalla o ABM. Si un caso de uso cruza varias entidades, como la API de ubicación, lleva su propio controller.
-- **Rutas:** `/admin/...` para el panel, `/cliente/...` para el cliente logueado, `/api/...` para JSON y el resto público.
+- **Controllers:** uno por pantalla o ABM. Las opciones de ubicación se renderizan en los formularios.
+- **Rutas:** `/admin/...` para el panel, `/cliente/...` para el cliente logueado y el resto público.
 - **Inyección de dependencias** por constructor. Nada de `@Autowired` en atributos.
 - **Entidades:** todas extienden `BaseEntity` (`id` String UUID y `eliminado`).
 - **Baja lógica siempre:** `eliminarX()` pone `eliminado = true`. No se borra nada físicamente.
@@ -83,7 +83,7 @@ Seguí estos pasos en orden, sin esperar a que te los repita:
 ## Entorno
 
 - Base local en `data/zero.db`, fuera de Git. Para resetearla, se borra el archivo y el seeder la vuelve a poblar al arrancar.
-- Credenciales de Mercado Pago en la variable de entorno `MP_ACCESS_TOKEN`. Nunca hardcodees credenciales ni las subas al repo.
+- Mercado Pago es una forma de pago simulada; la confirmación se hace desde el panel sin credenciales externas.
 - Usuarios de prueba: ver el `README.md`.
 
 ## Git

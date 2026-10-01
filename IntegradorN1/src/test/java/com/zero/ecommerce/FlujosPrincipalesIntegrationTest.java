@@ -3,9 +3,7 @@ package com.zero.ecommerce;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -15,16 +13,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -38,11 +31,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-
-import com.mercadopago.client.payment.PaymentClient;
-import com.mercadopago.client.payment.PaymentRefundClient;
-import com.mercadopago.client.preference.PreferenceClient;
-import com.mercadopago.resources.payment.Payment;
 import com.zero.ecommerce.dto.DetalleFacturaItemDTO;
 import com.zero.ecommerce.entities.FacturaProveedor;
 import com.zero.ecommerce.entities.enums.EstadoFactura;
@@ -63,8 +51,8 @@ import com.zero.ecommerce.services.UsuarioService;
 /**
  * Tests de integración de los flujos principales (E5-08), los que se muestran en la exposición. Corren con el perfil
  * {@code test}: una base SQLite en un archivo aparte que se borra antes de empezar (así el seeder parte de una base
- * vacía) y al terminar. El {@link EmailService} y los clientes de Mercado Pago son mocks, para no mandar correos ni
- * pagos reales. No es {@code @Transactional}: cada request corre en su propia transacción, igual que en producción.
+ * vacía) y al terminar. El {@link EmailService} es mock para no mandar correos reales. No es
+ * {@code @Transactional}: cada request corre en su propia transacción, igual que en producción.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -73,7 +61,6 @@ import com.zero.ecommerce.services.UsuarioService;
 class FlujosPrincipalesIntegrationTest {
 
     private static final Path BASE_DE_TEST = Path.of("target", "zero-test.db");
-    private static final String SECRETO = "secreto-de-prueba";
     private static final String CLAVE_CLIENTES = "Cliente123!";
     private static final String LUCIA = "lucia.gomez@mail.com";
     private static final String MARTIN = "martin.perez@mail.com";
@@ -92,12 +79,6 @@ class FlujosPrincipalesIntegrationTest {
     private final StockService stockService;
     @MockitoBean
     private EmailService emailService;
-    @MockitoBean
-    private PaymentClient paymentClient;
-    @MockitoBean
-    private PreferenceClient preferenceClient;
-    @MockitoBean
-    private PaymentRefundClient paymentRefundClient;
 
     FlujosPrincipalesIntegrationTest(@Autowired MockMvc mvc, @Autowired UsuarioService usuarioService,
             @Autowired ClienteService clienteService, @Autowired CarritoService carritoService,
@@ -152,7 +133,7 @@ class FlujosPrincipalesIntegrationTest {
 
     @Test
     void carritoConfirmacionPagoDescuentoDeStockYFacturaPagada() throws Exception {
-        // Lucía tiene en el carrito del seeder 1 gorra; le suma 2 remeras desde el sitio y paga con Mercado Pago.
+        // Lucía tiene en el carrito del seeder 1 gorra; suma 2 remeras y elige Mercado Pago simulado.
         MockHttpSession lucia = sesion(LUCIA, CLAVE_CLIENTES);
         String idOrden = carritoService.obtenerCarrito(idCliente(LUCIA)).getId();
         int gorrasAntes = stock(GORRA);
@@ -163,17 +144,19 @@ class FlujosPrincipalesIntegrationTest {
                 .andExpect(redirectedUrl("/cliente/carrito"));
         mvc.perform(post("/cliente/checkout").session(lucia).with(csrf())
                         .param("idFormaPago", idFormaDePago(TipoPago.BILLETERA_VIRTUAL)))
-                .andExpect(redirectedUrl("/cliente/pago/" + idOrden));
+                .andExpect(redirectedUrl("/cliente/checkout/registrada/" + idOrden));
 
         // Confirmar no mueve el stock: baja recién con el pago.
         assertThat(estadoOrden(idOrden)).isEqualTo(EstadoOrdenCompra.PENDIENTE_PAGO);
         assertThat(estadoFactura(idOrden)).isEqualTo(EstadoFactura.SIN_DEFINIR);
         assertThat(stock(REMERA)).isEqualTo(remerasAntes);
 
-        // Mercado Pago avisa dos veces el mismo pago aprobado: el stock se descuenta una sola vez.
-        pagoAprobadoEnMercadoPago(555L, idOrden);
-        mvc.perform(notificacionDePago("555")).andExpect(status().isOk());
-        mvc.perform(notificacionDePago("555")).andExpect(status().isOk());
+        // El administrador confirma el pago simulado; una repetición no vuelve a descontar stock.
+        MockHttpSession admin = sesion("admin@zero.com.ar", "Admin123!");
+        mvc.perform(post("/admin/pedidos/" + idOrden + "/confirmar-pago").session(admin).with(csrf()))
+                .andExpect(flash().attributeExists("exito"));
+        mvc.perform(post("/admin/pedidos/" + idOrden + "/confirmar-pago").session(admin).with(csrf()))
+                .andExpect(flash().attributeExists("error"));
 
         assertThat(estadoOrden(idOrden)).isEqualTo(EstadoOrdenCompra.PENDIENTE_ENVIO);
         assertThat(estadoFactura(idOrden)).isEqualTo(EstadoFactura.PAGADA);
@@ -245,6 +228,8 @@ class FlujosPrincipalesIntegrationTest {
 
         mvc.perform(get("/admin").session(martin)).andExpect(status().isForbidden());
         mvc.perform(get("/admin/pedidos").session(martin)).andExpect(status().isForbidden());
+        mvc.perform(post("/admin/pedidos/cualquiera/confirmar-pago").session(martin).with(csrf()))
+                .andExpect(status().isForbidden());
         mvc.perform(post("/admin/compras/cualquiera/recibir").session(martin).with(csrf()))
                 .andExpect(status().isForbidden());
         // Sin sesión, lo manda a iniciar sesión.
@@ -259,31 +244,6 @@ class FlujosPrincipalesIntegrationTest {
                         .param("idFormaPago", idFormaDePago(TipoPago.TRANSFERENCIA)))
                 .andExpect(redirectedUrl("/cliente/checkout/registrada/" + idOrden));
         return idOrden;
-    }
-
-    private void pagoAprobadoEnMercadoPago(long id, String idOrden) throws Exception {
-        String identificador = ordenCompraService.buscarPedido(idOrden).getIdentificadorCompra();
-        double total = ordenCompraService.buscarFacturaDePedido(idOrden).orElseThrow().getTotalPagado();
-        Payment pago = mock(Payment.class);
-        when(pago.getId()).thenReturn(id);
-        when(pago.getStatus()).thenReturn("approved");
-        when(pago.getExternalReference()).thenReturn(identificador);
-        when(pago.getTransactionAmount()).thenReturn(BigDecimal.valueOf(total));
-        when(pago.getCurrencyId()).thenReturn("ARS");
-        when(paymentClient.get(id)).thenReturn(pago);
-    }
-
-    // Notificación con el formato de Webhooks y la firma x-signature que calcula Mercado Pago.
-    private MockHttpServletRequestBuilder notificacionDePago(String idPago) throws Exception {
-        String requestId = "req-" + idPago;
-        long ts = System.currentTimeMillis();
-        String manifest = "id:" + idPago + ";request-id:" + requestId + ";ts:" + ts + ";";
-        Mac mac = Mac.getInstance("HmacSHA256");
-        mac.init(new SecretKeySpec(SECRETO.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
-        String v1 = HexFormat.of().formatHex(mac.doFinal(manifest.getBytes(StandardCharsets.UTF_8)));
-        return post("/webhooks/mercadopago").param("data.id", idPago).param("type", "payment")
-                .header("x-request-id", requestId)
-                .header("x-signature", "ts=" + ts + ",v1=" + v1);
     }
 
     private MockHttpServletRequestBuilder login(String correo, String clave) {

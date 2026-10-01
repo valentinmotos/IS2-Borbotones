@@ -4,16 +4,18 @@
     <!--
       Selects en cascada país → provincia → departamento (→ localidad). Se incluye dentro de un <form class="zero-form">.
       hasta: 'departamento' o 'localidad'. Los ids precargan los selects al editar; pueden ser null.
-      Envía paisId, provinciaId, departamentoId y localidadId. El JS completa las opciones desde /api/ubicacion.
+      Envía paisId, provinciaId, departamentoId y localidadId. El JS filtra opciones renderizadas en HTML.
     -->
     <div th:fragment="cascada(hasta, paisId, provinciaId, departamentoId, localidadId)" class="form-row"
-         data-ubicacion-cascada th:attr="data-api=@{/api/ubicacion}"
+         data-ubicacion-cascada
          th:with="columna=${hasta == 'localidad' ? 'col-md-6 col-lg-3' : 'col-md-4'}">
         <div class="form-group" th:classappend="${columna}">
             <label for="paisId">País</label>
             <select id="paisId" name="paisId" class="form-control" data-ubicacion="pais" required
                     th:attr="data-seleccionado=${paisId}">
                 <option value="">Seleccionar país</option>
+                <option th:each="opcion : ${ubicacionPaises}" th:value="${opcion.id}" th:text="${opcion.nombre}"
+                        th:selected="${opcion.id == paisId}"></option>
             </select>
         </div>
         <div class="form-group" th:classappend="${columna}">
@@ -21,6 +23,8 @@
             <select id="provinciaId" name="provinciaId" class="form-control" data-ubicacion="provincia" required
                     th:attr="data-seleccionado=${provinciaId}">
                 <option value="">Seleccionar provincia</option>
+                <option th:each="opcion : ${ubicacionProvincias}" th:value="${opcion.id}" th:text="${opcion.nombre}"
+                        th:attr="data-padre=${opcion.padreId}" th:selected="${opcion.id == provinciaId}"></option>
             </select>
         </div>
         <div class="form-group" th:classappend="${columna}">
@@ -28,6 +32,8 @@
             <select id="departamentoId" name="departamentoId" class="form-control" data-ubicacion="departamento" required
                     th:attr="data-seleccionado=${departamentoId}">
                 <option value="">Seleccionar departamento</option>
+                <option th:each="opcion : ${ubicacionDepartamentos}" th:value="${opcion.id}" th:text="${opcion.nombre}"
+                        th:attr="data-padre=${opcion.padreId}" th:selected="${opcion.id == departamentoId}"></option>
             </select>
         </div>
         <div th:if="${hasta == 'localidad'}" class="form-group" th:classappend="${columna}">
@@ -35,6 +41,9 @@
             <select id="localidadId" name="localidadId" class="form-control" data-ubicacion="localidad" required
                     th:attr="data-seleccionado=${localidadId}">
                 <option value="">Seleccionar localidad</option>
+                <option th:each="opcion : ${ubicacionLocalidades}" th:value="${opcion.id}" th:text="${opcion.nombre}"
+                        th:attr="data-padre=${opcion.padreId},data-codigo-postal=${opcion.codigoPostal}"
+                        th:selected="${opcion.id == localidadId}"></option>
             </select>
         </div>
         <script th:src="@{/js/ubicacion-cascada.js}" defer></script>

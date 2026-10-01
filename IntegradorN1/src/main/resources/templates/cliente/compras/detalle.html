@@ -35,10 +35,8 @@
                     <th:block th:unless="${compra.estadoOrdenCompra.name() == 'ANULADA'}">
                         <ol th:replace="~{fragments/seguimiento :: linea(${pasos})}"></ol>
                     </th:block>
-                    <div class="zero-form-actions" th:if="${pagarConMercadoPago or puedeAnularse}">
-                        <!-- URL del contrato con E4-10: crea la preferencia de pago y redirige a Mercado Pago. -->
-                        <a th:if="${pagarConMercadoPago}" th:href="@{'/cliente/pago/' + ${compra.id}}"
-                           class="zero-button primary">Pagar ahora</a>
+                    <p th:if="${mercadoPagoSimuladoPendiente}" class="text-muted">Mercado Pago simulado: el pago está pendiente de confirmación administrativa.</p>
+                    <div class="zero-form-actions" th:if="${puedeAnularse}">
                         <button th:if="${puedeAnularse}" type="button" class="btn btn-outline-danger"
                                 data-toggle="modal" data-target="#anular-compra">Anular compra</button>
                     </div>

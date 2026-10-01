@@ -2,13 +2,10 @@ package com.zero.ecommerce;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -44,7 +41,6 @@ import com.zero.ecommerce.services.ProvinciaService;
 @Transactional
 class DireccionIntegrationTest {
 
-    private static final String API = "/api/ubicacion";
     private static final String DEV = "/dev/direccion";
     private final MockMvc mvc;
     private final PaisService paisService;
@@ -68,36 +64,27 @@ class DireccionIntegrationTest {
     }
 
     @Test
-    void endpointsPublicosDevuelvenCadaNivelConIdYNombre() throws Exception {
+    void formularioRenderizaLasOpcionesYRelacionesDeUbicacion() throws Exception {
         String argentina = paisService.buscarPaisPorNombre("Argentina").getId();
         Provincia mendoza = provinciaService.buscarProvinciaPorNombre("Mendoza");
         Departamento maipu = departamentoService.buscarDepartamentoPorNombre("Maipú");
+        Localidad gutierrez = localidadService.buscarLocalidadPorNombre("Gutiérrez");
 
-        mvc.perform(get(API + "/paises")).andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].nombre").value("Argentina"))
-                .andExpect(jsonPath("$[0].id").value(argentina));
-        mvc.perform(get(API + "/provincias").param("pais", argentina)).andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(24)))
-                .andExpect(jsonPath("$[*].nombre", hasItem("Mendoza")));
-        mvc.perform(get(API + "/departamentos").param("provincia", mendoza.getId())).andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(18)))
-                .andExpect(jsonPath("$[*].nombre", hasItem("Maipú")));
-        mvc.perform(get(API + "/localidades").param("departamento", maipu.getId())).andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.nombre == 'Gutiérrez')].codigoPostal", hasItem("5511")));
-    }
-
-    @Test
-    void idVacioOInexistenteDevuelveListaVacia() throws Exception {
-        mvc.perform(get(API + "/provincias").param("pais", "")).andExpect(jsonPath("$", hasSize(0)));
-        mvc.perform(get(API + "/departamentos").param("provincia", "no-existe")).andExpect(jsonPath("$", hasSize(0)));
+        mvc.perform(get(DEV)).andExpect(status().isOk())
+                .andExpect(content().string(containsString("value=\"" + argentina + "\"")))
+                .andExpect(content().string(containsString("data-padre=\"" + argentina + "\"")))
+                .andExpect(content().string(containsString("data-padre=\"" + mendoza.getId() + "\"")))
+                .andExpect(content().string(containsString("data-padre=\"" + maipu.getId() + "\"")))
+                .andExpect(content().string(containsString("value=\"" + gutierrez.getId() + "\"")))
+                .andExpect(content().string(containsString("data-codigo-postal=\"5511\"")));
     }
 
     @Test
     void noDevuelveLocalidadesEliminadas() throws Exception {
         Localidad russell = localidadService.buscarLocalidadPorNombre("Russell");
         localidadService.eliminarLocalidad(russell.getId());
-        mvc.perform(get(API + "/localidades").param("departamento", russell.getDepartamento().getId()))
-                .andExpect(jsonPath("$[*].nombre", org.hamcrest.Matchers.not(hasItem("Russell"))));
+        mvc.perform(get(DEV)).andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString(">Russell</option>"))));
     }
 
     @Test
@@ -106,7 +93,7 @@ class DireccionIntegrationTest {
         MockHttpSession sesion = new MockHttpSession();
         mvc.perform(get(DEV).session(sesion)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("data-ubicacion-cascada")))
-                .andExpect(content().string(containsString("data-api=\"" + API + "\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("data-api="))))
                 .andExpect(content().string(containsString("/js/ubicacion-cascada.js")))
                 .andExpect(content().string(containsString("data-ubicacion-cp")));
 
