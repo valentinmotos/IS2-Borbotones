@@ -91,7 +91,52 @@
                 </th:block>
             </dl>
         </div>
-        <div class="zero-panel">
+        <div class="zero-panel mb-4" th:if="${factura != null}">
+            <h2 th:text="${'Factura N.º ' + factura.numeroFactura}">Factura N.º 1</h2>
+            <dl>
+                <dt>Fecha</dt>
+                <dd th:text="${#temporals.format(factura.fechaFactura, 'dd/MM/yyyy')}">01/01/2026</dd>
+                <dt>Cliente</dt>
+                <dd th:text="${factura.cliente != null ? factura.cliente.nombre + ' ' + factura.cliente.apellido : '-'}">Nombre Apellido</dd>
+                <dt>Estado</dt>
+                <dd><span th:replace="~{fragments/badge-estado :: badge(${factura.estado.name()})}"></span></dd>
+                <dt>Forma de pago</dt>
+                <dd th:text="${factura.formaDePago != null
+                        ? factura.formaDePago.observacion + ' (' + factura.formaDePago.tipoPago.descripcion + ')' : '-'}">Efectivo</dd>
+            </dl>
+            <div class="table-responsive zero-table-wrap">
+                <table class="table table-striped table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Código</th>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Talle</th>
+                            <th scope="col">Cantidad</th>
+                            <th scope="col">Precio unitario</th>
+                            <th scope="col">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${factura.detalles}" th:unless="${item.eliminado}">
+                            <td th:text="${item.producto.codigo}">COD</td>
+                            <td th:text="${item.producto.nombre}">Producto</td>
+                            <td th:text="${item.producto.talle}">M</td>
+                            <td class="text-right" th:text="${item.cantidad}">1</td>
+                            <td class="text-right" th:text="${'$' + #numbers.formatDecimal(item.precioUnitario, 1, 'POINT', 2, 'COMMA')}">$0,00</td>
+                            <td class="text-right" th:text="${'$' + #numbers.formatDecimal(item.subtotal, 1, 'POINT', 2, 'COMMA')}">$0,00</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th scope="row" colspan="5" class="text-right">Total</th>
+                            <th class="text-right" th:text="${'$' + #numbers.formatDecimal(factura.totalPagado, 1, 'POINT', 2, 'COMMA')}">$0,00</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        <!-- La factura ya lista los productos; este panel solo queda para pedidos sin factura. -->
+        <div class="zero-panel" th:if="${factura == null}">
             <h2>Productos</h2>
             <div class="table-responsive zero-table-wrap">
                 <table class="table table-striped table-bordered mb-0">
