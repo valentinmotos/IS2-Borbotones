@@ -1,7 +1,7 @@
-﻿# Ejercicio 2d: biblioteca con archivos PDF
+﻿# Ejercicio 2d: exportacion de reportes PDF y Excel
 
-Extension del proyecto cliente-servidor de `TPN2/Ejercicio2/Ejercicio 2c`.
-Conserva las funciones de libros, personas, domicilios, prestamos y envios automaticos.
+Extension de `TPN2/Ejercicio2/Ejercicio 2c`, con el mismo cliente web, API REST,
+SQLite, prestamos y envios automaticos.
 
 ## Ejecutar
 
@@ -15,47 +15,60 @@ Requiere Java 17 o superior. Desde esta carpeta, en dos terminales:
 .\mvnw.ps1 -pl cliente spring-boot:run
 ```
 
-Abrir `http://localhost:8080/libros`. El servidor utiliza el puerto 8000;
-detener las aplicaciones del ejercicio c si estan usando esos puertos.
+Abrir `http://localhost:8080`. El servidor usa el puerto 8000.
+Detener otras aplicaciones que esten usando esos puertos.
 
-## Cargar y consultar un PDF
+## Descargar reportes
 
-1. Seleccionar **Nuevo libro**, completar sus datos y elegir un archivo PDF opcional (hasta 20 MB).
-2. Al guardar, el cliente envia los datos y el archivo a la API mediante `multipart/form-data`.
-3. El servidor crea la carpeta `C:/biblioteca` cuando se carga el primer PDF y guarda el archivo
-   con el formato `libro_nombrelibro_.pdf`. Por ejemplo: `El principito` se guarda como
-   `C:/biblioteca/libro_el_principito_.pdf`. Los espacios y signos se convierten en guiones bajos;
-   las letras se normalizan a minusculas sin acentos.
-4. En la lista de libros o al editarlo, **Abrir PDF** abre el documento en una nueva pestana.
-   El cliente obtiene el PDF del servidor por HTTP; funciona aunque esten en equipos distintos.
+- En **Personas**, seleccionar **Descargar personas con alquileres (PDF)**.
+- En **Libros**, seleccionar **Descargar libros disponibles (Excel)**.
 
-Los libros sin archivo muestran **Sin PDF**. Se puede agregar un PDF al editar un libro que
-todavia no tenga uno. Editar los datos de un libro conserva el archivo y su nombre original.
-No se reemplazan PDFs existentes: si el nombre generado ya existe se muestra un error.
-Eliminar un libro tambien elimina su PDF. La API valida la extension y la firma `%PDF-`.
-La asociacion se persiste en SQLite en el campo `pdfNombre`; JPA actualiza la tabla al iniciar.
-El proceso del servidor debe tener permiso de escritura en `C:/biblioteca`.
+El cliente solicita los archivos a la API y los entrega como descargas al navegador,
+con nombre de archivo y tipo de contenido adecuados. Los reportes se generan en memoria
+con los datos actuales: no se escriben en una carpeta del servidor.
 
-Para usar otra carpeta durante pruebas, configurar `BIBLIOTECA_DIRECTORIO` en el servidor.
-La ruta predeterminada para la entrega es `C:/biblioteca`.
+### Personas con alquileres
 
-## API
+PDF generado con **iText 9.3.0**, con ID, apellido, nombre, DNI y email.
+Incluye a todas las personas que tienen al menos un prestamo registrado, tanto activo
+como devuelto. Cada persona aparece una sola vez, ordenada por apellido y nombre.
+Las personas sin prestamos no se incluyen. Un reporte vacio informa que no hay alquileres.
+La tabla repite encabezados y continua en otras paginas cuando es necesario.
 
-- `POST /api/libros`: acepta JSON sin archivo o multipart con parte `libro` (JSON) y parte `pdf` opcional.
-- `PUT /api/libros/{id}`: acepta las mismas variantes y conserva el PDF asociado.
-- `GET /api/libros/{id}/pdf`: devuelve `application/pdf` con `Content-Disposition: inline`.
-- `GET /api/libros`: incluye el nombre del PDF asociado, si existe.
+### Libros disponibles
 
-El navegador accede al PDF mediante `GET /libros/{id}/pdf` en el cliente.
+Excel `.xlsx` generado con **Apache POI 5.4.1**, con ID, titulo, anio, genero, paginas y autor.
+Un libro esta disponible si no tiene prestamos pendientes de devolucion:
+`devuelto=false` o un estado sin informar se consideran pendientes, incluso si la fecha
+limite ya vencio. Un prestamo devuelto no bloquea la disponibilidad. Si hay varios
+prestamos para un libro, basta uno pendiente para excluirlo.
 
-## Verificacion
+La hoja tiene encabezados, filtro, fila superior inmovilizada y columnas ajustadas.
+ID, anio y paginas se exportan como numeros; los titulos y autores se exportan como texto.
+Si no hay libros disponibles, se genera una hoja valida con los encabezados.
+
+## Endpoints
+
+| Capa | PDF | Excel |
+| --- | --- | --- |
+| Cliente | `/reportes/personas-alquileres.pdf` | `/reportes/libros-disponibles.xlsx` |
+| API | `/api/reportes/personas-alquileres.pdf` | `/api/reportes/libros-disponibles.xlsx` |
+
+Todos son endpoints GET. El servidor devuelve `Content-Disposition: attachment`.
+
+## Compilar y verificar
 
 ```powershell
-.\mvnw.ps1 test
 .\mvnw.ps1 package
 ```
 
-Las pruebas del servidor usan una base SQLite y una carpeta temporal independientes;
-verifican carga, contenido servido, edicion, eliminacion, archivos invalidos, nombres
-duplicados y libros sin PDF. Las del cliente verifican el envio multipart, el enlace
-en otra pestana, la respuesta PDF y los errores del formulario.
+Las pruebas usan una base SQLite temporal y comprueban el contenido de los archivos
+con iText y Apache POI. Cubren personas sin prestamos, duplicados, prestamos devueltos,
+pendientes vencidos, estados nulos, reportes vacios y PDFs de varias paginas.
+Las pruebas del cliente comprueban los botones y que las descargas mantengan los bytes,
+el nombre y el tipo de archivo recibidos del servidor.
+
+## Documentacion de las bibliotecas
+
+- [Instalacion de iText para Java](https://kb.itextpdf.com/itext/installing-itext-for-java)
+- [XSSFWorkbook de Apache POI](https://poi.apache.org/apidocs/dev/org/apache/poi/xssf/usermodel/XSSFWorkbook.html)
