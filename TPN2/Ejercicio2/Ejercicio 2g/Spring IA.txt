@@ -1,0 +1,143 @@
+INVESTIGACIÓN: SPRING IA (SPRING AI)
+
+1.  ¿Qué es Spring IA?
+
+Spring AI es un proyecto oficial del ecosistema Spring que permite
+integrar inteligencia artificial (modelos de lenguaje como ChatGPT,
+Gemini, Claude o modelos locales con Ollama) dentro de aplicaciones
+Java hechas con Spring Boot.
+
+Su idea principal es la misma que Spring aplica en otras áreas (por
+ejemplo Spring Data con las bases de datos): ofrecer una interfaz común
+para trabajar con distintos proveedores de IA, sin atar el código a uno
+en particular. Así, cambiar de OpenAI a Gemini consiste principalmente
+en cambiar una dependencia y la configuración en
+application.properties, sin reescribir la lógica del sistema.
+
+Funciona de la siguiente forma: 1. Se agrega al proyecto el starter del
+proveedor elegido (por ejemplo spring-ai-starter-model-openai). 2. Se
+configura la API key y el modelo en application.properties. 3. Spring
+crea automáticamente los beans necesarios (ChatClient, ChatModel,
+etc.). 4. Se inyectan en un service o controller y se usan para enviar
+preguntas al modelo y recibir sus respuestas.
+
+Sus componentes principales son:
+-   ChatClient: API fluida para enviar mensajes al modelo y obtener la
+    respuesta. Es la forma más común de usar Spring AI.
+-   Prompt y mensajes: permiten separar el mensaje del sistema
+    (instrucciones de cómo debe comportarse la IA) del mensaje del
+    usuario.
+-   Salida estructurada: convierte la respuesta del modelo
+    directamente en un objeto Java (por ejemplo un DTO o un record).
+-   Tool Calling: permite que el modelo llame a métodos Java de nuestra
+    aplicación (por ejemplo, consultar la base de datos) cuando
+    necesita información.
+-   Chat Memory: guarda el historial de la conversación para que el
+    modelo recuerde lo que se habló antes.
+-   Embeddings y Vector Store: transforman textos en vectores y los
+    guardan en una base vectorial para buscar información por
+    significado.
+-   RAG (Retrieval Augmented Generation): el modelo responde usando
+    documentos propios de la empresa, no solo lo que aprendió en su
+    entrenamiento.
+-   Advisors: piezas reutilizables que modifican la petición o la
+    respuesta (agregar memoria, RAG, logs, filtros).
+
+2.  ¿Qué ventajas posee?
+
+-   Portabilidad entre proveedores: el mismo código funciona con
+    OpenAI, Google Gemini, Anthropic Claude, Mistral, Azure OpenAI,
+    Amazon Bedrock u Ollama (modelos locales y gratuitos).
+-   Integración natural con Spring Boot: usa autoconfiguración,
+    inyección de dependencias y application.properties, igual que el
+    resto del proyecto.
+-   No hace falta salir de Java: no es necesario armar un servicio
+    aparte en Python para usar IA.
+-   Menos código repetitivo: no hay que armar a mano las peticiones
+    HTTP ni parsear el JSON de cada proveedor.
+-   Respuestas tipadas: la salida estructurada evita trabajar con
+    texto suelto y facilita validar los datos.
+-   Funcionalidades avanzadas listas para usar: memoria de chat, RAG,
+    tool calling y bases vectoriales.
+-   Observabilidad: permite medir tokens consumidos, tiempos de
+    respuesta y errores con las herramientas de Spring.
+-   Respaldo del ecosistema Spring: documentación oficial, comunidad
+    grande y actualizaciones frecuentes.
+
+Ejemplo:
+
+@RestController
+public class ChatController {
+    private final ChatClient chatClient;
+
+    public ChatController(ChatClient.Builder builder) {
+        this.chatClient = builder
+                .defaultSystem("Sos un asistente de una biblioteca. Respondé en español y en pocas líneas.")
+                .build();
+    }
+
+    @GetMapping("/api/chat")
+    public String chat(@RequestParam String pregunta) {
+        return chatClient.prompt()
+                .user(pregunta)
+                .call()
+                .content();
+    }
+}
+
+application.properties:
+spring.ai.openai.api-key=TU_API_KEY
+spring.ai.openai.chat.options.model=gpt-4o-mini
+
+EXPLICACIÓN DEL EJEMPLO
+Spring Boot crea automáticamente un ChatClient.Builder a partir de la
+configuración de application.properties. En el constructor se define
+un mensaje de sistema que indica cómo debe comportarse la IA. Cuando el
+frontend hace un GET a /api/chat?pregunta=..., el controller envía la
+pregunta al modelo con prompt().user(...).call() y devuelve el texto de
+la respuesta con content(). Si se quisiera usar Gemini en lugar de
+OpenAI, solo se cambia la dependencia y las propiedades; el controller
+queda igual.
+
+Ejemplo de salida estructurada:
+
+record Resumen(String titulo, String autor, List<String> temas) {}
+
+Resumen resumen = chatClient.prompt()
+        .user("Resumí el libro El Principito")
+        .call()
+        .entity(Resumen.class);
+
+EXPLICACIÓN DEL EJEMPLO
+En lugar de devolver texto, entity(Resumen.class) le pide al modelo que
+responda en un formato JSON compatible con el record y Spring AI lo
+convierte automáticamente en un objeto Java listo para usar.
+
+3.  Ejemplos de cómo se podría aplicar en distintas funcionalidades de
+    sistemas
+
+-   Chatbot de atención al cliente: responder preguntas frecuentes
+    (horarios, estado de un pedido, requisitos de un trámite) usando
+    RAG sobre los documentos y datos propios de la empresa.
+-   Búsqueda inteligente: en una biblioteca, buscar libros por
+    significado ("libros sobre la amistad para chicos") y no solo por
+    coincidencia exacta del título.
+-   Carga de datos a partir de texto libre: el usuario escribe "Juan
+    Pérez, DNI 123, vive en San Martín 100, Mendoza" y la IA completa
+    automáticamente el formulario de Persona y Domicilio usando salida
+    estructurada.
+-   Resumen de información: resumir reclamos, comentarios de clientes,
+    historias clínicas o actas de reuniones.
+-   Clasificación automática: clasificar tickets de soporte por
+    prioridad o área, o detectar si un comentario es positivo o
+    negativo.
+-   Asistente que consulta el sistema: con Tool Calling, el usuario
+    pregunta "¿qué libros tiene prestados Juan?" y la IA llama a un
+    método del PersonaService para obtener la respuesta real de la base
+    de datos.
+-   Generación de contenido: redactar descripciones de productos,
+    correos de notificación o mensajes de WhatsApp personalizados.
+-   Recomendaciones: sugerir productos, libros o cursos según el
+    historial del usuario.
+-   Apoyo al desarrollo: generar datos de prueba o explicar errores
+    del sistema en lenguaje simple para el usuario final.

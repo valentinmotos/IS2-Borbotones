@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Domicilio</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h2 th:text="${domicilio.id == null ? 'Nuevo domicilio' : 'Editar domicilio'}"></h2>
+    <form th:action="@{/domicilios/guardar}" th:object="${domicilio}" method="post">
+        <input type="hidden" th:field="*{id}">
+        <label>Calle <input type="text" th:field="*{calle}" required></label>
+        <label>Numero <input type="number" th:field="*{numero}" required></label>
+        <label>Latitud <input type="text" th:field="*{latitud}" placeholder="-32.88970575178735"></label>
+        <label>Longitud <input type="text" th:field="*{longitud}" placeholder="-68.84457510855037"></label>
+        <label>Localidad
+            <select th:field="*{localidad.id}" required>
+                <option value="">Seleccione una localidad</option>
+                <option th:each="localidad : ${localidades}"
+                        th:value="${localidad.id}"
+                        th:text="${localidad.denominacion}"></option>
+            </select>
+        </label>
+        <div class="form-actions">
+            <button class="button" type="submit">Guardar</button>
+            <a class="button danger" th:href="@{/domicilios}">Cancelar</a>
+        </div>
+    </form>
+</main>
+</body>
+</html>
