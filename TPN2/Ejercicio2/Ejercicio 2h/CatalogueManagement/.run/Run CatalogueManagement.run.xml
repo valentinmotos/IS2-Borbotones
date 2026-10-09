@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run CatalogueManagement" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.payu.CatalogueManagement.CatalogueManagementApplication" />
+    <module name="CatalogueManagement" />
+    <option name="VM_PARAMETERS" value="-Xms32m -Xmx256m -XX:+UseSerialGC -XX:MaxMetaspaceSize=160m" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
