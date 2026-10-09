@@ -1,0 +1,86 @@
+INVESTIGACIÓN: PATRONES GOF
+
+1. ¿Qué son?
+Los patrones GOF (Gang of Four) son 23 soluciones generales a problemas frecuentes del diseño de software orientado a objetos. Ayudan a organizar el código y facilitan su mantenimiento.
+
+2. Categorías
+
+A. Creacionales: tratan sobre la creación de objetos.
+- Abstract Factory: crea familias de objetos relacionados. Ejemplo: botones para Windows o Linux.
+- Builder: construye objetos complejos paso a paso. Ejemplo: configurar una computadora.
+- Factory Method: delega en subclases la creación de objetos. Ejemplo: crear camiones o barcos según el tipo de logística.
+- Prototype: crea objetos copiando otros. Ejemplo: duplicar una figura en un editor.
+- Singleton: limita una clase a una sola instancia. Ejemplo: configuración central de una aplicación.
+
+B. Estructurales: organizan clases y objetos.
+- Adapter: conecta interfaces incompatibles. Ejemplo: integrar una biblioteca de pagos externa.
+- Bridge: separa una abstracción de su implementación. Ejemplo: controles remotos para distintos dispositivos.
+- Composite: permite tratar objetos individuales y grupos de forma uniforme. Ejemplo: archivos y carpetas.
+- Decorator: agrega funciones a un objeto sin cambiar su clase. Ejemplo: añadir opciones a un café.
+- Facade: simplifica el uso de un sistema complejo. Ejemplo: una operación que coordina pago, inventario y envío.
+- Flyweight: comparte datos para ahorrar memoria. Ejemplo: árboles de un videojuego que comparten texturas.
+- Proxy: controla el acceso a otro objeto. Ejemplo: cargar una imagen solo cuando se necesita.
+
+C. De comportamiento: definen cómo colaboran los objetos.
+- Chain of Responsibility: pasa una solicitud por varios receptores. Ejemplo: niveles de soporte técnico.
+- Command: convierte una acción en un objeto. Ejemplo: deshacer una operación.
+- Interpreter: interpreta expresiones de un lenguaje simple. Ejemplo: una calculadora.
+- Iterator: recorre una colección sin exponer su estructura. Ejemplo: recorrer reservas.
+- Mediator: centraliza la comunicación entre objetos. Ejemplo: coordinar elementos de un formulario.
+- Memento: guarda y restaura estados. Ejemplo: recuperar una versión anterior de un documento.
+- Observer: notifica cambios a suscriptores. Ejemplo: avisar cuando una cabaña queda disponible.
+- State: cambia el comportamiento según el estado. Ejemplo: una reserva pendiente, confirmada o cancelada.
+- Strategy: permite intercambiar algoritmos. Ejemplo: distintas tarifas de alquiler.
+- Template Method: define los pasos generales de un algoritmo. Ejemplo: generar informes en distintos formatos.
+- Visitor: agrega operaciones a una estructura de objetos. Ejemplo: calcular impuestos para distintos tipos de productos.
+
+3. Diagramas de clases simplificados
+
+Factory Method:
+Creador
+  + crearTransporte()
+      ▲
+      ├── LogisticaTerrestre → Camion
+      └── LogisticaMaritima → Barco
+
+Adapter:
+Cliente → InterfazEsperada
+               ▲
+          Adaptador → ServicioExterno
+
+Composite:
+Elemento
+  + mostrar()
+      ▲
+      ├── Archivo
+      └── Carpeta → Elemento (0..*)
+
+Observer:
+Sujeto
+  + suscribir()
+  + notificar()
+      ├── ObservadorA
+      └── ObservadorB
+
+Strategy:
+CalculadorPrecio → EstrategiaPrecio
+                         ▲
+                         ├── TarifaNormal
+                         └── TarifaTemporada
+
+State:
+Reserva → EstadoReserva
+               ▲
+               ├── Pendiente
+               ├── Confirmada
+               └── Cancelada
+
+4. ¿Cuándo conviene usarlos?
+- Creacionales: cuando se necesita flexibilizar la creación de objetos.
+- Estructurales: cuando hay que conectar, organizar o simplificar componentes.
+- De comportamiento: cuando hay que distribuir responsabilidades o coordinar objetos.
+
+No es necesario usar patrones en todos los proyectos. Conviene aplicarlos cuando resuelven un problema real, ya que un uso innecesario puede agregar complejidad.
+
+Conclusión
+Los patrones GOF ofrecen soluciones reutilizables para problemas comunes de diseño. Conocer sus categorías permite elegir el patrón adecuado según la necesidad del sistema.
