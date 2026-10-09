@@ -4,8 +4,6 @@ import com.example.cliente.dao.LibroDAO;
 import com.example.cliente.dto.LibroDTO;
 import com.example.cliente.dto.PersonaDTO;
 import org.springframework.stereotype.Service;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -33,12 +31,8 @@ public class LibroService {
         return libro;
     }
 
-    public void guardar(LibroDTO libro, MultipartFile pdf) {
-        libroDAO.guardar(libro, pdf);
-    }
-
-    public ResponseEntity<byte[]> abrirPdf(Long id) {
-        return libroDAO.abrirPdf(id);
+    public void guardar(LibroDTO libro) {
+        libroDAO.guardar(libro);
     }
 
     public void eliminar(Long id) {

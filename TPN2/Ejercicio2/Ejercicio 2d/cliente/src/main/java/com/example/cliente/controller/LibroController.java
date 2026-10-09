@@ -9,14 +9,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.server.ResponseStatusException;
 
 @Controller
 @RequestMapping("/libros")
@@ -46,43 +38,9 @@ public class LibroController {
     }
 
     @PostMapping("/guardar")
-    public String guardar(@ModelAttribute LibroDTO libro,
-                          @RequestParam(value = "pdf", required = false) MultipartFile pdf, Model model) {
-        try {
-            libroService.guardar(libro, pdf);
-        } catch (RestClientResponseException ex) {
-            String mensaje = "No se pudo guardar el libro. Compruebe los datos y el archivo PDF.";
-            try {
-                ProblemDetail problema = ex.getResponseBodyAs(ProblemDetail.class);
-                if (problema != null && problema.getDetail() != null) {
-                    mensaje = problema.getDetail();
-                }
-            } catch (RuntimeException ignorada) {
-                // El servidor puede devolver un error sin cuerpo JSON.
-            }
-            cargarFormulario(model, libro);
-            model.addAttribute("error", mensaje);
-            return "libros/formulario";
-        } catch (IllegalArgumentException ex) {
-            cargarFormulario(model, libro);
-            model.addAttribute("error", ex.getMessage());
-            return "libros/formulario";
-        }
+    public String guardar(@ModelAttribute LibroDTO libro) {
+        libroService.guardar(libro);
         return "redirect:/libros";
-    }
-
-    @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
-    public ResponseEntity<byte[]> abrirPdf(@PathVariable Long id) {
-        try {
-            ResponseEntity<byte[]> pdf = libroService.abrirPdf(id);
-            return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            pdf.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION))
-                    .header("X-Content-Type-Options", "nosniff")
-                    .body(pdf.getBody());
-        } catch (RestClientResponseException ex) {
-            throw new ResponseStatusException(ex.getStatusCode(), "No se pudo abrir el PDF", ex);
-        }
     }
 
     @GetMapping("/eliminar/{id}")

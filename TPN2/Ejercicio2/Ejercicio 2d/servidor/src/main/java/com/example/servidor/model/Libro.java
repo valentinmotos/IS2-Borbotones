@@ -21,7 +21,6 @@ public class Libro {
     private String genero;
     private Integer paginas;
     private String autor;
-    private String pdfNombre;
 
     @ManyToOne
     private Persona persona;

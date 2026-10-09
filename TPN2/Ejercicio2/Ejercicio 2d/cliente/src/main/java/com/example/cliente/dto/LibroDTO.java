@@ -12,6 +12,5 @@ public class LibroDTO {
     private String genero;
     private Integer paginas;
     private String autor;
-    private String pdfNombre;
     private PersonaDTO persona;
 }
