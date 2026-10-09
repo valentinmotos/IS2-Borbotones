@@ -1,0 +1,483 @@
+INVESTIGACIÓN: HTTP, REST API, JSON Y POSTMAN
+
+1.  HTTP
+
+1.1. ¿Qué es HTTP y cómo funciona?
+
+HTTP (Hypertext Transfer Protocol o Protocolo de Transferencia de
+Hipertexto) es un protocolo de comunicación que permite intercambiar
+información entre un cliente y un servidor. Se utiliza, por ejemplo,
+cuando un navegador solicita una página web o cuando una aplicación
+consulta información de una API.
+
+Funciona mediante un modelo de petición y respuesta: 1. El cliente (por
+ejemplo, un navegador o una aplicación) envía una petición HTTP al
+servidor. 2. El servidor procesa la petición. 3. El servidor devuelve
+una respuesta que incluye un código de estado y, normalmente, datos o
+contenido. 4. El cliente interpreta la respuesta y actúa en
+consecuencia.
+
+HTTP es un protocolo sin estado: cada petición se interpreta de forma
+independiente. Para mantener sesiones pueden utilizarse mecanismos como
+cookies o tokens. HTTPS es HTTP protegido mediante cifrado TLS, que
+ayuda a mantener la confidencialidad e integridad de la comunicación.
+
+1.2. ¿Cuáles son los métodos de petición y qué hace cada uno?
+
+-   GET: solicita la representación o consulta de un recurso. En
+    general, no debe utilizarse para modificar información.
+-   POST: envía datos al servidor para crear un recurso o ejecutar una
+    operación. Su efecto depende del diseño del servicio.
+-   PUT: crea o reemplaza el estado de un recurso en una dirección
+    determinada. Se suele enviar la representación completa del recurso.
+-   PATCH: aplica una modificación parcial a un recurso.
+-   DELETE: solicita eliminar un recurso.
+-   HEAD: funciona de forma similar a GET, pero solicita solamente los
+    encabezados de la respuesta, sin el cuerpo.
+-   OPTIONS: consulta qué opciones o métodos de comunicación admite un
+    recurso o servidor.
+
+1.3. Diferencias entre GET y POST
+
+GET: - Se utiliza principalmente para consultar datos. - Los parámetros
+suelen enviarse en la URL, después de un signo de interrogación. - Los
+datos de la URL pueden quedar registrados en el historial del navegador,
+registros del servidor o enlaces compartidos. - Puede guardarse en caché
+según las condiciones de la petición y la respuesta. - No es apropiado
+para enviar contraseñas ni para modificar datos.
+
+POST: - Se utiliza para enviar datos al servidor, por ejemplo, para
+crear un usuario o registrar una compra. - Los datos suelen enviarse en
+el cuerpo (body) de la petición. - No se muestran como parámetros en la
+URL, aunque esto por sí solo no cifra ni protege la información. - Para
+información sensible se debe utilizar HTTPS y aplicar controles de
+seguridad adecuados. - Una petición POST no es necesariamente
+idempotente: repetirla puede crear registros duplicados o ejecutar la
+operación más de una vez.
+
+1.4. ¿Cómo se envían los parámetros?
+
+En GET, los parámetros suelen enviarse en la cadena de consulta (query
+string), después de ?. Ejemplo:
+https://api.ejemplo.com/productos?categoria=libros&pagina=2
+
+En este ejemplo: - categoria=libros es un parámetro. - pagina=2 es otro
+parámetro. - El signo ? inicia la cadena de consulta. - El símbolo &
+separa parámetros.
+
+En POST, los datos pueden enviarse en el cuerpo de la petición. Por
+ejemplo, en formato JSON: { “nombre”: “Ana”, “edad”: 22 }
+
+El encabezado Content-Type indica el formato del cuerpo, por ejemplo:
+Content-Type: application/json
+
+Los parámetros también pueden enviarse en la ruta, como /usuarios/15, o
+en encabezados HTTP, según el diseño de la API.
+
+1.5. ¿Qué significan ? y & al enviar parámetros?
+
+-   ?: marca el inicio de la cadena de consulta en una URL.
+-   &: separa un parámetro de otro dentro de esa cadena.
+
+Ejemplo: https://api.ejemplo.com/alumnos?curso=3&activo=true
+
+En este caso, curso tiene el valor 3 y activo tiene el valor true. Si un
+valor contiene espacios u otros caracteres especiales, debe codificarse
+correctamente para una URL.
+
+1.6. ¿Cuáles son los códigos de estado HTTP?
+
+Los códigos de estado indican el resultado de una petición. Se agrupan
+en cinco familias:
+
+-   1xx (informativos): la petición continúa en proceso.
+-   2xx (éxito): la petición fue recibida y procesada correctamente.
+-   3xx (redirección): se requiere o indica una acción adicional para
+    completar la petición.
+-   4xx (error del cliente): la petición tiene un problema o no puede
+    completarse por una condición relacionada con el cliente.
+-   5xx (error del servidor): el servidor no pudo completar una petición
+    aparentemente válida.
+
+Códigos frecuentes: - 200 OK: la petición se procesó correctamente. -
+201 Created: se creó un recurso. - 202 Accepted: la petición fue
+aceptada para procesarse, pero el procesamiento puede no haber
+terminado. - 204 No Content: la operación tuvo éxito y no se devuelve
+contenido en el cuerpo. - 301 Moved Permanently: el recurso tiene una
+nueva dirección permanente. - 302 Found: redirección temporal. - 304 Not
+Modified: el recurso no cambió respecto de una versión almacenada en
+caché. - 400 Bad Request: la petición es inválida o está mal formada. -
+401 Unauthorized: faltan credenciales válidas o no se han aceptado. -
+403 Forbidden: el servidor entiende la petición, pero rechaza
+autorizarla. - 404 Not Found: no se encontró el recurso. - 405 Method
+Not Allowed: el método no está permitido para ese recurso. - 409
+Conflict: existe un conflicto con el estado actual del recurso. - 422
+Unprocessable Content: el contenido se entiende, pero no puede
+procesarse por errores semánticos o de validación. - 429 Too Many
+Requests: se realizaron demasiadas peticiones en un período
+determinado. - 500 Internal Server Error: error interno del servidor. -
+502 Bad Gateway: un servidor que actúa como intermediario recibió una
+respuesta inválida. - 503 Service Unavailable: el servicio no está
+disponible temporalmente. - 504 Gateway Timeout: un servidor
+intermediario no recibió una respuesta a tiempo.
+
+2.  REST Y API
+
+2.1. ¿Qué es REST y para qué sirve?
+
+REST (Representational State Transfer) es un estilo de arquitectura para
+diseñar servicios que permiten acceder y operar sobre recursos mediante
+una interfaz uniforme. En una API REST, los recursos suelen
+identificarse mediante URL y se utilizan métodos HTTP para consultar o
+modificar su estado.
+
+REST sirve para organizar la comunicación entre aplicaciones de manera
+clara y predecible. Por ejemplo, una aplicación web puede consultar una
+API REST para obtener usuarios, registrar productos o actualizar
+pedidos.
+
+Entre sus principios arquitectónicos se encuentran: - Cliente-servidor:
+la interfaz del cliente se separa de la lógica y los datos del
+servidor. - Sin estado (stateless): cada petición contiene la
+información necesaria para ser entendida; el servidor no depende de una
+sesión de petición previa. - Interfaz uniforme: se utilizan convenciones
+consistentes para identificar y operar sobre recursos. - Capacidad de
+caché: las respuestas pueden indicar si es posible almacenarlas en
+caché. - Sistema por capas: el cliente puede comunicarse con
+intermediarios sin necesitar conocer toda la infraestructura. - Código
+bajo demanda (opcional): el servidor puede enviar código ejecutable al
+cliente, aunque no es un requisito habitual de las API REST.
+
+Una API que usa HTTP no es automáticamente REST; para considerarse REST
+debe respetar los principios relevantes de este estilo arquitectónico.
+
+2.2. ¿Qué es una API y para qué sirve?
+
+API significa Application Programming Interface (Interfaz de
+Programación de Aplicaciones). Es un conjunto de reglas, operaciones y
+formatos que permite que dos programas se comuniquen.
+
+Una API define qué operaciones se pueden realizar, qué datos deben
+enviarse y qué respuestas pueden recibirse. Por ejemplo, una aplicación
+de clima puede consultar una API para obtener la temperatura de una
+ciudad sin tener que recopilar por sí misma todos los datos
+meteorológicos.
+
+Las API pueden utilizar distintos protocolos y formatos. REST es un
+estilo de diseño frecuente para API web, pero también existen API
+basadas en otros enfoques, como GraphQL, SOAP o gRPC.
+
+2.3. ¿Cuál es el objetivo de combinar API con REST?
+
+Una API REST ofrece un contrato organizado para que los clientes accedan
+a recursos del servidor utilizando convenciones conocidas. Esto facilita
+que distintas aplicaciones se integren, permite separar el frontend del
+backend y ayuda a mantener servicios reutilizables y escalables.
+
+Por ejemplo, una misma API REST de productos podría ser utilizada por
+una página web, una aplicación móvil y otro sistema de gestión.
+
+2.4. ¿Qué es un endpoint?
+
+Un endpoint es una dirección concreta de una API a la que se envía una
+petición para realizar una operación. Normalmente se define mediante una
+URL y un método HTTP.
+
+Ejemplos: - GET /api/productos: consultar productos. - GET
+/api/productos/15: consultar el producto con identificador 15. - POST
+/api/productos: crear un producto. - PUT /api/productos/15: reemplazar o
+actualizar el producto 15. - DELETE /api/productos/15: solicitar la
+eliminación del producto 15.
+
+En la práctica, un endpoint no se define solamente por la URL: también
+importa el método HTTP y, según la API, los parámetros, encabezados y el
+cuerpo de la petición.
+
+2.5. Ejemplo gráfico de uso de una API REST
+
+                  CLIENTE (web o aplicación)
+                            |
+                            | 1. GET /api/productos/15
+                            v
+                      API REST / SERVIDOR
+                            |
+                            | 2. Consulta el producto
+                            v
+                       BASE DE DATOS
+                            |
+                            | 3. Devuelve los datos
+                            v
+                      API REST / SERVIDOR
+                            |
+                            | 4. HTTP 200 OK
+                            |    Content-Type: application/json
+                            |    {"id":15,"nombre":"Teclado","precio":25000}
+                            v
+                  CLIENTE (muestra el producto)
+
+Descripción: 1. El cliente solicita el producto cuyo identificador es
+15. 2. El servidor recibe la petición y consulta la base de datos. 3. La
+base de datos devuelve la información encontrada. 4. El servidor
+responde con un código de estado HTTP y los datos en JSON. 5. El cliente
+interpreta la respuesta y muestra el producto.
+
+Ejemplo de endpoint: GET https://api.ejemplo.com/api/productos/15
+
+Ejemplo de respuesta: { “id”: 15, “nombre”: “Teclado”, “precio”: 25000 }
+
+La dirección api.ejemplo.com es ilustrativa y no corresponde a un
+servicio real.
+
+2.6. Patrones de diseño aplicados a las API
+
+Los patrones de diseño son soluciones reutilizables a problemas comunes
+de diseño de software. No todos son exclusivos de las API REST, pero
+pueden ayudar a organizar su implementación.
+
+-   Separación de responsabilidades por capas: divide el sistema en
+    componentes, por ejemplo, controlador, servicio y repositorio. El
+    controlador recibe la petición; el servicio contiene la lógica de
+    negocio; el repositorio accede a los datos. Esto facilita el
+    mantenimiento y las pruebas.
+
+-   Repository (Repositorio): encapsula el acceso a los datos y separa
+    la lógica de negocio de los detalles de la base de datos. Por
+    ejemplo, ProductoRepository puede buscar productos o guardarlos.
+
+-   Service Layer (Capa de servicios): concentra las reglas de negocio.
+    Por ejemplo, verificar que haya stock antes de confirmar una compra.
+
+-   DTO (Data Transfer Object): objeto utilizado para transportar datos
+    entre componentes o entre cliente y servidor. Permite controlar qué
+    información se recibe o se devuelve sin exponer necesariamente las
+    entidades internas de la base de datos.
+
+-   Dependency Injection (Inyección de dependencias): los objetos
+    reciben desde fuera las dependencias que necesitan, en lugar de
+    crearlas directamente. Esto reduce el acoplamiento y facilita las
+    pruebas.
+
+-   Factory (Fábrica): centraliza la creación de objetos cuando su
+    construcción tiene cierta complejidad o debe variar según el caso.
+
+-   Adapter (Adaptador): permite que componentes con interfaces
+    diferentes puedan trabajar juntos. Puede utilizarse para integrar un
+    servicio externo con la interfaz interna de la aplicación.
+
+-   Facade (Fachada): ofrece una interfaz sencilla para acceder a una
+    funcionalidad que internamente involucra varios componentes.
+
+-   API Gateway (Puerta de enlace de API): en arquitecturas con varios
+    servicios, actúa como punto de entrada y puede encargarse de enrutar
+    peticiones, autenticar, limitar el tráfico o registrar solicitudes.
+
+-   Circuit Breaker (Cortacircuitos): en sistemas que llaman a servicios
+    externos, evita repetir llamadas a un servicio que está fallando
+    durante un período, ayudando a limitar fallas en cadena.
+
+-   Versionado de API: permite publicar cambios incompatibles sin
+    obligar a todos los clientes a migrar de inmediato. Por ejemplo,
+    /api/v1/productos y /api/v2/productos. Es una estrategia de
+    evolución de la API, no un patrón GoF clásico.
+
+No es necesario aplicar todos estos patrones en todos los proyectos. Se
+eligen según la complejidad, los requisitos y los problemas que se busca
+resolver.
+
+3.  JSON
+
+3.1. ¿Qué es JSON y para qué sirve?
+
+JSON (JavaScript Object Notation) es un formato de texto utilizado para
+representar e intercambiar datos estructurados. Aunque su nombre
+proviene de JavaScript, puede utilizarse con muchos lenguajes, como
+Java, Python, C#, JavaScript y PHP.
+
+Se utiliza habitualmente para enviar y recibir datos en API web, guardar
+configuraciones y transferir información entre sistemas. Es legible para
+las personas y fácil de procesar por programas.
+
+3.2. ¿Cómo es el formato JSON?
+
+JSON permite representar: - Objetos: colecciones de pares clave-valor
+entre llaves {}. - Arreglos: listas ordenadas de valores entre corchetes
+[]. - Cadenas de texto: deben escribirse entre comillas dobles. -
+Números. - Valores booleanos: true o false. - null: representa la
+ausencia de un valor.
+
+Ejemplo de un objeto JSON: { “nombre”: “Juan”, “edad”: 21, “activo”:
+true, “materias”: [“Programación”, “Bases de Datos”], “direccion”: {
+“ciudad”: “Mendoza”, “pais”: “Argentina” } }
+
+Reglas importantes: - Los nombres de las propiedades y las cadenas usan
+comillas dobles. - No se permiten comentarios en JSON estándar. - No se
+permite una coma final después del último elemento. - JSON representa
+datos, no instrucciones o métodos ejecutables.
+
+3.3. Ejemplo de un objeto Java y su equivalente JSON
+
+Objeto Java ilustrativo:
+
+public class Alumno { private String nombre; private int edad; private
+boolean activo;
+
+    public Alumno(String nombre, int edad, boolean activo) {
+        this.nombre = nombre;
+        this.edad = edad;
+        this.activo = activo;
+    }
+
+}
+
+Alumno alumno = new Alumno(“Juan”, 21, true);
+
+Equivalente JSON: { “nombre”: “Juan”, “edad”: 21, “activo”: true }
+
+El JSON contiene los valores que se quieren intercambiar, no la
+definición de la clase ni sus métodos. En Java, bibliotecas como Jackson
+o Gson pueden convertir objetos a JSON y JSON a objetos, según la
+configuración y las clases utilizadas.
+
+3.4. Ejemplo de una colección de objetos Java y su equivalente JSON
+
+Colección Java ilustrativa:
+
+List alumnos = List.of( new Alumno(“Juan”, 21, true), new Alumno(“Ana”,
+22, false) );
+
+Equivalente JSON: [ { “nombre”: “Juan”, “edad”: 21, “activo”: true }, {
+“nombre”: “Ana”, “edad”: 22, “activo”: false }]
+
+Una colección de objetos suele representarse como un arreglo JSON, es
+decir, una lista de elementos entre corchetes. Cada elemento del ejemplo
+es un objeto JSON.
+
+3.5. ¿Qué alternativas existen además de JSON?
+
+-   XML: formato de texto que utiliza etiquetas. Puede ser útil cuando
+    se necesitan esquemas, espacios de nombres o compatibilidad con
+    sistemas tradicionales. Suele ser más extenso que JSON para
+    estructuras equivalentes.
+-   YAML: formato de texto legible que se utiliza con frecuencia en
+    archivos de configuración. La indentación es importante.
+-   CSV: representa datos tabulares en filas y columnas, por lo que
+    resulta útil para planillas e intercambio de datos simples. No
+    representa directamente estructuras anidadas complejas.
+-   Protocol Buffers (Protobuf): formato binario definido mediante
+    esquemas; suele ser compacto y eficiente, y se usa con frecuencia en
+    servicios gRPC.
+-   MessagePack: formato binario que representa estructuras similares a
+    JSON y puede reducir el tamaño de los mensajes.
+-   BSON: representación binaria de documentos, asociada especialmente
+    con MongoDB.
+
+La alternativa adecuada depende de la necesidad: legibilidad,
+compatibilidad, tamaño, velocidad, esquema de datos y herramientas
+disponibles.
+
+4.  POSTMAN
+
+4.1. ¿Qué es Postman?
+
+Postman es una plataforma para crear, enviar, probar y documentar
+peticiones a API. Permite configurar métodos HTTP, URL, parámetros,
+encabezados, autenticación y cuerpo de la petición. También permite
+inspeccionar las respuestas, incluidos el código de estado, los
+encabezados y el contenido recibido.
+
+Es útil para desarrollar y probar una API sin tener que crear primero
+una interfaz web o una aplicación que la consuma.
+
+Sitio oficial: https://www.postman.com/
+
+4.2. Ejemplo de cómo utilizar GET, POST, PUT y DELETE
+
+Para practicar, se puede utilizar el servicio de prueba JSONPlaceholder:
+https://jsonplaceholder.typicode.com/
+
+Es un servicio público de demostración. Las operaciones de escritura
+simulan cambios y no deben considerarse almacenamiento persistente real.
+
+A. GET: consultar información
+
+1.  Abrir Postman y crear una petición nueva.
+2.  Elegir el método GET.
+3.  Escribir esta URL: https://jsonplaceholder.typicode.com/posts/1
+4.  Presionar Send.
+5.  Revisar el código de estado y el cuerpo de la respuesta.
+
+Se espera una respuesta con información de una publicación, por ejemplo,
+campos como userId, id, title y body.
+
+B. POST: enviar o crear un recurso
+
+1.  Crear una petición y elegir POST.
+2.  Escribir esta URL: https://jsonplaceholder.typicode.com/posts
+3.  Ir a Body, seleccionar raw y elegir JSON.
+4.  Escribir: { “title”: “Mi publicación”, “body”: “Contenido de
+    prueba”, “userId”: 1 }
+5.  Presionar Send.
+
+El servicio de prueba suele responder con los datos recibidos y un
+identificador simulado. Esto no significa que el registro se guarde de
+manera permanente.
+
+C. PUT: reemplazar un recurso
+
+1.  Elegir el método PUT.
+2.  Escribir esta URL: https://jsonplaceholder.typicode.com/posts/1
+3.  En Body, seleccionar raw y JSON.
+4.  Enviar un cuerpo como: { “id”: 1, “title”: “Título actualizado”,
+    “body”: “Contenido actualizado”, “userId”: 1 }
+5.  Presionar Send y observar la respuesta.
+
+PUT suele representar el reemplazo completo del recurso indicado. El
+comportamiento exacto depende de la API; en JSONPlaceholder la
+modificación es simulada.
+
+D. DELETE: solicitar la eliminación de un recurso
+
+1.  Elegir el método DELETE.
+2.  Escribir esta URL: https://jsonplaceholder.typicode.com/posts/1
+3.  Presionar Send.
+4.  Revisar el código de estado y la respuesta. En este servicio de
+    prueba la operación es simulada.
+
+4.3. ¿Qué se debe observar en Postman?
+
+En cada petición conviene revisar: - Método HTTP utilizado. - URL y
+parámetros. - Encabezados, como Content-Type cuando se envía JSON. -
+Cuerpo de la petición, si corresponde. - Código de estado HTTP. - Cuerpo
+y encabezados de la respuesta. - Tiempo de respuesta.
+
+Si una API real requiere autenticación, se deben configurar las
+credenciales o tokens indicados por su documentación y evitar compartir
+secretos en capturas o repositorios públicos.
+
+CONCLUSIÓN
+
+HTTP define cómo se comunican clientes y servidores mediante peticiones
+y respuestas. REST es un estilo de arquitectura utilizado para diseñar
+API web; los endpoints identifican las operaciones disponibles. JSON es
+uno de los formatos más comunes para intercambiar datos entre
+aplicaciones. Postman facilita probar estas comunicaciones al permitir
+enviar peticiones y analizar sus respuestas sin desarrollar un cliente
+propio.
+
+FUENTES Y DOCUMENTACIÓN OFICIAL
+
+-   MDN Web Docs, métodos de petición HTTP:
+    https://developer.mozilla.org/es/docs/Web/HTTP/Methods
+-   MDN Web Docs, códigos de estado HTTP:
+    https://developer.mozilla.org/es/docs/Web/HTTP/Status
+-   Fielding, R. T. (2000), Architectural Styles and the Design of
+    Network-based Software Architectures:
+    https://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm
+-   JSON, sitio oficial: https://www.json.org/json-es.html
+-   Postman, sitio oficial: https://www.postman.com/
+-   JSONPlaceholder, API de prueba:
+    https://jsonplaceholder.typicode.com/
+
+Nota: Los ejemplos de código y las direcciones api.ejemplo.com son
+ilustrativos, excepto los enlaces identificados como servicios de
+documentación o prueba.
