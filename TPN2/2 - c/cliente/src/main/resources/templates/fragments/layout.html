@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header">
+    <h1>Biblioteca REST</h1>
+    <nav>
+        <a th:href="@{/personas}">Personas</a>
+        <a th:href="@{/libros}">Libros</a>
+        <a th:href="@{/prestamos}">Prestamos</a>
+        <a th:href="@{/envios-automaticos}">Envios automaticos</a>
+        <a th:href="@{/domicilios}">Domicilios</a>
+    </nav>
+</header>
+</body>
+</html>
