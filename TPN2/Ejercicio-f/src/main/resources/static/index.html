@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Tinder de Mascota - Inicio</title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Catamaran:100,200,300,400,500,600,700,800,900" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Lato:100,100i,300,300i,400,400i,700,700i,900,900i" rel="stylesheet">
+  <link href="/css/one-page-wonder.min.css" rel="stylesheet">
+  <link href="/styles.css" rel="stylesheet">
+  <script src="/views.js" defer></script><script src="/api.js" defer></script><script src="/app.js" defer></script>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom fixed-top"><div class="container">
+    <a class="navbar-brand" href="/">Tinder de Mascota</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Abrir navegación"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="navbarResponsive"><ul class="navbar-nav ml-auto" id="navigation"></ul></div>
+  </div></nav>
+  <div class="container"><div id="message" class="alert mt-3" role="status" aria-live="polite" hidden></div></div>
+  <main id="page"></main>
+  <section id="exposition" class="container my-5"><div class="card shadow-sm"><div class="card-body">
+    <h2 class="card-title">Demostración de la API REST</h2>
+    <p>Prepará dos cuentas para mostrar un voto y un match. Cada acción se registra abajo con su método HTTP, JSON y respuesta.</p>
+    <div class="d-flex flex-wrap exposition-actions"><button id="demo" class="btn btn-primary">Preparar una demostración</button><button id="switch-ana" class="btn btn-outline-primary" disabled>Entrar como Ana</button><button id="switch-juan" class="btn btn-outline-primary" disabled>Entrar como Juan</button></div>
+    <p id="demo-status" class="small text-muted mt-3">Ana tendrá a Luna y Juan tendrá a Toby, en la misma zona.</p><p id="identity" class="small font-weight-bold"></p>
+    <div id="upload-retry" class="alert alert-warning" hidden><p id="upload-detail"></p><button id="retry-photo" class="btn btn-warning btn-sm">Reintentar foto</button><button id="discard-photo" class="btn btn-outline-secondary btn-sm">Continuar sin esa foto</button></div>
+    <details class="mt-3"><summary>Agregar una zona para registrar cuentas propias</summary><form id="zone-form" class="mt-3"><div class="form-row">
+      <div class="form-group col-md-5"><label for="zone-name">Nombre</label><input id="zone-name" class="form-control" name="nombre" maxlength="100" required></div>
+      <div class="form-group col-md-5"><label for="zone-description">Descripción</label><input id="zone-description" class="form-control" name="descripcion" maxlength="500"></div>
+      <div class="form-group col-md-2 align-self-end"><button class="btn btn-secondary" type="submit">Agregar zona</button></div>
+    </div></form></details><hr>
+    <div class="d-flex justify-content-between align-items-center flex-wrap"><h3>Peticiones REST en vivo</h3><button id="clear-log" class="btn btn-outline-secondary btn-sm">Limpiar historial</button></div>
+    <p class="small text-muted">Últimas 30 peticiones. Abrí una para ver los detalles. Las claves y Authorization se ocultan.</p>
+    <div id="request-log" aria-live="polite"><p class="text-muted">Las peticiones aparecerán acá.</p></div>
+  </div></div></section>
+  <footer class="py-5 bg-black"><div class="container"><p class="m-0 text-center text-white small">Copyright &copy; Tinder de Mascotas - Sprint 2025</p></div></footer>
+  <script src="/vendor/jquery/jquery.min.js"></script><script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
