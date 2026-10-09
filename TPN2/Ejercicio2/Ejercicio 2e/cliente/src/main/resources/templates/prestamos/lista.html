@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Prestamos</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h2>Prestamos</h2>
+    <p><a class="button" th:href="@{/prestamos/nuevo}">Nuevo prestamo</a></p>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Libro</th>
+            <th>Persona</th>
+            <th>Prestamo</th>
+            <th>Devolucion</th>
+            <th>Devuelto</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="prestamo : ${prestamos}">
+            <td th:text="${prestamo.id}"></td>
+            <td th:text="${prestamo.libro != null ? prestamo.libro.titulo : 'Sin libro'}"></td>
+            <td th:text="${prestamo.persona != null ? prestamo.persona.nombre + ' ' + prestamo.persona.apellido : 'Sin persona'}"></td>
+            <td th:text="${prestamo.fechaPrestamo}"></td>
+            <td th:text="${prestamo.fechaDevolucion}"></td>
+            <td th:text="${prestamo.devuelto ? 'Si' : 'No'}"></td>
+            <td class="actions">
+                <a class="button" th:href="@{/prestamos/editar/{id}(id=${prestamo.id})}">Editar</a>
+                <a class="button danger" th:href="@{/prestamos/eliminar/{id}(id=${prestamo.id})}">Eliminar</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>
