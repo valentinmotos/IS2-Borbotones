@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Personas</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h2>Personas</h2>
+    <p><a class="button" th:href="@{/personas/nuevo}">Nueva persona</a></p>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>DNI</th>
+            <th>Email</th>
+            <th>Fecha de nacimiento</th>
+            <th>Domicilio</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="persona : ${personas}">
+            <td th:text="${persona.id}"></td>
+            <td th:text="${persona.nombre}"></td>
+            <td th:text="${persona.apellido}"></td>
+            <td th:text="${persona.dni}"></td>
+            <td th:text="${persona.email ?: 'Sin email'}"></td>
+            <td th:text="${persona.fechaNacimiento ?: 'Sin fecha'}"></td>
+            <td th:text="${persona.domicilio != null ? persona.domicilio.calle + ' ' + persona.domicilio.numero : 'Sin domicilio'}"></td>
+            <td class="actions">
+                <a class="button" th:href="@{/personas/editar/{id}(id=${persona.id})}">Editar</a>
+                <a class="button danger" th:href="@{/personas/eliminar/{id}(id=${persona.id})}">Eliminar</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Libro</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h2 th:text="${libro.id == null ? 'Nuevo libro' : 'Editar libro'}"></h2>
+    <p th:if="${error}" th:text="${error}" role="alert"></p>
+    <form th:action="@{/libros/guardar}" th:object="${libro}" method="post" enctype="multipart/form-data">
+        <input type="hidden" th:field="*{id}">
+        <label>Titulo <input type="text" th:field="*{titulo}" required></label>
+        <label>Fecha <input type="number" th:field="*{fecha}" required></label>
+        <label>Genero <input type="text" th:field="*{genero}" required></label>
+        <label>Paginas <input type="number" th:field="*{paginas}" required></label>
+        <label>Autor <input type="text" th:field="*{autor}" required></label>
+        <label th:if="${libro.pdfNombre == null}">Archivo PDF (opcional, hasta 20 MB)
+            <input type="file" name="pdf" accept=".pdf,application/pdf">
+        </label>
+        <p th:if="${libro.pdfNombre != null}">
+            <a th:href="@{/libros/{id}/pdf(id=${libro.id})}" target="_blank" rel="noopener">Abrir PDF</a>
+            <span>El PDF se conserva al editar los datos del libro.</span>
+        </p>
+        <label>Persona
+            <select th:field="*{persona.id}">
+                <option value="">Sin persona</option>
+                <option th:each="persona : ${personas}"
+                        th:value="${persona.id}"
+                        th:text="${persona.nombre + ' ' + persona.apellido}"></option>
+            </select>
+        </label>
+        <div class="form-actions">
+            <button class="button" type="submit">Guardar</button>
+            <a class="button danger" th:href="@{/libros}">Cancelar</a>
+        </div>
+    </form>
+</main>
+<script>
+    const pdfInput = document.querySelector('input[name="pdf"]');
+    if (pdfInput) {
+        pdfInput.addEventListener('change', () => {
+            const archivo = pdfInput.files[0];
+            pdfInput.setCustomValidity(archivo && archivo.size > 20 * 1024 * 1024
+                ? 'El PDF no puede superar los 20 MB.' : '');
+            pdfInput.reportValidity();
+        });
+    }
+</script>
+</body>
+</html>

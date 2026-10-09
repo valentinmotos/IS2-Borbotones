@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Libros</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h2>Libros</h2>
+    <p><a class="button" th:href="@{/libros/nuevo}">Nuevo libro</a></p>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Titulo</th>
+            <th>Fecha</th>
+            <th>Genero</th>
+            <th>Paginas</th>
+            <th>Autor</th>
+            <th>Persona</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="libro : ${libros}">
+            <td th:text="${libro.id}"></td>
+            <td th:text="${libro.titulo}"></td>
+            <td th:text="${libro.fecha}"></td>
+            <td th:text="${libro.genero}"></td>
+            <td th:text="${libro.paginas}"></td>
+            <td th:text="${libro.autor}"></td>
+            <td th:text="${libro.persona != null ? libro.persona.nombre + ' ' + libro.persona.apellido : 'Sin persona'}"></td>
+            <td class="actions">
+                <a th:if="${libro.pdfNombre != null}" class="button"
+                   th:href="@{/libros/{id}/pdf(id=${libro.id})}" target="_blank" rel="noopener">Abrir PDF</a>
+                <span th:if="${libro.pdfNombre == null}">Sin PDF</span>
+                <a class="button" th:href="@{/libros/editar/{id}(id=${libro.id})}">Editar</a>
+                <a class="button danger" th:href="@{/libros/eliminar/{id}(id=${libro.id})}">Eliminar</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>
