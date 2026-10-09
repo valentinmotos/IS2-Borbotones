@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#244c3d">
+  <title>Mi biblioteca · Catálogo</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Mi biblioteca, inicio"><span class="brand-icon" aria-hidden="true">▤</span> Mi biblioteca<span class="brand-note">CATÁLOGO PERSONAL</span></a>
+    <span class="header-note">Un lugar para tus próximas lecturas.</span>
+  </header>
+  <main>
+    <section class="hero">
+      <div><p class="eyebrow">TU COLECCIÓN, EN ORDEN</p><h1>Cada libro tiene<br>su lugar.</h1><p class="intro">Organizá tu biblioteca, encontrá un título y sumá nuevas historias a tu colección.</p>
+        <button class="primary" id="add-book"><span aria-hidden="true">＋</span> Agregar libro</button>
+      </div>
+      <div class="book-art" aria-hidden="true"><div class="art-circle"></div><div class="art-book book-one">HISTORIAS<br><small>por descubrir</small></div><div class="art-book book-two">EL ARTE<br>DE LEER</div><div class="art-book book-three">UN NUEVO<br>CAPÍTULO</div><span class="art-caption">Una colección. Infinitas historias.</span></div>
+    </section>
+    <section class="stats" aria-label="Resumen del catálogo">
+      <div><span id="total">0</span><p>Libros en tu colección</p></div>
+      <div><span id="printed">0</span><p>Ejemplares impresos</p></div>
+      <div><span id="digital">0</span><p>Libros digitales</p></div>
+    </section>
+    <section class="catalogue" aria-labelledby="catalogue-title">
+      <div class="section-heading"><div><p class="eyebrow">EXPLORÁ TUS ESTANTES</p><h2 id="catalogue-title">Tu catálogo</h2></div><button class="quiet" id="reload">Actualizar</button></div>
+      <div class="toolbar"><label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Buscar por título o ISBN" aria-label="Buscar por título o ISBN"></label>
+        <label class="filter">Formato<select id="filter"><option value="">Todos los formatos</option><option value="HARDCOVER">Tapa dura</option><option value="SOFTCOVER">Tapa blanda</option><option value="EBOOK">Digital</option></select></label>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <div id="books" class="book-grid" aria-live="polite"></div>
+      <div id="empty" class="empty" hidden><span class="empty-icon" aria-hidden="true">▤</span><h3 id="empty-title">Tu biblioteca empieza acá</h3><p id="empty-text">Agregá tu primer libro y dale forma a tu colección.</p><button class="primary" id="empty-add">Agregar mi primer libro</button></div>
+      <p id="results" class="results"></p>
+    </section>
+  </main>
+  <footer><span>Mi biblioteca</span><p>Más historias. Menos desorden.</p></footer>
+  <dialog id="editor" aria-labelledby="editor-title">
+    <form id="book-form">
+      <div class="dialog-heading"><div><p class="eyebrow">TU COLECCIÓN</p><h2 id="editor-title">Agregar libro</h2></div><button class="close" type="button" data-close="editor" aria-label="Cerrar formulario">×</button></div>
+      <input type="hidden" id="book-id">
+      <label>Título<input id="name" name="name" maxlength="255" required placeholder="El nombre de tu próxima historia"></label>
+      <label>ISBN<input id="isbn" name="isbnNumber" maxlength="255" required placeholder="Ej.: 9789875669283"></label>
+      <div class="form-row"><label>Fecha de publicación<input id="date" name="publishDate" type="date" required></label><label>Precio<input id="price" name="price" type="number" min="0" step="0.01" required placeholder="0,00"></label></div>
+      <label>Formato<select id="type" name="bookType" required><option value="HARDCOVER">Tapa dura</option><option value="SOFTCOVER">Tapa blanda</option><option value="EBOOK">Digital</option></select></label>
+      <p id="form-error" class="error" role="alert"></p>
+      <div class="dialog-actions"><button type="button" class="quiet" data-close="editor">Cancelar</button><button class="primary" id="save" type="submit">Guardar libro</button></div>
+    </form>
+  </dialog>
+  <dialog id="delete-dialog" aria-labelledby="delete-title"><div class="dialog-heading"><h2 id="delete-title">Eliminar libro</h2><button class="close" data-close="delete-dialog" aria-label="Cerrar confirmación">×</button></div><p>Se eliminará <strong id="delete-name"></strong> de tu catálogo. Esta acción no se puede deshacer.</p><p id="delete-error" class="error" role="alert"></p><div class="dialog-actions"><button class="quiet" data-close="delete-dialog">Cancelar</button><button class="danger" id="confirm-delete">Eliminar libro</button></div></dialog>
+</body>
+</html>
