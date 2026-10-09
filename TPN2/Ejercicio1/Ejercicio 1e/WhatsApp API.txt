@@ -1,0 +1,81 @@
+INVESTIGACIÓN: API DE WHATSAPP
+
+1.  ¿Qué es la API de WhatsApp?
+
+La API de WhatsApp (WhatsApp Business Platform / Cloud API) es un
+servicio de Meta que permite que una aplicación envíe y reciba mensajes
+de WhatsApp de forma automática, sin que una persona tenga que escribir
+desde el celular. Está pensada para empresas y se usa mediante
+peticiones HTTP REST que intercambian información en formato JSON.
+
+Existen dos variantes:
+-   Cloud API: alojada por Meta. Es la opción recomendada y la más
+    simple, ya que no requiere servidores propios.
+-   On-Premises API: se instalaba en servidores propios. Meta la
+    discontinuó, por lo que hoy se usa la Cloud API.
+
+2.  ¿Cómo se accede?
+
+1. Crear una cuenta en Meta for Developers
+   (https://developers.facebook.com).
+2. Crear una aplicación de tipo "Business" y agregarle el producto
+   "WhatsApp".
+3. Meta entrega un número de teléfono de prueba, un identificador del
+   número (Phone Number ID) y un token de acceso temporal.
+4. Registrar hasta 5 números destinatarios para pruebas.
+5. Para producción, se debe verificar el negocio en el Meta Business
+   Manager, registrar un número propio y generar un token permanente.
+
+Ejemplo de envío de un mensaje (petición POST):
+
+POST https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages
+Authorization: Bearer {TOKEN}
+Content-Type: application/json
+
+{
+  "messaging_product": "whatsapp",
+  "to": "5492610000000",
+  "type": "text",
+  "text": { "body": "Hola, tu turno fue confirmado" }
+}
+
+EXPLICACIÓN DEL EJEMPLO
+La aplicación envía un POST a la Graph API de Meta indicando el
+identificador del número emisor, el token de acceso en el encabezado
+Authorization y, en el cuerpo JSON, el número destinatario y el texto
+del mensaje. Desde Java se podría hacer con RestTemplate, de la misma
+forma que en este ejercicio se consume OpenWeatherMap.
+
+3.  Características
+
+-   Mensajes de texto, imágenes, documentos, ubicación y botones.
+-   Plantillas (templates): mensajes predefinidos que Meta debe aprobar
+    antes de usarlos. Son obligatorias para iniciar una conversación
+    con un usuario.
+-   Ventana de 24 horas: cuando el usuario escribe primero, la empresa
+    puede responder libremente durante 24 horas.
+-   Webhooks: Meta avisa a nuestro backend (con un POST) cuando llega
+    un mensaje nuevo o cambia el estado de uno enviado (entregado,
+    leído).
+-   Costo: se cobra por conversación o mensaje según la categoría
+    (marketing, utilidad, autenticación). Las respuestas dentro de la
+    ventana de servicio y el entorno de pruebas son gratuitos.
+
+4.  ¿Qué utilidad podría darle el equipo en un proyecto futuro?
+
+-   Notificaciones: avisar a los usuarios cuando se crea, modifica o
+    vence algo (turnos, pedidos, órdenes de compra, préstamos de
+    libros).
+-   Recordatorios automáticos: por ejemplo, un día antes de un turno o
+    de la fecha de devolución.
+-   Confirmaciones: el usuario responde "SI" o "NO" con botones y el
+    sistema actualiza el estado mediante el webhook.
+-   Códigos de verificación: enviar un código al registrarse o
+    recuperar la contraseña.
+-   Atención básica: un bot simple que responda consultas frecuentes
+    (horarios, estado de un pedido) consultando nuestra base de datos.
+
+Para el equipo es una forma de llegar al usuario por un medio que ya
+usa todos los días, con mayor tasa de lectura que el correo electrónico,
+reutilizando lo aprendido en el TP2: consumir una API REST desde el
+backend y exponer endpoints para recibir información externa.
