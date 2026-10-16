@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Envio automatico</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h2 th:text="${envio.id == null ? 'Nuevo envio automatico' : 'Editar envio automatico'}"></h2>
+    <form th:action="@{/envios-automaticos/guardar}" th:object="${envio}" method="post">
+        <input type="hidden" th:field="*{id}">
+        <label>Nombre <input type="text" th:field="*{nombre}" required></label>
+        <label>Tipo
+            <select th:field="*{tipo}" required>
+                <option value="DEVOLUCION">Devolucion de libro</option>
+                <option value="CUMPLEANOS">Cumpleanos</option>
+            </select>
+        </label>
+        <label>Asunto <input type="text" th:field="*{asunto}" required></label>
+        <label>Cuerpo HTML
+            <textarea th:field="*{cuerpoHtml}" rows="9" required></textarea>
+        </label>
+        <label class="checkbox-label"><input type="checkbox" th:field="*{activo}"> Activo</label>
+        <div class="form-actions">
+            <button class="button" type="submit">Guardar</button>
+            <a class="button danger" th:href="@{/envios-automaticos}">Cancelar</a>
+        </div>
+    </form>
+</main>
+</body>
+</html>
