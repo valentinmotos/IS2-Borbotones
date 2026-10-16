@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cliente - Carrito de compras</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<main class="page">
+    <header class="header">
+        <div>
+            <p class="eyebrow">Aplicacion Cliente</p>
+            <h1>Carrito de compras</h1>
+        </div>
+        <div class="server-pill">Servidor: localhost:8081</div>
+    </header>
+
+    <section th:if="${mensaje}" class="alert success" th:text="${mensaje}"></section>
+    <section th:if="${error}" class="alert error" th:text="${error}"></section>
+
+    <section class="panel">
+        <h2>Crear carrito</h2>
+        <form class="inline-form" method="post" th:action="@{/carritos}">
+            <label>
+                Usuario
+                <select name="usuarioId" required>
+                    <option th:each="usuario : ${usuarios}" th:value="${usuario.id}" th:text="${usuario.nombre}"></option>
+                </select>
+            </label>
+            <button type="submit">Crear</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2>Articulos disponibles</h2>
+        <div class="items-grid">
+            <article class="item" th:each="articulo : ${articulos}">
+                <div>
+                    <h3 th:text="${articulo.nombre}">Articulo</h3>
+                    <p th:text="${'$ ' + #numbers.formatDecimal(articulo.precio, 1, 2)}">$ 0.00</p>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>Carritos</h2>
+        <div class="empty" th:if="${#lists.isEmpty(carritos)}">No hay carritos creados.</div>
+
+        <article class="cart" th:each="carrito : ${carritos}">
+            <div class="cart-header">
+                <div>
+                    <h3 th:text="${'Carrito de ' + carrito.usuario.nombre}">Carrito</h3>
+                    <p th:text="${'ID: ' + carrito.id}">ID</p>
+                </div>
+                <strong th:text="${'$ ' + #numbers.formatDecimal(carrito.total, 1, 2)}">$ 0.00</strong>
+            </div>
+
+            <p class="status" th:classappend="${carrito.finalizado} ? ' done' : ' open'"
+               th:text="${carrito.finalizado} ? 'Finalizado' : 'Abierto'">Abierto</p>
+
+            <form class="inline-form" method="post" th:if="${!carrito.finalizado}" th:action="@{/carritos/{id}/detalles(id=${carrito.id})}">
+                <label>
+                    Articulo
+                    <select name="articuloId" required>
+                        <option th:each="articulo : ${articulos}" th:value="${articulo.id}" th:text="${articulo.nombre}"></option>
+                    </select>
+                </label>
+                <label>
+                    Cantidad
+                    <input type="number" name="cantidad" min="1" value="1" required>
+                </label>
+                <button type="submit">Agregar</button>
+            </form>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>Articulo</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="detalle : ${carrito.detalles}" th:if="${!detalle.eliminado}">
+                    <td th:text="${detalle.articulo.nombre}">Articulo</td>
+                    <td th:text="${'$ ' + #numbers.formatDecimal(detalle.precioUnitario, 1, 2)}">$ 0.00</td>
+                    <td>
+                        <form class="quantity-form" method="post"
+                              th:if="${!carrito.finalizado}"
+                              th:action="@{/carritos/{carritoId}/detalles/{detalleId}(carritoId=${carrito.id},detalleId=${detalle.id})}">
+                            <input type="number" name="cantidad" min="0" th:value="${detalle.cantidad}">
+                            <button type="submit">Editar</button>
+                        </form>
+                        <span th:if="${carrito.finalizado}" th:text="${detalle.cantidad}">1</span>
+                    </td>
+                    <td th:text="${'$ ' + #numbers.formatDecimal(detalle.cantidad * detalle.precioUnitario, 1, 2)}">$ 0.00</td>
+                    <td>
+                        <form method="post"
+                              th:if="${!carrito.finalizado}"
+                              th:action="@{/carritos/{carritoId}/detalles/{detalleId}(carritoId=${carrito.id},detalleId=${detalle.id})}">
+                            <input type="hidden" name="cantidad" value="0">
+                            <button class="ghost" type="submit">Quitar</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="actions">
+                <form method="post" th:if="${!carrito.finalizado}" th:action="@{/carritos/{id}/finalizar(id=${carrito.id})}">
+                    <button type="submit">Finalizar compra</button>
+                </form>
+                <form method="post" th:action="@{/carritos/{id}/eliminar(id=${carrito.id})}">
+                    <button class="danger" type="submit">Eliminar carrito</button>
+                </form>
+            </div>
+        </article>
+    </section>
+</main>
+</body>
+</html>
