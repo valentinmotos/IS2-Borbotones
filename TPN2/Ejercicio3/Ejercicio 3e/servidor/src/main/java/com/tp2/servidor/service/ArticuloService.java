@@ -7,26 +7,40 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ArticuloService extends BaseRestService<Articulo, ArticuloRequest, String> {
-    private final ArticuloDao articuloDao;
-
-    public ArticuloService(ArticuloDao articuloDao) {
-        super(articuloDao, ArticuloService::convertir, articulo -> !articulo.isEliminado());
-        this.articuloDao = articuloDao;
+    public ArticuloService(ArticuloDao articuloDao, ImagenService imagenService, ProveedorService proveedorService) {
+        super(articuloDao, request -> convertir(request, imagenService, proveedorService), articulo -> !articulo.isEliminado());
     }
 
-    private static Articulo convertir(ArticuloRequest request) {
+    private static Articulo convertir(ArticuloRequest request, ImagenService imagenService, ProveedorService proveedorService) {
         Articulo articulo = new Articulo();
         articulo.setNombre(request.getNombre());
         articulo.setPrecio(request.getPrecio());
+        if (request.getImagenId() != null) {
+            articulo.setImagen(imagenService.buscarActivo(request.getImagenId()));
+        }
+        if (request.getProveedorId() != null) {
+            articulo.setProveedor(proveedorService.buscarActivo(request.getProveedorId()));
+        }
         return articulo;
+    }
+
+    @Override
+    protected void validar(Operacion operacion, Articulo articulo) {
+        if (operacion != Operacion.BAJA && articulo.getPrecio() <= 0) {
+            throw new IllegalArgumentException("El precio debe ser mayor a cero");
+        }
+    }
+
+    @Override
+    protected void actualizar(Articulo existente, Articulo nuevo) {
+        existente.setNombre(nuevo.getNombre());
+        existente.setPrecio(nuevo.getPrecio());
+        existente.setImagen(nuevo.getImagen());
+        existente.setProveedor(nuevo.getProveedor());
     }
 
     @Override
     protected void marcarEliminada(Articulo articulo) {
         articulo.setEliminado(true);
-    }
-
-    public Articulo buscarActivo(String id) {
-        return buscarPorId(id).orElseThrow(() -> new IllegalArgumentException("Articulo no encontrado o eliminado"));
     }
 }

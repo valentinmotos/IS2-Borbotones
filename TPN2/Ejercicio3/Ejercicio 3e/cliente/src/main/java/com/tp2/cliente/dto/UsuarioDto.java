@@ -8,7 +8,4 @@ import lombok.Setter;
 public class UsuarioDto {
     private String id;
     private String nombre;
-    private String clave;
-    private boolean eliminado;
-
 }

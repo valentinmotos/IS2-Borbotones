@@ -2,6 +2,7 @@ package com.tp2.servidor.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,31 +18,9 @@ public class Articulo {
     private double precio;
     private boolean eliminado;
 
-    public String getId() {
-        return id;
-    }
+    @ManyToOne
+    private Imagen imagen;
 
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public double getPrecio() {
-        return precio;
-    }
-
-    public void setPrecio(double precio) {
-        this.precio = precio;
-    }
-
-    public boolean isEliminado() {
-        return eliminado;
-    }
-
-    public void setEliminado(boolean eliminado) {
-        this.eliminado = eliminado;
-    }
+    @ManyToOne
+    private Proveedor proveedor;
 }

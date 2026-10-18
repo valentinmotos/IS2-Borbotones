@@ -7,12 +7,4 @@ import lombok.Setter;
 @Setter
 public class CrearCarritoRequest {
     private String usuarioId;
-
-    public String getUsuarioId() {
-        return usuarioId;
-    }
-
-    public void setUsuarioId(String usuarioId) {
-        this.usuarioId = usuarioId;
-    }
 }

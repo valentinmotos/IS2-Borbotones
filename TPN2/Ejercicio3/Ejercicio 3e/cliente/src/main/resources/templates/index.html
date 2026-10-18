@@ -3,78 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cliente - Carrito de compras</title>
+    <title>Carrito de compras</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
 <body>
-<main class="page">
-    <header class="header">
-        <div>
-            <p class="eyebrow">Aplicacion Cliente</p>
-            <h1>Carrito de compras</h1>
-        </div>
-        <div class="server-pill">Servidor: localhost:8081</div>
-    </header>
-
-    <section th:if="${mensaje}" class="alert success" th:text="${mensaje}"></section>
-    <section th:if="${error}" class="alert error" th:text="${error}"></section>
-
-    <section class="panel">
-        <h2>Crear carrito</h2>
-        <form class="inline-form" method="post" th:action="@{/carritos}">
-            <label>
-                Usuario
-                <select name="usuarioId" required>
-                    <option th:each="usuario : ${usuarios}" th:value="${usuario.id}" th:text="${usuario.nombre}"></option>
-                </select>
-            </label>
-            <button type="submit">Crear</button>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container px-4 px-lg-5">
+        <a class="navbar-brand" th:href="@{/}">Tienda TP2</a>
+        <ul class="navbar-nav me-auto">
+            <li class="nav-item"><a class="nav-link active" th:href="@{/}">Tienda</a></li>
+        </ul>
+        <form class="d-flex" method="post" th:action="@{/carritos}">
+            <select class="form-select me-2" name="usuarioId" required>
+                <option th:each="usuario : ${usuarios}" th:value="${usuario.id}" th:text="${usuario.nombre}"></option>
+            </select>
+            <button class="btn btn-outline-dark text-nowrap" type="submit">
+                <i class="bi-cart-plus-fill me-1"></i> Nuevo carrito
+            </button>
         </form>
-    </section>
+    </div>
+</nav>
 
-    <section class="panel">
-        <h2>Articulos disponibles</h2>
-        <div class="items-grid">
-            <article class="item" th:each="articulo : ${articulos}">
-                <div>
-                    <h3 th:text="${articulo.nombre}">Articulo</h3>
-                    <p th:text="${'$ ' + #numbers.formatDecimal(articulo.precio, 1, 2)}">$ 0.00</p>
-                </div>
-            </article>
+<header class="bg-dark py-5">
+    <div class="container px-4 px-lg-5 my-4">
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bolder">Carrito de compras</h1>
+            <p class="lead fw-normal text-white-50 mb-0">Aplicacion cliente conectada al servidor REST</p>
         </div>
-    </section>
+    </div>
+</header>
 
-    <section class="panel">
-        <h2>Carritos</h2>
-        <div class="empty" th:if="${#lists.isEmpty(carritos)}">No hay carritos creados.</div>
+<main class="container px-4 px-lg-5 py-5">
+    <div th:if="${mensaje}" class="alert alert-success" th:text="${mensaje}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
-        <article class="cart" th:each="carrito : ${carritos}">
-            <div class="cart-header">
-                <div>
-                    <h3 th:text="${'Carrito de ' + carrito.usuario.nombre}">Carrito</h3>
-                    <p th:text="${'ID: ' + carrito.id}">ID</p>
+    <h2 class="fw-bolder mb-4">Articulos</h2>
+    <div class="row gx-4 gx-lg-5 row-cols-1 row-cols-sm-2 row-cols-lg-3 mb-5">
+        <div class="col mb-4" th:each="articulo : ${articulos}">
+            <div class="card h-100">
+                <img class="card-img-top" th:if="${articulo.imagen != null}"
+                     th:src="${imagenesUrl + articulo.imagen.id + '/contenido'}" th:alt="${articulo.nombre}">
+                <div class="card-body p-4 text-center">
+                    <h5 class="fw-bolder" th:text="${articulo.nombre}">Articulo</h5>
+                    <p class="text-muted small mb-2" th:if="${articulo.proveedor != null}"
+                       th:text="${'Proveedor: ' + articulo.proveedor.nombre}">Proveedor</p>
+                    <span th:text="${'$ ' + #numbers.formatDecimal(articulo.precio, 1, 2)}">$ 0.00</span>
                 </div>
-                <strong th:text="${'$ ' + #numbers.formatDecimal(carrito.total, 1, 2)}">$ 0.00</strong>
             </div>
+        </div>
+    </div>
 
-            <p class="status" th:classappend="${carrito.finalizado} ? ' done' : ' open'"
-               th:text="${carrito.finalizado} ? 'Finalizado' : 'Abierto'">Abierto</p>
+    <h2 class="fw-bolder mb-4">Carritos</h2>
+    <div class="alert alert-secondary" th:if="${#lists.isEmpty(carritos)}">No hay carritos creados.</div>
 
-            <form class="inline-form" method="post" th:if="${!carrito.finalizado}" th:action="@{/carritos/{id}/detalles(id=${carrito.id})}">
-                <label>
-                    Articulo
-                    <select name="articuloId" required>
+    <div class="card mb-4" th:each="carrito : ${carritos}">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <strong th:text="${'Carrito de ' + carrito.usuario.nombre}">Carrito</strong>
+                <span class="badge ms-2" th:classappend="${carrito.finalizado} ? 'bg-success' : 'bg-primary'"
+                      th:text="${carrito.finalizado} ? 'Finalizado' : 'Abierto'">Abierto</span>
+            </div>
+            <strong class="fs-5" th:text="${'$ ' + #numbers.formatDecimal(carrito.total, 1, 2)}">$ 0.00</strong>
+        </div>
+        <div class="card-body">
+            <form class="row g-2 align-items-end mb-3" method="post" th:if="${!carrito.finalizado}"
+                  th:action="@{/carritos/{id}/detalles(id=${carrito.id})}">
+                <div class="col-sm-6">
+                    <label class="form-label">Articulo</label>
+                    <select class="form-select" name="articuloId" required>
                         <option th:each="articulo : ${articulos}" th:value="${articulo.id}" th:text="${articulo.nombre}"></option>
                     </select>
-                </label>
-                <label>
-                    Cantidad
-                    <input type="number" name="cantidad" min="1" value="1" required>
-                </label>
-                <button type="submit">Agregar</button>
+                </div>
+                <div class="col-sm-3">
+                    <label class="form-label">Cantidad</label>
+                    <input class="form-control" type="number" name="cantidad" min="1" value="1" required>
+                </div>
+                <div class="col-sm-3">
+                    <button class="btn btn-dark w-100" type="submit"><i class="bi-cart-fill me-1"></i> Agregar</button>
+                </div>
             </form>
 
-            <table>
+            <table class="table align-middle">
                 <thead>
                 <tr>
                     <th>Articulo</th>
@@ -89,37 +100,41 @@
                     <td th:text="${detalle.articulo.nombre}">Articulo</td>
                     <td th:text="${'$ ' + #numbers.formatDecimal(detalle.precioUnitario, 1, 2)}">$ 0.00</td>
                     <td>
-                        <form class="quantity-form" method="post"
-                              th:if="${!carrito.finalizado}"
+                        <form class="d-flex gap-2" method="post" th:if="${!carrito.finalizado}"
                               th:action="@{/carritos/{carritoId}/detalles/{detalleId}(carritoId=${carrito.id},detalleId=${detalle.id})}">
-                            <input type="number" name="cantidad" min="0" th:value="${detalle.cantidad}">
-                            <button type="submit">Editar</button>
+                            <input class="form-control form-control-sm cantidad" type="number" name="cantidad" min="0" th:value="${detalle.cantidad}">
+                            <button class="btn btn-sm btn-outline-dark" type="submit">Editar</button>
                         </form>
                         <span th:if="${carrito.finalizado}" th:text="${detalle.cantidad}">1</span>
                     </td>
                     <td th:text="${'$ ' + #numbers.formatDecimal(detalle.cantidad * detalle.precioUnitario, 1, 2)}">$ 0.00</td>
-                    <td>
-                        <form method="post"
-                              th:if="${!carrito.finalizado}"
+                    <td class="text-end">
+                        <form method="post" th:if="${!carrito.finalizado}"
                               th:action="@{/carritos/{carritoId}/detalles/{detalleId}(carritoId=${carrito.id},detalleId=${detalle.id})}">
                             <input type="hidden" name="cantidad" value="0">
-                            <button class="ghost" type="submit">Quitar</button>
+                            <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi-trash"></i></button>
                         </form>
                     </td>
                 </tr>
                 </tbody>
             </table>
 
-            <div class="actions">
+            <div class="d-flex justify-content-end gap-2">
                 <form method="post" th:if="${!carrito.finalizado}" th:action="@{/carritos/{id}/finalizar(id=${carrito.id})}">
-                    <button type="submit">Finalizar compra</button>
+                    <button class="btn btn-success" type="submit">Finalizar compra</button>
                 </form>
                 <form method="post" th:action="@{/carritos/{id}/eliminar(id=${carrito.id})}">
-                    <button class="danger" type="submit">Eliminar carrito</button>
+                    <button class="btn btn-outline-danger" type="submit">Eliminar carrito</button>
                 </form>
             </div>
-        </article>
-    </section>
+        </div>
+    </div>
 </main>
+
+<footer class="py-4 bg-dark">
+    <div class="container">
+        <p class="m-0 text-center text-white small">Template basado en Shop Homepage de Start Bootstrap (licencia MIT)</p>
+    </div>
+</footer>
 </body>
 </html>
