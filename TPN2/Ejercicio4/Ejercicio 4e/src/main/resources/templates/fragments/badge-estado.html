@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <span th:fragment="badge(estado)" th:switch="${estado}" class="zero-state-badge">
+        <span th:case="'PENDIENTE_COMPLETAR'" class="badge badge-warning">Pendiente de completar</span>
+        <span th:case="'PENDIENTE_PAGO'" class="badge badge-warning">Pendiente de pago</span>
+        <span th:case="'PENDIENTE_ENVIO'" class="badge badge-info">Pendiente de envío</span>
+        <span th:case="'PENDIENTE_ENTREGA'" class="badge badge-info">Pendiente de entrega</span>
+        <span th:case="'ENTREGADO'" class="badge badge-success">Entregado</span>
+        <span th:case="'PAGADA'" class="badge badge-success">Pagada</span>
+        <span th:case="'ANULADA'" class="badge badge-danger">Anulada</span>
+        <span th:case="'SIN_DEFINIR'" class="badge badge-secondary">Sin definir</span>
+        <span th:case="*" class="badge badge-secondary" th:text="${estado}">Estado</span>
+    </span>
+</body>
+</html>

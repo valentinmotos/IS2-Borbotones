@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Abastecimiento</span><span class="breadcrumb-separator">/</span>
+        <a th:href="@{/admin/compras}">Compras a proveedor</a><span class="breadcrumb-separator">/</span>
+        <span>Detalle</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel mb-4">
+            <h2 th:text="${'Factura de proveedor N.º ' + compra.numeroFactura}">Factura de proveedor N.º 1</h2>
+            <dl>
+                <dt>Fecha</dt>
+                <dd th:text="${#temporals.format(compra.fechaFactura, 'dd/MM/yyyy')}">01/01/2026</dd>
+                <dt>Proveedor</dt>
+                <dd th:text="${compra.proveedor.razonSocial}">Proveedor</dd>
+                <dt>Forma de pago</dt>
+                <dd th:text="${compra.formaDePago != null ? compra.formaDePago.observacion : '-'}">Transferencia</dd>
+                <dt>Estado</dt>
+                <dd>
+                    <span th:replace="~{fragments/badge-estado :: badge(${compra.estado.name()})}"></span>
+                    <span th:if="${compra.estado.name() == 'SIN_DEFINIR'}" class="text-muted">Pedida: todavía no se recibió la mercadería.</span>
+                    <span th:if="${compra.estado.name() == 'PAGADA'}" class="text-muted">Recibida: la mercadería ya se sumó al stock.</span>
+                    <span th:if="${compra.estado.name() == 'ANULADA'}" class="text-muted">Anulada: no se va a recibir.</span>
+                </dd>
+            </dl>
+            <div class="table-responsive zero-table-wrap mb-3">
+                <table class="table table-striped table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Código</th>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Talle</th>
+                            <th scope="col">Cantidad</th>
+                            <th scope="col">Precio de costo</th>
+                            <th scope="col">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="detalle : ${compra.detalles}" th:unless="${detalle.eliminado}">
+                            <td th:text="${detalle.producto.codigo}">COD</td>
+                            <td th:text="${detalle.producto.nombre}">Producto</td>
+                            <td th:text="${detalle.producto.talle}">M</td>
+                            <td class="text-right" th:text="${detalle.cantidad}">1</td>
+                            <td class="text-right" th:text="${'$' + #numbers.formatDecimal(detalle.precioUnitario, 1, 'POINT', 2, 'COMMA')}">$0,00</td>
+                            <td class="text-right" th:text="${'$' + #numbers.formatDecimal(detalle.subtotal, 1, 'POINT', 2, 'COMMA')}">$0,00</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th scope="row" colspan="5" class="text-right">Total</th>
+                            <th class="text-right" th:text="${'$' + #numbers.formatDecimal(compra.totalPagado, 1, 'POINT', 2, 'COMMA')}">$0,00</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="zero-form-actions">
+                <a th:if="${celular != null and compra.estado.name() == 'SIN_DEFINIR'}"
+                   th:href="@{'https://wa.me/' + ${celular.telefono}(text=${mensajeWhatsApp})}"
+                   target="_blank" rel="noopener noreferrer" class="btn zero-btn-whatsapp"
+                   th:attr="aria-label=${'Avisar a ' + compra.proveedor.razonSocial + ' por WhatsApp'}">
+                    <i class="fa fa-whatsapp" aria-hidden="true"></i> Avisar al proveedor por WhatsApp
+                </a>
+                <th:block th:if="${compra.estado.name() == 'SIN_DEFINIR'}">
+                    <button type="button" class="zero-button primary" data-toggle="modal" data-target="#recibir-compra">
+                        Marcar como recibida
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#anular-compra">
+                        Anular compra
+                    </button>
+                </th:block>
+                <a th:href="@{/admin/compras}" class="zero-button secondary">Volver</a>
+            </div>
+        </div>
+        <th:block th:if="${compra.estado.name() == 'SIN_DEFINIR'}">
+            <div th:replace="~{fragments/modal-confirmar :: modal('recibir-compra', 'Marcar como recibida',
+                 ${'¿Llegó la mercadería de la compra N.º ' + compra.numeroFactura + '? Se suman al stock las unidades de todos sus productos y la compra ya no se puede anular.'},
+                 ${'/admin/compras/' + compra.id + '/recibir'})}"></div>
+            <div th:replace="~{fragments/modal-confirmar :: modal('anular-compra', 'Anular compra',
+                 ${'¿Querés anular la compra N.º ' + compra.numeroFactura + '? No se va a poder recibir.'},
+                 ${'/admin/compras/' + compra.id + '/anular'})}"></div>
+        </th:block>
+    </div>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Abastecimiento</span><span class="breadcrumb-separator">/</span>
+        <a th:href="@{/admin/compras}">Compras a proveedor</a><span class="breadcrumb-separator">/</span>
+        <span>Nueva compra</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <form th:action="@{/admin/compras}" method="post" class="zero-form">
+            <div class="zero-panel mb-4">
+                <h2>Datos</h2>
+                <div th:replace="~{fragments/formulario :: campoSelect('proveedorId', 'Proveedor', ${opcionesProveedor}, ${compraForm.proveedorId}, true)}"></div>
+                <div th:replace="~{fragments/formulario :: campoSelect('formaDePagoId', 'Forma de pago', ${opcionesFormaDePago}, ${compraForm.formaDePagoId}, true)}"></div>
+            </div>
+            <div class="zero-panel">
+                <h2>Productos</h2>
+                <p class="text-muted">
+                    Cargá cada producto una sola vez, con la cantidad y el precio de costo por unidad. Cada talle es un
+                    producto distinto. La compra queda <strong>pedida</strong> hasta que se reciba la mercadería.
+                </p>
+                <div class="table-responsive zero-table-wrap">
+                    <table class="table table-bordered mb-0 zero-tabla-detalles">
+                        <thead>
+                            <tr>
+                                <th scope="col">Producto</th>
+                                <th scope="col">Cantidad</th>
+                                <th scope="col">Precio de costo</th>
+                                <th scope="col">Subtotal</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody data-detalles>
+                            <!-- Spring deja en null los índices de los renglones quitados del medio: no se muestran. -->
+                            <th:block th:each="detalle, stat : ${compraForm.detalles}" th:if="${detalle != null}">
+                                <tr th:replace="~{admin/compras/formulario :: filaDetalle(${detalle}, ${stat.index})}"></tr>
+                            </th:block>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th scope="row" colspan="3" class="text-right">Total</th>
+                                <th colspan="2" data-total>$0</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <button type="button" class="zero-button secondary" data-agregar-detalle>Agregar producto</button>
+                    <small class="form-text text-muted" data-aviso-incompleto hidden>
+                        Completá el producto, la cantidad y el precio de costo de cada renglón antes de agregar otro.
+                    </small>
+                </div>
+                <div th:replace="~{fragments/formulario :: acciones('/admin/compras')}"></div>
+            </div>
+        </form>
+
+        <!-- Renglón vacío que clona static/js/compra-detalles.js: INDICE se reemplaza por el número de renglón. -->
+        <template id="plantilla-detalle">
+            <tr th:fragment="filaDetalle(detalle, indice)" class="fila-detalle"
+                th:with="i=${indice != null ? indice : 'INDICE'}">
+                <td>
+                    <!-- static/js/compra-detalles.js lo convierte en un select con buscador (Select2 del template). -->
+                    <select th:name="|detalles[${i}].productoId|" class="form-control" aria-label="Producto"
+                            data-producto required>
+                        <option value="">Seleccionar un producto</option>
+                        <option th:each="opcion : ${opcionesProducto}" th:value="${opcion.key}" th:text="${opcion.value}"
+                                th:selected="${opcion.key == detalle?.productoId}">Producto</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" th:name="|detalles[${i}].cantidad|" class="form-control" min="1" step="1"
+                           th:value="${detalle?.cantidad}" aria-label="Cantidad" placeholder="Ej: 10" data-cantidad required>
+                </td>
+                <td>
+                    <input type="number" th:name="|detalles[${i}].precioUnitario|" class="form-control" min="0.01"
+                           step="0.01" th:value="${detalle?.precioUnitario}" aria-label="Precio de costo unitario"
+                           placeholder="Ej: 5000" data-precio required>
+                </td>
+                <td class="text-right" data-subtotal>$0</td>
+                <td class="zero-table-actions">
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-quitar-detalle>Quitar</button>
+                </td>
+            </tr>
+        </template>
+    </div>
+    <th:block layout:fragment="scripts">
+        <script th:src="@{/vendor/template/vendor/select2/select2.min.js}"></script>
+        <script th:src="@{/js/compra-detalles.js}"></script>
+    </th:block>
+</body>
+</html>

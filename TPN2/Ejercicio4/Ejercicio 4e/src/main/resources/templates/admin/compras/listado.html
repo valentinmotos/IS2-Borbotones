@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Abastecimiento</span><span class="breadcrumb-separator">/</span><span>Compras a proveedor</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <form th:action="@{/admin/compras}" method="get" class="zero-filters zero-filters-amplio mb-4">
+                <div th:replace="~{fragments/filtros :: campoFiltroSelect('estado', 'Estado', ${opcionesEstado}, ${estado})}"></div>
+                <div th:replace="~{fragments/filtros :: campoFiltroSelect('proveedor', 'Proveedor', ${opcionesProveedor}, ${proveedor})}"></div>
+                <div th:replace="~{fragments/filtros :: campoFiltroFecha('desde', 'Desde', ${desde})}"></div>
+                <div th:replace="~{fragments/filtros :: campoFiltroFecha('hasta', 'Hasta', ${hasta})}"></div>
+                <div class="zero-filters-acciones">
+                    <button type="submit" class="zero-button primary">Buscar</button>
+                    <a th:href="@{/admin/compras}" class="zero-button secondary">Limpiar</a>
+                </div>
+            </form>
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                <a th:href="@{/admin/compras/nueva}" class="zero-button primary">Nueva compra</a>
+                <span class="text-muted"
+                      th:text="${totalCompras == 1 ? '1 compra' : totalCompras + ' compras'}">0 compras</span>
+            </div>
+            <!-- Misma estructura que fragments/tabla :: tablaRegistros, con el badge de estado y el botón "Ver",
+                 que el fragment no soporta. -->
+            <div class="table-responsive zero-table-wrap">
+                <table class="table table-striped table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">N.º</th>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">Proveedor</th>
+                            <th scope="col">Forma de pago</th>
+                            <th scope="col">Total</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(compras)}">
+                            <td colspan="7" class="text-center text-muted py-4">No hay registros para mostrar.</td>
+                        </tr>
+                        <tr th:each="compra : ${compras}">
+                            <td th:text="${compra.numeroFactura}">1</td>
+                            <td th:text="${#temporals.format(compra.fechaFactura, 'dd/MM/yyyy')}">01/01/2026</td>
+                            <td th:text="${compra.proveedor.razonSocial}">Proveedor</td>
+                            <td th:text="${compra.formaDePago != null ? compra.formaDePago.observacion : '-'}">Transferencia</td>
+                            <td th:text="${'$' + #numbers.formatDecimal(compra.totalPagado, 1, 'POINT', 2, 'COMMA')}">$0,00</td>
+                            <td><span th:replace="~{fragments/badge-estado :: badge(${compra.estado.name()})}"></span></td>
+                            <td class="zero-table-actions">
+                                <a th:href="@{'/admin/compras/' + ${compra.id}}" class="btn btn-sm btn-outline-primary"
+                                   th:attr="aria-label=${'Ver compra ' + compra.numeroFactura}">Ver</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1520' height='690' viewBox='0 0 1520 690'><rect width='1520' height='690' fill='white'/>
+<g><rect x='20' y='10' width='400' height='170' fill='#FFFFFF' stroke='#222'/>
+<text x='220.0' y='32.0' font-family='Arial, sans-serif' font-size='17.0' text-anchor='middle' >«abstract»</text>
+<text x='220.0' y='56.0' font-family='Arial, sans-serif' font-size='23.0' font-weight='bold' text-anchor='middle' >Factura</text>
+<line x1='20.0' y1='67.0' x2='420.0' y2='67.0' stroke='#222'/>
+<text x='32.0' y='92.0' font-family='Arial, sans-serif' font-size='20.0' >- numeroFactura: long</text>
+<text x='32.0' y='117.0' font-family='Arial, sans-serif' font-size='20.0' >- fechaFactura: LocalDate</text>
+<text x='32.0' y='142.0' font-family='Arial, sans-serif' font-size='20.0' >- estado: EstadoFactura</text>
+</g>
+<g><rect x='570' y='10' width='550' height='210' fill='#DFF2DF' stroke='#222'/>
+<text x='845.0' y='32.0' font-family='Arial, sans-serif' font-size='17.0' text-anchor='middle' >«interface»</text>
+<text x='845.0' y='56.0' font-family='Arial, sans-serif' font-size='23.0' font-weight='bold' text-anchor='middle' >EventoAgendable</text>
+<line x1='570.0' y1='67.0' x2='1120.0' y2='67.0' stroke='#222'/>
+<text x='582.0' y='93.0' font-family='Arial, sans-serif' font-size='20.0' >+ getId(): String</text>
+<text x='582.0' y='118.0' font-family='Arial, sans-serif' font-size='20.0' >+ getFechaAgenda(): LocalDate</text>
+<text x='582.0' y='143.0' font-family='Arial, sans-serif' font-size='20.0' >+ getTipoEvento(): TipoEventoCalendario</text>
+<text x='582.0' y='168.0' font-family='Arial, sans-serif' font-size='20.0' >+ describirEvento(): String</text>
+<text x='582.0' y='193.0' font-family='Arial, sans-serif' font-size='20.0' >+ estaAtrasado(hoy: LocalDate): boolean</text>
+</g>
+<g><rect x='1190' y='10' width='310' height='135' fill='#DFF2DF' stroke='#222'/>
+<text x='1345.0' y='32.0' font-family='Arial, sans-serif' font-size='17.0' text-anchor='middle' >«enumeration»</text>
+<text x='1345.0' y='56.0' font-family='Arial, sans-serif' font-size='23.0' font-weight='bold' text-anchor='middle' >TipoEventoCalendario</text>
+<line x1='1190.0' y1='67.0' x2='1500.0' y2='67.0' stroke='#222'/>
+<text x='1202.0' y='92.0' font-family='Arial, sans-serif' font-size='20.0' >LLEGADA_PROVEEDOR</text>
+<text x='1202.0' y='117.0' font-family='Arial, sans-serif' font-size='20.0' >ENVIO_CLIENTE</text>
+</g>
+<g><rect x='20' y='310' width='520' height='245' fill='#FFF4CC' stroke='#222'/>
+<text x='280.0' y='356.0' font-family='Arial, sans-serif' font-size='23.0' font-weight='bold' text-anchor='middle' >FacturaProveedor</text>
+<line x1='20.0' y1='367.0' x2='540.0' y2='367.0' stroke='#222'/>
+<text x='32.0' y='392.0' font-family='Arial, sans-serif' font-size='20.0' >- fechaEntregaEstimada: LocalDate {nuevo}</text>
+<line x1='20.0' y1='405.0' x2='540.0' y2='405.0' stroke='#222'/>
+<text x='32.0' y='431.0' font-family='Arial, sans-serif' font-size='20.0' >+ getFechaAgenda(): LocalDate {nuevo}</text>
+<text x='32.0' y='456.0' font-family='Arial, sans-serif' font-size='20.0' >+ getTipoEvento(): TipoEventoCalendario {nuevo}</text>
+<text x='32.0' y='481.0' font-family='Arial, sans-serif' font-size='20.0' >+ describirEvento(): String {nuevo}</text>
+<text x='32.0' y='506.0' font-family='Arial, sans-serif' font-size='20.0' >+ estaAtrasado(hoy: LocalDate): boolean {nuevo}</text>
+<text x='32.0' y='531.0' font-family='Arial, sans-serif' font-size='20.0' >+ reprogramarEntrega(fecha: LocalDate): void {nuevo}</text>
+</g>
+<g><rect x='590' y='310' width='550' height='265' fill='#FFF4CC' stroke='#222'/>
+<text x='865.0' y='356.0' font-family='Arial, sans-serif' font-size='23.0' font-weight='bold' text-anchor='middle' >OrdenCompra</text>
+<line x1='590.0' y1='367.0' x2='1140.0' y2='367.0' stroke='#222'/>
+<text x='602.0' y='392.0' font-family='Arial, sans-serif' font-size='20.0' >- fechaLimiteEnvio: LocalDate {nuevo}</text>
+<line x1='590.0' y1='405.0' x2='1140.0' y2='405.0' stroke='#222'/>
+<text x='602.0' y='431.0' font-family='Arial, sans-serif' font-size='20.0' >+ registrarPago(diasDespacho: int): void {modificado}</text>
+<text x='602.0' y='456.0' font-family='Arial, sans-serif' font-size='20.0' >+ getFechaAgenda(): LocalDate {nuevo}</text>
+<text x='602.0' y='481.0' font-family='Arial, sans-serif' font-size='20.0' >+ getTipoEvento(): TipoEventoCalendario {nuevo}</text>
+<text x='602.0' y='506.0' font-family='Arial, sans-serif' font-size='20.0' >+ describirEvento(): String {nuevo}</text>
+<text x='602.0' y='531.0' font-family='Arial, sans-serif' font-size='20.0' >+ estaAtrasado(hoy: LocalDate): boolean {nuevo}</text>
+<text x='602.0' y='556.0' font-family='Arial, sans-serif' font-size='20.0' >+ reprogramarEnvio(fecha: LocalDate): void {nuevo}</text>
+</g>
+<g><rect x='1190' y='360' width='310' height='120' fill='#FFF4CC' stroke='#222'/>
+<text x='1345.0' y='406.0' font-family='Arial, sans-serif' font-size='23.0' font-weight='bold' text-anchor='middle' >Empresa</text>
+<line x1='1190.0' y1='417.0' x2='1500.0' y2='417.0' stroke='#222'/>
+<text x='1202.0' y='442.0' font-family='Arial, sans-serif' font-size='20.0' >- diasDespacho: int {nuevo}</text>
+</g>
+<polyline fill='none' stroke='#222' stroke-width='1.5' points='220,310 220,180 '/><path d='M 229 196 L 220 180 L 211 196 Z' fill='white' stroke='#222'/>
+<polyline fill='none' stroke='#222' stroke-width='1.5' stroke-dasharray='7 5' points='460,310 460,260 690,260 690,220 '/><path d='M 699 236 L 690 220 L 681 236 Z' fill='white' stroke='#222'/>
+<polyline fill='none' stroke='#222' stroke-width='1.5' stroke-dasharray='7 5' points='870,310 870,220 '/><path d='M 879 236 L 870 220 L 861 236 Z' fill='white' stroke='#222'/>
+<polyline fill='none' stroke='#222' stroke-width='1.5' stroke-dasharray='7 5' points='1120,80 1190,80 '/><path d='M 1174 89 L 1190 80 L 1174 71' fill='none' stroke='#222'/>
+<text x='20.0' y='600.0' font-family='Arial, sans-serif' font-size='20.0' >Verde: interfaz / enumeración nueva · Amarillo: entidad modificada · Blanco: contexto existente</text>
+<text x='20.0' y='630.0' font-family='Arial, sans-serif' font-size='20.0' >{nuevo}: miembro agregado · {modificado}: operación que cambia · Solo miembros relevantes</text>
+<text x='20.0' y='660.0' font-family='Arial, sans-serif' font-size='20.0' >Empresa aporta el plazo al registrar el pago; la dependencia no implica una asociación persistente.</text>
+</svg>

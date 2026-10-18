@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2980" height="1616" viewBox="0 0 2980 1616" font-family="Arial, sans-serif">
+<defs><marker id="f" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#000"/></marker><marker id="r" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#000" stroke-width="1.2"/></marker></defs>
+<rect width="2980" height="1616" fill="#fff"/>
+<text x="40" y="34" font-size="17" font-weight="bold">CU02 · Generar factura: confirmar la compra</text>
+<rect x="584" y="644" width="1072" height="208" fill="none" stroke="#555"/><path d="M584,644 h44 v12 l-6,6 h-38 z" fill="#eef3f9" stroke="#555"/><text x="589" y="657" font-size="11.5" font-weight="bold">loop</text><text x="636" y="657" font-size="11.5">[por cada DetalleCompra activo]</text>
+<rect x="584" y="1112" width="1432" height="72" fill="none" stroke="#555"/><path d="M584,1112 h44 v12 l-6,6 h-38 z" fill="#eef3f9" stroke="#555"/><text x="589" y="1125" font-size="11.5" font-weight="bold">loop</text><text x="636" y="1125" font-size="11.5">[por cada DetalleCompra activo]</text>
+<rect x="44" y="1396" width="352" height="142" fill="none" stroke="#555"/><path d="M44,1396 h36 v12 l-6,6 h-30 z" fill="#eef3f9" stroke="#555"/><text x="49" y="1409" font-size="11.5" font-weight="bold">alt</text><text x="88" y="1409" font-size="11.5">[sin errores]</text>
+<line x1="44" y1="1468" x2="396" y2="1468" stroke="#555" stroke-dasharray="6,4"/><text x="52" y="1483" font-size="11.5">[ErrorServiceException: rollback]</text>
+<line x1="130" y1="120" x2="130" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<circle cx="130" cy="56" r="8" fill="#fff" stroke="#000"/><line x1="130" y1="64" x2="130" y2="88" stroke="#000"/><line x1="117" y1="72" x2="143" y2="72" stroke="#000"/><line x1="130" y1="88" x2="119" y2="106" stroke="#000"/><line x1="130" y1="88" x2="141" y2="106" stroke="#000"/><text x="130" y="118" font-size="12" text-anchor="middle" font-weight="bold">Cliente</text>
+<line x1="310" y1="120" x2="310" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="228" y="70" width="164" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="310" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:CheckoutController</text>
+<line x1="490" y1="120" x2="490" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="408" y="70" width="164" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="490" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:ClienteService</text>
+<line x1="670" y1="120" x2="670" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="588" y="70" width="164" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="670" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:VentaService</text>
+<line x1="850" y1="120" x2="850" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="768" y="70" width="164" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="850" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:FormaDePagoService</text>
+<line x1="1030" y1="120" x2="1030" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="948" y="70" width="164" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="1030" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:CarritoService</text>
+<line x1="1210" y1="120" x2="1210" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="1128" y="70" width="164" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="1210" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:VigenciaPrecioService</text>
+<line x1="1390" y1="120" x2="1390" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="1308" y="70" width="164" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="1390" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:StockService</text>
+<line x1="1570" y1="120" x2="1570" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="1488" y="70" width="164" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="1570" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:OrdenCompra</text>
+<line x1="1750" y1="120" x2="1750" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="1668" y="70" width="164" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="1750" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:OrdenCompraRepository</text>
+<line x1="1930" y1="120" x2="1930" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="1848" y="70" width="164" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="1930" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:FacturaCliente</text>
+<line x1="2110" y1="120" x2="2110" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="2028" y="70" width="164" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="2110" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:FacturaClienteRepository</text>
+<line x1="2290" y1="120" x2="2290" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="2208" y="70" width="164" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="2290" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:NotificacionCompraService</text>
+<line x1="2470" y1="120" x2="2470" y2="1576" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="2388" y="70" width="164" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="2470" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:EmailService</text>
+<rect x="124" y="144" width="12" height="1366" fill="#fff" stroke="#000"/>
+<rect x="304" y="144" width="12" height="1366" fill="#fff" stroke="#000"/>
+<rect x="484" y="178" width="12" height="216" fill="#fff" stroke="#000"/>
+<rect x="664" y="314" width="12" height="1064" fill="#fff" stroke="#000"/>
+<rect x="844" y="464" width="12" height="46" fill="#fff" stroke="#000"/>
+<rect x="1024" y="532" width="12" height="46" fill="#fff" stroke="#000"/>
+<rect x="1204" y="676" width="12" height="46" fill="#fff" stroke="#000"/>
+<rect x="1384" y="744" width="12" height="46" fill="#fff" stroke="#000"/>
+<rect x="1564" y="812" width="12" height="98" fill="#fff" stroke="#000"/>
+<rect x="1744" y="932" width="12" height="12" fill="#fff" stroke="#000"/>
+<rect x="2104" y="1014" width="12" height="262" fill="#fff" stroke="#000"/>
+<rect x="1924" y="1082" width="12" height="160" fill="#fff" stroke="#000"/>
+<rect x="2284" y="1298" width="12" height="46" fill="#fff" stroke="#000"/>
+<rect x="2464" y="1332" width="12" height="12" fill="#fff" stroke="#000"/>
+<line x1="136" y1="150" x2="304" y2="150" stroke="#000" marker-end="url(#f)"/>
+<text x="142" y="145" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">POST /cliente/checkout (idFormaPago)</text>
+<line x1="316" y1="184" x2="484" y2="184" stroke="#000" marker-end="url(#f)"/>
+<text x="322" y="179" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">perfilCompleto(idUsuario)</text>
+<line x1="484" y1="218" x2="316" y2="218" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="322" y="213" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">true</text>
+<line x1="316" y1="252" x2="484" y2="252" stroke="#000" marker-end="url(#f)"/>
+<text x="322" y="247" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">buscarClientePorUsuario(idUsuario)</text>
+<line x1="484" y1="286" x2="316" y2="286" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="322" y="281" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">cliente</text>
+<line x1="316" y1="320" x2="664" y2="320" stroke="#000" marker-end="url(#f)"/>
+<text x="322" y="315" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">confirmarCompra(idCliente, idFormaPago)</text>
+<line x1="664" y1="354" x2="496" y2="354" stroke="#000" marker-end="url(#f)"/>
+<text x="502" y="349" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">buscarCliente(idCliente)</text>
+<line x1="496" y1="388" x2="664" y2="388" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="502" y="383" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">cliente</text>
+<polyline points="676,422 710,422 710,436 676,436" fill="none" stroke="#000" marker-end="url(#f)"/>
+<text x="716" y="433" font-size="11">validar(cliente, idFormaPago)</text>
+<line x1="676" y1="470" x2="844" y2="470" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="465" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">buscarFormaDePago(idFormaPago)</text>
+<line x1="844" y1="504" x2="676" y2="504" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="682" y="499" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">formaDePago</text>
+<line x1="676" y1="538" x2="1024" y2="538" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="533" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">obtenerCarrito(idCliente)</text>
+<line x1="1024" y1="572" x2="676" y2="572" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="682" y="567" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">orden</text>
+<polyline points="676,606 710,606 710,620 676,620" fill="none" stroke="#000" marker-end="url(#f)"/>
+<text x="716" y="617" font-size="11">revalidarItems(orden)</text>
+<line x1="676" y1="682" x2="1204" y2="682" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="677" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">buscarPrecioVigente(idProducto)</text>
+<line x1="1204" y1="716" x2="676" y2="716" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="682" y="711" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">precioVigente</text>
+<line x1="676" y1="750" x2="1384" y2="750" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="745" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">buscarStockActual(idProducto)</text>
+<line x1="1384" y1="784" x2="676" y2="784" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="682" y="779" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">stockActual</text>
+<line x1="676" y1="818" x2="1564" y2="818" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="813" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">detalle.calcularSubtotal(precioVigente)</text>
+<line x1="676" y1="870" x2="1564" y2="870" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="865" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">recalcularTotal()</text>
+<line x1="676" y1="904" x2="1564" y2="904" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="899" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">confirmar()   [PENDIENTE_COMPLETAR → PENDIENTE_PAGO]</text>
+<line x1="676" y1="938" x2="1744" y2="938" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="933" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">save(orden)</text>
+<polyline points="676,972 710,972 710,986 676,986" fill="none" stroke="#000" marker-end="url(#f)"/>
+<text x="716" y="983" font-size="11">siguienteNumero()</text>
+<line x1="676" y1="1020" x2="2104" y2="1020" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="1015" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">findFirstByOrderByNumeroFacturaDesc()</text>
+<line x1="2104" y1="1054" x2="676" y2="1054" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="682" y="1049" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">última factura (número + 1)</text>
+<line x1="676" y1="1088" x2="1924" y2="1088" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="1083" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">«create» numero, fecha, SIN_DEFINIR, cliente, orden, formaDePago</text>
+<line x1="676" y1="1150" x2="1924" y2="1150" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="1145" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">agregarDetalle(producto, cantidad, precioUnitario)</text>
+<line x1="676" y1="1202" x2="1924" y2="1202" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="1197" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">calcularTotal()</text>
+<line x1="1924" y1="1236" x2="676" y2="1236" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="682" y="1231" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">total</text>
+<line x1="676" y1="1270" x2="2104" y2="1270" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="1265" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">save(factura)</text>
+<line x1="676" y1="1304" x2="2284" y2="1304" stroke="#000" marker-end="url(#f)"/>
+<text x="682" y="1299" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">enviarConfirmacion(orden)</text>
+<line x1="2296" y1="1338" x2="2464" y2="1338" stroke="#000" marker-end="url(#f)"/>
+<text x="2302" y="1333" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">enviar(destinatario, "Recibimos tu compra", "confirmacion-compra", variables)  «@Async»</text>
+<line x1="664" y1="1372" x2="316" y2="1372" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="322" y="1367" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">factura</text>
+<line x1="304" y1="1434" x2="136" y2="1434" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="142" y="1429" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">redirect /cliente/checkout/registrada/{idOrden}</text>
+<line x1="304" y1="1504" x2="136" y2="1504" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="142" y="1499" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">redirect /cliente/checkout (flash error)</text>
+<path d="M584,644 h44 v12 l-6,6 h-38 z" fill="#eef3f9" stroke="#555"/><text x="589" y="657" font-size="11.5" font-weight="bold">loop</text><text x="636" y="657" font-size="11.5" font-style="italic" style="paint-order:stroke" stroke="#fff" stroke-width="4">[por cada DetalleCompra activo]</text>
+<path d="M584,1112 h44 v12 l-6,6 h-38 z" fill="#eef3f9" stroke="#555"/><text x="589" y="1125" font-size="11.5" font-weight="bold">loop</text><text x="636" y="1125" font-size="11.5" font-style="italic" style="paint-order:stroke" stroke="#fff" stroke-width="4">[por cada DetalleCompra activo]</text>
+<path d="M44,1396 h36 v12 l-6,6 h-30 z" fill="#eef3f9" stroke="#555"/><text x="49" y="1409" font-size="11.5" font-weight="bold">alt</text><text x="88" y="1409" font-size="11.5" font-style="italic" style="paint-order:stroke" stroke="#fff" stroke-width="4">[sin errores]</text>
+<text x="52" y="1483" font-size="11.5" font-style="italic" style="paint-order:stroke" stroke="#fff" stroke-width="4">[ErrorServiceException: rollback]</text>
+</svg>

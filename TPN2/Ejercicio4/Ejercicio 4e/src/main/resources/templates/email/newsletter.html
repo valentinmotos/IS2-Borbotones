@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{email/base}">
+<body>
+<div layout:fragment="contenido">
+    <p style="margin: 0 0 8px 0; color: #555555;" th:text="|Hola, ${nombreCliente}!|">Hola, Cliente Zero!</p>
+    <h1 style="margin: 0 0 12px 0; font-size: 28px; line-height: 1.2; color: #0b0b0b;">
+        Ofertas que no te podés perder
+    </h1>
+    <p style="margin: 0 0 24px 0; color: #555555;">
+        Elegimos productos Zero en oferta y con stock disponible para vos.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr th:each="producto, iter : ${ofertas}" th:if="${iter.index % 2 == 0}">
+            <td width="50%" valign="top" style="padding: 0 6px 16px 0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                       style="border: 1px solid #e4e4e4; border-radius: 8px; overflow: hidden;">
+                    <tr th:if="${producto.imagenId != null}">
+                        <td align="center" style="background-color: #f5f5f5; padding: 8px;">
+                            <img th:src="|${urlBase}/imagen/${producto.imagenId}|" th:alt="${producto.nombre}"
+                                 width="240" style="display: block; width: 100%; max-width: 240px; height: 170px; object-fit: cover; border: 0;">
+                        </td>
+                    </tr>
+                    <tr><td style="padding: 14px;">
+                        <div style="display: inline-block; background-color: #d7ff3f; color: #0b0b0b; font-size: 11px; font-weight: bold; padding: 3px 7px; border-radius: 10px;">OFERTA</div>
+                        <h2 style="margin: 9px 0 4px 0; font-size: 16px; line-height: 1.3;" th:text="${producto.nombre}">Producto</h2>
+                        <p style="margin: 0 0 10px 0; color: #666666; font-size: 13px;" th:text="|Talle ${producto.talle}|">Talle</p>
+                        <p style="margin: 0 0 12px 0; font-size: 20px; font-weight: bold;" th:text="${producto.precioFormateado}">$0</p>
+                        <a th:href="|${urlBase}/producto/${producto.id}|"
+                           style="display: inline-block; background-color: #0b0b0b; color: #ffffff; text-decoration: none; font-weight: bold; padding: 9px 13px; border-radius: 5px;">Ver producto</a>
+                    </td></tr>
+                </table>
+            </td>
+            <td width="50%" valign="top" style="padding: 0 0 16px 6px;"
+                th:with="siguiente=${iter.index + 1 < ofertas.size() ? ofertas[iter.index + 1] : null}">
+                <table th:if="${siguiente != null}" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                       style="border: 1px solid #e4e4e4; border-radius: 8px; overflow: hidden;">
+                    <tr th:if="${siguiente.imagenId != null}">
+                        <td align="center" style="background-color: #f5f5f5; padding: 8px;">
+                            <img th:src="|${urlBase}/imagen/${siguiente.imagenId}|" th:alt="${siguiente.nombre}"
+                                 width="240" style="display: block; width: 100%; max-width: 240px; height: 170px; object-fit: cover; border: 0;">
+                        </td>
+                    </tr>
+                    <tr><td style="padding: 14px;">
+                        <div style="display: inline-block; background-color: #d7ff3f; color: #0b0b0b; font-size: 11px; font-weight: bold; padding: 3px 7px; border-radius: 10px;">OFERTA</div>
+                        <h2 style="margin: 9px 0 4px 0; font-size: 16px; line-height: 1.3;" th:text="${siguiente.nombre}">Producto</h2>
+                        <p style="margin: 0 0 10px 0; color: #666666; font-size: 13px;" th:text="|Talle ${siguiente.talle}|">Talle</p>
+                        <p style="margin: 0 0 12px 0; font-size: 20px; font-weight: bold;" th:text="${siguiente.precioFormateado}">$0</p>
+                        <a th:href="|${urlBase}/producto/${siguiente.id}|"
+                           style="display: inline-block; background-color: #0b0b0b; color: #ffffff; text-decoration: none; font-weight: bold; padding: 9px 13px; border-radius: 5px;">Ver producto</a>
+                    </td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <p style="margin: 8px 0 0 0; text-align: center;">
+        <a th:href="|${urlBase}/ofertas|" style="color: #171717; font-weight: bold;">Ver todas las ofertas en Zero</a>
+    </p>
+</div>
+</body>
+</html>

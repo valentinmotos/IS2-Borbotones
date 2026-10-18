@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="15.1"><zoom_level>10</zoom_level>
+<element><id>UMLFrame</id><coordinates><x>260</x><y>50</y><w>870</w><h>510</h></coordinates><panel_attributes>Sistema E-Commerce Zero</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLActor</id><coordinates><x>60</x><y>120</y><w>100</w><h>110</h></coordinates><panel_attributes>Administrativo</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLActor</id><coordinates><x>60</x><y>400</y><w>100</w><h>110</h></coordinates><panel_attributes>Jefe</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLUseCase</id><coordinates><x>330</x><y>90</y><w>210</w><h>80</h></coordinates><panel_attributes>Recibir compra
+a proveedor</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLUseCase</id><coordinates><x>330</x><y>260</y><w>210</w><h>80</h></coordinates><panel_attributes>Confirmar pago
+de pedido</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLUseCase</id><coordinates><x>330</x><y>430</y><w>210</w><h>80</h></coordinates><panel_attributes>Anular pedido
+pagado</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLUseCase</id><coordinates><x>640</x><y>260</y><w>200</w><h>80</h></coordinates><panel_attributes>Actualizar stock</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLUseCase</id><coordinates><x>900</x><y>130</y><w>190</w><h>75</h></coordinates><panel_attributes>Calcular stock
+actual</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLUseCase</id><coordinates><x>900</x><y>390</y><w>190</w><h>75</h></coordinates><panel_attributes>Validar saldo
+no negativo</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>128</x><y>131</y><w>216</w><h>41</h></coordinates><panel_attributes>lt=-</panel_attributes><additional_attributes>10;31;206;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>128</x><y>167</y><w>246</w><h>114</h></coordinates><panel_attributes>lt=-</panel_attributes><additional_attributes>10;10;236;104</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>128</x><y>181</y><w>278</w><h>262</h></coordinates><panel_attributes>lt=-</panel_attributes><additional_attributes>10;10;268;252</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>100</x><y>208</y><w>20</w><h>194</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;10;184</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>484</x><y>153</y><w>208</w><h>125</h></coordinates><panel_attributes>lt=.>
+&lt;&lt;include&gt;&gt;</panel_attributes><additional_attributes>10;10;198;115</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>530</x><y>290</y><w>120</w><h>20</h></coordinates><panel_attributes>lt=.>
+&lt;&lt;include&gt;&gt;</panel_attributes><additional_attributes>10;10;110;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>484</x><y>322</y><w>208</w><h>125</h></coordinates><panel_attributes>lt=.>
+&lt;&lt;include&gt;&gt;</panel_attributes><additional_attributes>10;115;198;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>791</x><y>187</y><w>157</w><h>91</h></coordinates><panel_attributes>lt=.>
+&lt;&lt;include&gt;&gt;</panel_attributes><additional_attributes>10;81;147;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>792</x><y>321</y><w>154</w><h>87</h></coordinates><panel_attributes>lt=.>
+&lt;&lt;include&gt;&gt;</panel_attributes><additional_attributes>10;10;144;77</additional_attributes></element>
+</diagram>

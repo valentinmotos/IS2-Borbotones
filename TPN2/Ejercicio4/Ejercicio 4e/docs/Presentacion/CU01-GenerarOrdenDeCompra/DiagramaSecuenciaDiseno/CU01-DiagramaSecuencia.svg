@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2260" height="1392" viewBox="0 0 2260 1392" font-family="Arial, sans-serif">
+<defs><marker id="f" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#000"/></marker><marker id="r" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#000" stroke-width="1.2"/></marker></defs>
+<rect width="2260" height="1392" fill="#fff"/>
+<text x="40" y="34" font-size="17" font-weight="bold">CU01 · Generar orden de compra: agregar producto al carrito</text>
+<rect x="444" y="644" width="992" height="120" fill="none" stroke="#555"/><path d="M444,644 h36 v12 l-6,6 h-30 z" fill="#eef3f9" stroke="#555"/><text x="449" y="657" font-size="11.5" font-weight="bold">opt</text><text x="488" y="657" font-size="11.5">[el cliente no tiene carrito abierto]</text>
+<rect x="244" y="840" width="392" height="72" fill="none" stroke="#555"/><path d="M244,840 h36 v12 l-6,6 h-30 z" fill="#eef3f9" stroke="#555"/><text x="249" y="853" font-size="11.5" font-weight="bold">opt</text><text x="288" y="853" font-size="11.5">[cantidadFinal &gt; stockActual]</text>
+<rect x="444" y="920" width="1392" height="292" fill="none" stroke="#555"/><path d="M444,920 h36 v12 l-6,6 h-30 z" fill="#eef3f9" stroke="#555"/><text x="449" y="933" font-size="11.5" font-weight="bold">alt</text><text x="488" y="933" font-size="11.5">[el producto ya está en la orden]</text>
+<line x1="444" y1="1060" x2="1836" y2="1060" stroke="#555" stroke-dasharray="6,4"/><text x="452" y="1075" font-size="11.5">[producto nuevo]</text>
+<line x1="140" y1="120" x2="140" y2="1352" stroke="#777" stroke-dasharray="5,4"/>
+<circle cx="140" cy="56" r="8" fill="#fff" stroke="#000"/><line x1="140" y1="64" x2="140" y2="88" stroke="#000"/><line x1="127" y1="72" x2="153" y2="72" stroke="#000"/><line x1="140" y1="88" x2="129" y2="106" stroke="#000"/><line x1="140" y1="88" x2="151" y2="106" stroke="#000"/><text x="140" y="118" font-size="12" text-anchor="middle" font-weight="bold">Cliente</text>
+<line x1="340" y1="120" x2="340" y2="1352" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="248" y="70" width="184" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="340" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:CarritoController</text>
+<line x1="540" y1="120" x2="540" y2="1352" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="448" y="70" width="184" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="540" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:CarritoService</text>
+<line x1="740" y1="120" x2="740" y2="1352" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="648" y="70" width="184" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="740" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:ProductoRepository</text>
+<line x1="940" y1="120" x2="940" y2="1352" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="848" y="70" width="184" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="940" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:VigenciaPrecioService</text>
+<line x1="1140" y1="120" x2="1140" y2="1352" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="1048" y="70" width="184" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="1140" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:StockService</text>
+<line x1="1340" y1="120" x2="1340" y2="1352" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="1248" y="70" width="184" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="1340" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:OrdenCompraRepository</text>
+<line x1="1540" y1="120" x2="1540" y2="1352" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="1448" y="70" width="184" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="1540" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:OrdenCompra</text>
+<line x1="1740" y1="120" x2="1740" y2="1352" stroke="#777" stroke-dasharray="5,4"/>
+<rect x="1648" y="70" width="184" height="50" fill="#e8eef7" stroke="#000"/>
+<text x="1740" y="99.0" font-size="11.5" text-anchor="middle" font-weight="bold">:DetalleCompra</text>
+<rect x="134" y="144" width="12" height="1160" fill="#fff" stroke="#000"/>
+<rect x="334" y="144" width="12" height="1160" fill="#fff" stroke="#000"/>
+<rect x="534" y="178" width="12" height="1092" fill="#fff" stroke="#000"/>
+<rect x="734" y="328" width="12" height="46" fill="#fff" stroke="#000"/>
+<rect x="934" y="396" width="12" height="46" fill="#fff" stroke="#000"/>
+<rect x="1134" y="464" width="12" height="46" fill="#fff" stroke="#000"/>
+<rect x="1334" y="580" width="12" height="656" fill="#fff" stroke="#000"/>
+<rect x="1534" y="776" width="12" height="408" fill="#fff" stroke="#000"/>
+<rect x="1734" y="952" width="12" height="184" fill="#fff" stroke="#000"/>
+<line x1="146" y1="150" x2="334" y2="150" stroke="#000" marker-end="url(#f)"/>
+<text x="152" y="145" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">POST /cliente/carrito/agregar (idProducto, cantidad, returnUrl)</text>
+<line x1="346" y1="184" x2="534" y2="184" stroke="#000" marker-end="url(#f)"/>
+<text x="352" y="179" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">obtenerOCrearClienteParaUsuario(usuario)</text>
+<line x1="534" y1="218" x2="346" y2="218" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="352" y="213" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">cliente</text>
+<line x1="346" y1="252" x2="534" y2="252" stroke="#000" marker-end="url(#f)"/>
+<text x="352" y="247" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">agregarProducto(idCliente, idProducto, cantidad)</text>
+<polyline points="546,286 580,286 580,300 546,300" fill="none" stroke="#000" marker-end="url(#f)"/>
+<text x="586" y="297" font-size="11">validarCliente(idCliente)</text>
+<line x1="546" y1="334" x2="734" y2="334" stroke="#000" marker-end="url(#f)"/>
+<text x="552" y="329" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">findByIdAndEliminadoFalse(idProducto)</text>
+<line x1="734" y1="368" x2="546" y2="368" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="552" y="363" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">producto</text>
+<line x1="546" y1="402" x2="934" y2="402" stroke="#000" marker-end="url(#f)"/>
+<text x="552" y="397" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">buscarPrecioVigente(idProducto)</text>
+<line x1="934" y1="436" x2="546" y2="436" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="552" y="431" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">precioVigente</text>
+<line x1="546" y1="470" x2="1134" y2="470" stroke="#000" marker-end="url(#f)"/>
+<text x="552" y="465" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">buscarStockActual(idProducto)</text>
+<line x1="1134" y1="504" x2="546" y2="504" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="552" y="499" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">stockActual</text>
+<polyline points="546,538 580,538 580,552 546,552" fill="none" stroke="#000" marker-end="url(#f)"/>
+<text x="586" y="549" font-size="11">obtenerCarrito(idCliente)</text>
+<line x1="546" y1="586" x2="1334" y2="586" stroke="#000" marker-end="url(#f)"/>
+<text x="552" y="581" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">findFirstByCliente_IdAndEstadoOrdenCompraAndEliminadoFalseOrderByFechaDesc(idCliente, PENDIENTE_COMPLETAR)</text>
+<line x1="1334" y1="620" x2="546" y2="620" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="552" y="615" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">Optional&lt;OrdenCompra&gt;</text>
+<polyline points="546,682 580,682 580,696 546,696" fill="none" stroke="#000" marker-end="url(#f)"/>
+<text x="586" y="693" font-size="11">crearNuevoCarrito(cliente)</text>
+<line x1="546" y1="730" x2="1334" y2="730" stroke="#000" marker-end="url(#f)"/>
+<text x="552" y="725" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">save(nueva)</text>
+<line x1="546" y1="782" x2="1534" y2="782" stroke="#000" marker-end="url(#f)"/>
+<text x="552" y="777" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">buscarDetallePorProducto(idProducto)</text>
+<line x1="1534" y1="816" x2="546" y2="816" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="552" y="811" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">Optional&lt;DetalleCompra&gt;</text>
+<line x1="534" y1="878" x2="346" y2="878" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="352" y="873" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">ErrorServiceException("No hay suficiente stock...")</text>
+<line x1="546" y1="958" x2="1734" y2="958" stroke="#000" marker-end="url(#f)"/>
+<text x="552" y="953" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">setCantidad(cantidadFinal)</text>
+<line x1="546" y1="992" x2="1734" y2="992" stroke="#000" marker-end="url(#f)"/>
+<text x="552" y="987" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">calcularSubtotal(precioVigente)</text>
+<line x1="546" y1="1026" x2="1534" y2="1026" stroke="#000" marker-end="url(#f)"/>
+<text x="552" y="1021" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">recalcularTotal()</text>
+<line x1="546" y1="1096" x2="1534" y2="1096" stroke="#000" marker-end="url(#f)"/>
+<text x="552" y="1091" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">crearDetalle(producto, cantidad, precioVigente)</text>
+<line x1="1546" y1="1130" x2="1734" y2="1130" stroke="#000" marker-end="url(#f)"/>
+<text x="1552" y="1125" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">«create» calcularSubtotal(precioUnitario)</text>
+<polyline points="1546,1164 1580,1164 1580,1178 1546,1178" fill="none" stroke="#000" marker-end="url(#f)"/>
+<text x="1586" y="1175" font-size="11">recalcularTotal()</text>
+<line x1="546" y1="1230" x2="1334" y2="1230" stroke="#000" marker-end="url(#f)"/>
+<text x="552" y="1225" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">save(orden)</text>
+<line x1="534" y1="1264" x2="346" y2="1264" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="352" y="1259" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">detalle</text>
+<line x1="334" y1="1298" x2="146" y2="1298" stroke="#000" stroke-dasharray="5,4" marker-end="url(#r)"/>
+<text x="152" y="1293" font-size="11" style="paint-order:stroke" stroke="#fff" stroke-width="3">redirect /producto/{id} (flash "Producto agregado al carrito con éxito.")</text>
+<path d="M444,644 h36 v12 l-6,6 h-30 z" fill="#eef3f9" stroke="#555"/><text x="449" y="657" font-size="11.5" font-weight="bold">opt</text><text x="488" y="657" font-size="11.5" font-style="italic" style="paint-order:stroke" stroke="#fff" stroke-width="4">[el cliente no tiene carrito abierto]</text>
+<path d="M244,840 h36 v12 l-6,6 h-30 z" fill="#eef3f9" stroke="#555"/><text x="249" y="853" font-size="11.5" font-weight="bold">opt</text><text x="288" y="853" font-size="11.5" font-style="italic" style="paint-order:stroke" stroke="#fff" stroke-width="4">[cantidadFinal &gt; stockActual]</text>
+<path d="M444,920 h36 v12 l-6,6 h-30 z" fill="#eef3f9" stroke="#555"/><text x="449" y="933" font-size="11.5" font-weight="bold">alt</text><text x="488" y="933" font-size="11.5" font-style="italic" style="paint-order:stroke" stroke="#fff" stroke-width="4">[el producto ya está en la orden]</text>
+<text x="452" y="1075" font-size="11.5" font-style="italic" style="paint-order:stroke" stroke="#fff" stroke-width="4">[producto nuevo]</text>
+</svg>

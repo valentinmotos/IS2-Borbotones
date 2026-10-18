@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Configuración</span><span class="breadcrumb-separator">/</span>
+        <a th:href="@{/admin/configuracion/formas-pago}">Formas de pago</a><span class="breadcrumb-separator">/</span>
+        <span th:text="${id == null ? 'Alta' : 'Edición'}">Alta</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <form th:action="@{${id == null ? '/admin/configuracion/formas-pago' : '/admin/configuracion/formas-pago/' + id + '/editar'}}"
+                  method="post" class="zero-form">
+                <div th:replace="~{fragments/formulario :: campoSelect('tipoPago', 'Tipo de pago', ${tiposPago}, ${tipoPago}, true)}"></div>
+                <div th:replace="~{fragments/formulario :: campoTexto('observacion', 'Observación', ${observacion}, true)}"></div>
+                <div th:replace="~{fragments/formulario :: acciones('/admin/configuracion/formas-pago')}"></div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

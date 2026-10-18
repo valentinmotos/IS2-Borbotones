@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <a th:href="@{/admin/categorias}">Categorías</a><span class="breadcrumb-separator">/</span>
+        <span th:text="${id == null ? 'Alta de subcategoría' : 'Edición de subcategoría'}">Alta de subcategoría</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <form th:action="@{/admin/categorias/{categoriaId}/subcategorias(categoriaId=${categoriaId})}" th:if="${id == null}" method="post" class="zero-form">
+                <div class="form-group">
+                    <label for="categoriaId">Categoría padre</label>
+                    <select id="categoriaId" name="categoriaId" class="form-control" required>
+                        <option value="">Seleccionar categoría</option>
+                        <option th:each="categoria : ${categorias}" th:value="${categoria.id}" th:text="${categoria.nombre}"
+                                th:selected="${categoria.id == categoriaId}">Categoría</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="nombre">Nombre</label>
+                    <input id="nombre" name="nombre" type="text" class="form-control" th:value="${subCategoriaForm != null ? subCategoriaForm.nombre : ''}" required>
+                </div>
+                <div class="zero-form-actions">
+                    <button type="submit" class="zero-button primary">Guardar</button>
+                    <a th:href="@{/admin/categorias}" class="zero-button secondary">Cancelar</a>
+                </div>
+            </form>
+
+            <form th:action="@{/admin/categorias/{categoriaId}/subcategorias/{id}/editar(categoriaId=${categoriaId}, id=${id})}" th:if="${id != null}" method="post" class="zero-form">
+                <div class="form-group">
+                    <label for="categoriaIdEdit">Categoría padre</label>
+                    <select id="categoriaIdEdit" name="categoriaId" class="form-control" required>
+                        <option value="">Seleccionar categoría</option>
+                        <option th:each="categoria : ${categorias}" th:value="${categoria.id}" th:text="${categoria.nombre}"
+                                th:selected="${categoria.id == subCategoriaForm.categoriaId}">Categoría</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="nombreEdit">Nombre</label>
+                    <input id="nombreEdit" name="nombre" type="text" class="form-control" th:value="${subCategoriaForm != null ? subCategoriaForm.nombre : ''}" required>
+                </div>
+                <div class="zero-form-actions">
+                    <button type="submit" class="zero-button primary">Guardar</button>
+                    <a th:href="@{/admin/categorias}" class="zero-button secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

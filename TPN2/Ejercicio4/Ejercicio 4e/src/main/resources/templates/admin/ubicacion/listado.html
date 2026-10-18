@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Configuración</span><span class="breadcrumb-separator">/</span>
+        <span>Ubicación</span><span class="breadcrumb-separator">/</span><span th:text="${pageTitle}">Países</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <div th:replace="~{admin/ubicacion/pestanas :: pestanas(${pestanaActiva})}"></div>
+            <div th:if="${filtroNombre != null}" class="mb-4">
+                <form th:replace="~{fragments/filtros :: filtroSelect(${baseUrl}, ${filtroNombre}, ${filtroEtiqueta},
+                      ${filtroOpciones}, ${filtroSeleccionado})}"></form>
+            </div>
+            <div class="mb-3">
+                <a th:href="@{${urlNuevo}}" class="zero-button primary" th:text="${textoNuevo}">Nuevo</a>
+            </div>
+            <div th:replace="~{fragments/tabla :: tablaRegistros(${encabezados}, ${registros}, ${baseUrl})}"></div>
+        </div>
+        <th:block th:each="registro : ${registros}">
+            <div th:replace="~{fragments/modal-confirmar :: modal(${'eliminar-' + registro.id}, ${'Eliminar ' + entidad},
+                 ${'¿Querés eliminar ' + registro.nombre + '?'}, ${baseUrl + '/' + registro.id + '/eliminar'})}"></div>
+        </th:block>
+    </div>
+</body>
+</html>

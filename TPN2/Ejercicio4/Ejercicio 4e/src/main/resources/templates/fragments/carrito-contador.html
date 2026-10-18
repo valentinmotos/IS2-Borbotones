@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!-- Fragment contador para el header de escritorio -->
+    <a th:fragment="contadorDesktop" th:href="@{/cliente/carrito}"
+       class="icon-header-item cl2 hov-cl1 trans-04 p-l-22 p-r-11 icon-header-noti"
+       th:attr="data-notify=${cantidadCarrito ?: 0}"
+       title="Ver carrito de compras"
+       aria-label="Ver carrito de compras">
+        <i class="zmdi zmdi-shopping-cart"></i>
+    </a>
+
+    <!-- Fragment contador para el header móvil -->
+    <a th:fragment="contadorMobile" th:href="@{/cliente/carrito}"
+       class="icon-header-item cl2 hov-cl1 trans-04 p-r-11 p-l-10 icon-header-noti"
+       th:attr="data-notify=${cantidadCarrito ?: 0}"
+       title="Ver carrito de compras"
+       aria-label="Ver carrito de compras">
+        <i class="zmdi zmdi-shopping-cart"></i>
+    </a>
+
+    <!-- Fragment genérico para cualquier otra sección -->
+    <a th:fragment="contador" th:href="@{/cliente/carrito}"
+       class="icon-header-item cl2 hov-cl1 trans-04 icon-header-noti"
+       th:attr="data-notify=${cantidadCarrito ?: 0}"
+       title="Ver carrito de compras"
+       aria-label="Ver carrito de compras">
+        <i class="zmdi zmdi-shopping-cart"></i>
+    </a>
+</body>
+</html>

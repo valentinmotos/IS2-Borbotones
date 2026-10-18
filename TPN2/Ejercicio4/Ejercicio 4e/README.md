@@ -1,0 +1,951 @@
+# E-Commerce Zero - TP2 Ejercicio 4e (factura en PDF)
+
+Copia del Trabajo Integrador N.º 1 (`IntegradorN1`) con una mejora: descargar en PDF la factura emitida, con diseño de factura de papel. Se hizo siguiendo la guía audiovisual "Reportes" (JasperReports + Jaspersoft Studio + Spring Boot). El resto del sistema es igual al integrador.
+
+## Ejercicio 4e: factura en PDF
+
+- **Dónde se descarga:** botón "Descargar factura PDF" en el detalle de una compra del cliente (`/cliente/compras/{id}/factura`) y en el detalle de un pedido del panel admin (`/admin/pedidos/{id}/factura`). Un cliente solo puede descargar las facturas de sus compras (si no, 403).
+- **Librería:** `net.sf.jasperreports:jasperreports` 6.21.3 y `jasperreports-fonts` (fuente DejaVu Sans, para que salgan bien los acentos y la ñ).
+- **Diseño:** `src/main/resources/reports/factura.jrxml` (se abre y edita con Jaspersoft Studio) y `factura.jasper` (el reporte compilado que usa la app). Si se cambia el `.jrxml`, hay que volver a compilarlo desde Studio (*Compile Report*) y reemplazar el `.jasper`.
+- **Código**, con la estructura de los videos:
+  - `utils/ReportUtil`: carga el `.jasper` (`JRLoader`), lo llena (`JasperFillManager` con un `JRBeanCollectionDataSource`) y lo exporta a PDF (`JasperExportManager`). También arma la respuesta HTTP con `Content-Type: application/pdf` y `Content-Disposition: attachment`.
+  - `services/FacturaReportService`: busca la factura del pedido y arma los parámetros del encabezado (empresa, número, fecha, cliente, forma de pago, total) y los renglones (`dto/RenglonFacturaDTO`, uno por producto).
+  - `controllers/cliente/CompraClienteController` y `controllers/admin/PedidoController`: el endpoint `GET /{id}/factura`.
+- **Prueba rápida:** entrar como `lucia.gomez@mail.com` / `Cliente123!`, ir a *Mis compras*, abrir una compra y descargar la factura.
+
+---
+
+Trabajo Integrador de IS2. El plan completo, con las decisiones de diseño, las convenciones y todos los issues, está en [docs/PlanDeTrabajo.md](docs/PlanDeTrabajo.md).
+
+## Requisitos
+
+- **JDK 21 o superior.** El proyecto compila con `release 21`.
+- No hace falta instalar Maven: el repo trae el Maven Wrapper (`mvnw`), que descarga la versión correcta la primera vez.
+- Tampoco hace falta instalar una base de datos: se usa SQLite embebido.
+
+## Cómo correrlo
+
+Desde la carpeta `IntegradorN1`:
+
+```bash
+./mvnw spring-boot:run        # Linux, macOS o Git Bash
+mvnw.cmd spring-boot:run      # Windows (cmd o PowerShell)
+```
+
+La app queda en <http://localhost:8080>.
+
+Para compilar y correr los tests:
+
+```bash
+./mvnw clean verify
+```
+
+## Base de datos
+
+- El archivo de la base es `data/zero.db`, relativo a la carpeta desde donde se corre la app. La carpeta `data/` se crea sola al arrancar.
+- Está en el `.gitignore`: cada uno tiene su base local.
+- Hibernate crea y actualiza las tablas solo (`ddl-auto=update`).
+- Al arrancar con la base vacía, el `DataSeeder` (`config/DataSeeder.java`) carga los datos iniciales. Si la base ya tiene datos, no carga nada.
+- **Resetear la base:** frenar la app, borrar `data/zero.db` y volver a levantarla. Hay que hacerlo cuando cambia una entidad de forma incompatible o cuando alguien agrega datos nuevos al seeder.
+- Los tests usan una base en memoria y no tocan `data/zero.db`. La excepción son los tests de integración de los
+  flujos principales (E5-08), que usan el perfil `test` con una base en `target/zero-test.db` que se borra sola.
+
+## Estructura
+
+```
+com.zero.ecommerce
+ ├─ config        seguridad, mail, scheduling, DataSeeder
+ ├─ entities      entidades JPA (todas extienden BaseEntity)
+ │   └─ enums
+ ├─ repositories  interfaces Spring Data JPA
+ ├─ services      lógica de negocio y validaciones
+ ├─ dto           reportes, dashboard, catálogo
+ ├─ controllers
+ │   ├─ publico
+ │   ├─ cliente
+ │   └─ admin
+ ├─ scheduler     newsletter, alertas de precio
+ ├─ exception     ErrorServiceException y handler global
+ └─ utils         funciones estáticas reutilizables (ej: TextoUtils.mismoNombre)
+
+resources/templates: layout/  fragments/  publico/  cliente/  admin/  email/  error/
+resources/static:    vendor/template/  css/  js/  img/
+```
+
+## Kit de componentes E0-03
+
+La página `/dev/componentes` muestra todos los fragments funcionando dentro del layout público de E0-02. Los datos de esa ruta son estáticos y no se guardan en la base.
+
+| Componente | Fragmento y firma | Uso |
+|---|---|---|
+| Mensajes | `fragments/mensajes :: mensajes` | `<div th:replace="~{fragments/mensajes :: mensajes}"></div>` |
+| Tabla | `fragments/tabla :: tabla(encabezados, filas, verUrl, editarUrl, eliminarUrl)` | `<div th:replace="~{fragments/tabla :: tabla(${encabezados}, ${filas}, ${verUrl}, ${editarUrl}, ${eliminarUrl})}"></div>` |
+| Formulario | `fragments/formulario :: formulario(action, method, errorNombre, errorEmail)` | `<form th:replace="~{fragments/formulario :: formulario(${action}, 'post', ${errorNombre}, ${errorEmail})}"></form>` |
+| Tabla de registros | `fragments/tabla :: tablaRegistros(encabezados, registros, baseUrl)` | `<div th:replace="~{fragments/tabla :: tablaRegistros(${encabezados}, ${registros}, ${baseUrl})}"></div>` |
+| Campo de texto | `fragments/formulario :: campoTexto(nombre, etiqueta, valor, requerido)` | `<div th:replace="~{fragments/formulario :: campoTexto('observacion', 'Observación', ${observacion}, true)}"></div>` |
+| Campo de selección | `fragments/formulario :: campoSelect(nombre, etiqueta, opciones, seleccionado, requerido)` | `<div th:replace="~{fragments/formulario :: campoSelect('tipoPago', 'Tipo de pago', ${opciones}, ${tipoPago}, true)}"></div>` |
+| Acciones de formulario | `fragments/formulario :: acciones(cancelarUrl)` | `<div th:replace="~{fragments/formulario :: acciones('/admin/...')}"></div>` |
+| Modal | `fragments/modal-confirmar :: modal(id, titulo, mensaje, actionUrl)` | `<div th:replace="~{fragments/modal-confirmar :: modal(${id}, ${titulo}, ${mensaje}, ${actionUrl})}"></div>` |
+| Paginación | `fragments/paginacion :: paginacion(actual, total, baseUrl)` | `<nav th:replace="~{fragments/paginacion :: paginacion(${paginaActual}, ${totalPaginas}, ${baseUrl})}"></nav>` |
+| Card de producto | `fragments/card-producto :: card(imagen, nombre, precio, enOferta)` | `<article th:replace="~{fragments/card-producto :: card(${imagen}, ${nombre}, ${precio}, ${enOferta})}"></article>` |
+| Badge de estado | `fragments/badge-estado :: badge(estado)` | `<span th:replace="~{fragments/badge-estado :: badge(${estado})}"></span>` |
+| Filtros | `fragments/filtros :: filtros(action)` | `<form th:replace="~{fragments/filtros :: filtros(${action})}"></form>` |
+| Filtro por selección | `fragments/filtros :: filtroSelect(action, nombre, etiqueta, opciones, seleccionado)` | `<form th:replace="~{fragments/filtros :: filtroSelect(${baseUrl}, 'pais', 'País', ${paises}, ${pais})}"></form>` |
+| Campo de clave | `fragments/formulario :: campoClave(nombre, etiqueta, requerido, ayuda)` | `<div th:replace="~{fragments/formulario :: campoClave('clave', 'Clave', false, 'Dejala vacía para no cambiarla.')}"></div>` |
+| Checkbox | `fragments/formulario :: campoCheckbox(nombre, etiqueta, marcado)` | `<div th:replace="~{fragments/formulario :: campoCheckbox('tls', 'Usar TLS', ${tls})}"></div>` |
+| Selección agrupada | `fragments/formulario :: campoSelectAgrupado(nombre, etiqueta, grupos, seleccionado, requerido)` | `<div th:replace="~{fragments/formulario :: campoSelectAgrupado('departamentoId', 'Departamento', ${grupos}, ${departamentoId}, true)}"></div>` |
+| KPI | `fragments/kpi :: kpi(titulo, valor, descripcion, icono)` | `<article th:replace="~{fragments/kpi :: kpi(${titulo}, ${valor}, ${descripcion}, ${icono})}"></article>` |
+| KPI con enlace | `fragments/kpi :: kpiEnlace(titulo, valor, descripcion, icono, url, activo)` | `<a th:replace="~{fragments/kpi :: kpiEnlace(${titulo}, ${valor}, null, null, ${url}, ${activo})}"></a>` |
+| Línea de tiempo | `fragments/seguimiento :: linea(pasos)` | `<ol th:replace="~{fragments/seguimiento :: linea(${pasos})}"></ol>` |
+| Switch | `fragments/formulario :: campoSwitch(nombre, etiqueta, marcado)` | `<div th:replace="~{fragments/formulario :: campoSwitch('enOferta', 'En oferta', ${enOferta})}"></div>` |
+| Texto largo | `fragments/formulario :: campoTextoLargo(nombre, etiqueta, valor, requerido)` | `<div th:replace="~{fragments/formulario :: campoTextoLargo('descripcion', 'Descripción', ${descripcion}, true)}"></div>` |
+| Solo lectura | `fragments/formulario :: campoSoloLectura(nombre, etiqueta, valor)` | `<div th:replace="~{fragments/formulario :: campoSoloLectura('codigo', 'Código', ${codigo})}"></div>` |
+| Fecha | `fragments/formulario :: campoFecha(nombre, etiqueta, valor, requerido)` | `<div th:replace="~{fragments/formulario :: campoFecha('fechaNacimiento', 'Fecha de nacimiento', ${fechaNacimiento}, true)}"></div>` |
+| Tabla con imagen | `fragments/tabla :: tablaRegistrosImagen(encabezados, registros, baseUrl)` | `<div th:replace="~{fragments/tabla :: tablaRegistrosImagen(${encabezados}, ${productos}, '/admin/productos')}"></div>` |
+| Tabla con imagen y detalle | `fragments/tabla :: tablaRegistrosImagenConDetalle(encabezados, registros, baseUrl)` | `<div th:replace="~{fragments/tabla :: tablaRegistrosImagenConDetalle(${encabezados}, ${productos}, '/admin/productos')}"></div>` |
+| Campo de filtro | `fragments/filtros :: campoFiltroTexto(nombre, etiqueta, valor, ayuda)` y `campoFiltroSelect(nombre, etiqueta, opciones, seleccionado)` | `<div th:replace="~{fragments/filtros :: campoFiltroTexto('buscar', 'Buscar', ${buscar}, 'Código o nombre')}"></div>` |
+| Filtro de fecha | `fragments/filtros :: campoFiltroFecha(nombre, etiqueta, valor)` | `<div th:replace="~{fragments/filtros :: campoFiltroFecha('desde', 'Desde', ${desde})}"></div>` |
+| Categoría → subcategoría | `fragments/categoria :: cascada(arbol, nombreCategoria, nombreSubCategoria, categoriaId, subCategoriaId, esFiltro)` | `<th:block th:replace="~{fragments/categoria :: cascada(${arbol}, 'categoriaId', 'subCategoriaId', ${categoriaId}, ${subCategoriaId}, false)}"></th:block>` |
+
+`mensajes` consume los atributos flash existentes `error` y `exito`; no crea un mecanismo nuevo. `tabla` recibe encabezados y filas como listas, y sus URLs pueden ser `null` para ocultar acciones. La tabla muestra un estado vacío cuando `filas` está vacío. `formulario` recibe errores ya calculados por el backend y no valida reglas de negocio.
+
+El modal usa Bootstrap y recibe una URL de confirmación configurable. La paginación es solamente visual y genera enlaces con `?page=` (o `&page=` si `baseUrl` ya trae filtros); no implementa paginación backend.
+
+`tablaRegistrosImagen` recibe `dto.FilaTablaImagenDTO(id, nombre, imagenId, celdas)`; con `imagenId` nulo muestra `img/default-image.png`. Los campos de filtro van dentro de un `<form method="get" class="zero-filters zero-filters-amplio">` (cuatro por fila), con los botones en un `<div class="zero-filters-acciones">`. `categoria :: cascada` recibe `CategoriaService.listarArbolActivo()`: con `esFiltro = true` muestra "Todas" y no es obligatorio; con `false` se incluye dentro de un `div.form-row`. Sin JavaScript muestra todas las subcategorías agrupadas por categoría, y `static/js/categoria-cascada.js` deja solo las de la categoría elegida. Los estados de `badge-estado` corresponden a `EstadoOrdenCompra` y `EstadoFactura`: `PENDIENTE_COMPLETAR`, `PENDIENTE_PAGO`, `PENDIENTE_ENVIO`, `PENDIENTE_ENTREGA`, `ENTREGADO`, `PAGADA`, `ANULADA` y `SIN_DEFINIR`.
+
+## Reglas de código (resumen)
+
+El detalle está en la sección "Convenciones técnicas" del plan. El revisor de cada PR rechaza lo que no las cumpla.
+
+- **Capas:** controller → service → repository. Un controller nunca usa un repository, y los services no saben nada de la vista.
+- **Inyección de dependencias por constructor.** Nada de `@Autowired` sobre atributos.
+- **Entidades:** todas extienden `BaseEntity` (`id` String UUID y `eliminado`). Las herencias usan `InheritanceType.JOINED`.
+- **Baja lógica:** `eliminarX()` pone `eliminado = true` y `listarXActivo()` filtra por `eliminado = false`. No se borra nada físicamente.
+- **Validaciones:** cada service tiene su `validar(...)`, que lanza `ErrorServiceException` con un mensaje en español. Si el controller no la atrapa, el `GlobalExceptionHandler` vuelve a la página anterior con el mensaje en el flash attribute `error`. Los mensajes de éxito van en el flash attribute `exito`.
+- **Nombres** según el diagrama: `crearProducto`, `buscarProductoPorCodigo`, `listarProductoActivo`.
+- **Rutas:** `/admin/...` para el panel, `/cliente/...` para el cliente logueado y el resto es público.
+- **Vistas:** toda vista decora `layout/publico.html` o `layout/admin.html` y usa los fragments del kit de componentes. No se permiten estilos inline ni CSS por página.
+
+## Seguridad
+
+El acceso se realiza desde `/login` con el correo de la cuenta. Las contraseñas se guardan con BCrypt. Las rutas `/admin/usuarios/**` y `/admin/configuracion/**` requieren el rol `JEFE`; el resto de `/admin/**` permite `JEFE` y `ADMINISTRATIVO`, y `/cliente/**` requiere `CLIENTE`. El resto del sitio es público.
+
+El seeder crea las siguientes cuentas para desarrollo cuando la base está vacía:
+
+| Rol | Correo | Contraseña |
+|---|---|---|
+| JEFE | `jefe@zero.com.ar` | `Jefe123!` |
+| ADMINISTRATIVO | `admin@zero.com.ar` | `Admin123!` |
+| CLIENTE | `cliente@zero.com.ar` | `Cliente123!` |
+
+CSRF está activado; los formularios POST deben usar `th:action` para que Thymeleaf agregue el token.
+
+## Registro y activación de cuenta E2-05
+
+Desde **Crear cuenta** (header o login) se entra a `/registro`: correo, contraseña y confirmación.
+
+- **Validaciones (RF01):** correo obligatorio y con formato válido, que no esté registrado (incluidas
+  cuentas dadas de baja o pendientes de activar), clave de al menos 8 caracteres y confirmación igual.
+  Si falla, el formulario vuelve con el correo, pero nunca con la clave.
+- **Alta:** `UsuarioService.registrarCliente(correo, clave, confirmacion)` crea el `Usuario` con rol
+  `CLIENTE`, la clave con BCrypt, el correo en minúsculas y un `codigoActivacion` aleatorio de 6 dígitos.
+- **Correo (RF02):** `email/activacion.html`, con el código y un botón a `/registro/activar?correo=...`.
+  Lo manda `enviarCodigoActivacion(usuario, urlActivacion)`, que es asincrónico.
+- **Activación:** en `/registro/activar` se ingresan correo y código. Si coinciden, `activarCuenta` pone el
+  código en `null` y redirige al login con "¡Tu cuenta quedó activada!". Antes de eso, el login muestra
+  "La cuenta todavía no está activada" con un link a esta página.
+- **Reenviar código:** botón en la misma página. `reenviarCodigoActivacion` genera un código nuevo y el
+  anterior deja de servir.
+- **Sin correo configurado:** el envío falla en el log, pero el código también queda en el log
+  (`Código de activación de ...: 123456`), así se puede activar la cuenta en desarrollo.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/registro` | Formulario de registro |
+| POST | `/registro` | Registrar cliente y mandar el código |
+| GET | `/registro/activar?correo=` | Formulario de activación |
+| POST | `/registro/activar` | Activar la cuenta |
+| POST | `/registro/reenviar` | Generar y mandar un código nuevo |
+
+Para otros issues: `UsuarioService.LARGO_MINIMO_CLAVE` es la regla de clave del registro (E2-06 y E2-08
+aplican la misma).
+
+## ABM de categorías y subcategorías E1-05
+
+La sección `/admin/categorias` permite listar las categorías con subcategorías, crear y editar tanto categorías como subcategorías, y eliminar/desactivar solo cuando no hay productos activos relacionados. El árbol activo se expone por `CategoriaService.listarArbolActivo()` y está listo para consumirlo en el catálogo público.
+
+### Validaciones y reglas
+
+- El nombre es obligatorio y se normaliza quitando espacios en los extremos.
+- No se permiten categorías duplicadas ni subcategorías duplicadas dentro de la misma categoría.
+- La baja de una categoría o subcategoría queda bloqueada si tiene productos activos relacionados.
+- El servicio valida la existencia de la categoría padre antes de guardar una subcategoría.
+- Los errores y los mensajes de éxito se muestran con flash messages y los formularios conservan los datos ingresados al fallar.
+
+### Seed inicial
+
+El `DataSeeder` crea 4 categorías y 12 subcategorías en total cuando la base está vacía, sin duplicarlas si la aplicación se reinicia sobre una base ya cargada.
+
+## ABM de productos E2-01
+
+Entrar a **Productos** en el panel (`/admin/productos`, `JEFE` y `ADMINISTRATIVO`).
+
+- **Listado:** miniatura, código, nombre, talle, subcategoría, oferta, precio vigente y stock actual, de a
+  10 por página. Se filtra por categoría → subcategoría, por oferta y con un buscador por código o nombre
+  (sin importar mayúsculas ni tildes). La paginación conserva los filtros.
+- **Precio y stock:** el precio es el de la vigencia actual (`VigenciaPrecioService`, E2-03), o "Sin precio" si
+  el producto todavía no tiene uno; el stock sale de `StockService.buscarStockActual` (E2-02). Los dos se
+  arman en `ProductoService.armarFila`.
+- **Formulario:** código, nombre, talle, descripción, categoría → subcategoría, switch de oferta e imagen
+  (fragment `input-imagen` de E1-06, con vista previa).
+
+### Validaciones y reglas
+
+- Código, nombre, descripción, talle y subcategoría son obligatorios; la imagen es obligatoria al crear.
+  Al editar, si no se elige un archivo, se conserva la imagen actual.
+- El código no puede repetirse entre productos activos (sin importar mayúsculas). **No se edita:**
+  `modificarProducto` del diagrama no lo recibe, así que en la edición se muestra de solo lectura.
+- La subcategoría y su categoría tienen que estar activas.
+- La baja es lógica. Una vez dado de baja, el código se puede volver a usar.
+- Los datos se validan antes de guardar la imagen y todo corre en una transacción: si algo falla, no queda
+  una imagen suelta. Si falla la validación, el formulario vuelve con los datos cargados (el archivo hay
+  que elegirlo de nuevo).
+
+### Para otros issues
+
+- `crearProducto(codigo, nombre, descripcion, talle, enOferta, idImagen, idSubCategoria)` recibe una imagen ya
+  guardada con `ImagenService.crearImagen`: es la que usa el seeder de E2-02. El formulario usa
+  `crearProductoConImagen` / `modificarProductoConImagen`, que reciben el `MultipartFile`.
+- `listarProductoActivo(texto, idCategoria, idSubCategoria, enOferta)` devuelve los activos filtrados (cada
+  filtro puede ser `null`). `buscarProductoPorCodigo` y `buscarProductoPorNombre` devuelven solo activos;
+  como cada talle es un producto, `buscarProductoPorNombre` devuelve el primero por talle.
+- Los productos de demostración los carga el seeder de E2-02 (ver abajo).
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/admin/productos?buscar=&categoria=&subcategoria=&oferta=&page=` | Listar activos con filtros |
+| GET | `/admin/productos/nuevo` | Formulario de alta |
+| POST | `/admin/productos` | Crear (multipart) |
+| GET | `/admin/productos/{id}/editar` | Formulario de edición |
+| POST | `/admin/productos/{id}/editar` | Modificar (multipart) |
+| POST | `/admin/productos/{id}/eliminar` | Baja lógica |
+
+## Lectura de stock y catálogo de demostración E2-02
+
+### StockService (lectura)
+
+El stock se guarda como movimientos: cada `Stock` tiene en `cantidadActual` el saldo del producto después
+del movimiento.
+
+- `buscarStockActual(idProducto): int`: el `cantidadActual` del último movimiento activo del producto (por
+  `fecha`), o 0 si nunca tuvo movimientos. El diagrama devuelve un `Stock`, pero se respeta el contrato del
+  kickoff de la Etapa 2 (`int`). Lo usa el listado de `/admin/productos` en la columna "Stock actual".
+- `buscarStock(id)` (solo activos) y `listarStock()` (todos, del más reciente al más antiguo).
+- La escritura (registrar y revertir movimientos) es de E3-04: ver "Recepción de mercadería y movimientos de
+  stock E3-04".
+
+### Catálogo de demostración
+
+Con la base vacía, el `DataSeeder` carga **20 productos** en las 12 subcategorías: 6 en oferta y varios
+modelos en más de un talle (Remera Dry Fit M y L, Zapatilla Run 41 y 42, Calza Fit S y M, etc.), siguiendo la
+regla de un producto por talle. Todos arrancan con una vigencia de precio de demostración de $10.000, que se
+puede modificar desde **Precios**. Cada producto tiene además un stock inicial de demostración de entre 8 y 32
+unidades (`StockService.cargarStockInicial`, E3-06), fechado hace 2 meses para que sea su primer movimiento. Sobre
+ese saldo, el seeder de E3-04 suma compras recibidas y resta ventas.
+
+- Las fotos están en `src/main/resources/seed/img/`. Son de Unsplash (licencia libre); el origen y el autor de
+  cada una están en `seed/img/CREDITOS.md`.
+- Se cargan con `ImagenService.crearImagen`, así pasan las mismas validaciones que en el formulario. Para
+  pasarle un archivo del classpath se usa `utils/ArchivoEnMemoria`, un `MultipartFile` en memoria.
+- Cada producto tiene su propia `Imagen` aunque varios talles compartan la foto (`Producto.imagen` es 1 a 1).
+- **Para verlos en una base que ya existe** hay que borrar `data/zero.db` y volver a levantar la app.
+- En los tests el seeder también corre: `ProductoIntegrationTest` da de baja esos productos al empezar cada
+  test (se revierte al terminar) para partir de un catálogo vacío.
+
+## Actualización de precios por inflación E2-04
+
+En **Precios → Actualización por inflación** (`/admin/precios/actualizacion`) se puede aplicar un aumento
+a todo el catálogo, a una categoría o a una subcategoría. La vista previa muestra precios actuales, precios
+nuevos redondeados a múltiplos de $10 y diferencias; la confirmación crea una vigencia nueva por producto
+y cierra las anteriores en una sola transacción. El porcentaje debe ser mayor que cero y la fecha desde no
+puede ser anterior a hoy ni igual o anterior al inicio de alguno de los precios vigentes. Si un producto del
+alcance no tiene precio vigente, se informa y no se aplica ninguna actualización. La confirmación también
+comprueba que los precios no hayan cambiado desde la vista previa.
+
+## Perfil del cliente E2-07
+
+Un cliente logueado entra desde **Mi cuenta → Mi perfil** (`/cliente/perfil`, solo `CLIENTE`). Para probar
+sin registrarse está el cliente del seeder: `cliente@zero.com.ar` / `Cliente123!`.
+
+- **Datos (RF03 y RF05):** nombre, apellido, sexo, fecha de nacimiento, tipo y número de documento,
+  nacionalidad y teléfono celular (se guarda como `ContactoTelefonico` `CELULAR`).
+- **Dirección de entrega:** fragment `direccion` de E1-04, con la cascada país → provincia → departamento →
+  localidad.
+- **Foto de perfil opcional:** fragment `input-imagen` de E1-06, guardada con `ImagenService` como `PERSONA`.
+  Al editar, si no se elige un archivo, se conserva la actual.
+- La primera vez se crea el `Cliente` y se asocia al usuario logueado; las siguientes se modifica el mismo
+  cliente, su dirección y su teléfono (no se crean otros).
+- **Sexo** no está en el diagrama, pero lo pide el enunciado: se agregó a `Cliente` como enum `Sexo`.
+
+### Validaciones
+
+- Todos los datos son obligatorios salvo la foto y los campos opcionales de la dirección.
+- Mayor de 18 años, y la fecha no puede ser futura.
+- DNI de 7 u 8 números (se guarda sin puntos) o pasaporte de 6 a 15 letras o números.
+- El documento es único por tipo y número entre todas las personas activas (clientes y empleados).
+- Si algo falla, el formulario vuelve con los datos cargados, incluida la dirección.
+
+### Para otros issues
+
+- `ClienteService.buscarClientePorUsuario(idUsuario)` devuelve un `Optional`: vacío si el cliente todavía no
+  cargó su perfil (lo usa E2-08 en `perfilCompleto`).
+- `crearCliente`, `modificarCliente`, `validar`, `listarCliente`, `listarClienteActivo` y
+  `asociarClienteUsuario(cliente, usuario)` siguen el diagrama. La pantalla usa `guardarPerfilCliente`, que
+  crea o modifica según corresponda.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/cliente/perfil` | Formulario con los datos guardados |
+| POST | `/cliente/perfil` | Crear o modificar el perfil (multipart) |
+
+## ABM de ubicación E1-03
+
+Entrar a **Configuración → Ubicación** (`/admin/configuracion/ubicacion`, solo `JEFE`). Hay una
+pestaña por entidad: Países, Provincias, Departamentos y Localidades. Cada listado se filtra por su
+padre (`?pais=`, `?provincia=`, `?departamento=`) y el botón de alta precarga el padre filtrado.
+En Localidades el departamento se elige con los selects en cascada país → provincia → departamento de E1-04.
+
+- El nombre es obligatorio y no puede repetirse dentro del mismo padre. La comparación ignora
+  mayúsculas, tildes y espacios en los extremos: "Guaymallén" y "GUAYMALLEN" son duplicados.
+- El código postal de la localidad es obligatorio: 4 dígitos (`5500`) o CPA (`M5500ABC`).
+- El padre tiene que existir y estar activo.
+- La baja es lógica. No se puede eliminar un país, provincia o departamento con hijos activos.
+- Solo se comparan los registros activos, así que un registro eliminado se puede volver a crear.
+
+El seeder carga Argentina, sus 24 provincias (incluida CABA), los 18 departamentos de Mendoza y las
+principales localidades de Gran Mendoza con su código postal. **Solo corre con la base vacía:** para
+cargar estos datos sobre una base existente hay que borrar `data/zero.db` y volver a levantar la app.
+
+## Fragment de dirección E1-04
+
+Se incluye con una línea dentro de un `<form class="zero-form">`:
+
+```html
+<div th:replace="~{fragments/direccion :: direccion(${direccionForm})}"></div>
+```
+
+- `direccionForm` es un `DireccionForm`: `new DireccionForm()` en el alta, `DireccionForm.desde(direccion)`
+  al editar, o el mismo objeto recibido con `@ModelAttribute` para volver al formulario después de un error.
+- Envía `calle`, `numeracion`, `barrio`, `manzanaPiso`, `casaDepartamento`, `referencia` y `localidadId`
+  (más `paisId`, `provinciaId` y `departamentoId`, que solo sirven para precargar los selects).
+- Los selects se filtran en cascada, sin solicitudes JSON, con `static/js/ubicacion-cascada.js`. El código postal se completa solo
+  al elegir la localidad y no se envía.
+- `DireccionService` tiene `crearDireccion` (devuelve la `Direccion` para asociarla), `modificarDireccion`,
+  `eliminarDireccion` (baja lógica), `buscarDireccion` y `buscarDireccionPorCalleNumeracion`. Calle,
+  numeración y una localidad activa son obligatorias; el resto es opcional y se guarda `null` si viene vacío.
+- Para solo los selects, sin el resto de la dirección:
+  `fragments/ubicacion :: cascada(hasta, paisId, provinciaId, departamentoId, localidadId)`, con `hasta`
+  igual a `'departamento'` o `'localidad'`. Lo usa el formulario de Localidad.
+
+Las opciones activas de ubicación se renderizan en el HTML. El JavaScript local filtra cada nivel por su padre y completa el código postal sin llamar a una API.
+
+La página de prueba `/dev/direccion` guarda una dirección real y, al guardar, se recarga con `?id=` para
+mostrar los selects precargados.
+
+## Empresa, correo y envío E1-07
+
+### Empresa
+
+**Configuración → Empresa** (`/admin/configuracion/empresa`, solo `JEFE`): ABM de la sede central y sus
+sucursales, con razón social, CUIT, tipo, dirección (fragment de E1-04), un correo y un teléfono.
+
+- El CUIT se valida con su dígito verificador (`utils/CuitUtils`), se acepta con o sin guiones y se guarda
+  como `XX-XXXXXXXX-X`. No puede repetirse entre empresas activas. CUITs válidos para probar:
+  `30-71234567-1`, `20-12345678-6`.
+- Hay **una sola `SEDE_CENTRAL`**: no se puede crear otra, pasarla a sucursal ni darla de baja. Es la
+  empresa que envía los correos y a la que pertenece el stock.
+- La baja de una sucursal es lógica e incluye su dirección y sus contactos.
+- Los contactos usan `ContactoService`, que maneja toda la jerarquía `Contacto` (correo y teléfono) y
+  se reutiliza en Proveedores (E3-01).
+- El seeder carga "Zero Indumentaria Deportiva S.A." (CUIT `30-71567890-6`) como sede central.
+
+### Cómo se envían los correos
+
+```
+Zero ──(SMTP, usuario y clave)──► servidor SMTP (Gmail) ──► bandeja del destinatario
+```
+
+La app arma el correo (template Thymeleaf + logo) y lo entrega a un **servidor SMTP externo** con
+Jakarta Mail (`spring-boot-starter-mail`). El servidor es el que lo reparte a la bandeja del destinatario.
+Java no reparte correos por su cuenta: **sin un servidor SMTP configurado no sale ningún correo**.
+
+- El proveedor no está en el código: el servidor, puerto, usuario, clave y TLS se cargan en
+  **Configuración → Correo** (`/admin/configuracion/correo`, solo `JEFE`) y se guardan en la base.
+  Cambiar de Gmail a otro proveedor (Brevo, SendGrid, Mailgun, Amazon SES) es cambiar esos datos.
+- `EmailService` arma el `JavaMailSender` en cada envío con esa configuración: un cambio en la pantalla
+  aplica sin reiniciar.
+- La configuración **no la carga el seeder**, porque lleva credenciales reales. Como cada integrante tiene
+  su propia base (`data/zero.db`), **cada uno la carga una vez en la suya**. Hace falta internet.
+- La clave nunca se muestra en la pantalla; al editar, si se deja vacía se conserva la guardada. Se guarda
+  sin cifrar en la base local (queda para la revisión de seguridad E5-06).
+
+### Configurar Gmail (gratis)
+
+1. Usar una cuenta de Gmail **del proyecto** (por ejemplo `zero.tienda.tp@gmail.com`), no una personal:
+   todos los correos salen con esa cuenta como remitente.
+2. En https://myaccount.google.com/security activar la **Verificación en 2 pasos**.
+3. En https://myaccount.google.com/apppasswords crear una **clave de aplicación** (nombre: "Zero").
+   Google muestra 16 letras una sola vez: copiarlas. **No es la contraseña de la cuenta**: Gmail no deja
+   que una aplicación entre con la contraseña normal.
+4. En **Configuración → Correo** cargar:
+
+| Campo | Valor |
+|---|---|
+| Servidor SMTP | `smtp.gmail.com` |
+| Puerto | `587` |
+| Correo | la cuenta de Gmail |
+| Clave | las 16 letras de la clave de aplicación, sin espacios |
+| Usar TLS | marcado |
+
+5. Guardar y usar **Enviar correo de prueba**. Es sincrónico a propósito: la pantalla muestra si Gmail lo
+   aceptó o el error que devolvió. Si no llega, revisar spam.
+
+Una cuenta de Gmail común permite unos **500 destinatarios por día**, suficiente para el TP. Para una
+tienda real se usaría un proveedor de correo transaccional, sin cambiar código.
+
+| Error en la prueba | Causa probable |
+|---|---|
+| `535 ... Username and Password not accepted` | Se usó la contraseña de la cuenta en lugar de la clave de aplicación, o la clave se revocó |
+| `Connection refused` / `connect timed out` | Sin internet, puerto o servidor mal escrito, o un firewall bloquea el puerto 587 |
+| `Todavía no se configuró el correo de la empresa.` | Falta guardar la cuenta de envío |
+
+### Enviar correos desde otro issue
+
+```java
+// Ejemplo de E4-05: los datos se pasan ya armados (ver la advertencia de abajo).
+emailService.enviar(usuario.getNombreUsuario(), "Tu compra fue confirmada", "compra-confirmada",
+        Map.of("nombre", cliente.getNombre(), "identificador", orden.getIdentificadorCompra(),
+                "total", orden.getTotal()));
+```
+
+- Es `@Async`: vuelve enseguida y, si el envío falla, lo registra en el log sin romper la operación que
+  lo llamó (la compra se confirma igual aunque Gmail no responda).
+- **Pasar valores simples o DTOs, no entidades con relaciones perezosas.** El envío corre en otro hilo,
+  sin la sesión de Hibernate: si el template recorre, por ejemplo, `orden.detalles`, falla con
+  `LazyInitializationException` y el correo no sale (solo queda el error en el log).
+- El template va en `templates/email/{nombre}.html`, decora `email/base.html` y pone su contenido en
+  `layout:fragment="contenido"` (copiar `email/prueba.html`). **Los correos usan estilos inline y tablas**,
+  porque los clientes de correo ignoran el CSS externo: es la única excepción a la regla del template.
+- Todos los templates reciben `asunto` y `empresa` (razón social, dirección, correo y teléfono de la sede
+  central) sin que haya que pasarlos. El logo va embebido como `cid:logo`.
+- **Links dentro del correo** (por ejemplo "Activá tu cuenta" en E2-05): no usar `@{...}`, porque en el
+  envío no hay request. Armar la URL absoluta y pasarla como variable. Un link a `localhost:8080` solo
+  abre en la máquina donde corre la app: para la demo alcanza.
+
+### Probar sin enviar correos reales
+
+Los tests (`mvnw test`) usan **GreenMail**, un servidor SMTP en memoria en el puerto 3025 (dependencia
+solo de test): verifican el envío, el HTML y el logo sin que salga nada de la máquina. Ver
+`CorreoIntegrationTest` y `EmailAsyncIntegrationTest`.
+
+## Correos de la compra E4-05
+
+`NotificacionCompraService` manda los dos correos de la compra al cliente (el nombre de usuario de su `Usuario`):
+
+- `enviarConfirmacion(orden)` (RF20), template `email/confirmacion-compra.html`: número de compra, fecha, ítems con
+  cantidad, precio unitario y subtotal, total, número de factura, forma de pago y un botón "Seguir mi compra". Si la
+  orden está pendiente de pago, suma las instrucciones de pago según el `TipoPago` (texto fijo, porque el diagrama no
+  guarda datos de cobro). Con Mercado Pago simulado, la compra queda pendiente de confirmación administrativa.
+- `notificarCambioEstado(orden)`, template `email/cambio-estado.html`: el nuevo estado, un mensaje y el link al
+  seguimiento.
+- Los links son absolutos, a `app.url-base` + `/cliente/compras/{idOrden}` (pantalla de E4-04).
+
+### Para otros issues
+
+- Llamarlos **después** de la transición y de crear la factura, dentro de la misma transacción (la orden tiene que
+  estar cargada): E4-02 llama a `enviarConfirmacion` y E4-03 / E4-07 a `notificarCambioEstado`.
+- No lanzan excepciones: arman los datos y el envío es `@Async` (`EmailService.enviar`). Si el correo falla, o si la
+  orden no tiene cliente con usuario, queda en el log y la operación sigue.
+- Sin correo configurado no llega nada: cargar la cuenta SMTP en **Configuración → Correo**.
+
+Las pruebas están en `NotificacionCompraServiceTest` y `NotificacionCompraIntegrationTest` (GreenMail, con los
+pedidos del seeder).
+
+## Newsletter de ofertas E4-08
+
+La pantalla **Newsletter** (`/admin/newsletter`, roles `JEFE` y `ADMINISTRATIVO`) muestra las ofertas
+que se incluirán, la cantidad de destinatarios, el último y el próximo envío, y una vista previa del
+HTML real. **Enviar ahora** manda un correo individual a cada cliente activo, con cuenta activada y
+perfil completo; de esa forma nunca se comparten direcciones entre destinatarios.
+
+- Solo se incluyen productos activos marcados como oferta, con stock y precio vigente.
+- Los links y las imágenes usan `APP_URL_BASE` (por defecto `http://localhost:8080`). En un despliegue,
+  configurarla con la URL pública HTTPS, por ejemplo `APP_URL_BASE=https://zero.example.com`.
+- El scheduler evalúa el envío todos los días a las 09:00 de Buenos Aires y envía cuando pasaron
+  diez días. El cron y la zona se pueden cambiar con `newsletter.cron` y `newsletter.zona`.
+- La fecha se guarda en `data/newsletter-ultimo-envio.txt` solo después de que SMTP aceptó todos los
+  mensajes. Si no hay ofertas o destinatarios, no envía ni modifica la fecha.
+- Antes de probarlo, configurar la cuenta SMTP en **Configuración → Correo** y completar el perfil
+  del usuario cliente de demostración (`cliente@zero.com.ar` / `Cliente123!`).
+
+Las pruebas están en `NewsletterServiceTest`, `NewsletterEnvioRepositoryTest` y
+`NewsletterIntegrationTest`.
+
+## Alertas de actualización de precios E4-09
+
+La pantalla **Alertas de precios** (`/admin/precios/alertas`, roles `JEFE` y `ADMINISTRATIVO`)
+muestra los productos activos cuyo precio vigente comenzó hace más de dos meses. Los agrupa por
+categoría e informa el precio, la fecha del último cambio y los días transcurridos.
+
+- El badge de **Precios** en el sidebar muestra la cantidad actual de alertas.
+- **Actualizar categoría** abre la actualización masiva de E2-04 con esa categoría preseleccionada.
+- `PrecioScheduler` ejecuta la detección todos los días a las 09:15 de Buenos Aires. El horario y la
+  zona se pueden cambiar con `precios.alertas.cron` y `precios.alertas.zona`.
+- Las alertas se calculan desde las vigencias actuales; al crear una nueva vigencia dejan de aparecer
+  automáticamente, sin mantener estado duplicado.
+
+Las pruebas están en `VigenciaPrecioServiceTest`, `PrecioSchedulerTest` y
+`AlertasPrecioIntegrationTest`.
+
+## Catálogo público E3-05
+
+La home y las rutas `/catalogo/{categoriaId}` y
+`/catalogo/{categoriaId}/{subCategoriaId}` muestran únicamente productos activos que tengan
+stock mayor a cero y una vigencia de precio abierta. El menú público de escritorio y celular se
+genera desde el árbol de categorías activas. Las páginas de catálogo incluyen breadcrumb, cards
+responsive y paginación mediante el parámetro `page`.
+
+La firma compartida con las siguientes issues es
+`CatalogoService.listar(CatalogoFiltro)`, que devuelve objetos `ProductoCatalogoDTO` sin exponer
+entidades JPA a la vista.
+## ABM de proveedores E3-01
+
+**Proveedores** (`/admin/proveedores`, `JEFE` y `ADMINISTRATIVO`): listado con buscador por razón social y
+formulario con una lista dinámica de contactos. Cada fila tiene tipo (correo, celular o fijo), valor, ámbito
+(`TipoContacto`) y observación; "Agregar contacto" suma una fila y "Quitar" la saca
+(`static/js/proveedor-contactos.js`, que clona el `<template id="plantilla-contacto">` de la vista).
+
+### Validaciones y reglas (RF24)
+
+- Razón social obligatoria y única entre los proveedores activos, sin importar mayúsculas.
+- Al menos un correo con formato válido y al menos un **celular para WhatsApp**.
+- El celular se guarda **solo con dígitos**, en formato internacional: se puede escribir
+  `+54 9 261 412-3456` y queda `5492614123456`. Tiene que tener entre 11 y 15 dígitos, sin 0 adelante, y los
+  de Argentina empiezan con `549` y tienen 13 dígitos (sin el 0 del área ni el 15). Así `wa.me` abre el chat
+  correcto.
+- Los contactos se crean, modifican y dan de baja con `ContactoService`, el mismo de Empresa y Cliente.
+- Al editar, cada fila lleva el id de su contacto: se **modifica ese contacto** en lugar de crear otro. Las
+  filas quitadas se dan de baja y las nuevas se crean. Si un correo pasa a ser teléfono (o al revés), se da de
+  baja el anterior y se crea uno nuevo, porque son clases distintas.
+- La baja del proveedor es lógica e incluye sus contactos.
+
+### Para otros issues
+
+- `Proveedor.buscarCelularActivo()`: el celular al que se le escribe por WhatsApp. El botón del listado abre
+  `https://wa.me/{telefono}`; lo pueden usar la compra a proveedor (E3-03) y la reposición (E5-04).
+- `Proveedor.listarCorreoActivo()` y `listarTelefonoActivo()`: los contactos activos del proveedor.
+- `ProveedorService.listarProveedorActivo()` para los selects de proveedor.
+- El seeder carga 4 proveedores con sus contactos: Distribuidora Deportiva Cuyo S.A., Calzados y Textiles del
+  Plata S.R.L., Indumentaria Atlética San Juan y Accesorios Fitness Andina.
+
+## Compras a proveedor E3-03
+
+**Compras a proveedor** (`/admin/compras`, `JEFE` y `ADMINISTRATIVO`). Una compra es una `FacturaProveedor` con sus
+`DetalleFactura` (RF25). Se crea en `SIN_DEFINIR`, que significa **pedida**: todavía no mueve el stock. Recibirla
+(pasa a `PAGADA` y genera el stock) y anularla está en la sección de E3-04.
+
+- **Listado:** número, fecha, proveedor, forma de pago, total y badge de estado, de la más nueva a la más vieja.
+  Filtros por estado, proveedor y rango de fechas (`campoFiltroFecha`, agregado al kit).
+- **Nueva compra:** proveedor, forma de pago y una tabla dinámica de productos (`static/js/compra-detalles.js`, que
+  clona el `<template id="plantilla-detalle">`). El producto de cada renglón se elige con un select con buscador
+  (Select2 del template, `vendor/template/vendor/select2`): se escribe parte del código, nombre o talle, en cualquier
+  orden y sin importar tildes ("remera l"). Después van la cantidad y el precio de costo unitario; el subtotal y el
+  total se calculan en vivo. Sin JavaScript queda un select común.
+- **Detalle** (`/admin/compras/{id}`): datos, renglones con precio de costo y subtotal, y total. Al crear la compra se
+  vuelve a esta pantalla, que mientras esté pedida tiene el botón **Avisar al proveedor por WhatsApp**: abre
+  `https://wa.me/{celular}?text=` con el pedido armado (productos, talles, códigos, cantidades, precios y total).
+
+### Validaciones y reglas
+
+- Proveedor y forma de pago activos y obligatorios.
+- Al menos un producto. Los renglones vacíos se ignoran.
+- Cantidad entera y precio de costo mayores a 0. Un valor que no es número vuelve al formulario con un mensaje.
+- Sin productos repetidos: cada producto (cada talle) va en un solo renglón.
+- Número secuencial propio de las compras (1, 2, 3...) y fecha de hoy.
+- Si algo falla, el formulario vuelve con los renglones cargados.
+
+### Para otros issues
+
+- `FacturaProveedorService.crearFactura(idProveedor, idFormaDePago, detalles)` recibe una lista de
+  `DetalleFacturaItemDTO(productoId, cantidad, precioUnitario)`. Es la que usa el seeder.
+- **Patrones:** `Factura.agregarDetalle(producto, cantidad, precioUnitario)` crea el detalle (Creador) y
+  `Factura.calcularTotal()` suma los subtotales (Experto). El diagrama no guarda el precio unitario: el detalle
+  guarda `cantidad` y `subtotal`, y `DetalleFactura.getPrecioUnitario()` lo calcula (sirve para el proveedor más
+  económico de E5-05).
+- `listarFacturaActivo(estado, idProveedor, desde, hasta)`, `listarFacturaPorEstado(estado)` y `buscarFactura(id)`
+  para la recepción (E3-04) y los reportes. `eliminarFactura(id)` es la baja lógica, solo de compras pedidas.
+- El seeder carga dos compras pedidas: la N.º 3 a Distribuidora Deportiva Cuyo (3 productos) y la N.º 4 a Calzados y
+  Textiles del Plata (2 productos). La N.º 1 y la N.º 2 son las recibidas de E3-04.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/admin/compras?estado=&proveedor=&desde=&hasta=` | Listar activas con filtros |
+| GET | `/admin/compras/nueva` | Formulario de nueva compra |
+| POST | `/admin/compras` | Crear la compra pedida |
+| GET | `/admin/compras/{id}` | Detalle y botón de WhatsApp |
+
+## Recepción de mercadería y movimientos de stock E3-04
+
+### Recepción y anulación (RF26)
+
+En el detalle de una compra pedida (`/admin/compras/{id}`) hay dos botones, cada uno con un modal de confirmación:
+
+- **Marcar como recibida:** la compra pasa a `PAGADA` y se registra un movimiento de stock por cada detalle, todo en
+  una transacción: si un movimiento falla, la compra sigue pedida y no queda stock a medias. Una compra recibida no
+  se puede recibir de nuevo ni anular.
+- **Anular compra:** solo para compras pedidas. Pasa a `ANULADA` y no mueve el stock, porque nunca entró. Una compra
+  anulada no se puede recibir.
+
+### StockService (escritura)
+
+- `registrarMovimiento(detalle)`: nuevo saldo = saldo actual + `cantidad × factura.getSignoStock()`. El signo lo da
+  la factura por **polimorfismo**: `FacturaProveedor` suma (+1) y `FacturaCliente` resta (-1). La observación es el
+  comprobante, con `Factura.describir()` (otro método polimórfico): "Compra N.º 3" o "Venta N.º 1".
+- `revertirMovimiento(detalle)`: el mismo movimiento con el signo inverso y la observación "Anulación". Lo usa la
+  anulación de una venta pagada (E4-03).
+- Los dos **rechazan un saldo negativo** con un `ErrorServiceException` ("No hay stock suficiente de ...: hay 2 y
+  se necesitan 3."). E4-03 lo puede mostrar tal cual.
+- `listarMovimientos(idProducto)`: los movimientos activos del producto, del más reciente al más antiguo.
+  `listarHistorial(idProducto)` los arma como `MovimientoStockDTO` para la pantalla: como cada movimiento guarda
+  solo el saldo, la cantidad movida es la diferencia con el saldo anterior.
+- `crearStock(idDetalleFactura)` del diagrama se cubre con `registrarMovimiento`, que recibe el detalle ya cargado
+  (contrato del kickoff de la Etapa 3).
+
+### Detalle del producto
+
+En **Productos**, el botón **Ver** (fragment `tablaRegistrosImagenConDetalle`, agregado al kit) abre
+`/admin/productos/{id}`: los datos del producto, el stock actual y el historial de movimientos (fecha, comprobante
+con link a la compra, cantidad +/- y saldo). Desde el detalle de una compra, el código de cada producto lleva a
+esta pantalla.
+
+### Datos de demostración
+
+Con la base vacía, el seeder deja productos en los tres niveles del reporte de stock (E5-03). El orden de los
+movimientos de cada producto es: stock inicial de E3-06 (hace 2 meses), compra recibida y venta.
+
+| Comprobante | Qué hace |
+|---|---|
+| Compra N.º 1, recibida hace 30 días | Indumentaria Atlética San Juan: calzas, top, zapatillas Flow y colchoneta |
+| Compra N.º 2, recibida hace 25 días | Accesorios Fitness Andina: mochila, bolso, reloj, billetera, gorra y productos de niños |
+| Venta N.º 1, hace 10 días | Deja Calza Fit S en 35 % y Top en 40 % (Regular), y Calza Fit M en 15 % (Malo) |
+| Venta N.º 2, hace 5 días | Deja Mochila Urban en 40 % (Regular), y Reloj, Zapatilla Kids y Bolso Gym entre 10 % y 12 % (Malo) |
+
+Los porcentajes son del saldo después de la recepción (inicial + recibido) y se redondean para abajo, así que el
+valor exacto depende del stock inicial. Ningún producto queda en 0, para que todos se sigan viendo en el catálogo.
+El resto de los productos recibidos queda en Bueno. Las remeras, el short y las zapatillas Run solo tienen el stock
+inicial, que no es una recepción, así que quedan fuera del reporte: son los de las compras pedidas N.º 3 y N.º 4,
+para probar la recepción.
+
+- **Las ventas N.º 1 y N.º 2 son mínimas:** `FacturaCliente` pagadas **sin cliente ni `OrdenCompra`**, cargadas en
+  `cargarVentas` solo para generar las salidas de stock. Las pantallas de ventas y los reportes (Etapas 4 y 5)
+  tienen que tolerar `cliente` y `ordenCompra` nulos, o E6-03 reemplaza estas ventas por ventas de clientes reales
+  (queda un `TODO E6-03` en el seeder).
+- **Para verlos en una base que ya existe** hay que borrar `data/zero.db` y volver a levantar la app.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| POST | `/admin/compras/{id}/recibir` | Marcar la compra como recibida y sumar el stock |
+| POST | `/admin/compras/{id}/anular` | Anular una compra pedida |
+| GET | `/admin/productos/{id}` | Detalle del producto con stock e historial |
+
+## Panel de pedidos y acciones E4-06 / E4-07
+
+**Pedidos** (`/admin/pedidos`, `JEFE` y `ADMINISTRATIVO`). Un pedido es una `OrdenCompra` que ya salió del carrito:
+los carritos abiertos (`PENDIENTE_COMPLETAR`) no aparecen.
+
+- **Listado:** número, fecha, cliente, total, forma de pago y badge de estado, del más nuevo al más viejo. Filtros por
+  estado, forma de pago, rango de fechas y cliente (parte del nombre, apellido o correo, sin importar mayúsculas ni
+  tildes). Arriba, una tarjeta por estado con la cantidad de pedidos (`kpi :: kpiEnlace`): al tocarla se filtra por
+  ese estado.
+- **Detalle** (`/admin/pedidos/{id}`): línea de tiempo con `OrdenCompra.pasosSeguimiento()` (fragment
+  `seguimiento :: linea`), datos del pedido, factura, forma de pago, cliente con correo, documento, teléfono y
+  dirección de entrega, y los productos. Un pedido anulado muestra el aviso en lugar de la línea de tiempo.
+- **"Registrado por":** el diagrama guarda un solo `Empleado` por `FacturaCliente`, así que se muestra ese (el último
+  que registró una acción del panel, E4-07). No hay un empleado por paso.
+- La forma de pago y la factura salen de la `FacturaCliente` del pedido. Si todavía no tiene factura, se muestra "-".
+- **Acciones:** el detalle muestra solamente la transición válida para el estado actual. Efectivo, transferencia y
+  Mercado Pago simulado permiten confirmar el pago manualmente; luego se puede marcar el pedido como enviado y entregado.
+  Cada cambio registra al empleado autenticado, actualiza el seguimiento, muestra un
+  mensaje y solicita el correo de cambio de estado.
+- **Anulación administrativa:** está disponible hasta `PENDIENTE_ENVIO` y exige confirmar la acción e informar
+  un motivo. Si la venta ya estaba pagada, repone el stock en la misma transacción.
+
+### Para otros issues
+
+- `OrdenCompraService` es el service de `OrdenCompra`: `listarPedidoActivo()`, `listarPedido(estado, idFormaDePago,
+  desde, hasta, cliente)` (devuelve `PedidoDTO`), `contarPedidoPorEstado()`, `buscarPedido(id)` (no encuentra
+  carritos) y `buscarFacturaDePedido(idOrden)`. E4-04 agrega acá `listarComprasCliente`.
+- `FacturaClienteRepository.findFirstByOrdenCompra_IdAndEliminadoFalse(idOrden)`: la relación está solo del lado de
+  la factura.
+
+### Datos de demostración
+
+El seeder carga dos clientes con perfil completo (contraseña `Cliente123!`) y un pedido en cada estado. Los estados
+se alcanzan con las transiciones de la orden (E4-01). Los pedidos pagados descuentan stock de productos que solo
+tienen el stock inicial, así que no cambian los niveles del reporte de stock de E3-04.
+
+| Pedido | Cliente | Estado | Forma de pago | Factura |
+|---|---|---|---|---|
+| ORD-DEMO0001 | Lucía Gómez (`lucia.gomez@mail.com`) | Pendiente de pago | Transferencia | N.º 3, sin definir |
+| ORD-DEMO0002 | Martín Pérez (`martin.perez@mail.com`) | Pendiente de envío | Mercado Pago | N.º 4, pagada |
+| ORD-DEMO0003 | Lucía Gómez | Pendiente de entrega | Efectivo | N.º 5, pagada (Administrativo) |
+| ORD-DEMO0004 | Martín Pérez | Entregado | Transferencia | N.º 6, pagada (Jefa) |
+| ORD-DEMO0005 | Martín Pérez | Anulada | Mercado Pago | N.º 7, anulada |
+| ORD-DEMO0006 | Lucía Gómez | Carrito abierto | - | - (no aparece en el panel) |
+| ORD-DEMO0007 | Martín Pérez | Pendiente de pago | Mercado Pago | N.º 8, sin definir (pago simulado pendiente) |
+
+**Para verlos en una base que ya existe** hay que borrar `data/zero.db` y volver a levantar la app.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/admin/pedidos?estado=&formaPago=&desde=&hasta=&cliente=` | Listar pedidos con filtros y tarjetas por estado |
+| GET | `/admin/pedidos/{id}` | Detalle del pedido con la línea de tiempo |
+| POST | `/admin/pedidos/{id}/confirmar-pago` | Confirmar manualmente efectivo, transferencia o Mercado Pago simulado |
+| POST | `/admin/pedidos/{id}/marcar-enviado` | Pasar el pedido a pendiente de entrega |
+| POST | `/admin/pedidos/{id}/marcar-entregado` | Marcar el pedido como entregado |
+| POST | `/admin/pedidos/{id}/anular` | Anular con motivo y reponer stock si estaba pagado |
+
+## Mis compras, seguimiento y anulación por el cliente E4-04
+
+Un cliente logueado entra desde **Mi cuenta → Mis compras** (`/cliente/compras`, solo `CLIENTE`). Para probar, usar
+los clientes del seeder de E4-06: `lucia.gomez@mail.com` o `martin.perez@mail.com`, con la clave `Cliente123!`.
+
+- **Listado (RF21):** número de compra, fecha, cantidad de ítems, total, forma de pago y badge de estado, de la más
+  nueva a la más vieja. No incluye el carrito abierto.
+- **Detalle y seguimiento (RF22 y RF23):** línea de tiempo con `pasosSeguimiento()` (fragment `seguimiento :: linea`),
+  datos de la compra, número de factura, dirección de entrega y productos con precio y subtotal.
+- **Mercado Pago simulado pendiente:** el detalle informa que no se realizó un cobro real y que falta la confirmación administrativa.
+- **"Anular compra" (RF19):** solo si `puedeAnularse(false)`, es decir, antes del pago. Pide confirmación con el modal
+  del kit y llama a `VentaService.anularVenta(idOrden, false)`: la compra y su factura pasan a `ANULADA`.
+- Un cliente no puede ver ni anular compras de otro: devuelve 403.
+
+### Para otros issues
+
+- `OrdenCompraService.listarComprasCliente(idCliente)` (contrato del plan), `listarFilaCompraCliente(idCliente)`
+  (filas con `CompraClienteDTO`) y `esCompraDelCliente(orden, idCliente)`.
+- La anulación usa `VentaService.anularVenta(idOrden, false)`, completa desde E4-03 (ver esa sección).
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/cliente/compras` | Mis compras |
+| GET | `/cliente/compras/{id}` | Detalle y seguimiento de la compra |
+| POST | `/cliente/compras/{id}/anular` | Anular una compra sin pagar |
+
+## Checkout y factura al cliente E4-02
+
+Desde el carrito, **"Continuar al pago"** lleva a `/cliente/checkout` (solo `CLIENTE`). Para probar, usar a
+`lucia.gomez@mail.com` / `Cliente123!`, que tiene el carrito abierto ORD-DEMO0006 del seeder.
+
+- **Pantalla (RF18):** resumen del pedido, dirección de entrega del perfil con un link para modificarla y la forma de
+  pago entre las activas (`campoSelect` del kit).
+- **Perfil obligatorio:** sin perfil completo (`ClienteService.perfilCompleto`) el checkout redirige a `/cliente/perfil`
+  con un mensaje, y `confirmarCompra` también lo rechaza.
+- Al abrir el checkout se sincroniza el carrito como en E3-07. Si hubo ajustes de stock, vuelve al carrito con el aviso.
+- **Después de confirmar:** todas las formas de pago muestran la compra registrada. Mercado Pago queda pendiente de confirmación administrativa.
+
+### `VentaService.confirmarCompra(idCliente, idFormaPago)`
+
+- Valida perfil completo y forma de pago activa, y revalida cada ítem: activo, con precio vigente y con stock
+  suficiente. Si falta stock o precio, rechaza con "Revisá tu carrito". Si el precio cambió, toma el vigente.
+- `orden.confirmar()` (E4-01) pasa la orden a `PENDIENTE_PAGO`, y su fecha pasa a ser la de la confirmación.
+- Crea la `FacturaCliente` en `SIN_DEFINIR` con cliente, orden, forma de pago, número secuencial propio de las ventas
+  (`FacturaClienteRepository.findFirstByOrderByNumeroFacturaDesc`) y un `DetalleFactura` por ítem con el precio del
+  momento (`Factura.agregarDetalle`, Creador).
+- Llama a `NotificacionCompraService.enviarConfirmacion(orden)` (E4-05). Devuelve la factura.
+- El carrito queda vacío solo: la orden ya no está en `PENDIENTE_COMPLETAR`, así que `CarritoService.obtenerCarrito`
+  crea una nueva la próxima vez.
+- El texto de las instrucciones de pago sale de `NotificacionCompraService.instruccionesPago(orden, formaDePago)`, el
+  mismo del correo.
+
+Las pruebas están en `VentaServiceTest` y `CheckoutIntegrationTest`.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/cliente/checkout` | Resumen, dirección y forma de pago |
+| POST | `/cliente/checkout` | Confirmar la compra (`idFormaPago`) |
+| GET | `/cliente/checkout/registrada/{idOrden}` | "Compra registrada" con las instrucciones de pago |
+
+## Registro del pago, descuento de stock y anulación de ventas E4-03
+
+Son métodos de `VentaService` sin pantalla propia: los usan las acciones del panel de pedidos (E4-07, a través de
+`PedidoAccionService`) y "Mis compras" (E4-04).
+
+- **`registrarPago(idOrden)`:** la orden pasa a `PENDIENTE_ENVIO` (`OrdenCompra.registrarPago()`), la factura a
+  `PAGADA`, y se descuenta el stock con `StockService.registrarMovimiento` por cada detalle (RF13). El signo negativo
+  lo da `FacturaCliente`, y `totalPagado` se recalcula con los detalles. Al final llama a
+  `NotificacionCompraService.notificarCambioEstado(orden)`.
+  - **Una sola transacción:** si un producto se quedó sin stock, `StockService` lanza "No hay stock suficiente de ...:
+    hay 2 y se necesitan 3." y se deshace todo, incluidos los movimientos de los otros productos. La orden sigue en
+    `PENDIENTE_PAGO`.
+  - **Idempotente:** si la factura ya está `PAGADA`, no hace nada, no mueve stock y no manda correo.
+
+  - Rechaza pedidos sin factura ("El pedido no tiene una factura asociada."), facturas anuladas ("No se puede
+    registrar el pago de una factura anulada.") y órdenes sin confirmar (con el mensaje de la transición de E4-01).
+- **`anularVenta(idOrden, esAdmin)`:** verifica con `puedeAnularse(esAdmin)` y pasa la orden y la factura a `ANULADA`.
+  Si la factura ya estaba `PAGADA` (solo el admin anula en `PENDIENTE_ENVIO`), reingresa el stock con
+  `StockService.revertirMovimiento` por cada detalle (movimiento inverso con la observación "Anulación").
+  Al final llama a `notificarCambioEstado(orden)`, tanto si anula el cliente como el administrador.
+
+### Para otros issues
+
+- `registrarPago` y `anularVenta` ya mandan el correo de cambio de estado: quien los llame no tiene que volver a
+  llamar a `notificarCambioEstado` (así lo hace `PedidoAccionService` de E4-07).
+
+Las pruebas están en `VentaServiceTest` y en `VentaIntegrationTest`: compra → pago → stock descontado → segundo pago
+sin efecto → anulación del admin → stock reingresado, y un pago sin stock que no aplica nada. Este último test no es
+`@Transactional`, para ver el rollback real, y usa `@DirtiesContext` para no ensuciar la base de las otras clases.
+
+## Reporte de proveedores E5-05
+
+**Reportes → Proveedores** (`/admin/reportes/proveedores`, `JEFE` y `ADMINISTRATIVO`). Compara lo que le cobró cada
+proveedor a Zero por cada producto (RF31).
+
+- **Datos:** salen de los `DetalleFactura` de las compras **recibidas** (`FacturaProveedor` en `PAGADA`). Las pedidas y
+  las anuladas no cuentan. El precio de costo es `DetalleFactura.getPrecioUnitario()`.
+- **Último precio por proveedor:** de cada proveedor se toma su compra recibida más reciente del producto (por fecha y,
+  el mismo día, por número). El **recomendado** es el de menor último precio; con el mismo precio, el de la compra más
+  reciente. Así un precio viejo que el proveedor ya no mantiene no define la recomendación.
+- Quedan afuera los productos sin compras recibidas y los productos o proveedores dados de baja.
+- **Pantalla:** tarjetas con la cantidad de productos, de proveedores y de productos con más de un proveedor; filtro
+  por categoría y buscador por código o nombre del producto. La tabla muestra el proveedor recomendado resaltado, su
+  precio y la fecha de la compra. **Comparar** despliega el último precio de cada proveedor, con link a la compra y la
+  diferencia porcentual contra el más barato.
+
+### Para otros issues
+
+- `ReporteProveedoresService.buscarProveedorMasEconomico(idProducto)` devuelve un `Optional<Proveedor>`: vacío si el
+  producto no tiene compras recibidas de un proveedor activo (E5-04 elige el proveedor en un modal). El celular para
+  WhatsApp sale de `Proveedor.buscarCelularActivo()`.
+- `generar()` y `generar(texto, idCategoria)` devuelven un `ReporteProveedoresDTO` (totales y una lista de
+  `ProductoProveedorDTO`, cada uno con sus `PrecioProveedorDTO`). E5-02 puede armar el CSV con esas filas.
+- El seeder no tiene todavía un mismo producto comprado a varios proveedores: cada producto recibido tiene uno solo. Eso
+  lo agrega E6-03 ("4 proveedores con precios distintos para un mismo producto"). Para probar la comparación, ver abajo.
+
+**Probarlo a mano:** en **Compras a proveedor** crear tres compras de la Zapatilla Zero Run 41 (`ZAP-RUN-41`) a tres
+proveedores distintos con precios diferentes (por ejemplo $30.000, $32.000 y $36.000) y marcarlas como recibidas. El
+reporte recomienda la de $30.000 y muestra las otras con +6,7 % y +20,0 %.
+
+Las pruebas están en `ReporteProveedoresServiceTest` y `ReporteProveedoresIntegrationTest`.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/admin/reportes/proveedores?buscar=&categoria=` | Reporte con filtros |
+
+## ABM de referencia E0-06: Nacionalidad
+
+Entrar a `/admin/nacionalidades` o a **Configuración → Nacionalidades** en el panel.
+Permite listar las activas, crear, editar y confirmar una baja lógica en un modal.
+Las operaciones exitosas vuelven al listado con `exito`; las validaciones vuelven al
+formulario con `error` y conservan el nombre ingresado (Post/Redirect/Get).
+
+El nombre es obligatorio, se guarda sin espacios en los extremos y se compara sin
+importar mayúsculas, incluidas letras como Ñ. Un nombre ya utilizado, incluso por
+una nacionalidad eliminada, sigue reservado para evitar duplicados históricos.
+Editar el mismo registro sin cambiar su nombre está permitido. La búsqueda por ID
+o nombre devuelve solo registros activos; si no existe, el service lanza
+`ErrorServiceException`. El controller traduce los IDs inexistentes o eliminados a 404.
+`listarNacionalidad()` incluye eliminadas y `listarNacionalidadActiva()` las filtra.
+
+El seeder carga Argentina, Bolivia, Brasil, Chile, Colombia, España,
+Italia, Paraguay, Perú, Uruguay y Venezuela **solo si toda la base está vacía**.
+No modifica una base existente. En una base con datos se pueden dar de alta desde
+el ABM; no hace falta borrar información para probarlo.
+
+### Crear otro ABM a partir de este
+
+1. Usar la entidad y el repository correspondientes. Agregar consultas de listado
+   ordenado, listado activo y búsqueda por ID activo como en `NacionalidadRepository`.
+2. Copiar la estructura de `services/NacionalidadService.java`, respetando los nombres
+   del UML. Inyectar el repository por constructor. Concentrar reglas en `validar`,
+   excluir el ID actual al comprobar duplicados y validar antes de modificar la entidad.
+   Las escrituras usan `@Transactional(rollbackFor = ErrorServiceException.class)`
+   porque la excepción de negocio es checked. La baja cambia `eliminado`, nunca borra.
+3. Tomar `controllers/admin/NacionalidadController.java` como referencia: inyectar
+   únicamente el service, definir GET para vistas y POST para cambios, y manejar
+   validaciones con mensajes flash y destinos explícitos. No recibir una entidad JPA
+   completa desde el formulario: aceptar solo los campos editables.
+4. Copiar `templates/admin/nacionalidades/listado.html` y `formulario.html`, cambiar
+   las rutas y los textos y mantener `layout:decorate="~{layout/admin}"`. Agregar
+   el enlace en el menú del layout.
+5. Reutilizar los fragments del kit. Para catálogos de un nombre están disponibles:
+   - `fragments/tabla :: tablaNombre(registros, baseUrl)`: recibe registros con `id`
+     y `nombre`; genera edición por fila y botones que abren `#eliminar-{id}`.
+   - `fragments/formulario :: formularioNombre(action, nombre, cancelarUrl)`:
+     formulario POST con nombre precargado y token CSRF generado por `th:action`.
+   - `fragments/modal-confirmar :: modal(id, titulo, mensaje, actionUrl)`: incluir
+     un modal por registro con ID `eliminar-{id}` y acción POST de baja.
+   - `fragments/mensajes :: mensajes`: muestra `error` y `exito`.
+   Para ABM con varios campos (ver Formas de pago, E1-08):
+   - `fragments/tabla :: tablaRegistros(encabezados, registros, baseUrl)`: cada registro
+     es un `dto.FilaTablaDTO(id, nombre, celdas)`, armado en el service. `nombre` se
+     usa en las etiquetas de accesibilidad y en el modal; `celdas` son las columnas.
+   - `fragments/formulario :: campoTexto(...)`, `campoSelect(...)` y `acciones(cancelarUrl)`:
+     se incluyen dentro de un `<form th:action="@{...}" method="post" class="zero-form">`.
+     `campoSelect` recibe las opciones como `Map` valor → texto (usar `LinkedHashMap`
+     para respetar el orden).
+   Para campos adicionales, extender primero el kit; las firmas anteriores de
+   `tabla` y `formulario` siguen disponibles para los ejemplos de E0-03.
+6. Agregar datos iniciales al grupo correspondiente del `DataSeeder`, respetando
+   sus dependencias y el control de base vacía.
+7. Adaptar `NacionalidadServiceTest` (JUnit + Mockito) y `NacionalidadIntegrationTest`
+   (MockMvc + SQLite en memoria). Cubrir duplicados en alta y edición, campos
+   obligatorios, baja lógica, IDs inválidos, flashes y CSRF. Ejecutar `./mvnw test`.
+
+| Método | Ruta | Operación |
+|---|---|---|
+| GET | `/admin/nacionalidades` | Listar activas |
+| GET | `/admin/nacionalidades/nueva` | Formulario de alta |
+| POST | `/admin/nacionalidades` | Crear |
+| GET | `/admin/nacionalidades/{id}/editar` | Formulario de edición |
+| POST | `/admin/nacionalidades/{id}/editar` | Modificar |
+| POST | `/admin/nacionalidades/{id}/eliminar` | Baja lógica |
+
+## Reposición por WhatsApp E5-04
+
+En `/admin/reportes/stock`, las filas con estado **Malo** permiten pedir las unidades necesarias para llegar al
+50 % del stock de referencia (redondeado hacia arriba):
+
+- **Pedir reposición** abre `wa.me` con el celular del proveedor cuyo último precio para ese producto es el más
+  bajo. El mensaje incluye razón social, producto, código, talle, cantidad y la firma de Zero.
+- **Crear compra** abre `/admin/compras/nueva` con proveedor, producto y cantidad precargados; solo queda elegir la
+  forma de pago y completar el precio de costo acordado.
+- Si el producto no tiene compras recibidas de un proveedor que siga activo, ambos botones abren un modal para
+  elegir uno. Los enlaces de WhatsApp no requieren API, token ni una cuenta Business.
+
+La URL que arma el mensaje es
+`GET /admin/reportes/stock/reposicion/{idProducto}/whatsapp?proveedor={idProveedor}`. `proveedor` es opcional cuando
+existe una recomendación. La cantidad se recalcula en el servidor antes de redirigir, para no confiar en datos de
+la URL.
+
+## Mercado Pago simulado (E4-10)
+
+El cliente puede elegir Mercado Pago como forma de pago. La compra queda en `PENDIENTE_PAGO` y la factura en `SIN_DEFINIR`; no se realiza un cobro. La página de compra registrada, el seguimiento y el correo indican que espera confirmación administrativa.
+
+Un usuario `JEFE` o `ADMINISTRATIVO` confirma el pago desde `/admin/pedidos/{id}`. El sistema registra al empleado, pasa la factura a `PAGADA`, deja el pedido en `PENDIENTE_ENVIO` y descuenta el stock una sola vez. No se necesitan credenciales, cuentas de prueba, tarjetas ni túneles.
+
+## Tests de integración de los flujos principales E5-08
+
+`FlujosPrincipalesIntegrationTest` recorre de punta a punta los flujos que se muestran en la exposición. Corre con el
+perfil `test` (`src/test/resources/application-test.properties`): una base SQLite en `target/zero-test.db` que se borra
+antes de empezar, así el `DataSeeder` parte de una base vacía, y al terminar. `EmailService` se reemplaza por un mock
+para evitar correos reales; Mercado Pago se simula y no realiza cobros.
+
+| Test | Flujo |
+|---|---|
+| `registroActivacionYLogin` | Registro → código por correo → login rechazado → activación → login |
+| `carritoConfirmacionPagoDescuentoDeStockYFacturaPagada` | Carrito → checkout con Mercado Pago → confirmación administrativa repetida → stock descontado una sola vez y factura pagada |
+| `compraAProveedorRecepcionYAumentoDeStock` | Compra a proveedor → recepción → stock aumentado (recibir de nuevo no suma) |
+| `anulacionPorElClienteAntesDelPagoYPorElAdminDespuesDelPagoConReingresoDeStock` | El cliente anula sin pagar; el admin confirma el pago, el cliente ya no puede anular y el admin sí, con reingreso de stock |
+| `unClienteNoPuedeEntrarAlPanelDeAdministracion` | `/admin` con un cliente da 403 (MockMvc) y sin sesión manda al login |
+
+Para correr solo estos tests: `mvnw.cmd test -Dtest=FlujosPrincipalesIntegrationTest` (o `./mvnw ...` en Linux o Mac).

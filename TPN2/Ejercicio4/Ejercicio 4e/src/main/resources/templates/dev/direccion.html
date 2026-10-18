@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Desarrollo</span><span class="breadcrumb-separator">/</span>
+        <span th:text="${id == null ? 'Alta de dirección' : 'Edición de dirección'}">Alta de dirección</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <div class="zero-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
+                <h2 class="mb-0">Fragment de dirección</h2>
+                <a th:if="${id != null}" th:href="@{/dev/direccion}" class="zero-button secondary">Nueva dirección</a>
+            </div>
+            <p class="zero-component-description">
+                Al guardar, la página se recarga con la dirección precargada para probar la edición.
+            </p>
+            <p th:if="${direccion != null}" class="zero-component-description">
+                Guardada: <strong th:text="${direccion.calle + ' ' + direccion.numeracion + ', '
+                    + direccion.localidad.nombre + ' (' + direccion.localidad.codigoPostal + ')'}">Calle 123</strong>
+            </p>
+            <form th:action="@{/dev/direccion(id=${id})}" method="post" class="zero-form">
+                <div th:replace="~{fragments/direccion :: direccion(${direccionForm})}"></div>
+                <div th:replace="~{fragments/formulario :: acciones('/dev/direccion')}"></div>
+            </form>
+            <code>&lt;div th:replace="~{fragments/direccion :: direccion(${direccionForm})}"&gt;&lt;/div&gt;</code>
+        </div>
+    </div>
+</body>
+</html>
