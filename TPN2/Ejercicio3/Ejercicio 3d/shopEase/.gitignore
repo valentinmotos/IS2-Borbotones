@@ -1,0 +1,5 @@
+.runtime/
+backend/data/
+.env
+*.log
+backend/uploads/
