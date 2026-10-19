@@ -1,0 +1,14 @@
+package com.example.cliente.dto;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class PrestamoDTO extends BaseDTO {
+    private LibroDTO libro;
+    private PersonaDTO persona;
+    private String fechaPrestamo;
+    private String fechaDevolucion;
+    private Boolean devuelto;
+}

@@ -1,0 +1,26 @@
+package com.tp2.servidor.entity;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.UUID;
+
+@Getter
+@Setter
+@Entity
+public class Articulo {
+    @Id
+    private String id = UUID.randomUUID().toString();
+    private String nombre;
+    private double precio;
+    private boolean eliminado;
+
+    @ManyToOne
+    private Imagen imagen;
+
+    @ManyToOne
+    private Proveedor proveedor;
+}

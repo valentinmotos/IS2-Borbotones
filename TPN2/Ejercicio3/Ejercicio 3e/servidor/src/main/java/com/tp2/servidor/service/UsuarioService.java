@@ -7,11 +7,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UsuarioService extends BaseRestService<Usuario, UsuarioRequest, String> {
-    private final UsuarioDao usuarioDao;
-
     public UsuarioService(UsuarioDao usuarioDao) {
         super(usuarioDao, UsuarioService::convertir, usuario -> !usuario.isEliminado());
-        this.usuarioDao = usuarioDao;
     }
 
     private static Usuario convertir(UsuarioRequest request) {
@@ -22,11 +19,22 @@ public class UsuarioService extends BaseRestService<Usuario, UsuarioRequest, Str
     }
 
     @Override
-    protected void marcarEliminada(Usuario usuario) {
-        usuario.setEliminado(true);
+    protected void validar(Operacion operacion, Usuario usuario) {
+        if (operacion != Operacion.BAJA && (usuario.getNombre() == null || usuario.getNombre().isBlank())) {
+            throw new IllegalArgumentException("El nombre del usuario es obligatorio");
+        }
     }
 
-    public Usuario buscarActivo(String id) {
-        return buscarPorId(id).orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado o eliminado"));
+    @Override
+    protected void actualizar(Usuario existente, Usuario nuevo) {
+        existente.setNombre(nuevo.getNombre());
+        if (nuevo.getClave() != null && !nuevo.getClave().isBlank()) {
+            existente.setClave(nuevo.getClave());
+        }
+    }
+
+    @Override
+    protected void marcarEliminada(Usuario usuario) {
+        usuario.setEliminado(true);
     }
 }

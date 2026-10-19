@@ -27,7 +27,11 @@ public abstract class BaseRestService<T, R, ID> {
         return repository.findById(id).filter(activo);
     }
 
-    public T crear(R request) {
+    public final T buscarActivo(ID id) {
+        return buscarPorId(id).orElseThrow(() -> new IllegalArgumentException("Entidad no encontrada o eliminada"));
+    }
+
+    public final T crear(R request) {
         T entidad = adaptador.apply(request);
         preAlta(entidad);
         validar(Operacion.ALTA, entidad);
@@ -36,18 +40,18 @@ public abstract class BaseRestService<T, R, ID> {
         return guardada;
     }
 
-    public Optional<T> modificar(ID id, R request) {
+    public final Optional<T> modificar(ID id, R request) {
         T entidad = adaptador.apply(request);
         preModificacion(entidad);
         validar(Operacion.MODIFICACION, entidad);
-        return repository.findById(id).filter(activo).map(existente -> {
+        return buscarPorId(id).map(existente -> {
             actualizar(existente, entidad);
             return repository.save(existente);
         });
     }
 
-    public void eliminar(ID id) {
-        T entidad = buscarPorId(id).orElseThrow(() -> new IllegalArgumentException("Entidad no encontrada o eliminada"));
+    public final void eliminar(ID id) {
+        T entidad = buscarActivo(id);
         preBaja(entidad);
         validar(Operacion.BAJA, entidad);
         marcarEliminada(entidad);
@@ -60,13 +64,9 @@ public abstract class BaseRestService<T, R, ID> {
     protected void preModificacion(T entidad) { }
     protected void preBaja(T entidad) { }
 
-    protected void actualizar(T existente, T nueva) {
-        throw new UnsupportedOperationException("La modificación no está disponible para este recurso");
-    }
+    protected abstract void actualizar(T existente, T nueva);
 
-    protected void marcarEliminada(T entidad) {
-        throw new UnsupportedOperationException("La eliminación no está disponible para este recurso");
-    }
+    protected abstract void marcarEliminada(T entidad);
 
     public enum Operacion { ALTA, MODIFICACION, BAJA }
 }

@@ -11,9 +11,7 @@ import java.util.List;
 public class CarritoDto {
     private String id;
     private double total;
-    private boolean eliminado;
     private boolean finalizado;
     private UsuarioDto usuario;
     private List<DetalleDto> detalles = new ArrayList<>();
-
 }

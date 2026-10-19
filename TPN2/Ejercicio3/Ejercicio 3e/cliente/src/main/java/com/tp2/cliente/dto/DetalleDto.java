@@ -11,5 +11,4 @@ public class DetalleDto {
     private double precioUnitario;
     private boolean eliminado;
     private ArticuloDto articulo;
-
 }

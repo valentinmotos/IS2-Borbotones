@@ -3,6 +3,8 @@ package com.tp2.cliente.controller;
 import com.tp2.cliente.service.ArticuloService;
 import com.tp2.cliente.service.CarritoService;
 import com.tp2.cliente.service.UsuarioService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,17 +16,22 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+
 @Controller
 @RequestMapping("/")
 public class CarritoWebController {
     private final UsuarioService usuarioService;
     private final ArticuloService articuloService;
     private final CarritoService carritoService;
+    private final String imagenesUrl;
 
-    public CarritoWebController(UsuarioService usuarioService, ArticuloService articuloService, CarritoService carritoService) {
+    public CarritoWebController(UsuarioService usuarioService, ArticuloService articuloService, CarritoService carritoService,
+                               @Value("${servidor.api.base-url}") String baseUrl) {
         this.usuarioService = usuarioService;
         this.articuloService = articuloService;
         this.carritoService = carritoService;
+        this.imagenesUrl = baseUrl + "/imagenes/";
     }
 
     @GetMapping
@@ -32,6 +39,7 @@ public class CarritoWebController {
         model.addAttribute("usuarios", usuarioService.listar());
         model.addAttribute("articulos", articuloService.listar());
         model.addAttribute("carritos", carritoService.listar());
+        model.addAttribute("imagenesUrl", imagenesUrl);
         return "index";
     }
 
@@ -71,8 +79,16 @@ public class CarritoWebController {
     }
 
     @ExceptionHandler(RestClientException.class)
-    public String manejarErrorBackend(RestClientException exception, RedirectAttributes attributes) {
-        attributes.addFlashAttribute("error", "No se pudo completar la operacion: " + exception.getMessage());
+    public String manejarErrorBackend(RestClientException exception, HttpServletRequest request, Model model, RedirectAttributes attributes) {
+        String error = "No se pudo completar la operacion: " + exception.getMessage();
+        if ("GET".equals(request.getMethod())) {
+            model.addAttribute("error", error);
+            model.addAttribute("usuarios", List.of());
+            model.addAttribute("articulos", List.of());
+            model.addAttribute("carritos", List.of());
+            return "index";
+        }
+        attributes.addFlashAttribute("error", error);
         return "redirect:/";
     }
 }

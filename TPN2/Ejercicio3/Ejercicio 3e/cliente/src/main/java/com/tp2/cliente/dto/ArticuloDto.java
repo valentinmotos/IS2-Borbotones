@@ -9,6 +9,6 @@ public class ArticuloDto {
     private String id;
     private String nombre;
     private double precio;
-    private boolean eliminado;
-
+    private ImagenDto imagen;
+    private ProveedorDto proveedor;
 }

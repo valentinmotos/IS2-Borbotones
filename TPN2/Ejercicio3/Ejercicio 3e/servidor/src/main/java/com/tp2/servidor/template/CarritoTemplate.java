@@ -5,16 +5,19 @@ import com.tp2.servidor.dto.CrearCarritoRequest;
 import com.tp2.servidor.entity.Articulo;
 import com.tp2.servidor.entity.Carrito;
 import com.tp2.servidor.entity.Detalle;
+import com.tp2.servidor.entity.Usuario;
 import com.tp2.servidor.service.BaseRestService;
+
+import java.util.function.Function;
 
 /** Template Method para los casos de uso particulares del carrito. */
 public abstract class CarritoTemplate extends BaseRestService<Carrito, CrearCarritoRequest, String> {
     private final CarritoDao carritoDao;
 
-    protected CarritoTemplate(CarritoDao carritoDao, UsuarioServiceLookup lookup) {
+    protected CarritoTemplate(CarritoDao carritoDao, Function<String, Usuario> buscarUsuario) {
         super(carritoDao, request -> {
             Carrito carrito = new Carrito();
-            carrito.setUsuario(lookup.buscar(request.getUsuarioId()));
+            carrito.setUsuario(buscarUsuario.apply(request.getUsuarioId()));
             return carrito;
         }, carrito -> !carrito.isEliminado());
         this.carritoDao = carritoDao;
@@ -22,7 +25,7 @@ public abstract class CarritoTemplate extends BaseRestService<Carrito, CrearCarr
 
     public final Carrito agregarArticulo(String carritoId, Articulo articulo, int cantidad) {
         validarCantidad(cantidad);
-        Carrito carrito = obtenerCarritoActivo(carritoId);
+        Carrito carrito = buscarActivo(carritoId);
         validarCarritoEditable(carrito);
         agregarOIncrementarDetalle(carrito, articulo, cantidad);
         recalcularTotal(carrito);
@@ -30,7 +33,7 @@ public abstract class CarritoTemplate extends BaseRestService<Carrito, CrearCarr
     }
 
     public final Carrito editarDetalle(String carritoId, String detalleId, int cantidad) {
-        Carrito carrito = obtenerCarritoActivo(carritoId);
+        Carrito carrito = buscarActivo(carritoId);
         validarCarritoEditable(carrito);
         modificarDetalle(carrito, detalleId, cantidad);
         recalcularTotal(carrito);
@@ -38,7 +41,7 @@ public abstract class CarritoTemplate extends BaseRestService<Carrito, CrearCarr
     }
 
     public final Carrito finalizarCompra(String carritoId) {
-        Carrito carrito = obtenerCarritoActivo(carritoId);
+        Carrito carrito = buscarActivo(carritoId);
         validarCarritoEditable(carrito);
         validarCarritoConArticulos(carrito);
         carrito.setFinalizado(true);
@@ -47,14 +50,14 @@ public abstract class CarritoTemplate extends BaseRestService<Carrito, CrearCarr
     }
 
     @Override
+    protected void actualizar(Carrito existente, Carrito nuevo) {
+        throw new UnsupportedOperationException("El carrito se modifica a traves de sus detalles");
+    }
+
+    @Override
     protected void marcarEliminada(Carrito carrito) {
         carrito.setEliminado(true);
         carrito.getDetalles().forEach(detalle -> detalle.setEliminado(true));
-    }
-
-    protected Carrito obtenerCarritoActivo(String id) {
-        return carritoDao.findById(id).filter(carrito -> !carrito.isEliminado())
-                .orElseThrow(() -> new IllegalArgumentException("Carrito no encontrado o eliminado"));
     }
 
     protected void validarCantidad(int cantidad) {
@@ -97,10 +100,5 @@ public abstract class CarritoTemplate extends BaseRestService<Carrito, CrearCarr
     protected void recalcularTotal(Carrito carrito) {
         carrito.setTotal(carrito.getDetalles().stream().filter(d -> !d.isEliminado())
                 .mapToDouble(d -> d.getCantidad() * d.getPrecioUnitario()).sum());
-    }
-
-    @FunctionalInterface
-    public interface UsuarioServiceLookup {
-        com.tp2.servidor.entity.Usuario buscar(String usuarioId);
     }
 }
