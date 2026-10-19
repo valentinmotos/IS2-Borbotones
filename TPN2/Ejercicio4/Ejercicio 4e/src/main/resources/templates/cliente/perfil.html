@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
+<body>
+    <div layout:fragment="content">
+        <section class="zero-section">
+            <div class="container">
+                <div class="mb-4">
+                    <div class="zero-kicker">Mi cuenta</div>
+                    <h1>Mi perfil</h1>
+                    <p th:if="${!perfilCargado}">Completá tus datos para poder confirmar tus compras. La dirección es la de entrega.</p>
+                    <p th:if="${perfilCargado}">Actualizá tus datos personales, tu dirección de entrega y tu foto.</p>
+                </div>
+                <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+                <form th:action="@{/cliente/perfil}" method="post" enctype="multipart/form-data" class="zero-form">
+                    <div class="zero-panel mb-4">
+                        <h2>Datos personales</h2>
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/formulario :: campoTexto('nombre', 'Nombre', ${clienteForm.nombre}, true)}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div th:replace="~{fragments/formulario :: campoTexto('apellido', 'Apellido', ${clienteForm.apellido}, true)}"></div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-4">
+                                <div th:replace="~{fragments/formulario :: campoSelect('sexo', 'Sexo', ${sexos}, ${clienteForm.sexo}, true)}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div th:replace="~{fragments/formulario :: campoFecha('fechaNacimiento', 'Fecha de nacimiento', ${clienteForm.fechaNacimiento}, true)}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div th:replace="~{fragments/formulario :: campoSelect('nacionalidadId', 'Nacionalidad', ${nacionalidades}, ${clienteForm.nacionalidadId}, true)}"></div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-4">
+                                <div th:replace="~{fragments/formulario :: campoSelect('tipoDocumento', 'Tipo de documento', ${tiposDocumento}, ${clienteForm.tipoDocumento}, true)}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div th:replace="~{fragments/formulario :: campoTexto('numeroDocumento', 'Número de documento', ${clienteForm.numeroDocumento}, true)}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div th:replace="~{fragments/formulario :: campoTexto('telefono', 'Teléfono celular', ${clienteForm.telefono}, true)}"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="zero-panel mb-4">
+                        <h2>Dirección de entrega</h2>
+                        <div th:replace="~{fragments/direccion :: direccion(${direccionForm})}"></div>
+                    </div>
+                    <div class="zero-panel">
+                        <h2>Foto de perfil</h2>
+                        <div th:replace="~{fragments/input-imagen :: inputImagen('foto', 'foto', 'Foto (opcional)', null,
+                             ${imagenId != null ? '/imagen/' + imagenId : null}, false, null, null,
+                             ${imagenId == null ? null : 'Formatos permitidos: JPG, PNG y WEBP. Tamaño máximo: 2 MB. Dejala vacía para conservar la actual.'},
+                             true)}"></div>
+                        <div th:replace="~{fragments/formulario :: acciones('/')}"></div>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

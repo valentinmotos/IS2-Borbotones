@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="15.1"><zoom_level>10</zoom_level>
+<element><id>UMLClass</id><coordinates><x>20</x><y>10</y><w>400</w><h>170</h></coordinates><panel_attributes>«abstract»
+Factura
+--
+- numeroFactura: long
+- fechaFactura: LocalDate
+- estado: EstadoFactura
+bg=#FFFFFF</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>570</x><y>10</y><w>550</w><h>210</h></coordinates><panel_attributes>«interface»
+EventoAgendable
+--
+
+--
++ getId(): String
++ getFechaAgenda(): LocalDate
++ getTipoEvento(): TipoEventoCalendario
++ describirEvento(): String
++ estaAtrasado(hoy: LocalDate): boolean
+bg=#DFF2DF</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1190</x><y>10</y><w>310</w><h>135</h></coordinates><panel_attributes>«enumeration»
+TipoEventoCalendario
+--
+LLEGADA_PROVEEDOR
+ENVIO_CLIENTE
+bg=#DFF2DF</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>20</x><y>310</y><w>520</w><h>245</h></coordinates><panel_attributes>FacturaProveedor
+--
+- fechaEntregaEstimada: LocalDate {nuevo}
+--
++ getFechaAgenda(): LocalDate {nuevo}
++ getTipoEvento(): TipoEventoCalendario {nuevo}
++ describirEvento(): String {nuevo}
++ estaAtrasado(hoy: LocalDate): boolean {nuevo}
++ reprogramarEntrega(fecha: LocalDate): void {nuevo}
+bg=#FFF4CC</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>590</x><y>310</y><w>550</w><h>265</h></coordinates><panel_attributes>OrdenCompra
+--
+- fechaLimiteEnvio: LocalDate {nuevo}
+--
++ registrarPago(diasDespacho: int): void {modificado}
++ getFechaAgenda(): LocalDate {nuevo}
++ getTipoEvento(): TipoEventoCalendario {nuevo}
++ describirEvento(): String {nuevo}
++ estaAtrasado(hoy: LocalDate): boolean {nuevo}
++ reprogramarEnvio(fecha: LocalDate): void {nuevo}
+bg=#FFF4CC</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1190</x><y>360</y><w>310</w><h>120</h></coordinates><panel_attributes>Empresa
+--
+- diasDespacho: int {nuevo}
+bg=#FFF4CC</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>210</x><y>170</y><w>20</w><h>150</h></coordinates><panel_attributes>lt=-&gt;&gt;</panel_attributes><additional_attributes>10;140;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>450</x><y>210</y><w>250</w><h>110</h></coordinates><panel_attributes>lt=.&gt;&gt;</panel_attributes><additional_attributes>10;100;10;50;240;50;240;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>860</x><y>210</y><w>20</w><h>110</h></coordinates><panel_attributes>lt=.&gt;&gt;</panel_attributes><additional_attributes>10;100;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1110</x><y>70</y><w>90</w><h>20</h></coordinates><panel_attributes>lt=.&gt;</panel_attributes><additional_attributes>10;10;80;10</additional_attributes></element>
+<element><id>UMLNote</id><coordinates><x>20</x><y>590</y><w>970</w><h>105</h></coordinates><panel_attributes>Propuesta: cambios en el dominio
+Verde: interfaz / enumeración nueva. Amarillo: entidad modificada. Blanco: contexto existente.
+{nuevo}: miembro agregado. {modificado}: operación que cambia.
+Se muestran solo los miembros relevantes para el calendario.
+Empresa aporta el plazo al registrar el pago; no se agrega una asociación persistente.
+bg=#FFFFE0</panel_attributes><additional_attributes></additional_attributes></element>
+</diagram>

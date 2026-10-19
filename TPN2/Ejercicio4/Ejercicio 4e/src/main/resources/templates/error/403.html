@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
+<body>
+        <section layout:fragment="content" class="container py-5 text-center">
+            <h1 class="display-5">Acceso denegado</h1>
+            <p class="lead">No tenés permisos para ver esta página.</p>
+            <a class="zero-button primary" th:href="@{/}">Volver al inicio</a>
+        </section>
+</body>
+</html>

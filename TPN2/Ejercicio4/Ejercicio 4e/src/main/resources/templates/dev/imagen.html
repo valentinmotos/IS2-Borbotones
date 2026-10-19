@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
+<head>
+    <title>Prueba de imágenes</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <section class="zero-section">
+            <div class="container">
+                <div class="mb-4">
+                    <div class="zero-kicker">E1-06</div>
+                    <h1>Servicio de imágenes</h1>
+                    <p>Prueba de carga, validación y recuperación de imágenes con el servicio reutilizable de Zero.</p>
+                </div>
+
+                <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <form th:action="@{/dev/imagen}" method="post" enctype="multipart/form-data" class="zero-form">
+                            <div class="form-group">
+                                <label for="tipoImagen">Tipo de imagen</label>
+                                <select id="tipoImagen" name="tipoImagen" class="form-control">
+                                    <option th:each="tipo : ${tiposImagen}"
+                                            th:value="${tipo}"
+                                            th:text="${tipo.name()}"
+                                            th:selected="${tipo == T(com.zero.ecommerce.entities.enums.TipoImagen).PRODUCTO}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div th:replace="~{fragments/input-imagen :: inputImagen('archivo', 'archivo', 'Archivo de imagen', null, null, false, null, '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp', 'Formatos permitidos: JPG, PNG y WEBP. Tamaño máximo: 2 MB.', true)}"></div>
+
+                            <div class="zero-form-actions mt-4">
+                                <button type="submit" class="zero-button primary">Guardar imagen</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="col-lg-6" th:if="${imagenActualUrl != null}">
+                        <div class="zero-panel p-3">
+                            <h3>Imagen guardada</h3>
+                            <img th:src="${imagenActualUrl}" alt="Imagen guardada" class="img-fluid rounded border mb-3" style="max-height: 320px; object-fit: contain;">
+                            <p><strong>ID:</strong> <span th:text="${imagenActual.id}">-</span></p>
+                            <p><strong>Tipo:</strong> <span th:text="${imagenActual.tipoImagen}">-</span></p>
+                            <p><strong>MIME:</strong> <span th:text="${imagenActual.mime}">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

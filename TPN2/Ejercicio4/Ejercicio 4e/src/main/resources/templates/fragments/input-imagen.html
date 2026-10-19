@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="inputImagen(idInput, nombreCampo, etiqueta, imagenActual, imagenActualUrl, requerido, error, aceptar, descripcion, mostrarVistaPrevia)"
+         class="zero-image-field form-group">
+        <label th:for="${idInput}" th:text="${etiqueta}">Imagen</label>
+        <input th:id="${idInput}"
+               th:name="${nombreCampo}"
+               type="file"
+               class="form-control-file"
+               th:accept="${aceptar != null ? aceptar : '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp'}"
+               th:required="${requerido}">
+        <small class="form-text text-muted" th:text="${descripcion != null ? descripcion : 'Formatos permitidos: JPG, PNG y WEBP. Tamaño máximo: 2 MB.'}">Formatos permitidos: JPG, PNG y WEBP. Tamaño máximo: 2 MB.</small>
+        <small th:if="${error != null}" class="form-text text-danger" th:text="${error}">Error de validación.</small>
+
+        <div class="zero-image-preview mt-3" th:if="${mostrarVistaPrevia == null or mostrarVistaPrevia}">
+            <img class="zero-image-preview-current img-fluid rounded border"
+                 th:if="${imagenActualUrl != null and !#strings.isEmpty(imagenActualUrl)}"
+                 th:src="${imagenActualUrl}"
+                 th:alt="${etiqueta}"
+                 style="max-height: 220px; object-fit: cover;">
+            <img class="zero-image-preview-new img-fluid rounded border d-none"
+                 alt="Vista previa"
+                 style="max-height: 220px; object-fit: cover;">
+        </div>
+
+        <script th:inline="javascript">
+            (() => {
+                const input = document.getElementById(/*[[${idInput}]]*/ '');
+                if (!input) return;
+                const preview = input.closest('.zero-image-field').querySelector('.zero-image-preview-new');
+                const current = input.closest('.zero-image-field').querySelector('.zero-image-preview-current');
+                input.addEventListener('change', function () {
+                    const file = this.files && this.files[0];
+                    if (!file) {
+                        if (preview) {
+                            preview.classList.add('d-none');
+                            preview.removeAttribute('src');
+                        }
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        if (preview) {
+                            preview.src = event.target.result;
+                            preview.classList.remove('d-none');
+                        }
+                        if (current) {
+                            current.classList.add('d-none');
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                });
+            })();
+        </script>
+    </div>
+</body>
+</html>

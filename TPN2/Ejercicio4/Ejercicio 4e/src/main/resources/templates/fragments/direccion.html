@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!--
+      Campos de una dirección con país → provincia → departamento → localidad en cascada. Se incluye dentro de
+      un <form class="zero-form">: <div th:replace="~{fragments/direccion :: direccion(${direccionForm})}"></div>
+      direccion: un DireccionForm (DireccionForm.desde(direccion) al editar) o null en el alta.
+      El código postal se completa solo al elegir la localidad y no se envía.
+    -->
+    <div th:fragment="direccion(direccion)" class="zero-direccion">
+        <div th:replace="~{fragments/ubicacion :: cascada('localidad', ${direccion?.paisId}, ${direccion?.provinciaId},
+             ${direccion?.departamentoId}, ${direccion?.localidadId})}"></div>
+        <div class="form-row">
+            <div class="col-md-6">
+                <div th:replace="~{fragments/formulario :: campoTexto('calle', 'Calle', ${direccion?.calle}, true)}"></div>
+            </div>
+            <div class="col-md-3">
+                <div th:replace="~{fragments/formulario :: campoTexto('numeracion', 'Numeración', ${direccion?.numeracion}, true)}"></div>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="codigoPostal">Código postal</label>
+                <input id="codigoPostal" type="text" class="form-control" data-ubicacion-cp readonly
+                       placeholder="Se completa con la localidad">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="col-md-4">
+                <div th:replace="~{fragments/formulario :: campoTexto('barrio', 'Barrio', ${direccion?.barrio}, false)}"></div>
+            </div>
+            <div class="col-md-4">
+                <div th:replace="~{fragments/formulario :: campoTexto('manzanaPiso', 'Manzana / piso', ${direccion?.manzanaPiso}, false)}"></div>
+            </div>
+            <div class="col-md-4">
+                <div th:replace="~{fragments/formulario :: campoTexto('casaDepartamento', 'Casa / departamento', ${direccion?.casaDepartamento}, false)}"></div>
+            </div>
+        </div>
+        <div th:replace="~{fragments/formulario :: campoTexto('referencia', 'Referencia', ${direccion?.referencia}, false)}"></div>
+    </div>
+</body>
+</html>

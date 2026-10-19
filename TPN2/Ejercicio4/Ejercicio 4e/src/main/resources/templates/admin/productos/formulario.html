@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Catálogo</span><span class="breadcrumb-separator">/</span>
+        <a th:href="@{/admin/productos}">Productos</a><span class="breadcrumb-separator">/</span>
+        <span th:text="${id == null ? 'Alta' : 'Edición'}">Alta</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <form th:action="@{${id == null ? '/admin/productos' : '/admin/productos/' + id + '/editar'}}"
+              method="post" enctype="multipart/form-data" class="zero-form">
+            <div class="zero-panel mb-4">
+                <h2>Datos</h2>
+                <div class="form-row">
+                    <div class="col-md-4">
+                        <th:block th:if="${id == null}">
+                            <div th:replace="~{fragments/formulario :: campoTexto('codigo', 'Código', ${productoForm.codigo}, true)}"></div>
+                        </th:block>
+                        <th:block th:unless="${id == null}">
+                            <div th:replace="~{fragments/formulario :: campoSoloLectura('codigo', 'Código', ${productoForm.codigo})}"></div>
+                        </th:block>
+                    </div>
+                    <div class="col-md-5">
+                        <div th:replace="~{fragments/formulario :: campoTexto('nombre', 'Nombre', ${productoForm.nombre}, true)}"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div th:replace="~{fragments/formulario :: campoTexto('talle', 'Talle', ${productoForm.talle}, true)}"></div>
+                    </div>
+                </div>
+                <div th:replace="~{fragments/formulario :: campoTextoLargo('descripcion', 'Descripción', ${productoForm.descripcion}, true)}"></div>
+                <div class="form-row">
+                    <th:block th:replace="~{fragments/categoria :: cascada(${arbolCategorias}, 'categoriaId', 'subCategoriaId',
+                              ${productoForm.categoriaId}, ${productoForm.subCategoriaId}, false)}"></th:block>
+                </div>
+                <div th:replace="~{fragments/formulario :: campoSwitch('enOferta', 'En oferta', ${productoForm.enOferta})}"></div>
+            </div>
+            <div class="zero-panel">
+                <h2>Imagen</h2>
+                <div th:replace="~{fragments/input-imagen :: inputImagen('imagen', 'imagen', 'Imagen del producto', null,
+                     ${imagenId != null ? '/imagen/' + imagenId : null}, ${id == null}, null, null,
+                     ${id == null ? null : 'Formatos permitidos: JPG, PNG y WEBP. Tamaño máximo: 2 MB. Dejala vacía para conservar la actual.'},
+                     true)}"></div>
+                <div th:replace="~{fragments/formulario :: acciones('/admin/productos')}"></div>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

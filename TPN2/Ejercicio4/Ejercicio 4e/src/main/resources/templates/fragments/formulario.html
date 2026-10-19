@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <form th:fragment="formularioNombre(action, nombre, cancelarUrl)" th:action="@{${action}}" method="post" class="zero-form">
+        <div class="form-group">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" name="nombre" type="text" class="form-control" th:value="${nombre}" required autofocus>
+        </div>
+        <div class="zero-form-actions">
+            <button type="submit" class="zero-button primary">Guardar</button>
+            <a th:href="@{${cancelarUrl}}" class="zero-button secondary">Cancelar</a>
+        </div>
+    </form>
+    <!-- Campos sueltos para ABM con varios datos: se incluyen dentro de un <form class="zero-form" th:action>. -->
+    <div th:fragment="campoTexto(nombre, etiqueta, valor, requerido)" class="form-group">
+        <label th:for="${nombre}" th:text="${etiqueta}">Campo</label>
+        <input th:id="${nombre}" th:name="${nombre}" type="text" class="form-control" th:value="${valor}"
+               th:required="${requerido}">
+    </div>
+    <!-- Fecha con el selector del navegador. valor en formato aaaa-mm-dd (LocalDate.toString()) o null. -->
+    <div th:fragment="campoFecha(nombre, etiqueta, valor, requerido)" class="form-group">
+        <label th:for="${nombre}" th:text="${etiqueta}">Fecha</label>
+        <input th:id="${nombre}" th:name="${nombre}" type="date" class="form-control" th:value="${valor}"
+               th:required="${requerido}">
+    </div>
+    <!-- opciones: Map valor → texto visible, en el orden en que se muestran. -->
+    <div th:fragment="campoSelect(nombre, etiqueta, opciones, seleccionado, requerido)" class="form-group">
+        <label th:for="${nombre}" th:text="${etiqueta}">Opción</label>
+        <select th:id="${nombre}" th:name="${nombre}" class="form-control" th:required="${requerido}">
+            <option value="">Seleccionar una opción</option>
+            <option th:each="opcion : ${opciones}" th:value="${opcion.key}" th:text="${opcion.value}"
+                    th:selected="${opcion.key == seleccionado}">Opción</option>
+        </select>
+    </div>
+    <!-- grupos: Map etiqueta del grupo → (Map valor → texto visible). Cada grupo se muestra como <optgroup>. -->
+    <div th:fragment="campoSelectAgrupado(nombre, etiqueta, grupos, seleccionado, requerido)" class="form-group">
+        <label th:for="${nombre}" th:text="${etiqueta}">Opción</label>
+        <select th:id="${nombre}" th:name="${nombre}" class="form-control" th:required="${requerido}">
+            <option value="">Seleccionar una opción</option>
+            <optgroup th:each="grupo : ${grupos}" th:label="${grupo.key}">
+                <option th:each="opcion : ${grupo.value}" th:value="${opcion.key}" th:text="${opcion.value}"
+                        th:selected="${opcion.key == seleccionado}">Opción</option>
+            </optgroup>
+        </select>
+    </div>
+    <!-- Clave: nunca se precarga. ayuda (puede ser null) se muestra debajo, por ejemplo "Dejala vacía para no cambiarla". -->
+    <div th:fragment="campoClave(nombre, etiqueta, requerido, ayuda)" class="form-group">
+        <label th:for="${nombre}" th:text="${etiqueta}">Clave</label>
+        <input th:id="${nombre}" th:name="${nombre}" type="password" class="form-control" autocomplete="new-password"
+               th:required="${requerido}">
+        <small th:if="${ayuda != null}" class="form-text text-muted" th:text="${ayuda}">Ayuda</small>
+    </div>
+    <!-- Checkbox: envía "true" si está marcado; en el controller usar @RequestParam(defaultValue = "false"). -->
+    <div th:fragment="campoCheckbox(nombre, etiqueta, marcado)" class="form-check mb-3">
+        <input th:id="${nombre}" th:name="${nombre}" type="checkbox" class="form-check-input" value="true"
+               th:checked="${marcado}">
+        <label th:for="${nombre}" class="form-check-label" th:text="${etiqueta}">Opción</label>
+    </div>
+    <!-- Switch: envía "true" si está encendido; en el controller usar @RequestParam(defaultValue = "false"). -->
+    <div th:fragment="campoSwitch(nombre, etiqueta, marcado)" class="form-group">
+        <label th:for="${nombre}" class="zero-switch">
+            <input th:id="${nombre}" th:name="${nombre}" type="checkbox" class="zero-switch-input" value="true"
+                   th:checked="${marcado}">
+            <span class="zero-switch-slider" aria-hidden="true"></span>
+            <span th:text="${etiqueta}">Opción</span>
+        </label>
+    </div>
+    <!-- Texto de varias líneas, por ejemplo una descripción. -->
+    <div th:fragment="campoTextoLargo(nombre, etiqueta, valor, requerido)" class="form-group">
+        <label th:for="${nombre}" th:text="${etiqueta}">Campo</label>
+        <textarea th:id="${nombre}" th:name="${nombre}" class="form-control" rows="4" th:text="${valor}"
+                  th:required="${requerido}"></textarea>
+    </div>
+    <!-- Dato que se muestra pero no se edita ni se envía (no tiene name), por ejemplo un código. -->
+    <div th:fragment="campoSoloLectura(nombre, etiqueta, valor)" class="form-group">
+        <label th:for="${nombre}" th:text="${etiqueta}">Campo</label>
+        <input th:id="${nombre}" type="text" class="form-control" th:value="${valor}" readonly>
+    </div>
+    <div th:fragment="acciones(cancelarUrl)" class="zero-form-actions">
+        <button type="submit" class="zero-button primary">Guardar</button>
+        <a th:href="@{${cancelarUrl}}" class="zero-button secondary">Cancelar</a>
+    </div>
+    <form th:fragment="formulario(action, method, errorNombre, errorEmail)" th:attr="action=${action},method=${method != null ? method : 'post'}" class="zero-form">
+        <div class="form-group">
+            <label for="componente-nombre">Nombre</label>
+            <input id="componente-nombre" name="nombre" type="text" class="form-control" placeholder="Nombre">
+            <small th:if="${errorNombre != null}" class="form-text text-danger" th:text="${errorNombre}">El nombre es obligatorio.</small>
+        </div>
+        <div class="form-group">
+            <label for="componente-email">Correo electrónico</label>
+            <input id="componente-email" name="email" type="email" class="form-control" placeholder="correo@ejemplo.com">
+            <small th:if="${errorEmail != null}" class="form-text text-danger" th:text="${errorEmail}">Ingresá un correo válido.</small>
+        </div>
+        <div class="form-group">
+            <label for="componente-categoria">Categoría</label>
+            <select id="componente-categoria" name="categoria" class="form-control">
+                <option value="">Seleccionar categoría</option>
+                <option value="ropa">Ropa</option>
+                <option value="calzado">Calzado</option>
+                <option value="accesorios">Accesorios</option>
+            </select>
+        </div>
+        <div class="form-check mb-3">
+            <input id="componente-acepta" name="acepta" type="checkbox" class="form-check-input">
+            <label for="componente-acepta" class="form-check-label">Acepto los términos y condiciones</label>
+        </div>
+        <div class="zero-form-actions">
+            <button type="submit" class="zero-button primary">Guardar</button>
+            <a th:attr="href=${action}" class="zero-button secondary">Cancelar</a>
+        </div>
+    </form>
+    <form th:fragment="formularioLogin(action)" th:action="@{${action}}" method="post" class="zero-form">
+        <div class="form-group mb-3">
+            <label for="username">Correo electrónico</label>
+            <input id="username" name="username" type="email" class="form-control"
+                   autocomplete="username" required autofocus>
+        </div>
+        <div class="form-group mb-4">
+            <label for="password">Contraseña</label>
+            <input id="password" name="password" type="password" class="form-control"
+                   autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="zero-button primary w-100">Ingresar</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="15.1"><zoom_level>10</zoom_level>
+<element><id>Text</id><coordinates><x>40</x><y>15</y><w>2180</w><h>30</h></coordinates><panel_attributes>*CU01 · Generar orden de compra: agregar producto al carrito*
+fontsize=16</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLActor</id><coordinates><x>100</x><y>40</y><w>80</w><h>80</h></coordinates><panel_attributes>Cliente</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>130</x><y>110</y><w>20</w><h>1252</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1242</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>248</x><y>70</y><w>184</w><h>50</h></coordinates><panel_attributes>:CarritoController
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>330</x><y>110</y><w>20</w><h>1252</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1242</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>448</x><y>70</y><w>184</w><h>50</h></coordinates><panel_attributes>:CarritoService
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>530</x><y>110</y><w>20</w><h>1252</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1242</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>648</x><y>70</y><w>184</w><h>50</h></coordinates><panel_attributes>:ProductoRepository
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>730</x><y>110</y><w>20</w><h>1252</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1242</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>848</x><y>70</y><w>184</w><h>50</h></coordinates><panel_attributes>:VigenciaPrecioService
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>930</x><y>110</y><w>20</w><h>1252</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1242</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1048</x><y>70</y><w>184</w><h>50</h></coordinates><panel_attributes>:StockService
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1130</x><y>110</y><w>20</w><h>1252</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1242</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1248</x><y>70</y><w>184</w><h>50</h></coordinates><panel_attributes>:OrdenCompraRepository
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1330</x><y>110</y><w>20</w><h>1252</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1242</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1448</x><y>70</y><w>184</w><h>50</h></coordinates><panel_attributes>:OrdenCompra
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1530</x><y>110</y><w>20</w><h>1252</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1242</additional_attributes></element>
+<element><id>UMLClass</id><coordinates><x>1648</x><y>70</y><w>184</w><h>50</h></coordinates><panel_attributes>:DetalleCompra
+halign=center</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1730</x><y>110</y><w>20</w><h>1252</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;10;1242</additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>134</x><y>144</y><w>12</w><h>1160</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>334</x><y>144</y><w>12</w><h>1160</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>534</x><y>178</y><w>12</w><h>1092</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>734</x><y>328</y><w>12</w><h>46</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>934</x><y>396</y><w>12</w><h>46</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>1134</x><y>464</y><w>12</w><h>46</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>1334</x><y>580</y><w>12</w><h>656</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>1534</x><y>776</y><w>12</w><h>408</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLGeneric</id><coordinates><x>1734</x><y>952</y><w>12</w><h>184</h></coordinates><panel_attributes>bg=white</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLFrame</id><coordinates><x>444</x><y>644</y><w>992</w><h>120</h></coordinates><panel_attributes>opt
+[el cliente no tiene carrito abierto]</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLFrame</id><coordinates><x>244</x><y>840</y><w>392</w><h>72</h></coordinates><panel_attributes>opt
+[cantidadFinal &gt; stockActual]</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>UMLFrame</id><coordinates><x>444</x><y>920</y><w>1392</w><h>292</h></coordinates><panel_attributes>alt
+[el producto ya está en la orden]</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>434</x><y>1050</y><w>1412</w><h>20</h></coordinates><panel_attributes>lt=.</panel_attributes><additional_attributes>10;10;1402;10</additional_attributes></element>
+<element><id>Text</id><coordinates><x>450</x><y>1062</y><w>300</w><h>20</h></coordinates><panel_attributes>[producto nuevo]</panel_attributes><additional_attributes></additional_attributes></element>
+<element><id>Relation</id><coordinates><x>136</x><y>140</y><w>208</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+POST /cliente/carrito/agregar (idProducto, cantidad, returnUrl)</panel_attributes><additional_attributes>10;10;198;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>336</x><y>174</y><w>208</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+obtenerOCrearClienteParaUsuario(usuario)</panel_attributes><additional_attributes>10;10;198;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>336</x><y>208</y><w>208</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+cliente</panel_attributes><additional_attributes>198;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>336</x><y>242</y><w>208</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+agregarProducto(idCliente, idProducto, cantidad)</panel_attributes><additional_attributes>10;10;198;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>276</y><w>54</w><h>34</h></coordinates><panel_attributes>lt=-&gt;
+validarCliente(idCliente)</panel_attributes><additional_attributes>10;10;44;10;44;24;10;24</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>324</y><w>208</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+findByIdAndEliminadoFalse(idProducto)</panel_attributes><additional_attributes>10;10;198;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>358</y><w>208</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+producto</panel_attributes><additional_attributes>198;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>392</y><w>408</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+buscarPrecioVigente(idProducto)</panel_attributes><additional_attributes>10;10;398;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>426</y><w>408</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+precioVigente</panel_attributes><additional_attributes>398;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>460</y><w>608</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+buscarStockActual(idProducto)</panel_attributes><additional_attributes>10;10;598;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>494</y><w>608</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+stockActual</panel_attributes><additional_attributes>598;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>528</y><w>54</w><h>34</h></coordinates><panel_attributes>lt=-&gt;
+obtenerCarrito(idCliente)</panel_attributes><additional_attributes>10;10;44;10;44;24;10;24</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>576</y><w>808</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+findFirstByCliente_IdAndEstadoOrdenCompraAndEliminadoFalseOrderByFechaDesc(idCliente, PENDIENTE_COMPLETAR)</panel_attributes><additional_attributes>10;10;798;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>610</y><w>808</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+Optional&lt;OrdenCompra&gt;</panel_attributes><additional_attributes>798;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>672</y><w>54</w><h>34</h></coordinates><panel_attributes>lt=-&gt;
+crearNuevoCarrito(cliente)</panel_attributes><additional_attributes>10;10;44;10;44;24;10;24</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>720</y><w>808</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+save(nueva)</panel_attributes><additional_attributes>10;10;798;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>772</y><w>1008</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+buscarDetallePorProducto(idProducto)</panel_attributes><additional_attributes>10;10;998;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>806</y><w>1008</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+Optional&lt;DetalleCompra&gt;</panel_attributes><additional_attributes>998;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>336</x><y>868</y><w>208</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+ErrorServiceException("No hay suficiente stock...")</panel_attributes><additional_attributes>198;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>948</y><w>1208</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+setCantidad(cantidadFinal)</panel_attributes><additional_attributes>10;10;1198;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>982</y><w>1208</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+calcularSubtotal(precioVigente)</panel_attributes><additional_attributes>10;10;1198;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>1016</y><w>1008</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+recalcularTotal()</panel_attributes><additional_attributes>10;10;998;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>1086</y><w>1008</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+crearDetalle(producto, cantidad, precioVigente)</panel_attributes><additional_attributes>10;10;998;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1536</x><y>1120</y><w>208</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+«create» calcularSubtotal(precioUnitario)</panel_attributes><additional_attributes>10;10;198;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>1536</x><y>1154</y><w>54</w><h>34</h></coordinates><panel_attributes>lt=-&gt;
+recalcularTotal()</panel_attributes><additional_attributes>10;10;44;10;44;24;10;24</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>536</x><y>1220</y><w>808</w><h>20</h></coordinates><panel_attributes>lt=-&gt;
+save(orden)</panel_attributes><additional_attributes>10;10;798;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>336</x><y>1254</y><w>208</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+detalle</panel_attributes><additional_attributes>198;10;10;10</additional_attributes></element>
+<element><id>Relation</id><coordinates><x>136</x><y>1288</y><w>208</w><h>20</h></coordinates><panel_attributes>lt=.&gt;
+redirect /producto/{id} (flash "Producto agregado al carrito con éxito.")</panel_attributes><additional_attributes>198;10;10;10</additional_attributes></element>
+</diagram>

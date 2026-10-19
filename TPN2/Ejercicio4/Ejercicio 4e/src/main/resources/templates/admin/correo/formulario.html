@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Configuración</span><span class="breadcrumb-separator">/</span><span>Correo</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+
+        <div th:if="${sinSede != null}" class="zero-panel">
+            <h2>Falta la sede central</h2>
+            <p class="zero-component-description" th:text="${sinSede + ' Los correos se envían con la cuenta de la sede central.'}">
+                Todavía no se cargó la empresa sede central.
+            </p>
+            <a th:href="@{/admin/configuracion/empresa/nueva}" class="zero-button primary">Cargar empresa</a>
+        </div>
+
+        <th:block th:if="${sinSede == null}">
+            <div class="zero-panel mb-4">
+                <h2>Cuenta de envío</h2>
+                <p class="zero-component-description">
+                    Cuenta SMTP con la que la tienda envía sus correos. Para Gmail usá smtp.gmail.com, puerto 587 con TLS
+                    y una clave de aplicación (requiere la verificación en 2 pasos).
+                </p>
+                <form th:action="@{/admin/configuracion/correo}" method="post" class="zero-form">
+                    <div class="form-row">
+                        <div class="col-md-6">
+                            <div th:replace="~{fragments/formulario :: campoTexto('smtp', 'Servidor SMTP', ${smtp}, true)}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div th:replace="~{fragments/formulario :: campoTexto('puerto', 'Puerto', ${puerto}, true)}"></div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-6">
+                            <div th:replace="~{fragments/formulario :: campoTexto('correo', 'Correo', ${correo}, true)}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div th:replace="~{fragments/formulario :: campoClave('clave', 'Clave', ${!configurado},
+                                 ${configurado ? 'Dejala vacía para mantener la clave guardada.' : null})}"></div>
+                        </div>
+                    </div>
+                    <div th:replace="~{fragments/formulario :: campoCheckbox('tls', 'Usar TLS (STARTTLS)', ${tls})}"></div>
+                    <div class="zero-form-actions">
+                        <button type="submit" class="zero-button primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="zero-panel">
+                <h2>Correo de prueba</h2>
+                <p class="zero-component-description" th:if="${configurado}">
+                    Envía un correo con el diseño de la marca para comprobar que la cuenta funciona.
+                </p>
+                <p class="zero-component-description" th:unless="${configurado}">
+                    Guardá la cuenta de envío para poder mandar un correo de prueba.
+                </p>
+                <form th:if="${configurado}" th:action="@{/admin/configuracion/correo/prueba}" method="post" class="zero-form">
+                    <div class="form-row">
+                        <div class="col-md-6">
+                            <div th:replace="~{fragments/formulario :: campoTexto('destinatario', 'Enviar a', ${destinatario}, true)}"></div>
+                        </div>
+                    </div>
+                    <div class="zero-form-actions">
+                        <button type="submit" class="zero-button primary">Enviar correo de prueba</button>
+                    </div>
+                </form>
+            </div>
+        </th:block>
+    </div>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/publico}">
+<head>
+    <title>Ejemplo público</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <section class="zero-section">
+            <div class="container">
+                <div class="zero-banner">
+                    <div class="container zero-banner-content">
+                        <div class="zero-kicker">Zero Sport</div>
+                        <h1>Diseño listo<br>para la marca Zero</h1>
+                        <p>Plantilla pública adaptada al visual del e-commerce deportivo, con estructura reutilizable para futuras vistas del sitio.</p>
+                        <div>
+                            <a href="#" class="zero-button primary">Ver colección</a>
+                            <a href="#" class="zero-button secondary">Explorar</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="zero-feature-grid">
+                    <article class="zero-feature-card">
+                        <div class="zero-feature-icon"><i class="fa fa-bolt"></i></div>
+                        <h3>Rendimiento</h3>
+                        <p>Modelos pensados para movimiento, fuerza y estilo diario.</p>
+                    </article>
+                    <article class="zero-feature-card">
+                        <div class="zero-feature-icon"><i class="fa fa-shield"></i></div>
+                        <h3>Calidad</h3>
+                        <p>Materiales y acabados que combinan funcionalidad y presencia.</p>
+                    </article>
+                    <article class="zero-feature-card">
+                        <div class="zero-feature-icon"><i class="fa fa-truck"></i></div>
+                        <h3>Envíos</h3>
+                        <p>Entrega rápida, seguimiento y atención para cada compra.</p>
+                    </article>
+                </div>
+
+                <div class="zero-section">
+                    <h2 class="admin-page-title" style="font-size:2rem; margin-bottom:1.5rem;">Lo más visto</h2>
+                    <div class="zero-product-grid">
+                        <article class="zero-product-card">
+                            <div class="image-wrap"><img th:src="@{/vendor/template/images/product-01.jpg}" alt="Producto Zero"></div>
+                            <h3>Remera Zero Pro</h3>
+                            <p>Algodón premium y corte atlético.</p>
+                            <span class="price">$12.500</span>
+                        </article>
+                        <article class="zero-product-card">
+                            <div class="image-wrap"><img th:src="@{/vendor/template/images/product-02.jpg}" alt="Producto Zero"></div>
+                            <h3>Short Zero Move</h3>
+                            <p>Comodidad para entrenar todo el día.</p>
+                            <span class="price">$9.900</span>
+                        </article>
+                        <article class="zero-product-card">
+                            <div class="image-wrap"><img th:src="@{/vendor/template/images/product-03.jpg}" alt="Producto Zero"></div>
+                            <h3>Zapatillas Sprint</h3>
+                            <p>Amortiguación y tracción para velocidad.</p>
+                            <span class="price">$28.900</span>
+                        </article>
+                        <article class="zero-product-card">
+                            <div class="image-wrap"><img th:src="@{/vendor/template/images/product-04.jpg}" alt="Producto Zero"></div>
+                            <h3>Bolso Sport</h3>
+                            <p>Diseño práctico y resistente.</p>
+                            <span class="price">$16.200</span>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

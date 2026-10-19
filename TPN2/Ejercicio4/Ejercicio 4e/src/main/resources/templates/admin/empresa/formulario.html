@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<body>
+    <div layout:fragment="breadcrumb">
+        <span>Configuración</span><span class="breadcrumb-separator">/</span>
+        <a th:href="@{/admin/configuracion/empresa}">Empresa</a><span class="breadcrumb-separator">/</span>
+        <span th:text="${id == null ? 'Alta' : 'Edición'}">Alta</span>
+    </div>
+    <div layout:fragment="content">
+        <div th:replace="~{fragments/mensajes :: mensajes}"></div>
+        <form th:action="@{${id == null ? '/admin/configuracion/empresa' : '/admin/configuracion/empresa/' + id + '/editar'}}"
+              method="post" class="zero-form">
+            <div class="zero-panel mb-4">
+                <h2>Datos</h2>
+                <div class="form-row">
+                    <div class="col-md-6">
+                        <div th:replace="~{fragments/formulario :: campoTexto('razonSocial', 'Razón social', ${empresaForm.razonSocial}, true)}"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div th:replace="~{fragments/formulario :: campoTexto('cuit', 'CUIT (XX-XXXXXXXX-X)', ${empresaForm.cuit}, true)}"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div th:replace="~{fragments/formulario :: campoSelect('tipoSucursal', 'Tipo', ${tiposEmpresa}, ${empresaForm.tipoSucursal}, true)}"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="zero-panel mb-4">
+                <h2>Dirección</h2>
+                <div th:replace="~{fragments/direccion :: direccion(${direccionForm})}"></div>
+            </div>
+            <div class="zero-panel">
+                <h2>Contacto</h2>
+                <div class="form-row">
+                    <div class="col-md-6">
+                        <div th:replace="~{fragments/formulario :: campoTexto('correo', 'Correo electrónico', ${empresaForm.correo}, true)}"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div th:replace="~{fragments/formulario :: campoTexto('telefono', 'Teléfono', ${empresaForm.telefono}, true)}"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div th:replace="~{fragments/formulario :: campoSelect('tipoTelefono', 'Tipo de teléfono', ${tiposTelefono}, ${empresaForm.tipoTelefono}, true)}"></div>
+                    </div>
+                </div>
+                <div th:replace="~{fragments/formulario :: acciones('/admin/configuracion/empresa')}"></div>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
