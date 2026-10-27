@@ -1,0 +1,145 @@
+Ejercicio 6
+b) INVESTIGACIÓN
+
+1.  DEVOPS
+
+¿Qué significa y para qué sirve? DevOps une Desarrollo (Dev) y
+Operaciones (Ops). Es una cultura de trabajo y un conjunto de prácticas
+que favorecen la colaboración y automatizan la construcción, prueba,
+publicación y supervisión del software. Busca entregar cambios más
+rápido y con mayor confiabilidad.
+
+Relación con metodologías ágiles: Ambos promueven colaboración, entregas
+frecuentes y mejora continua. Ágil se enfoca principalmente en organizar
+el desarrollo en incrementos y responder a cambios del cliente. DevOps
+extiende esa colaboración hasta la puesta en producción y el
+mantenimiento.
+
+Gráfico del ciclo DevOps: PLANIFICAR → PROGRAMAR → CONSTRUIR → PROBAR ↑
+↓ MEDIR ← SUPERVISAR ← OPERAR ← DESPLEGAR
+
+Herramientas sugeridas: - Planificación: Jira o Trello. Organizan tareas
+y prioridades. - Control de versiones: Git y GitHub. Guardan el código y
+permiten colaborar. - Integración y entrega continua: GitHub Actions o
+Jenkins. Ejecutan compilaciones y pruebas automáticamente. -
+Contenedores: Docker. Empaqueta la aplicación con sus dependencias. -
+Orquestación: Kubernetes. Administra contenedores en varios
+servidores. - Supervisión: Prometheus y Grafana. Recopilan métricas y
+muestran el estado del sistema.
+
+2.  AMBIENTE DE DESARROLLO, PRUEBAS Y PRODUCCIÓN
+
+Desarrollo: entorno donde los programadores escriben y modifican el
+código. Puede contener datos ficticios y configuraciones locales.
+Pruebas: entorno donde se comprueba el funcionamiento, la seguridad y la
+integración antes de publicar. Producción: entorno real al que acceden
+los usuarios; requiere estabilidad, seguridad, copias de respaldo y
+monitoreo.
+
+¿Qué significa desplegar en producción? Consiste en instalar o publicar
+una versión de la aplicación en el entorno real para que los usuarios
+puedan utilizarla. Debe hacerse de forma controlada y con posibilidad de
+volver a una versión anterior si falla.
+
+3.  DOMINIO, DNS Y DOMINIOS GRATUITOS
+
+¿Qué es un dominio? Es el nombre legible que identifica un sitio en
+Internet, por ejemplo facultad.edu.ar. Permite acceder al sitio sin
+memorizar su dirección IP.
+
+¿Qué es DNS? El Sistema de Nombres de Dominio (DNS) traduce nombres como
+ejemplo.com a direcciones IP que las computadoras utilizan para
+comunicarse. Un servidor DNS responde consultas sobre esos nombres.
+
+Cinco ejemplos de dominios: - google.com - wikipedia.org -
+uncuyo.edu.ar - argentina.gob.ar - github.com
+
+¿Cómo obtener un dominio en Argentina? Se consulta la disponibilidad en
+NIC Argentina, se inicia sesión en Trámites a Distancia con CUIT/CUIL y
+Clave Fiscal, se confirma el trámite y se abona el arancel
+correspondiente. El precio depende de la extensión y puede cambiar.
+
+¿Cómo obtener un dominio en otros países? Se elige un registrador de
+dominios, se comprueba que el nombre esté disponible y se paga el
+registro y sus renovaciones. Las condiciones dependen de la extensión y
+del país.
+
+¿Se puede obtener gratis? Un dominio propio como .com o .com.ar
+normalmente tiene costo. Se puede usar gratis un subdominio ofrecido por
+plataformas, por ejemplo usuario.github.io para publicar un sitio
+estático. Algunas promociones ofrecen dominios sin costo por un período
+limitado; hay que revisar las condiciones de renovación.
+
+4.  SERVIDORES WEB Y HOSTING
+
+¿Qué es un servidor web? Es un software que recibe solicitudes
+HTTP/HTTPS y devuelve páginas, archivos o respuestas de una aplicación.
+Ejemplos: Apache HTTP Server, Nginx, Caddy e IIS.
+
+¿Qué significa hacer hosting? Es alojar los archivos y/o la aplicación
+en un servidor conectado a Internet para que otras personas puedan
+acceder desde un navegador o mediante una API.
+
+Opciones de hosting: - Compartido: económico y sencillo; recursos
+limitados y poco control del sistema. - VPS: servidor virtual con mayor
+control y recursos propios asignados. - Cloud Server: servidor virtual
+flexible, con recursos ampliables. - Servidor dedicado: equipo físico
+para un cliente; más control y costo. - Plataforma administrada (PaaS):
+facilita publicar aplicaciones sin administrar todo el servidor. -
+Hosting estático: apropiado para HTML, CSS y JavaScript sin backend.
+
+¿Qué ofrece DonWeb para una aplicación Spring Boot? DonWeb ofrece Web
+Hosting, Cloud Server y servidores dedicados. Para Spring Boot conviene
+evaluar un Cloud Server/VPS con Linux, Java instalado y acceso para
+ejecutar la aplicación; también puede desplegarse con Docker. El hosting
+compartido tradicional no debe suponerse compatible con una aplicación
+Java persistente: hay que confirmar soporte y condiciones con el
+proveedor.
+
+5.  DOCKER Y KUBERNETES
+
+¿Qué es Docker? Es una plataforma para empaquetar una aplicación y sus
+dependencias en contenedores, ayudando a que se ejecute de forma
+consistente en diferentes entornos.
+
+Funcionamiento de una aplicación Spring Boot con Docker: Código Spring
+Boot → construir JAR → crear imagen Docker → ejecutar contenedor →
+aplicación disponible por un puerto HTTP.
+
+¿Qué es Kubernetes? Es una plataforma que automatiza la implementación,
+escalado y recuperación de aplicaciones en contenedores. Resulta útil
+cuando hay muchos contenedores o se necesita alta disponibilidad.
+
+Funcionamiento simplificado con Kubernetes: Imagen Docker → clúster
+Kubernetes → Deployment crea/actualiza réplicas → Service distribuye el
+tráfico → usuarios acceden a la aplicación.
+
+Diferencias: - Docker crea y ejecuta contenedores. - Kubernetes
+administra y coordina contenedores, incluso distribuidos en varios
+servidores. - Para una aplicación pequeña puede bastar Docker;
+Kubernetes agrega complejidad y se justifica cuando se necesita
+orquestación y escalabilidad.
+
+6.  INTEGRACIÓN CONTINUA Y DESPLIEGUE CONTINUO (CI/CD)
+
+Integración continua (CI): Los cambios se incorporan frecuentemente a un
+repositorio compartido. Cada cambio puede activar automáticamente la
+compilación y las pruebas para detectar errores pronto.
+
+Entrega continua (Continuous Delivery): El código validado queda
+preparado para publicarse; el despliegue a producción suele requerir una
+aprobación manual.
+
+Despliegue continuo (Continuous Deployment): Si todas las comprobaciones
+pasan, los cambios se publican automáticamente en producción sin
+aprobación manual.
+
+Ventajas: - Detecta errores antes. - Reduce tareas manuales y errores
+humanos. - Facilita entregas frecuentes y repetibles. - Mejora la
+calidad mediante pruebas automáticas.
+
+Gráfico de CI/CD para Spring Boot: Programar → subir cambios a GitHub →
+GitHub Actions compila → ejecuta pruebas → construye JAR/imagen Docker →
+[aprobación, si corresponde] → despliega en servidor → monitoreo y
+retroalimentación
+

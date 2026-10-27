@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Novedades de la Facultad — Prototipo</title>
+<style>
+:root{--navy:#163b65;--blue:#2366a8;--gold:#e8b04a;--bg:#f4f7fb;--ink:#1d2939}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--navy);color:#fff;padding:20px max(5vw,20px);display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:1.2rem}.brand small{display:block;font-weight:400;font-size:.8rem;margin-top:5px}
+nav a{color:white;text-decoration:none;margin:0 10px;font-size:.95rem}
+.hero{background:linear-gradient(120deg,#163b65,#2366a8);color:white;padding:45px max(5vw,20px)}
+.hero h1{font-size:clamp(2rem,4vw,3rem);max-width:760px;margin:0 0 12px}.hero p{max-width:700px;line-height:1.6}
+.wrap{max-width:1120px;margin:30px auto;padding:0 20px}.filters{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
+input,select{padding:12px;border:1px solid #ccd5e0;border-radius:8px;background:#fff;font-size:1rem}
+input{flex:1;min-width:220px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.card{background:white;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px #163b6510}.image{height:145px;background:linear-gradient(135deg,#dbeafe,#fef3c7);display:flex;align-items:center;justify-content:center;color:#315579;font-weight:bold}
+.cardbody{padding:18px}.tag{color:#2366a8;font-size:.78rem;font-weight:bold;text-transform:uppercase}.card h2{font-size:1.15rem;line-height:1.35}.card p{line-height:1.5;color:#526173}.meta{font-size:.85rem;color:#667085}
+.btn{display:inline-block;background:var(--gold);color:#172b43;border:0;border-radius:7px;padding:11px 16px;font-weight:bold;text-decoration:none;cursor:pointer}
+footer{margin-top:45px;background:#102c4c;color:#e5edf7;padding:25px max(5vw,20px);line-height:1.6}
+.admin{border:1px dashed #7d93ab;background:#edf4fb;border-radius:10px;padding:18px;margin-top:30px}.admin h2{margin-top:0}
+@media(max-width:600px){nav a{margin:0 6px}.hero{padding-top:30px;padding-bottom:30px}}
+</style></head><body>
+<header><div class="brand">FACULTAD <small>Secretaría de Comunicación Institucional</small></div><nav><a href="#">Inicio</a><a href="#noticias">Noticias</a><a href="#facultad">La Facultad</a><a href="#contacto">Contacto</a></nav></header>
+<section class="hero"><p class="tag" style="color:#ffe2a2">Actualidad académica</p><h1>Las novedades de nuestra Facultad, en un solo lugar</h1><p>Información institucional, actividades, investigación y oportunidades para estudiantes, docentes, graduados y la comunidad.</p><a class="btn" href="#noticias">Explorar noticias</a></section>
+<main class="wrap" id="noticias"><h2>Últimas noticias</h2><p>Prototipo navegable con contenido de ejemplo inspirado en secciones de noticias institucionales.</p>
+<div class="filters"><input id="q" placeholder="Buscar por título o contenido…" oninput="filterCards()"><select id="cat" onchange="filterCards()"><option value="">Todas las categorías</option><option>Institucional</option><option>Estudiantes</option><option>Investigación</option><option>Capacitación</option></select></div>
+<div class="grid" id="cards">
+<article class="card" data-cat="Estudiantes"><div class="image">Imagen de la actividad</div><div class="cardbody"><div class="tag">Estudiantes</div><h2>Estudiantes participaron de una jornada de innovación</h2><p>La comunidad estudiantil compartió experiencias y proyectos desarrollados durante el cuatrimestre.</p><div class="meta">27 de octubre de 2026 · Autor: Comunicación</div></div></article>
+<article class="card" data-cat="Investigación"><div class="image">Imagen de investigación</div><div class="cardbody"><div class="tag">Investigación</div><h2>Nuevo encuentro para divulgar proyectos científicos</h2><p>Docentes e investigadores presentaron líneas de trabajo y oportunidades de participación.</p><div class="meta">22 de octubre de 2026 · Autor: Prensa</div></div></article>
+<article class="card" data-cat="Institucional"><div class="image">Imagen institucional</div><div class="cardbody"><div class="tag">Institucional</div><h2>Se abrió una nueva convocatoria para la comunidad</h2><p>La Facultad informa fechas, requisitos y canales de consulta para las personas interesadas.</p><div class="meta">20 de octubre de 2026 · Autor: Secretaría</div></div></article>
+<article class="card" data-cat="Capacitación"><div class="image">Imagen de capacitación</div><div class="cardbody"><div class="tag">Capacitación</div><h2>Inscripciones abiertas a una actividad de formación</h2><p>La propuesta busca fortalecer conocimientos y compartir herramientas aplicables al estudio y al trabajo.</p><div class="meta">18 de octubre de 2026 · Autor: Comunicación</div></div></article>
+</div>
+<section class="admin"><h2>Vista de gestión (demostración)</h2><p>El prototipo final contempla un formulario protegido para cargar título, copete, contenido, imagen, autor, fecha y categoría, además de guardar como borrador o publicar.</p><button class="btn" onclick="alert('Demostración visual: la gestión real requiere autenticación y backend.')">Nueva noticia (demo)</button></section>
+</main><footer id="contacto"><strong>Facultad — Noticias institucionales</strong><br>Prototipo académico · Los textos son ilustrativos y deben reemplazarse por contenido aprobado.<br><span id="facultad">Accesibilidad: imágenes con texto alternativo, contraste y diseño adaptable.</span></footer>
+<script>function filterCards(){const q=document.getElementById('q').value.toLowerCase(),c=document.getElementById('cat').value;document.querySelectorAll('.card').forEach(card=>{card.style.display=(!q||card.innerText.toLowerCase().includes(q))&&(!c||card.dataset.cat===c)?'':'none'})}</script>
+</body></html>
