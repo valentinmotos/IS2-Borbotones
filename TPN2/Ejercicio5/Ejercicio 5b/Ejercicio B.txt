@@ -1,0 +1,207 @@
+INVESTIGACIÓN: SSL, JWT, AUTH0 Y API SEGURAS
+
+1. CERTIFICADOS DE SEGURIDAD SSL
+
+1.1. ¿Qué es SSL y para qué sirve?
+SSL (Secure Sockets Layer) es un protocolo de seguridad que cifra la comunicación entre un cliente (por ejemplo, un navegador) y un servidor. Hoy en día SSL fue reemplazado por su versión mejorada, TLS (Transport Layer Security), pero se lo sigue llamando "SSL" por costumbre.
+
+Sirve para:
+- Confidencialidad: los datos viajan cifrados y nadie en el medio puede leerlos (contraseñas, tarjetas, etc.).
+- Integridad: los datos no pueden modificarse en el camino sin que se detecte.
+- Autenticación: el certificado SSL demuestra que el sitio es realmente quien dice ser.
+
+Un certificado SSL es un archivo emitido por una Autoridad Certificadora (CA) que contiene el dominio, la clave pública del servidor y la firma de la CA.
+
+1.2. ¿Cómo funciona?
+Antes de enviar datos, cliente y servidor realizan un "handshake" (saludo):
+1. El navegador se conecta al servidor y pide una conexión segura.
+2. El servidor envía su certificado SSL (con su clave pública).
+3. El navegador verifica que el certificado sea válido, no esté vencido y esté firmado por una CA de confianza.
+4. Ambos acuerdan una clave de sesión usando cifrado asimétrico (clave pública / privada).
+5. A partir de ahí, toda la comunicación se cifra con esa clave de sesión (cifrado simétrico, más rápido).
+
+1.3. Gráfica del funcionamiento
+
+   NAVEGADOR                                   SERVIDOR
+       |                                           |
+       | 1. Hola, quiero conexión segura           |
+       |------------------------------------------>|
+       |                                           |
+       | 2. Certificado SSL + clave pública        |
+       |<------------------------------------------|
+       |                                           |
+       | 3. Verifica el certificado con la CA      |
+       |    (¿válido? ¿vigente? ¿dominio correcto?)|
+       |                                           |
+       | 4. Clave de sesión (cifrada con la        |
+       |    clave pública del servidor)            |
+       |------------------------------------------>|
+       |                                           |
+       |      5. Datos cifrados con la clave       |
+       |<=========================================>|
+       |            de sesión (HTTPS)              |
+
+1.4. ¿Cómo se identifica visualmente en el navegador?
+- La URL comienza con https:// en lugar de http://.
+- Aparece un ícono de candado (o de "ajustes" en Chrome) a la izquierda de la dirección. Al hacer clic se puede ver el certificado, quién lo emitió y su vencimiento.
+- Si el certificado es inválido o el sitio usa HTTP, el navegador muestra "No seguro" o una advertencia en pantalla completa.
+
+1.5. Diferencia entre HTTP y HTTPS
+- HTTP: los datos viajan en texto plano, cualquiera que intercepte la conexión puede leerlos o modificarlos. Usa el puerto 80.
+- HTTPS: es HTTP sobre SSL/TLS. Los datos viajan cifrados y se verifica la identidad del servidor. Usa el puerto 443.
+- Además, HTTPS mejora la confianza del usuario, el posicionamiento en buscadores y es requisito para funciones modernas del navegador (geolocalización, service workers, etc.).
+
+1.6. ¿Cómo obtener un certificado SSL gratuito?
+- Let's Encrypt: autoridad certificadora gratuita y automática. Se usa con la herramienta Certbot, que genera e instala el certificado y lo renueva automáticamente (duran 90 días).
+- Cloudflare: al poner el dominio detrás de Cloudflare se obtiene HTTPS gratis.
+- Hostings y plataformas (Vercel, Netlify, GitHub Pages, Render, etc.) lo incluyen automáticamente.
+- ZeroSSL: otra alternativa gratuita similar a Let's Encrypt.
+
+Ejemplo con Certbot en un servidor Linux con Nginx:
+sudo certbot --nginx -d midominio.com
+
+
+2. JSON WEB TOKEN (JWT)
+
+2.1. ¿Qué es JWT?
+JWT (JSON Web Token) es un estándar (RFC 7519) para transmitir información entre dos partes de forma compacta y segura mediante un token firmado. Se usa principalmente para autenticación y autorización en APIs: después de iniciar sesión, el servidor entrega un token y el cliente lo envía en cada petición para demostrar quién es.
+
+Al estar firmado, el servidor puede verificar que el token no fue modificado, sin necesidad de guardar sesiones (es stateless).
+
+2.2. Estructura
+Un JWT tiene tres partes codificadas en Base64URL y separadas por puntos:
+
+   xxxxx.yyyyy.zzzzz
+   HEADER.PAYLOAD.SIGNATURE
+
+- Header: tipo de token y algoritmo de firma. Ej: {"alg": "HS256", "typ": "JWT"}
+- Payload: los datos (claims), por ejemplo el id del usuario, su rol y la fecha de expiración. Ej: {"sub": "15", "rol": "ADMIN", "exp": 1767225600}
+- Signature: firma calculada con el header, el payload y una clave secreta. Si alguien cambia el payload, la firma deja de coincidir.
+
+Importante: el payload NO está cifrado, solo codificado. Cualquiera puede leerlo, por eso no se deben guardar contraseñas ni datos sensibles en él.
+
+2.3. ¿Cómo funciona?
+1. El usuario envía usuario y contraseña al endpoint de login.
+2. El servidor valida las credenciales y genera un JWT firmado con su clave secreta.
+3. El servidor devuelve el token al cliente.
+4. El cliente guarda el token y lo envía en cada petición en el encabezado:
+   Authorization: Bearer <token>
+5. El servidor verifica la firma y la expiración. Si es válido, responde; si no, devuelve 401 Unauthorized.
+
+2.4. Gráfica del funcionamiento
+
+   CLIENTE                                     SERVIDOR (API)
+      |                                              |
+      | 1. POST /login {usuario, contraseña}         |
+      |--------------------------------------------->|
+      |                                              | 2. Valida credenciales
+      |                                              |    y firma el JWT
+      | 3. 200 OK {token: "eyJhbGci..."}             |
+      |<---------------------------------------------|
+      |                                              |
+      | 4. GET /api/productos                        |
+      |    Authorization: Bearer eyJhbGci...         |
+      |--------------------------------------------->|
+      |                                              | 5. Verifica firma
+      |                                              |    y expiración
+      | 6. 200 OK [datos]  /  401 Unauthorized       |
+      |<---------------------------------------------|
+
+
+3. AUTH0
+
+3.1. ¿Qué es Auth0?
+Auth0 es una plataforma (de la empresa Okta) que ofrece autenticación y autorización como servicio. En lugar de programar nosotros el login, el registro, la recuperación de contraseña y el manejo de usuarios, se delega todo a Auth0.
+
+Ofrece, entre otras cosas:
+- Login con usuario y contraseña.
+- Login social (Google, GitHub, Facebook, etc.).
+- Autenticación multifactor (MFA).
+- Single Sign-On (SSO): un solo login para varias aplicaciones.
+- Gestión de usuarios y roles desde un panel web.
+- SDKs para React, Angular, Spring Boot, Node, etc.
+
+Se basa en los estándares OAuth 2.0 y OpenID Connect, y entrega los tokens en formato JWT.
+
+3.2. ¿Cómo funciona?
+1. El usuario hace clic en "Iniciar sesión" en nuestra aplicación.
+2. La aplicación lo redirige a la página de login de Auth0 (Universal Login).
+3. El usuario ingresa sus credenciales o usa un login social.
+4. Auth0 valida al usuario y lo redirige de vuelta a la aplicación con un código.
+5. La aplicación cambia ese código por tokens: un ID Token (datos del usuario) y un Access Token (JWT para llamar a la API).
+6. La aplicación llama a nuestra API enviando el Access Token.
+7. La API valida el token usando las claves públicas de Auth0 y responde.
+
+3.3. Gráfica del funcionamiento
+
+   USUARIO        APLICACIÓN (frontend)        AUTH0            API (backend)
+      |                   |                      |                    |
+      | 1. Click Login    |                      |                    |
+      |------------------>|                      |                    |
+      |                   | 2. Redirige a Auth0  |                    |
+      |                   |--------------------->|                    |
+      | 3. Ingresa credenciales / Google         |                    |
+      |----------------------------------------->|                    |
+      |                   | 4. Devuelve código   |                    |
+      |                   |<---------------------|                    |
+      |                   | 5. Código -> Tokens  |                    |
+      |                   |<-------------------->|                    |
+      |                   |   (ID Token + Access Token JWT)           |
+      |                   |                      |                    |
+      |                   | 6. Petición + Bearer Access Token         |
+      |                   |------------------------------------------>|
+      |                   |                      | 7. Valida token    |
+      |                   |                      |<-------------------|
+      |                   | 8. Respuesta con los datos                |
+      |                   |<------------------------------------------|
+
+Ventaja principal: la aplicación nunca maneja las contraseñas, reduciendo riesgos y tiempo de desarrollo.
+
+
+4. API SEGURAS
+
+4.1. ¿Por qué es importante que nuestras APIs sean seguras?
+Las APIs exponen los datos y la lógica del negocio a internet, por lo que son uno de los principales blancos de ataque. Una API insegura puede provocar:
+- Robo o filtración de datos personales, contraseñas o información financiera.
+- Acceso o modificación de información por usuarios no autorizados.
+- Caída del servicio por abuso o ataques de denegación de servicio.
+- Pérdidas económicas, problemas legales (ley de protección de datos personales) y pérdida de confianza de los usuarios.
+
+4.2. Buenas prácticas de seguridad al desarrollar una API
+- Usar siempre HTTPS: nunca exponer la API por HTTP, para que los datos y tokens viajen cifrados.
+- Autenticación robusta: usar estándares como JWT u OAuth 2.0 / OpenID Connect (por ejemplo con Auth0). No inventar mecanismos propios.
+- Autorización en cada endpoint: verificar que el usuario tenga permiso sobre el recurso que pide, no solo que esté logueado (ej: que el usuario 5 no pueda ver /pedidos del usuario 8).
+- Validar todos los datos de entrada: tipo, longitud, formato y rango. Nunca confiar en lo que envía el cliente.
+- Prevenir inyecciones: usar consultas parametrizadas u ORM (JPA) en lugar de concatenar SQL.
+- Contraseñas hasheadas: guardarlas con algoritmos como BCrypt o Argon2, nunca en texto plano.
+- Tokens con expiración corta: definir un tiempo de vida (exp) y usar refresh tokens. Firmar con claves seguras.
+- No exponer secretos: claves, API keys y contraseñas en variables de entorno, nunca en el código ni en el repositorio.
+- Rate limiting: limitar la cantidad de peticiones por usuario o IP para evitar abusos y ataques de fuerza bruta (responder 429 Too Many Requests).
+- Configurar CORS correctamente: permitir solo los orígenes (dominios) que realmente consumen la API.
+- Devolver solo lo necesario: usar DTOs para no exponer campos internos (ej: hash de contraseña).
+- Manejo de errores seguro: no mostrar stack traces ni detalles internos al cliente; usar mensajes genéricos y códigos HTTP correctos (400, 401, 403, 404).
+- Logs y monitoreo: registrar accesos y errores para detectar comportamientos sospechosos, sin guardar datos sensibles en los logs.
+- Mantener dependencias actualizadas: revisar vulnerabilidades conocidas de las librerías utilizadas.
+- Principio de mínimo privilegio: cada usuario, servicio o base de datos debe tener solo los permisos que necesita.
+- Seguir las guías de OWASP: en particular el OWASP API Security Top 10, que lista los riesgos más comunes en APIs.
+
+Ejemplo de flujo seguro de una petición:
+
+   CLIENTE --HTTPS--> [Rate limit] -> [CORS] -> [Valida JWT] -> [Verifica permisos]
+                                                                      |
+                                                                      v
+   CLIENTE <--HTTPS-- [Respuesta DTO] <- [Lógica + consulta parametrizada a BD]
+
+
+CONCLUSIÓN
+SSL/TLS protege la comunicación cifrando los datos entre cliente y servidor (HTTPS). JWT permite identificar al usuario en cada petición mediante un token firmado sin guardar sesiones. Auth0 simplifica la autenticación delegándola a un servicio especializado basado en estándares. Combinadas con buenas prácticas de seguridad, estas herramientas permiten construir APIs confiables que protejan los datos de los usuarios.
+
+
+FUENTES
+- MDN Web Docs, HTTPS: https://developer.mozilla.org/es/docs/Glossary/HTTPS
+- Let's Encrypt: https://letsencrypt.org/es/
+- Certbot: https://certbot.eff.org/
+- JWT, sitio oficial: https://jwt.io/introduction
+- RFC 7519 (JSON Web Token): https://datatracker.ietf.org/doc/html/rfc7519
+- Auth0, documentación: https://auth0.com/docs
+- OWASP API Security Top 10: https://owasp.org/API-Security/

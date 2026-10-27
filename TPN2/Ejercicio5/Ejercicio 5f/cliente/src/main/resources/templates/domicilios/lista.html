@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Domicilios</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h2>Domicilios</h2>
+    <p><a class="button" th:href="@{/domicilios/nuevo}">Nuevo domicilio</a></p>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Calle</th>
+            <th>Numero</th>
+            <th>Localidad</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="domicilio : ${domicilios}">
+            <td th:text="${domicilio.id}"></td>
+            <td th:text="${domicilio.calle}"></td>
+            <td th:text="${domicilio.numero}"></td>
+            <td th:text="${domicilio.localidad != null ? domicilio.localidad.denominacion : 'Sin localidad'}"></td>
+            <td class="actions">
+                <a class="button" th:href="@{/domicilios/editar/{id}(id=${domicilio.id})}">Editar</a>
+                <a class="button danger" th:href="@{/domicilios/eliminar/{id}(id=${domicilio.id})}">Eliminar</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

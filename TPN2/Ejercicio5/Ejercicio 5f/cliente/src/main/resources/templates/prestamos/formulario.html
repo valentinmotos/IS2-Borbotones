@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Prestamo</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h2 th:text="${prestamo.id == null ? 'Nuevo prestamo' : 'Editar prestamo'}"></h2>
+    <form th:action="@{/prestamos/guardar}" th:object="${prestamo}" method="post">
+        <input type="hidden" th:field="*{id}">
+        <label>Libro
+            <select th:field="*{libro.id}" required>
+                <option value="">Seleccionar libro</option>
+                <option th:each="libro : ${libros}" th:value="${libro.id}" th:text="${libro.titulo}"></option>
+            </select>
+        </label>
+        <label>Persona
+            <select th:field="*{persona.id}" required>
+                <option value="">Seleccionar persona</option>
+                <option th:each="persona : ${personas}" th:value="${persona.id}" th:text="${persona.nombre + ' ' + persona.apellido}"></option>
+            </select>
+        </label>
+        <label>Fecha de prestamo <input type="date" th:field="*{fechaPrestamo}" required></label>
+        <label>Fecha de devolucion <input type="date" th:field="*{fechaDevolucion}" required></label>
+        <label class="checkbox-label"><input type="checkbox" th:field="*{devuelto}"> Devuelto</label>
+        <div class="form-actions">
+            <button class="button" type="submit">Guardar</button>
+            <a class="button danger" th:href="@{/prestamos}">Cancelar</a>
+        </div>
+    </form>
+</main>
+</body>
+</html>

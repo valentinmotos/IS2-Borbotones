@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso denegado</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h2>Acceso denegado</h2>
+    <p class="error">Tu usuario no tiene permisos para realizar esta acción. Solo el administrador puede crear, editar o eliminar.</p>
+    <p><a class="button" th:href="@{/personas}">Volver al inicio</a></p>
+</main>
+</body>
+</html>

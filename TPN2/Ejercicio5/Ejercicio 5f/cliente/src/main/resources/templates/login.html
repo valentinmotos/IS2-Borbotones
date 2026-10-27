@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar sesión</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<header>
+    <h1>Biblioteca REST</h1>
+</header>
+<main class="login">
+    <h2>Iniciar sesión</h2>
+    <p class="error" th:if="${param.vencida != null}">Tu sesión venció. Volvé a ingresar.</p>
+    <p class="error" th:if="${error != null}" th:text="${error}"></p>
+    <form method="post" th:action="@{/login}" th:object="${login}">
+        <label>Usuario
+            <input type="text" th:field="*{username}" required autofocus>
+        </label>
+        <label>Contraseña
+            <input type="password" th:field="*{password}" required>
+        </label>
+        <button class="button" type="submit">Ingresar</button>
+    </form>
+</main>
+</body>
+</html>
