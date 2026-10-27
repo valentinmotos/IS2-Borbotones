@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Persona</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h2 th:text="${persona.id == null ? 'Nueva persona' : 'Editar persona'}"></h2>
+    <form th:action="@{/personas/guardar}" th:object="${persona}" method="post">
+        <input type="hidden" th:field="*{id}">
+        <label>Nombre <input type="text" th:field="*{nombre}" required></label>
+        <label>Apellido <input type="text" th:field="*{apellido}" required></label>
+        <label>DNI <input type="number" th:field="*{dni}" required></label>
+        <label>Email <input type="email" th:field="*{email}"></label>
+        <label>Fecha de nacimiento <input type="date" th:field="*{fechaNacimiento}"></label>
+        <label>Domicilio
+            <select th:field="*{domicilio.id}">
+                <option value="">Sin domicilio</option>
+                <option th:each="domicilio : ${domicilios}"
+                        th:value="${domicilio.id}"
+                        th:text="${domicilio.calle + ' ' + domicilio.numero}"></option>
+            </select>
+        </label>
+        <div class="form-actions">
+            <button class="button" type="submit">Guardar</button>
+            <a class="button danger" th:href="@{/personas}">Cancelar</a>
+        </div>
+    </form>
+</main>
+</body>
+</html>

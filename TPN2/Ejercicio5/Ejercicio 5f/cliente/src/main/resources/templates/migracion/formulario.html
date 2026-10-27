@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Migración de proveedores</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main>
+    <h2>Migración de proveedores</h2>
+    <p>Seleccioná el archivo <strong>migracion.txt</strong>. Cada renglón debe tener los campos nombre, apellido,
+        DNI, calle y número, separados por punto y coma.</p>
+    <p>Ejemplo: <code>Lionel;Escaloneta;293851450;Perú;345;</code></p>
+    <form method="post" th:action="@{/migracion}" enctype="multipart/form-data">
+        <label for="archivo">Archivo TXT</label>
+        <input id="archivo" name="archivo" type="file" accept=".txt,text/plain" required>
+        <button class="button" type="submit">Importar proveedores</button>
+    </form>
+    <p class="success" th:if="${cantidad != null}" th:text="|Se importaron ${cantidad} proveedores correctamente.|"></p>
+    <p class="error" th:if="${error != null}" th:text="${error}"></p>
+</main>
+</body>
+</html>
