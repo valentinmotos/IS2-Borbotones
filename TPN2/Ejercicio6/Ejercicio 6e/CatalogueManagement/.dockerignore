@@ -1,0 +1,7 @@
+target/
+jenkins/
+.mvn/
+mvnw
+mvnw.cmd
+Jenkinsfile
+README.md

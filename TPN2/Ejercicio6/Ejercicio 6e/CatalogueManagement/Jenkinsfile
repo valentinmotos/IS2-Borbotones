@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven'
+    }
+
+    environment {
+        PROJECT_DIR = 'TPN2/Ejercicio6/Ejercicio 6e/CatalogueManagement'
+        IMAGE_NAME = 'catalogue-management'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/valentinmotos/IS2-Borbotones.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir("${PROJECT_DIR}") {
+                    sh 'mvn -B clean package -DskipTests'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir("${PROJECT_DIR}") {
+                    sh 'mvn -B test'
+                }
+            }
+            post {
+                always {
+                    dir("${PROJECT_DIR}") {
+                        junit 'target/surefire-reports/*.xml'
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir("${PROJECT_DIR}") {
+                    sh 'docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} -t ${IMAGE_NAME}:latest .'
+                }
+            }
+        }
+    }
+}
