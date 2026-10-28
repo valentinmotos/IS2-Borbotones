@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Crear cuenta · Tinder de Mascotas</title>
+<style>body{font-family:system-ui;background:#fff1f2;color:#442b36;max-width:460px;margin:60px auto;padding:24px}main{background:white;padding:30px;border-radius:20px}label{display:block;margin:18px 0}input{display:block;width:95%;padding:12px;margin-top:6px;border:1px solid #d8b9c2;border-radius:8px}button,a{display:inline-block;background:#d63866;color:white;border:0;border-radius:9px;padding:12px 20px;text-decoration:none}p{line-height:1.6}.error{color:#9e1234}</style></head>
+<body><main><h1>🐾 Creá tu cuenta</h1><p>Tu identidad para Tinder de Mascotas.</p>
+<p th:if="${error}" th:text="${error}" class="error" role="alert"></p>
+<div th:if="${exito}"><p>Tu cuenta se creó correctamente. Ahora podés ingresar y completar tu perfil.</p><a th:href="${cliente + '/oauth2/authorization/local'}">Ingresar a Tinder de Mascotas</a></div>
+<form th:unless="${exito}" th:action="@{/registro}" method="post">
+<label>Usuario<input name="username" th:value="${username}" pattern="[a-z0-9_]{3,40}" minlength="3" maxlength="40" autocomplete="username" required></label>
+<label>Contraseña<input name="password" type="password" minlength="8" maxlength="64" autocomplete="new-password" required></label>
+<label>Repetir contraseña<input name="confirmacion" type="password" minlength="8" maxlength="64" autocomplete="new-password" required></label>
+<button type="submit">Crear cuenta</button></form><p><a th:href="${cliente}">Volver</a></p></main></body></html>
