@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tinder de Mascotas</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="/">🐾 Tinder de Mascotas</a><nav id="nav" aria-label="Navegación principal"></nav></header>
+  <main>
+    <div id="notice" role="status" aria-live="polite" hidden></div>
+    <section id="welcome" class="hero">
+      <p class="eyebrow">UN ENCUENTRO, MUCHAS HUELLITAS</p>
+      <h1>Encontrale pareja<br>a tu choco.</h1>
+      <p>Creá su perfil, descubrí mascotas de tu zona y dejá que empiece la historia.</p>
+      <button id="start">Crear mi cuenta</button>
+      <div class="steps"><span>01 · Registrate</span><span>02 · Votá</span><span>03 · ¡Hacé match!</span></div>
+    </section>
+    <section id="auth" class="panel narrow" hidden>
+      <h1 id="auth-title">Iniciar sesión</h1>
+      <form id="auth-form">
+        <div class="register-only"><label>Nombre<input name="nombre" maxlength="80" autocomplete="given-name"></label>
+        <label>Apellido<input name="apellido" maxlength="80" autocomplete="family-name"></label>
+        <label>Zona<select name="idZona" class="zones"></select></label></div>
+        <label>Correo electrónico<input name="mail" type="email" maxlength="254" required autocomplete="email"></label>
+        <label>Contraseña<input name="clave" type="password" maxlength="64" required autocomplete="current-password"></label>
+        <div class="register-only"><label>Repetir contraseña<input name="clave2" type="password" maxlength="64" autocomplete="new-password"></label><p class="muted">Usá al menos 8 caracteres.</p></div>
+        <button type="submit" id="auth-submit">Ingresar</button>
+      </form>
+    </section>
+    <section id="dashboard" hidden>
+      <div class="page-heading"><div><p class="eyebrow">SU PRÓXIMA HISTORIA EMPIEZA ACÁ</p><h1 id="greeting"></h1></div><p id="expires" class="muted"></p></div>
+      <div class="tabs" role="navigation" aria-label="Mi cuenta">
+        <button data-tab="pets">Mis mascotas</button><button data-tab="explore">Explorar</button><button data-tab="votes">Votos y matches</button><button data-tab="profile">Mi perfil</button>
+      </div>
+      <section id="pets" class="tab">
+        <h2>Mis mascotas</h2><div id="pet-list" class="grid"></div>
+        <div class="panel"><h2 id="pet-title">Agregar mascota</h2>
+          <form id="pet-form"><input type="hidden" name="id">
+            <div class="fields"><label>Nombre<input name="nombre" required maxlength="80"></label>
+              <label>Sexo<select name="sexo"><option value="MACHO">Macho</option><option value="HEMBRA">Hembra</option></select></label>
+              <label>Especie<select name="tipo"><option value="PERRO">Perro</option><option value="GATO">Gato</option><option value="CONEJO">Conejo</option></select></label>
+              <label>Foto (PNG o JPEG, hasta 2 MB)<input name="archivo" type="file" accept="image/png,image/jpeg"></label></div>
+            <button type="submit">Guardar mascota</button><button type="button" class="secondary" id="cancel-pet">Cancelar edición</button>
+          </form>
+        </div>
+      </section>
+      <section id="explore" class="tab" hidden><h2>Descubrí su próxima pareja</h2>
+        <p class="muted">Mascotas de la misma especie y zona, de distinto sexo. Las que ya votaste no aparecen.</p>
+        <label>Explorar con<select id="explore-pet"></select></label><div id="explore-list" class="grid"></div>
+      </section>
+      <section id="votes" class="tab" hidden><h2>Votos y matches</h2><p class="muted">Aceptá un voto recibido o conseguí un voto mutuo para hacer match.</p><div id="vote-list" class="grid"></div></section>
+      <section id="profile" class="tab panel" hidden><h2>Mi perfil</h2>
+        <form id="profile-form"><div class="fields"><label>Nombre<input name="nombre" maxlength="80" required></label>
+          <label>Apellido<input name="apellido" maxlength="80" required></label><label>Zona<select name="idZona" class="zones"></select></label>
+          <label>Correo<input name="mail" type="email" readonly></label><label>Foto (PNG o JPEG, hasta 2 MB)<input name="archivo" type="file" accept="image/png,image/jpeg"></label></div>
+          <div id="profile-photo"></div><button type="submit">Guardar perfil</button></form>
+      </section>
+    </section>
+  </main>
+  <footer>Tinder de Mascotas · Los mejores encuentros dejan huella.</footer>
+</body>
+</html>
