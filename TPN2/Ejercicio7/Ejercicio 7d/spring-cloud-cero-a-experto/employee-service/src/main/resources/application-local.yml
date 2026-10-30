@@ -1,0 +1,12 @@
+# Desarrollo sin Keycloak, accesible solo desde esta PC.
+server:
+  address: 127.0.0.1
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration
+eureka:
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
