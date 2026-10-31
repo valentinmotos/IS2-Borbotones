@@ -1,0 +1,118 @@
+TRABAJO PRÁCTICO – INGENIERÍA DE SOFTWARE II INVESTIGACIÓN: CLEAN
+ARCHITECTURE Y ARQUITECTURA HEXAGONAL
+
+1.  CLEAN ARCHITECTURE
+
+¿Qué significa? Clean Architecture (arquitectura limpia) organiza el
+software en capas concéntricas para separar las reglas del negocio de
+los detalles técnicos, como bases de datos, interfaces web o frameworks.
+La regla principal es que las dependencias del código apuntan hacia el
+centro.
+
+Gráfico de capas:
+
+  --------------------------------------------------
+  Frameworks y dispositivos: web, BD, frameworks
+  +——————————————–+ | Adaptadores: controladores,
+  gateways, | | presentadores y conversores | |
+  +————————————–+ | | | Casos de uso: lógica de
+  aplicación | | | | +——————————–+ | | | | | |
+  Entidades: reglas del negocio | | | | | |
+  +——————————–+ | | | | +————————————–+ |
+  +——————————————–+
+
+  --------------------------------------------------
+
+Funcionamiento: Las entidades contienen las reglas centrales del
+negocio. Los casos de uso coordinan las acciones de la aplicación. Los
+adaptadores convierten datos entre el dominio y tecnologías externas. La
+capa externa contiene frameworks, base de datos y mecanismos de
+entrada/salida. Las capas internas no dependen de las externas.
+
+Ventajas: - Facilita pruebas y mantenimiento. - Permite cambiar una base
+de datos o framework con menos impacto. - Mantiene las reglas del
+negocio independientes de la interfaz.
+
+Desventajas: - Puede agregar interfaces y clases, aumentando la
+estructura inicial. - Puede resultar excesiva para aplicaciones
+pequeñas. - Requiere comprender y respetar las reglas de dependencia.
+
+2.  DIFERENCIA ENTRE CLEAN ARCHITECTURE Y ARQUITECTURA POR CAPAS
+    TRADICIONAL
+
+Arquitectura por capas tradicional: Presentación → Lógica de negocio →
+Acceso a datos → Base de datos Las capas suelen depender de la capa
+inmediatamente inferior. Por ejemplo, la lógica de negocio puede
+depender directamente de una implementación concreta de acceso a datos.
+
+Clean Architecture: Frameworks/BD → Adaptadores → Casos de uso →
+Entidades Las dependencias del código apuntan hacia el dominio. Las
+capas externas implementan interfaces definidas hacia el interior, lo
+que permite reemplazar detalles técnicos.
+
+Resumen: - Capas tradicional: suele organizar el código por
+responsabilidad, pero puede acoplar el negocio a la tecnología. - Clean
+Architecture: también separa responsabilidades, pero establece
+explícitamente que el dominio no debe depender de detalles externos.
+
+3.  ARQUITECTURA HEXAGONAL
+
+¿Qué es? La arquitectura hexagonal, o Ports and Adapters, separa el
+núcleo de negocio de los sistemas externos. El núcleo define puertos
+(interfaces) y los adaptadores conectan esos puertos con tecnologías
+concretas. El hexágono es una representación conceptual; no exige seis
+capas ni seis puertos.
+
+Gráfico de disposición:
+
+        [Interfaz web]                 [Base de datos]
+             |                              |
+      [Adaptador entrada]              [Adaptador salida]
+             |                              |
+             v                              ^
+       +-----------------------------------------+
+       |              PUERTOS                   |
+       |  +-----------------------------------+  |
+       |  |       NÚCLEO DE NEGOCIO           |  |
+       |  | entidades y casos de uso          |  |
+       |  +-----------------------------------+  |
+       +-----------------------------------------+
+             ^                              |
+             |                              v
+      [Adaptador entrada]              [Servicio externo]
+             |                              |
+        [API REST]                    [Correo / pagos]
+
+Funcionamiento: Una solicitud entra por un adaptador (por ejemplo, una
+API REST), que usa un puerto de entrada para invocar un caso de uso.
+Para acceder a una base de datos o servicio externo, el núcleo utiliza
+un puerto de salida cuya implementación es un adaptador. Así, el negocio
+no depende de la tecnología elegida.
+
+Ventajas: - Facilita probar el negocio sin conectarse a sistemas
+reales. - Permite sustituir adaptadores, como cambiar una base de datos
+o una API. - Separa las reglas de negocio de los mecanismos externos.
+
+Desventajas: - Requiere diseñar puertos y adaptadores, lo que agrega
+código. - Puede ser innecesaria en aplicaciones muy simples. - Si se
+aplica sin criterio, puede generar abstracciones excesivas.
+
+4.  DIFERENCIAS ENTRE CLEAN ARCHITECTURE Y ARQUITECTURA HEXAGONAL
+
+Similitudes: Ambas aíslan el negocio de la tecnología, facilitan las
+pruebas y buscan reducir el acoplamiento.
+
+Diferencias principales: - Clean Architecture propone una organización
+en capas concéntricas: entidades, casos de uso, adaptadores y
+frameworks. - Hexagonal se centra en el núcleo, los puertos (interfaces)
+y los adaptadores que conectan entradas y salidas. - Clean Architecture
+destaca la dirección de las dependencias hacia el centro. - Hexagonal
+destaca que el núcleo puede comunicarse con el exterior mediante puertos
+y adaptadores. - Se pueden combinar: una aplicación puede usar capas de
+Clean Architecture y, al mismo tiempo, puertos y adaptadores
+hexagonales.
+
+Fuentes de consulta: - Robert C. Martin, Clean Architecture:
+https://www.oreilly.com/library/view/clean-architecture-a/9780134494272/ -
+Alistair Cockburn, Hexagonal Architecture:
+https://alistair.cockburn.us/hexagonal-architecture/

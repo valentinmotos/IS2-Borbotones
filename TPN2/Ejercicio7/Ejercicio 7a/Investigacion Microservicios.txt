@@ -1,0 +1,89 @@
+TRABAJO PRÁCTICO N.º 2 – INGENIERÍA DE SOFTWARE II a) INVESTIGACIÓN:
+ARQUITECTURA DE MICROSERVICIOS
+
+1.  ¿Qué es una arquitectura basada en microservicios? Es un estilo
+    arquitectónico que divide una aplicación en servicios pequeños e
+    independientes. Cada servicio cumple una función concreta, se
+    comunica con los demás mediante APIs y puede desarrollarse,
+    desplegarse y escalarse por separado.
+
+2.  Diferencias con una arquitectura monolítica cliente-servidor
+
+-   Monolítica: las funciones principales forman una única aplicación
+    que se despliega como una unidad.
+-   Microservicios: la aplicación se divide en servicios independientes
+    que se comunican por la red.
+-   En ambos modelos puede existir una relación cliente-servidor; la
+    diferencia principal es cómo se organiza y despliega el backend.
+
+3.  Ventajas y desventajas Ventajas:
+
+-   Permite escalar solo los servicios que necesitan más recursos.
+-   Facilita desplegar cambios en un servicio sin publicar toda la
+    aplicación.
+-   Permite que distintos equipos trabajen en servicios diferentes.
+-   Un fallo puede quedar limitado a un servicio si el sistema está bien
+    diseñado.
+
+Desventajas: - Mayor complejidad de despliegue, monitoreo y
+diagnóstico. - La comunicación por red puede agregar latencia y
+fallos. - Se deben gestionar la seguridad y los datos entre varios
+servicios. - Puede aumentar el costo de infraestructura y operación.
+
+4.  Propuestas comerciales y de código abierto
+
+Soluciones comerciales o administradas: - AWS ECS/EKS: ejecución y
+orquestación de contenedores en Amazon Web Services. - Azure Kubernetes
+Service (AKS): Kubernetes administrado en Microsoft Azure. - Google
+Kubernetes Engine (GKE): Kubernetes administrado en Google Cloud. - Red
+Hat OpenShift: plataforma empresarial para administrar aplicaciones en
+contenedores.
+
+Opciones de código abierto: - Kubernetes: orquesta contenedores y
+administra despliegues y escalado. - Docker: construye y ejecuta
+contenedores. - Spring Boot: facilita desarrollar microservicios Java. -
+Istio: administra comunicación, seguridad y observabilidad entre
+servicios.
+
+5.  Funcionamiento gráfico de una aplicación de microservicios
+
+                Usuario / Aplicación cliente
+                           |
+                           v
+                      API Gateway
+                           |
+           +---------------+---------------+
+           |               |               |
+           v               v               v
+
+    Servicio Usuarios Servicio Noticias Servicio Pagos | | | v v v Base
+    de usuarios Base de noticias Base de pagos
+
+El cliente envía una solicitud al Gateway, que la dirige al servicio
+adecuado. Cada servicio realiza su tarea y puede gestionar sus propios
+datos. Los servicios se comunican entre sí cuando es necesario.
+
+6.  ¿Qué es un API Gateway y para qué se utiliza? Es un punto de entrada
+    único para las solicitudes de los clientes. Enruta cada solicitud al
+    microservicio correspondiente y puede centralizar autenticación,
+    límites de uso y registro. Así, el cliente no necesita conocer todos
+    los servicios.
+
+7.  ¿Qué es un balanceador de carga? Distribuye las solicitudes entre
+    varias instancias de una aplicación o servicio para evitar
+    sobrecargas. También puede detectar instancias que dejaron de
+    funcionar y dejar de enviarles tráfico.
+
+Relación entre balanceador y microservicios: Un balanceador distribuye
+las solicitudes entre varias instancias del mismo microservicio. El API
+Gateway dirige la solicitud al servicio apropiado y el balanceador puede
+repartirla entre sus instancias disponibles. En algunas plataformas,
+ambas funciones se integran.
+
+Fuentes de consulta: - AWS: https://aws.amazon.com/microservices/ -
+Microsoft Azure:
+https://azure.microsoft.com/products/kubernetes-service - Google
+Kubernetes Engine: https://cloud.google.com/kubernetes-engine -
+Kubernetes: https://kubernetes.io/ - Docker: https://www.docker.com/ -
+Spring Boot: https://spring.io/projects/spring-boot - Istio:
+https://istio.io/
