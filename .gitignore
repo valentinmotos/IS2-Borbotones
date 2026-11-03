@@ -34,3 +34,6 @@ Thumbs.db
 
 TPN2/Ejercicio7/Ejercicio 7b/.env
 
+
+# Variables de entorno con secretos (se versiona solo .env.example)
+.env
