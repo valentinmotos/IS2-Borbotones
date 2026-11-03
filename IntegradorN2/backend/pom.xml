@@ -12,7 +12,7 @@
     </parent>
 
     <groupId>com.dulcemayor</groupId>
-    <artifactId>server</artifactId>
+    <artifactId>backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>Dulce Mayor - Servidor</name>
     <description>API REST de Dulce Mayor - Trabajo Integrador N2 IS2</description>
