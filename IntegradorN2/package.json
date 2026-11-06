@@ -1,0 +1,33 @@
+{
+  "name": "dulce-mayor-clients",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "workspaces": [
+    "client-admin",
+    "client-public",
+    "packages/http"
+  ],
+  "scripts": {
+    "dev": "concurrently --kill-others -n admin,public \"npm run dev -w client-admin\" \"npm run dev -w client-public\"",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "eslint . --max-warnings 0",
+    "test": "node --test packages/http/test/*.test.js",
+    "test:integration": "npm run build && node --test tests/clients.test.mjs",
+    "format": "prettier --write client-admin client-public packages scripts tests eslint.config.js package.json",
+    "preview": "node scripts/serve-local.mjs",
+    "deploy:local": "npm run build && npm run preview"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.0",
+    "globals": "^16.5.0",
+    "prettier": "^3.9.10"
+  }
+}
