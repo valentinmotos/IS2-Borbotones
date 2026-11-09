@@ -252,7 +252,7 @@ class VentasRepositoryTest {
 
     private void cotizacion(LocalDate fecha, double valorVenta) {
         CotizacionDolar cotizacion = new CotizacionDolar();
-        cotizacion.setFecha(fecha);
+        cotizacion.setFecha(fecha.atStartOfDay());
         cotizacion.setValorVenta(valorVenta);
         em.persist(cotizacion);
     }
