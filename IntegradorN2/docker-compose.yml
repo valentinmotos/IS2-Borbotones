@@ -45,6 +45,7 @@ services:
       APP_URL_PUBLIC: ${APP_URL_PUBLIC:-http://localhost:5174}
       APP_URL_ADMIN: ${APP_URL_ADMIN:-http://localhost:5173}
       DOLARAPI_URL: ${DOLARAPI_URL:-https://dolarapi.com/v1/dolares/oficial}
+      NOMINATIM_URL: ${NOMINATIM_URL:-https://nominatim.openstreetmap.org}
       OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-}
       TZ: America/Argentina/Mendoza

@@ -321,6 +321,20 @@ Copiar la estructura de Categoría:
 
 Para usar la entidad desde otro service (p. ej. `ProductoService` necesita la `Categoria`), llamar a `categoriaService.buscarEntidad(id)`: devuelve la entidad activa o lanza 404. Los controllers nunca la usan.
 
+## E1-04 · Dirección con mapa
+
+Ingresá al panel como Jefe o Administrativo y abrí [Sistema de diseño → Dirección con mapa](http://localhost:5173/componentes#demo-direccion). Con los datos iniciales cargados, el ejemplo muestra Capital, Ciudad de Mendoza, el código postal 5500 y un punto en el mapa. Cambiá de departamento para probar la cascada. Elegí otra localidad y comprobá que su código postal se completa automáticamente. Podés marcar un punto con un clic o buscar la calle y numeración de la localidad seleccionada y elegir una coincidencia.
+
+Para incluirlo en un formulario React, importá `DireccionField` desde `packages/address/DireccionField.jsx` y usá el cliente HTTP del portal:
+
+```jsx
+<DireccionField api={api} value={direccion} onChange={setDireccion} />
+```
+
+El componente es controlado. Para editar una dirección, inicializá `value` con `departamentoId`, `localidadId`, los campos de texto y las coordenadas numéricas `latitud` y `longitud`. La localidad seleccionada provee el código postal. El formulario anfitrión se encarga de validar que haya un punto y guardar la dirección.
+
+La búsqueda se ejecuta solo al pulsar el botón y envía calle, numeración y localidad a través de la API del proyecto. El servidor guarda resultados en caché y limita las consultas externas a una por segundo por instancia. Se puede configurar otro servidor compatible con `NOMINATIM_URL`. Para el servicio público, consultá la [política de uso de Nominatim](https://operations.osmfoundation.org/policies/nominatim/).
+
 ## Docker · E0-09
 
 `docker-compose.yml` levanta la base, el servidor y los dos clientes. Ollama es opcional.
