@@ -9,7 +9,7 @@ import com.dulcemayor.service.CategoriaService;
 
 /**
  * ABM de categorías: hereda los endpoints de AbstractCrudController.
- * TODO E1-01: restringir a JEFE y ADMINISTRATIVO (regla en SecurityConfig o @PreAuthorize).
+ * Acceso: JEFE y ADMINISTRATIVO (regla de /api/categorias/** en SecurityConfig).
  */
 @RestController
 @RequestMapping("/api/categorias")

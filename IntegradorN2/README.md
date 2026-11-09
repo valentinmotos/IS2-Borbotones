@@ -235,9 +235,9 @@ Toda respuesta de error de la API tiene la misma forma (contrato "Errores" del k
 
 Nunca se devuelven stack traces.
 
-### Seguridad provisoria
+### Seguridad
 
-`SecurityConfig` deja la API sin estado, sin CSRF y **con todas las rutas abiertas**, para poder probar la API antes del login. E1-01 la reemplaza con el filtro JWT y las reglas por rol. Lo que tiene que mantener: `STATELESS`, CSRF deshabilitado, `ErroresSeguridadHandler` como entry point y access denied handler, y `/error` abierto. `@EnableMethodSecurity` ya está activo, así que `@PreAuthorize` funciona.
+La API ya no está abierta: desde E1-01 exige JWT y aplica reglas por rol (ver la sección **Seguridad: JWT, BCrypt y roles · E1-01**). Se mantiene lo de E0-01: `STATELESS`, CSRF deshabilitado, `ErroresSeguridadHandler` como entry point y access denied handler, `/error` abierto y `@EnableMethodSecurity`.
 
 ### Cómo probarlo
 
@@ -280,7 +280,7 @@ Plantilla de ABM que copian todos los demás (E1-03, E1-07, E2-01, E2-05…) y A
 
 ### Endpoints
 
-Seguridad todavía abierta. Desde E1-01 los usan JEFE y ADMINISTRATIVO.
+Solo JEFE y ADMINISTRATIVO (E1-01); sin token responde 401 y con otro rol 403.
 
 | Método | Ruta | Request → Response |
 |---|---|---|
@@ -303,7 +303,7 @@ Pantalla: **Categorías** en el panel (`/categorias`). Tiene el listado paginado
 - Sin PostgreSQL, el servidor se puede levantar con H2: `mvnw.cmd spring-boot:run "-Dspring-boot.run.useTestClasspath=true" "-Dspring-boot.run.profiles=test"`.
 - Manual: con el servidor y `npm run dev` corriendo, entrar a <http://localhost:5173/categorias>, crear "Turrones" y después "turrónes": aparece *Ya existe una categoría con ese nombre.* debajo del campo. Editar y dar de baja desde la tabla.
   ```
-  curl -i -X POST http://localhost:8080/api/categorias -H "Content-Type: application/json" -d "{\"nombre\":\"Alfajores\"}"
+  curl -i -X POST http://localhost:8080/api/categorias -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d "{\"nombre\":\"Alfajores\"}"
   → 409 {"mensaje":"Ya existe una categoría con ese nombre.","campo":"nombre"}
   ```
 
@@ -366,8 +366,8 @@ Criterio: `docker compose up` levanta todos los servicios y la API responde.
 ```
 docker compose up --build -d
 docker compose ps                                   db (healthy), backend, client-admin y client-public "Up"
-curl http://localhost:8080/api/categorias           200 con las categorías del seeder (API sobre PostgreSQL)
-curl http://localhost:5173/api/categorias           200 (API a través del nginx del panel)
+curl http://localhost:8080/api/categorias           401 en JSON (API sobre PostgreSQL, protegida desde E1-01)
+curl http://localhost:5173/api/categorias           401 (API a través del nginx del panel)
 curl http://localhost:5173/categorias               200 con el index.html (ruta de React servida por nginx)
 curl http://localhost:5174/                         200 (sitio promocional)
 docker compose down && docker compose up -d         los datos siguen; el log dice "La base ya tiene datos"
@@ -381,3 +381,108 @@ Hasta que Spring termina de iniciar (unos 10 segundos), nginx responde `502` en 
 - **E1-09 (Jenkins):** construye las imágenes con `docker compose build` desde `IntegradorN2/`.
 - **E3-04 (chatbot):** dentro de Docker, Ollama está en `http://ollama:11434` (valor por defecto de `OLLAMA_URL` en el compose); el modelo se elige con `OLLAMA_MODEL`.
 - **E1-05 (imágenes):** nginx ya acepta cuerpos de hasta 3 MB en `/api`, así el límite de 2 MB lo controla el servidor y responde 413 con su JSON.
+
+## Seguridad: JWT, BCrypt y roles · E1-01
+
+Login con correo y clave, claves con BCrypt, JWT con vencimiento, cierre de sesión, clave por defecto `dulcemayor` con cambio obligatorio y reglas por rol validadas en el servidor.
+
+Reutiliza la parte JWT de TP2 Ej. 5d (`JwtServicio`, `JwtFiltro`, hash ficticio en el login, cierre de sesión por versión del token) y las reglas de usuario de IntegradorN1 (`UsuarioService`: BCrypt, `LARGO_MINIMO_CLAVE`, validación de correo y clave, mensajes). IntegradorN1 usaba form login con sesión; acá la API es sin estado.
+
+### Cómo funciona
+
+- **Claves:** `PasswordEncoder` BCrypt (`SecurityConfig`). La base guarda solo el hash (`$2a$…`, 60 caracteres). Los correos se guardan sin espacios y en minúsculas.
+- **Token:** `security/JwtService` firma con HS256 (`JWT_SECRET`, al menos 32 caracteres) y vence a los `JWT_EXPIRATION` segundos (una hora por defecto). Claims: `sub` = id del usuario, `rol`, `version`. Con `JWT_SECRET` vacío usa una clave al azar (solo desarrollo: reiniciar el servidor cierra todas las sesiones).
+- **Filtro:** `security/JwtFiltro` lee `Authorization: Bearer <token>`, valida firma y vencimiento y comprueba en la base que el usuario exista, no esté dado de baja, esté activo y que la versión del token coincida con `Usuario.versionToken`. Si algo falla, la petición sigue sin autenticar y termina en 401.
+- **Cierre de sesión:** `POST /api/auth/logout` incrementa `versionToken`, así todos los tokens anteriores del usuario dejan de servir. Cambiar la clave también lo incrementa.
+- **Clave temporal:** el alta de empleados (`UsuarioService.crearUsuario(correo, rol)`) usa `dulcemayor` con `claveTemporal = true`. El login responde `debeCambiarClave: true` y, hasta cambiarla, el filtro no le da el rol sino la autoridad `CLAVE_TEMPORAL`: solo puede usar `/api/auth/**`; el resto responde 403 *Tenés que cambiar tu clave antes de continuar.*
+- **CORS:** solo los orígenes de `CORS_ORIGINS` (por defecto `http://localhost:5173` y `http://localhost:5174`).
+- **Desvío del UML:** `Usuario.versionToken` (int) no está en el diagrama; hace falta para invalidar tokens al cerrar sesión. `UsuarioService.login` devuelve el `Usuario` como dice el UML; `AuthService` emite el token y le devuelve DTOs al controller.
+
+### Reglas por rol
+
+En `config/SecurityConfig`; la primera regla que coincide gana:
+
+| Ruta | Acceso |
+|---|---|
+| `POST /api/auth/login`, `/api/publico/**` | público |
+| `/api/auth/**` | cualquier usuario autenticado (también con clave temporal) |
+| `/api/categorias/**` | JEFE, ADMINISTRATIVO |
+| `/api/minorista/**` | MINORISTA |
+| resto de `/api/**` | personal interno: JEFE, ADMINISTRATIVO, PREVENTOR, DISTRIBUIDOR |
+| cualquier otra ruta | denegada |
+
+El **JEFE** tiene además los permisos de ADMINISTRATIVO y PREVENTOR (`RoleHierarchy`, que aplica también a `@PreAuthorize`). Por la regla general, un **minorista recibe 403 en todo endpoint interno**, aunque nadie lo haya marcado.
+
+### Endpoints
+
+| Método | Ruta | Acceso | Request → Response |
+|---|---|---|---|
+| POST | `/api/auth/login` | público | `{nombreUsuario, clave}` → `200 {token, rol, debeCambiarClave, nombreUsuario, expiraEnSegundos}` · `400` campos vacíos · `401` *Correo o clave incorrectos.* |
+| PUT | `/api/auth/clave` | autenticado | `{claveActual, nuevaClave, confirmarClave}` → `200` igual que el login, con un **token nuevo** y `debeCambiarClave: false` · `400` con `campo` |
+| GET | `/api/auth/yo` | autenticado | → `200 {id, nombreUsuario, rol, debeCambiarClave}` |
+| POST | `/api/auth/logout` | autenticado | → `204` |
+
+Sin token, o con un token vencido, inválido o de una sesión cerrada: `401 {"mensaje":"Tenés que iniciar sesión para acceder a este recurso.","campo":null}`. Rol sin permiso: `403 {"mensaje":"No tenés permisos para realizar esta acción.","campo":null}`.
+
+Reglas de clave: al menos 8 caracteres, como máximo 72 bytes (límite de BCrypt), la confirmación tiene que coincidir y la nueva tiene que ser distinta de la actual.
+
+### Usuarios de demo
+
+`DataSeeder.cargarUsuarios()` (solo con la base vacía):
+
+| Correo | Rol | Clave |
+|---|---|---|
+| `jefe@dulcemayor.com.ar` | JEFE | `Demo1234!` |
+| `administrativo@dulcemayor.com.ar` | ADMINISTRATIVO | `Demo1234!` |
+| `preventor@dulcemayor.com.ar` | PREVENTOR | `Demo1234!` |
+| `distribuidor@dulcemayor.com.ar` | DISTRIBUIDOR | `Demo1234!` |
+| `minorista@dulcemayor.com.ar` | MINORISTA | `Demo1234!` |
+| `nuevo@dulcemayor.com.ar` | PREVENTOR | `dulcemayor` (temporal: obliga a cambiarla) |
+
+Las claves de demo no son temporales, para no tener que cambiarlas en cada base nueva. Por ahora son solo cuentas de `Usuario`; los datos personales (`Persona`, `Empleado`, `Minorista`) los agregan E2-04 y E2-05. Si la base ya tenía datos de antes de E1-01, vaciarla (`docker compose down -v`) para que se carguen.
+
+### Cómo probarlo
+
+- `mvnw.cmd test`:
+  - `UsuarioServiceTest` (Mockito + BCrypt real): clave por defecto encriptada y temporal, duplicados, login, cuenta sin activar, cambio de clave y cierre de sesión.
+  - `JwtServiceTest`: claims, firma con otra clave, token alterado, configuración inválida.
+  - `SeguridadIntegrationTest` (`@SpringBootTest` + H2): el **criterio de aceptación** de punta a punta (minorista con 403 en endpoints internos, primer ingreso con `dulcemayor` que obliga a cambiar la clave, hash BCrypt en la base), más reglas por rol, logout, usuario dado de baja y CORS.
+- Manual, con la base vacía y el servidor corriendo:
+  ```
+  curl -s -X POST http://localhost:8080/api/auth/login -H "Content-Type: application/json" -d "{\"nombreUsuario\":\"minorista@dulcemayor.com.ar\",\"clave\":\"Demo1234!\"}"
+  → 200 {"token":"eyJ...","rol":"MINORISTA","debeCambiarClave":false,...}
+  curl -i http://localhost:8080/api/categorias -H "Authorization: Bearer <token del minorista>"
+  → 403 {"mensaje":"No tenés permisos para realizar esta acción.","campo":null}
+
+  curl -s -X POST http://localhost:8080/api/auth/login -H "Content-Type: application/json" -d "{\"nombreUsuario\":\"nuevo@dulcemayor.com.ar\",\"clave\":\"dulcemayor\"}"
+  → 200 {...,"debeCambiarClave":true}
+  curl -i -X PUT http://localhost:8080/api/auth/clave -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d "{\"claveActual\":\"dulcemayor\",\"nuevaClave\":\"MiClave2026\",\"confirmarClave\":\"MiClave2026\"}"
+  → 200 con un token nuevo y "debeCambiarClave":false
+  ```
+  En PostgreSQL, `select nombre_usuario, clave, clave_temporal from usuarios;` muestra solo hashes BCrypt.
+
+### Para otros issues
+
+- **E1-02 (login React):** `POST /api/auth/login` con `{ skipAuth: true }`, guardar el `token` con `tokenStore.set(token)` y redirigir según `rol`. Si `debeCambiarClave` es `true`, llevar a la pantalla de cambio de clave (`PUT /api/auth/clave`) y guardar el **token nuevo** que devuelve. Al recargar, `GET /api/auth/yo` devuelve el rol y el estado de la sesión. Para cerrar sesión: `POST /api/auth/logout` y borrar el token.
+- **Identidad de quien llama:** nunca recibir el id del usuario por URL o cuerpo; sacarlo del token:
+  ```java
+  @GetMapping("/mis-pedidos")
+  public List<PedidoResponse> misPedidos(@AuthenticationPrincipal UsuarioAutenticado usuario) {
+      return pedidoService.listarPedidoPorUsuario(usuario.id());
+  }
+  ```
+  `UsuarioAutenticado` trae `id`, `nombreUsuario`, `rol` y `claveTemporal`.
+- **Reglas por rol de un recurso nuevo:** sumar una línea en `SecurityConfig` antes de la regla general de `/api/**`, p. ej. `.requestMatchers(HttpMethod.POST, "/api/pedidos/**").hasAnyRole("JEFE", "PREVENTOR")`. Para reglas finas sobre un método, `@PreAuthorize("hasRole('JEFE')")`. Lo que no se marque queda para el personal interno, nunca para el minorista.
+- **Endpoints del minorista (E2-07, E4…):** van bajo `/api/minorista/**`. **Endpoints públicos** (catálogo, sucursales, cotización, chatbot, imágenes): bajo `/api/publico/**`.
+- **E2-04 (registro de minoristas):** `usuarioService.crearUsuario(correo, RolUsuario.MINORISTA, clave, false)` y después `usuario.setActivo(false)` hasta activar la cuenta; el login de una cuenta inactiva responde 401 *Tu cuenta todavía no está activada…*.
+- **E2-05 (ABM de usuarios internos):** `usuarioService.crearUsuario(correo, rol)` crea con `dulcemayor` temporal. Para el reseteo de clave, volver a poner la clave por defecto con `claveTemporal = true` e incrementar `versionToken`.
+- **Tests con seguridad:** en `@WebMvcTest`, `@Import({ SecurityConfig.class, ErroresSeguridadHandler.class, JwtService.class })`, `@MockitoBean UsuarioRepository` y `@WithMockUser(roles = "ADMINISTRATIVO")` (ver `CategoriaControllerTest`). En `@SpringBootTest` alcanza con `@WithMockUser`, o con un token real como en `SeguridadIntegrationTest`.
+
+## Cotización del dólar con Adapter · E1-08
+
+- **Adapter:** `service/CotizacionProvider` (Target, contrato `obtenerVigente()`) y `service/adapter/DolarApiAdapter` (Adapter de DolarAPI, `DOLARAPI_URL`). Usa timeout de 3 segundos y pasa la fecha de UTC a la hora de Mendoza. Si falla, devuelve vacío y lo registra en el log.
+- **Servicio:** `CotizacionDolarService.buscarCotizacionVigente()` guarda una cotización por día en `CotizacionDolar` y la cachea una hora (Caffeine, `config/CacheConfig`). Si la API falla, devuelve la última guardada; si no hay ninguna, responde 404. `listarCotizacion()` devuelve el historial.
+- **Tarea programada:** `CotizacionDolarScheduler` actualiza la cotización cada hora (`app.cotizacion.intervalo-ms`). No corre en el perfil `test`.
+- **Endpoint público:** `GET /api/publico/cotizacion` → `200 {"fecha":"2026-11-09","valorVenta":1450.0}` · `404` si nunca se pudo obtener.
+- **Tests:** `CotizacionDolarServiceTest` (criterio: vigente y respaldo con la última guardada) y `CotizacionDolarIntegrationTest` (endpoint sin token y caché), los dos con DolarAPI mockeada.
+- **Para otros issues (E3-02, E3-03, E4-05):** usar `cotizacionDolarService.buscarCotizacionVigente()`; no llamar al provider directo.

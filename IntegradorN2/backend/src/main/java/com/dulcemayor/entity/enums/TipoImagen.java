@@ -3,5 +3,6 @@ package com.dulcemayor.entity.enums;
 public enum TipoImagen {
     PRODUCTO,
     SUCURSAL,
-    LOGO_EMPRESA
+    LOGO_EMPRESA,
+    PERFIL
 }
