@@ -20,16 +20,14 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/imagenes")
-public class ImagenController extends AbstractCrudController<ImagenCargaDTO, ImagenDTO> {
+public class ImagenController {
 
     private final ImagenService imagenService;
 
     public ImagenController(ImagenService imagenService) {
-        super(imagenService);
         this.imagenService = imagenService;
     }
 
-    @Override
     @GetMapping("/{id}")
     public ResponseEntity<byte[]> buscar(@PathVariable String id) {
         ImagenContenidoDTO imagen = imagenService.buscarContenido(id);
@@ -39,31 +37,23 @@ public class ImagenController extends AbstractCrudController<ImagenCargaDTO, Ima
                 .body(imagen.contenido());
     }
 
-    // Metodos no Funcionales, solo para no generar error de Services
-    // ------------------------------------------------------>>>>>>>>
-    @Override
     @GetMapping
     public List<ImagenDTO> listar() {
         return List.of();
     }
 
-    @Override
     @PostMapping
     public ImagenDTO crear(@RequestBody(required = false) ImagenCargaDTO request) {
         throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED);
     }
 
-    @Override
     @PutMapping("/{id}")
     public ImagenDTO modificar(@PathVariable String id, @RequestBody(required = false) ImagenCargaDTO request) {
         throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED);
     }
 
-    @Override
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable String id) {
         throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED);
     }
-    // ------------------------------------------------------>>>>>>>>
-    // ------------------------------------------------------>>>>>>>>
 }

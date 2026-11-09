@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
-import { Alert } from "../../../packages/design/components.jsx";
+import { useSession } from "../../../packages/auth/session.js";
 
 const adminUrl = import.meta.env.VITE_ADMIN_URL || "http://localhost:5173";
 const sections = [
@@ -12,7 +12,7 @@ const sections = [
 
 export default function PublicLayout() {
   const { pathname, hash } = useLocation();
-  const [sessionExpired, setSessionExpired] = useState(false);
+  const { status } = useSession();
 
   useEffect(() => {
     const section = sections.find(({ to }) => to === pathname);
@@ -20,12 +20,6 @@ export default function PublicLayout() {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
     else window.scrollTo(0, 0);
   }, [pathname, hash]);
-
-  useEffect(() => {
-    const expire = () => setSessionExpired(true);
-    window.addEventListener("session-expired", expire);
-    return () => window.removeEventListener("session-expired", expire);
-  }, []);
 
   return (
     <div className="shop">
@@ -43,17 +37,15 @@ export default function PublicLayout() {
                 {label}
               </NavLink>
             ))}
+            {status !== "loading" && (
+              <NavLink to={status === "guest" ? "/login" : "/cuenta"} end>
+                {status === "guest" ? "Ingresar" : "Mi cuenta"}
+              </NavLink>
+            )}
           </nav>
         </div>
       </header>
       <main id="contenido" tabIndex={-1}>
-        {sessionExpired && (
-          <div className="wrap shop-notice">
-            <Alert tone="warning" onDismiss={() => setSessionExpired(false)}>
-              Tu sesión venció.
-            </Alert>
-          </div>
-        )}
         <Outlet />
       </main>
       <footer className="shop-footer">

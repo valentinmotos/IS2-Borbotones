@@ -3,9 +3,9 @@ import axios from "axios";
 /** La instancia de cada cliente mantiene su propia sesión. Nunca guarda credenciales. */
 export function createTokenStore(storage, key) {
   return {
-    get: () => storage.getItem(key),
-    set: (token) => storage.setItem(key, token),
-    clear: () => storage.removeItem(key),
+    get: () => storage?.getItem(key),
+    set: (token) => storage?.setItem(key, token),
+    clear: () => storage?.removeItem(key),
   };
 }
 
@@ -41,8 +41,14 @@ export function createHttpClient({
     (error) => {
       if (axios.isCancel(error)) return Promise.reject(error);
       const status = error.response?.status ?? 0;
-      // Un 403 no cierra una sesión válida. Un login rechazado tampoco borra otra sesión.
-      if (status === 401 && !error.config?.skipAuth) {
+      const currentToken = tokenStore?.get();
+      // Una respuesta tardía de una sesión anterior no invalida el token nuevo.
+      if (
+        status === 401 &&
+        !error.config?.skipAuth &&
+        currentToken &&
+        error.config?.headers.get("Authorization") === `Bearer ${currentToken}`
+      ) {
         tokenStore?.clear();
         onUnauthorized?.();
       }

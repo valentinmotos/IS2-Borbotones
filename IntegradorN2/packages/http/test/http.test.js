@@ -103,7 +103,7 @@ test("un 403 conserva el token y los errores de formulario mantienen mensaje y c
   assert.equal(tokens.get(), "valido");
 });
 
-test("skipAuth permite un futuro login sin enviar ni borrar una sesión existente", async () => {
+test("skipAuth permite iniciar sesión sin enviar ni borrar una sesión existente", async () => {
   const { tokens } = store();
   tokens.set("existente");
   const http = createHttpClient({
@@ -117,6 +117,23 @@ test("skipAuth permite un futuro login sin enviar ni borrar una sesión existent
     status: 401,
   });
   assert.equal(tokens.get(), "existente");
+});
+
+test("un 401 de una solicitud anterior conserva el token renovado", async () => {
+  const { tokens } = store();
+  tokens.set("anterior");
+  let notifications = 0;
+  const http = createHttpClient({
+    tokenStore: tokens,
+    onUnauthorized: () => notifications++,
+    adapter: (config) => {
+      tokens.set("renovado");
+      return failure(401, {})(config);
+    },
+  });
+  await assert.rejects(http.get("/pedidos"), { status: 401 });
+  assert.equal(tokens.get(), "renovado");
+  assert.equal(notifications, 0);
 });
 
 test("errores de red y respuestas sin contrato tienen un mensaje seguro en español", async () => {

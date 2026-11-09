@@ -22,7 +22,7 @@ public class Imagen extends BaseEntity {
     private String mime;
 
     // byte[] se guarda como BYTEA en PostgreSQL y como binario en H2, sin OID/LOB.
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "bytea")
     private byte[] contenido;
 
     @Enumerated(EnumType.STRING)

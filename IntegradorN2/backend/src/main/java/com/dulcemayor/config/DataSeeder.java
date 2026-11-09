@@ -11,13 +11,12 @@ import com.dulcemayor.dto.CategoriaRequest;
 import com.dulcemayor.dto.DepartamentoRequest;
 import com.dulcemayor.dto.DepartamentoResponse;
 import com.dulcemayor.dto.LocalidadRequest;
-import com.dulcemayor.service.CategoriaService;
-import com.dulcemayor.service.DepartamentoService;
-import com.dulcemayor.service.LocalidadService;
 import com.dulcemayor.entity.enums.RolUsuario;
 import com.dulcemayor.entity.enums.TipoImagen;
 import com.dulcemayor.service.CategoriaService;
+import com.dulcemayor.service.DepartamentoService;
 import com.dulcemayor.service.ImagenService;
+import com.dulcemayor.service.LocalidadService;
 import com.dulcemayor.service.UsuarioService;
 
 import jakarta.persistence.EntityManager;
@@ -39,12 +38,6 @@ public class DataSeeder implements CommandLineRunner {
     private final DepartamentoService departamentoService;
     private final LocalidadService localidadService;
 
-    public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
-            DepartamentoService departamentoService, LocalidadService localidadService) {
-        this.entityManager = entityManager;
-        this.categoriaService = categoriaService;
-        this.departamentoService = departamentoService;
-        this.localidadService = localidadService;
     private final UsuarioService usuarioService;
     private final ImagenService imagenService;
 
@@ -52,9 +45,12 @@ public class DataSeeder implements CommandLineRunner {
     public static final String CLAVE_DEMO = "Demo1234!";
 
     public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
+            DepartamentoService departamentoService, LocalidadService localidadService,
             UsuarioService usuarioService, ImagenService imagenService) {
         this.entityManager = entityManager;
         this.categoriaService = categoriaService;
+        this.departamentoService = departamentoService;
+        this.localidadService = localidadService;
         this.usuarioService = usuarioService;
         this.imagenService = imagenService;
     }

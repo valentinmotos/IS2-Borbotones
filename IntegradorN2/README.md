@@ -21,8 +21,8 @@ Dos aplicaciones independientes de Vite + React, en la rama de trabajo `e0-02`:
 
 | Cliente | URL local | Rutas disponibles |
 |---|---|---|
-| Administración | http://localhost:5173 | `/`, `/guia`, `/componentes` |
-| Sitio promocional | http://localhost:5174 | `/`, `/empresa`, `/como-comprar`, `/creditos` |
+| Administración | http://localhost:5173 | `/login`, inicio por rol, `/guia`, `/componentes` |
+| Sitio promocional | http://localhost:5174 | `/`, `/empresa`, `/como-comprar`, `/creditos`, `/login`, `/cuenta` |
 
 Ambas tienen navegación responsive, menú móvil, recuperación de rutas desconocidas, enlace de salto al contenido y títulos por página. Las páginas de inicio funcionan sin el backend. Las tipografías y las fotografías de referencia se sirven localmente. No se simulan usuarios, stock ni ventas. Los ABM, login, catálogo y pedidos corresponden a los siguientes issues; E0-02 deja la estructura y el transporte HTTP preparados para integrarlos.
 
@@ -85,7 +85,7 @@ scripts/serve-local.mjs       servidor de preview de ambos builds
 tests/clients.test.mjs        integración de rutas, assets y proxy
 ```
 
-Cada módulo consume `api` desde `src/lib/api.js`. Los interceptores agregan `Authorization: Bearer <token>` leyendo la sesión en cada solicitud. El token se guarda en `sessionStorage` con claves distintas (`dulcemayor.admin.token` y `dulcemayor.public.token`), se elimina ante un 401 y se notifica a la interfaz. Un 403 conserva la sesión. `ApiError` expone `message`, `status` y `campo`, respetando el contrato `{mensaje, campo}` del backend. El futuro login puede usar `tokenStore.set(token)` y `{ skipAuth: true }` para la petición de autenticación; no hay credenciales precargadas ni autenticación ficticia. La protección de rutas por rol corresponde a E1-02.
+Cada módulo consume `api` desde `src/lib/api.js`. Los interceptores agregan `Authorization: Bearer <token>` leyendo la sesión en cada solicitud. El token se guarda en `sessionStorage` con claves distintas (`dulcemayor.admin.token` y `dulcemayor.public.token`), se elimina ante un 401 y se notifica a la interfaz. Un 403 conserva la sesión. `ApiError` expone `message`, `status` y `campo`, respetando el contrato `{mensaje, campo}` del backend. El login React usa `{ skipAuth: true }` y guarda el token devuelto por la API. Al recargar, valida la sesión con `GET /api/auth/yo` antes de habilitar las rutas protegidas.
 
 ### Verificaciones
 
@@ -463,7 +463,8 @@ Las claves de demo no son temporales, para no tener que cambiarlas en cada base 
 
 ### Para otros issues
 
-- **E1-02 (login React):** `POST /api/auth/login` con `{ skipAuth: true }`, guardar el `token` con `tokenStore.set(token)` y redirigir según `rol`. Si `debeCambiarClave` es `true`, llevar a la pantalla de cambio de clave (`PUT /api/auth/clave`) y guardar el **token nuevo** que devuelve. Al recargar, `GET /api/auth/yo` devuelve el rol y el estado de la sesión. Para cerrar sesión: `POST /api/auth/logout` y borrar el token.
+- **E1-02 (login React):** el personal inicia sesión en el panel administrativo y el minorista en la vidriera. Cada rol llega a su inicio: `/jefatura`, `/administracion`, `/preventa`, `/distribucion` o `/cuenta`. Jefe y Administrativo acceden a Categorías, Ubicación y Sistema de diseño. Todo el personal tiene acceso a la Guía de trabajo. El menú lateral y las guardas del panel usan la misma lista de permisos. Una URL de otro rol muestra **Acceso denegado**.
+- Si el servidor marca `debeCambiarClave`, el portal lleva a `/cambiar-clave` antes de mostrar los módulos y reemplaza el token con el que devuelve `PUT /api/auth/clave`. Al cerrar sesión, llama a `POST /api/auth/logout` y borra el token local.
 - **Identidad de quien llama:** nunca recibir el id del usuario por URL o cuerpo; sacarlo del token:
   ```java
   @GetMapping("/mis-pedidos")
