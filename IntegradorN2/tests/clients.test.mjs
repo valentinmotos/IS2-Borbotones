@@ -158,6 +158,13 @@ test("el menú y la URL directa respetan el rol y el cambio de clave", async (t)
   const jefe = render({ rol: "JEFE", home: "/jefatura", path: "/categorias" });
   assert.match(jefe, /<h1>Categorías<\/h1>/);
   assert.match(jefe, /href="\/categorias"/);
+  const empresa = render({
+    rol: "ADMINISTRATIVO",
+    home: "/administracion",
+    path: "/empresa",
+  });
+  assert.match(empresa, /<h1>Empresa y sucursales<\/h1>/);
+  assert.match(empresa, /href="\/empresa"/);
   const preventor = render({
     rol: "PREVENTOR",
     home: "/preventa",
@@ -166,6 +173,11 @@ test("el menú y la URL directa respetan el rol y el cambio de clave", async (t)
   assert.match(preventor, /<h1>Acceso denegado<\/h1>/);
   assert.match(preventor, /href="\/preventa"/);
   assert.doesNotMatch(preventor, /href="\/categorias"/);
+  assert.doesNotMatch(preventor, /href="\/empresa"/);
+  assert.match(
+    render({ rol: "PREVENTOR", home: "/preventa", path: "/empresa" }),
+    /<h1>Acceso denegado<\/h1>/,
+  );
   const temporal = render({
     rol: "JEFE",
     home: "/jefatura",

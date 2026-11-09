@@ -364,3 +364,37 @@
     display: block;
   }
 }
+
+.e107-section {
+  margin-top: var(--s-6);
+}
+
+.e107-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+
+.e107-map {
+  display: block;
+  width: 100%;
+  min-height: 240px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  margin-block: var(--s-3);
+}
+
+.e107-photo {
+  display: block;
+  width: min(100%, 320px);
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  margin-block: var(--s-3);
+}
+
+@media (max-width: 560px) {
+  .e107-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

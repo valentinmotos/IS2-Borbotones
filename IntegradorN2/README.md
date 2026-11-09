@@ -335,6 +335,25 @@ El componente es controlado. Para editar una dirección, inicializá `value` con
 
 La búsqueda se ejecuta solo al pulsar el botón y envía calle, numeración y localidad a través de la API del proyecto. El servidor guarda resultados en caché y limita las consultas externas a una por segundo por instancia. Se puede configurar otro servidor compatible con `NOMINATIM_URL`. Para el servicio público, consultá la [política de uso de Nominatim](https://operations.osmfoundation.org/policies/nominatim/).
 
+## Empresa, sucursales y formas de pago · E1-07
+
+El panel de administración incluye el ABM de empresa y sucursales en `/empresa`. La empresa valida el CUIT argentino y lo almacena normalizado. Cada sucursal guarda dirección, localidad, coordenadas y una foto subida por el servicio E1-05. El formulario muestra la ubicación en OpenStreetMap y permite abrir el punto en el mapa.
+
+Las formas de pago se administran en la misma pantalla. La transferencia requiere alias; las opciones activas se devuelven en el endpoint público para la vidriera. Desactivar aplica baja lógica y se puede volver a activar desde la tabla de administración.
+
+| Método | Ruta | Uso |
+|---|---|---|
+| GET / POST / PUT / DELETE | `/api/empresas` y `/api/empresas/{id}` | ABM de razón social y CUIT |
+| GET / POST / PUT / DELETE | `/api/sucursales` y `/api/sucursales/{id}` | ABM de sucursales y dirección; admite `/empresa/{id}` |
+| GET / POST / PUT / DELETE | `/api/formas-de-pago` y `/api/formas-de-pago/{id}` | ABM de formas activas |
+| GET | `/api/formas-de-pago/administracion` | Lista activas e inactivas para el panel |
+| PATCH | `/api/formas-de-pago/{id}/activar` | Reactiva una forma dada de baja |
+| GET | `/api/publico/empresa`, `/api/publico/sucursales`, `/api/publico/formas-de-pago` | Datos activos para el sitio público |
+
+El seeder crea Dulce Mayor, la sede central con foto y las tres formas de pago de demostración después de cargar las localidades. Los endpoints de administración requieren rol JEFE o ADMINISTRATIVO.
+
+Las pruebas `EmpresaServiceTest`, `SucursalServiceTest` y `FormaDePagoServiceTest` cubren el formato del CUIT, CUIT inválido, sede central duplicada, alias obligatorio y el alta de un medio de pago activo. Para ejecutarlas: `mvnw.cmd -Dtest=EmpresaServiceTest,SucursalServiceTest,FormaDePagoServiceTest test` desde `backend`.
+
 ## Docker · E0-09
 
 `docker-compose.yml` levanta la base, el servidor y los dos clientes. Ollama es opcional.

@@ -91,6 +91,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").authenticated()
                         // Reglas por recurso (cada issue agrega las suyas acá)
                         .requestMatchers("/api/categorias/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
+                        .requestMatchers("/api/empresas/**", "/api/sucursales/**", "/api/formas-de-pago/**")
+                        .hasAnyRole("JEFE", "ADMINISTRATIVO")
                         .requestMatchers("/api/minorista/**").hasRole("MINORISTA")
                         // Por defecto, todo /api es interno
                         .requestMatchers("/api/**").hasAnyRole(PERSONAL_INTERNO)

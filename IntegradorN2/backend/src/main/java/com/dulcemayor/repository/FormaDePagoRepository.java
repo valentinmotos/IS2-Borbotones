@@ -1,9 +1,8 @@
 package com.dulcemayor.repository;
 
-import com.dulcemayor.entity.FormaDePago;
 import java.util.List;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.dulcemayor.entity.FormaDePago;
 
-public interface FormaDePagoRepository extends JpaRepository<FormaDePago, String> {
+public interface FormaDePagoRepository extends BaseRepository<FormaDePago> {
     List<FormaDePago> findByEliminadoFalse();
 }

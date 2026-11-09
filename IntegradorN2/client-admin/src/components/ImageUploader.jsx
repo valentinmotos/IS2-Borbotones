@@ -4,7 +4,12 @@ const MAX_BYTES = 2 * 1024 * 1024;
 const ACCEPTED_MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const ACCEPT = ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp";
 
-export default function ImageUploader({ onFileSelected, label = "Imagen" }) {
+export default function ImageUploader({
+  onFileSelected,
+  label = "Imagen",
+  imageUrl = "",
+  maxBytes = MAX_BYTES,
+}) {
   const inputId = useId();
   const [archivo, setArchivo] = useState(null);
   const [vistaPrevia, setVistaPrevia] = useState("");
@@ -32,9 +37,11 @@ export default function ImageUploader({ onFileSelected, label = "Imagen" }) {
       event.target.value = "";
       return;
     }
-    if (file.size > MAX_BYTES) {
+    if (file.size > maxBytes) {
       setArchivo(null);
-      setError("La imagen no puede superar los 2 MB.");
+      setError(
+        `La imagen no puede superar los ${maxBytes / (1024 * 1024)} MB.`,
+      );
       onFileSelected?.(null);
       event.target.value = "";
       return;
@@ -57,11 +64,20 @@ export default function ImageUploader({ onFileSelected, label = "Imagen" }) {
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${inputId}-error` : undefined}
       />
-      <p className="dm-image-uploader__hint">JPG, PNG o WEBP · hasta 2 MB.</p>
-      {vistaPrevia && (
+      <p className="dm-image-uploader__hint">
+        JPG, PNG o WEBP · hasta {maxBytes / (1024 * 1024)} MB.
+      </p>
+      {(vistaPrevia || imageUrl) && (
         <figure className="dm-image-uploader__preview">
-          <img src={vistaPrevia} alt="Vista previa de la imagen seleccionada" />
-          <figcaption>{archivo?.name}</figcaption>
+          <img
+            src={vistaPrevia || imageUrl}
+            alt={
+              vistaPrevia
+                ? "Vista previa de la imagen seleccionada"
+                : "Imagen guardada"
+            }
+          />
+          {archivo && <figcaption>{archivo.name}</figcaption>}
         </figure>
       )}
       {error && (

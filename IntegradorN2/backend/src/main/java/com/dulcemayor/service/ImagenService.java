@@ -1,11 +1,10 @@
 package com.dulcemayor.service;
 
-import com.dulcemayor.dto.ImagenContenidoDTO;
 import com.dulcemayor.dto.ImagenCargaDTO;
+import com.dulcemayor.dto.ImagenContenidoDTO;
 import com.dulcemayor.dto.ImagenDTO;
 import com.dulcemayor.dto.mapper.ImagenMapper;
 import com.dulcemayor.entity.Imagen;
-import com.dulcemayor.entity.enums.TipoImagen;
 import com.dulcemayor.exception.ErrorServiceException;
 import com.dulcemayor.repository.ImagenRepository;
 import java.io.IOException;
@@ -13,6 +12,7 @@ import java.util.Arrays;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.dulcemayor.entity.enums.TipoImagen;
 
 @Service
 public class ImagenService extends AbstractCrudService<Imagen, ImagenCargaDTO, ImagenDTO> {
@@ -23,19 +23,25 @@ public class ImagenService extends AbstractCrudService<Imagen, ImagenCargaDTO, I
         super(imagenRepository, imagenMapper);
     }
 
-    @Transactional
-    public ImagenDTO crearImagen(String nombre, byte[] contenido, TipoImagen tipo) {
-        validarTipo(tipo);
-        validarTamanio(contenido.length);
-        Imagen imagen = nuevaEntidad();
-        asignarContenido(imagen, nombre, contenido, tipo);
-        return mapper.aRespuesta(repositorio.save(imagen));
-    }
-
     @Transactional(readOnly = true)
     public ImagenContenidoDTO buscarContenido(String id) {
         Imagen imagen = buscarEntidad(id);
         return new ImagenContenidoDTO(imagen.getMime(), imagen.getContenido());
+    }
+
+    /** Guarda una imagen que el seeder lee desde el classpath. */
+    @Transactional
+    public ImagenDTO crearImagen(String nombre, byte[] contenido, TipoImagen tipo) {
+        if (contenido == null || contenido.length == 0 || contenido.length > TAMANIO_MAXIMO) {
+            throw new ErrorServiceException("La imagen debe tener contenido y no superar los 2 MB.", "archivo");
+        }
+        if (tipo == null) throw new ErrorServiceException("El tipo de imagen es obligatorio.", "tipoImagen");
+        Imagen imagen = new Imagen();
+        imagen.setNombre(normalizarNombre(nombre));
+        imagen.setMime(detectarMime(contenido));
+        imagen.setContenido(contenido);
+        imagen.setTipoImagen(tipo);
+        return mapper.aRespuesta(repositorio.save(imagen));
     }
 
     @Override
@@ -43,8 +49,10 @@ public class ImagenService extends AbstractCrudService<Imagen, ImagenCargaDTO, I
         if (idActual != null) {
             throw new ErrorServiceException("Las imágenes no se pueden modificar.");
         }
-        validarTipo(request == null ? null : request.tipoImagen());
-        validarTamanio(request.archivo() == null ? 0 : request.archivo().getSize());
+        if (request == null || request.tipoImagen() == null) {
+            throw new ErrorServiceException("El tipo de imagen es obligatorio.", "tipoImagen");
+        }
+        validarArchivo(request.archivo());
         detectarMime(leerContenido(request.archivo()));
     }
 
@@ -55,15 +63,12 @@ public class ImagenService extends AbstractCrudService<Imagen, ImagenCargaDTO, I
 
     @Override
     protected void asignar(Imagen imagen, ImagenCargaDTO request) {
-        asignarContenido(imagen, request.archivo().getOriginalFilename(),
-                leerContenido(request.archivo()), request.tipoImagen());
-    }
-
-    private void asignarContenido(Imagen imagen, String nombre, byte[] contenido, TipoImagen tipo) {
-        imagen.setMime(detectarMime(contenido));
-        imagen.setNombre(normalizarNombre(nombre));
+        byte[] contenido = leerContenido(request.archivo());
+        String mime = detectarMime(contenido);
+        imagen.setNombre(normalizarNombre(request.archivo().getOriginalFilename()));
+        imagen.setMime(mime);
         imagen.setContenido(contenido);
-        imagen.setTipoImagen(tipo);
+        imagen.setTipoImagen(request.tipoImagen());
     }
 
     @Override
@@ -71,17 +76,11 @@ public class ImagenService extends AbstractCrudService<Imagen, ImagenCargaDTO, I
         return "No se encontró la imagen.";
     }
 
-    private void validarTipo(TipoImagen tipo) {
-        if (tipo == null) {
-            throw new ErrorServiceException("El tipo de imagen es obligatorio.", "tipoImagen");
-        }
-    }
-
-    private void validarTamanio(long tamanio) {
-        if (tamanio == 0) {
+    private void validarArchivo(MultipartFile archivo) {
+        if (archivo == null || archivo.isEmpty()) {
             throw new ErrorServiceException("Seleccioná una imagen para subir.", "archivo");
         }
-        if (tamanio > TAMANIO_MAXIMO) {
+        if (archivo.getSize() > TAMANIO_MAXIMO) {
             throw new ErrorServiceException("La imagen no puede superar los 2 MB.", "archivo");
         }
     }

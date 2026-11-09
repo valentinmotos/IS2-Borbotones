@@ -2,6 +2,7 @@ import HomePage from "../modules/home/pages/HomePage.jsx";
 import GuidePage from "../modules/help/pages/GuidePage.jsx";
 import DesignPage from "../modules/design/DesignPage.jsx";
 import CategoriasPage from "../modules/categorias/pages/CategoriasPage.jsx";
+import EmpresaPage from "../modules/empresa/pages/EmpresaPage.jsx";
 import UbicacionPage from "../modules/ubicacion/pages/UbicacionPage.jsx";
 import { homes } from "./access.js";
 
@@ -37,6 +38,12 @@ export const sections = [
     label: "Categorías",
     roles: gestion,
     element: <CategoriasPage />,
+  },
+  {
+    to: "/empresa",
+    label: "Empresa",
+    roles: gestion,
+    element: <EmpresaPage />,
   },
   {
     to: "/ubicacion",

@@ -1,27 +1,24 @@
 package com.dulcemayor.dto.mapper;
 
-import com.dulcemayor.dto.ImagenDTO;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import com.dulcemayor.dto.ImagenCargaDTO;
+import com.dulcemayor.dto.ImagenDTO;
 import com.dulcemayor.entity.Imagen;
-import java.util.List;
-import org.springframework.stereotype.Component;
 
-@Component
-public class ImagenMapper implements CrudMapper<Imagen, ImagenCargaDTO, ImagenDTO> {
+@Mapper(componentModel = "spring")
+public interface ImagenMapper extends CrudMapper<Imagen, ImagenCargaDTO, ImagenDTO> {
+    @Override
+    @Mapping(target = "url", expression = "java(\"/api/imagenes/\" + imagen.getId())")
+    ImagenDTO aRespuesta(Imagen imagen);
 
     @Override
-    public ImagenDTO aRespuesta(Imagen imagen) {
-        return new ImagenDTO(imagen.getId(), imagen.getNombre(), imagen.getMime(), imagen.getTipoImagen(),
-                "/api/imagenes/" + imagen.getId());
-    }
-
-    @Override
-    public List<ImagenDTO> aRespuestas(List<Imagen> imagenes) {
-        return imagenes.stream().map(this::aRespuesta).toList();
-    }
-
-    @Override
-    public void actualizar(ImagenCargaDTO request, Imagen imagen) {
-        // Las imágenes no se modifican mediante el CRUD genérico.
-    }
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "eliminado", ignore = true)
+    @Mapping(target = "nombre", ignore = true)
+    @Mapping(target = "mime", ignore = true)
+    @Mapping(target = "contenido", ignore = true)
+    @Mapping(target = "tipoImagen", ignore = true)
+    void actualizar(ImagenCargaDTO request, @MappingTarget Imagen entidad);
 }
