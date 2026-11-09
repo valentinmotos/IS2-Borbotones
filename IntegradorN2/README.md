@@ -478,6 +478,12 @@ Las claves de demo no son temporales, para no tener que cambiarlas en cada base 
 - **E2-05 (ABM de usuarios internos):** `usuarioService.crearUsuario(correo, rol)` crea con `dulcemayor` temporal. Para el reseteo de clave, volver a poner la clave por defecto con `claveTemporal = true` e incrementar `versionToken`.
 - **Tests con seguridad:** en `@WebMvcTest`, `@Import({ SecurityConfig.class, ErroresSeguridadHandler.class, JwtService.class })`, `@MockitoBean UsuarioRepository` y `@WithMockUser(roles = "ADMINISTRATIVO")` (ver `CategoriaControllerTest`). En `@SpringBootTest` alcanza con `@WithMockUser`, o con un token real como en `SeguridadIntegrationTest`.
 
+## Servicio de correo asíncrono
+
+`EmailService.enviar(destino, asunto, plantilla, variables)` procesa una plantilla Thymeleaf ubicada en `backend/src/main/resources/templates/` y manda el mensaje en segundo plano. Por ejemplo, `plantilla = "correo/prueba"` usa `templates/correo/prueba.html`. Pasá las variables de la plantilla en el mapa; el correo de prueba admite `nombre`, `mensaje`, `url` y `etiquetaEnlace`.
+
+El envío usa las variables SMTP `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` y `MAIL_FROM` del `.env`. En desarrollo podés completar esos valores con credenciales de Mailtrap; para Gmail usá una clave de aplicación. Si el envío falla, el servicio registra el error y la operación que lo llamó continúa. `mvnw.cmd test` ejecuta `EmailServiceTest` con un servidor SMTP simulado.
+
 ## Cotización del dólar con Adapter · E1-08
 
 - **Adapter:** `service/CotizacionProvider` (Target, contrato `obtenerVigente()`) y `service/adapter/DolarApiAdapter` (Adapter de DolarAPI, `DOLARAPI_URL`). Usa timeout de 3 segundos y pasa la fecha de UTC a la hora de Mendoza. Si falla, devuelve vacío y lo registra en el log.
