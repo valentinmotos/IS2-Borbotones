@@ -6,6 +6,7 @@ import { Alert } from "../../../packages/design/components.jsx";
 const publicUrl = import.meta.env.VITE_PUBLIC_URL || "http://localhost:5174";
 const sections = [
   { to: "/", label: "Inicio" },
+  { to: "/categorias", label: "Categorías" },
   { to: "/guia", label: "Guía de trabajo" },
   { to: "/componentes", label: "Sistema de diseño" },
 ];

@@ -215,6 +215,11 @@
 .design-form > button {
   justify-self: start;
 }
+.abm-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .design-catalog {
   margin-top: var(--s-6);
   border-top: 1px solid var(--line);

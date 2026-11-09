@@ -154,7 +154,7 @@ com.dulcemayor
  ├─ repository    repositorios Spring Data JPA (uno por entidad)
  ├─ service       lógica de negocio
  ├─ dto           records de request/response
- │   └─ mapper    MapStruct (E0-08)
+ │   └─ mapper    MapStruct: CrudMapper y un mapper por ABM (E0-08)
  ├─ controller    @RestController bajo /api
  ├─ security      JWT (E1-01)
  ├─ scheduler     tareas programadas (E5-05)
@@ -219,3 +219,61 @@ Nunca se devuelven stack traces.
 - **Datos de prueba:** completar el método de `DataSeeder` que le corresponde al issue (`cargarUbicacion` E1-03, `cargarEmpresa` / `cargarFormasDePago` E1-07, `cargarUsuarios` E1-01, `cargarCatalogo` E2-01…03, `cargarPuntosDeVenta` E2-06, `cargarPedidos` E6-04), pasando por los services.
 - **Utilidades:** `TextoUtils.mismoNombre(a, b)` compara sin tildes ni mayúsculas (duplicados) y `TextoUtils.esCorreoValido`. `CuitUtils.esValido` / `CuitUtils.normalizar` validan y formatean CUIT. Las dos vienen de IntegradorN1.
 - **Variables de entorno:** todas están listadas en `.env.example`. Si agregás una, sumala ahí.
+
+## ABM base con Template Method · E0-08
+
+Plantilla de ABM que copian todos los demás (E1-03, E1-07, E2-01, E2-05…) y ABM de **Categoría** completo como referencia, en la API y en el panel.
+
+### Patrones
+
+- **Template Method** · `service/AbstractCrudService<E, Q, S>` (clase abstracta) fija el algoritmo de cada operación y `CategoriaService` (clase concreta) redefine los ganchos:
+  - Alta: `validar` → `nuevaEntidad` → `asignar` → guardar → `despuesDeGuardar` → DTO.
+  - Modificación: buscar → `validar` → `asignar` → guardar → `despuesDeGuardar` → DTO.
+  - Baja lógica: buscar → `antesDeEliminar` → `eliminado = true`.
+
+  Los algoritmos son `protected final`; los métodos públicos (`crear`, `modificar`, `eliminar`, `buscar`, `listarActivos`) no son `final` para que funcione el proxy de `@Transactional` (mismo esquema que `CrudTemplate` de TP2 Ej. 4g). `controller/AbstractCrudController<Q, S>` hace lo mismo del lado REST.
+- **DTO con MapStruct** · `dto/mapper/CrudMapper<E, Q, S>` (`aRespuesta`, `aRespuestas`, `actualizar`, que nunca copia `id` ni `eliminado`). MapStruct genera la implementación al compilar.
+- `repository/BaseRepository<E>` (`@NoRepositoryBean`): `findByIdAndEliminadoFalse` y `findByEliminadoFalse(Sort)`, usados por la plantilla.
+
+### Endpoints
+
+Seguridad todavía abierta. Desde E1-01 los usan JEFE y ADMINISTRATIVO.
+
+| Método | Ruta | Request → Response |
+|---|---|---|
+| GET | `/api/categorias` | → `200 [{id, nombre}]` activas, ordenadas por nombre |
+| GET | `/api/categorias/{id}` | → `200 {id, nombre}` · `404` |
+| POST | `/api/categorias` | `{nombre}` → `201 {id, nombre}` · `400` vacío · `409` duplicado |
+| PUT | `/api/categorias/{id}` | `{nombre}` → `200` · `404` · `409` |
+| DELETE | `/api/categorias/{id}` | → `204` (baja lógica) · `400` si tiene productos activos · `404` |
+
+Reglas (de IntegradorN1): nombre obligatorio de hasta 120 caracteres; no puede repetirse entre las categorías activas sin importar mayúsculas, tildes ni espacios (`TextoUtils.mismoNombre`); una categoría dada de baja libera su nombre; no se da de baja una categoría con productos activos.
+
+Pantalla: **Categorías** en el panel (`/categorias`). Tiene el listado paginado, un formulario de alta y edición que muestra debajo del campo los errores del servidor que traen `campo`, y la baja con modal de confirmación. El seeder carga Alfajores, Caramelos, Chicles, Chocolates y Gomitas.
+
+### Cómo probarlo
+
+- `mvnw.cmd test`:
+  - `CategoriaServiceTest` (Mockito): alta, duplicado con tildes y mayúsculas, modificación conservando el propio nombre, baja con y sin productos, 404.
+  - `CategoriaControllerTest` (`@WebMvcTest`): códigos HTTP y JSON de error.
+  - `CategoriaIntegrationTest` (`@SpringBootTest` + H2): el ABM completo de punta a punta.
+- Sin PostgreSQL, el servidor se puede levantar con H2: `mvnw.cmd spring-boot:run "-Dspring-boot.run.useTestClasspath=true" "-Dspring-boot.run.profiles=test"`.
+- Manual: con el servidor y `npm run dev` corriendo, entrar a <http://localhost:5173/categorias>, crear "Turrones" y después "turrónes": aparece *Ya existe una categoría con ese nombre.* debajo del campo. Editar y dar de baja desde la tabla.
+  ```
+  curl -i -X POST http://localhost:8080/api/categorias -H "Content-Type: application/json" -d "{\"nombre\":\"Alfajores\"}"
+  → 409 {"mensaje":"Ya existe una categoría con ese nombre.","campo":"nombre"}
+  ```
+
+### Para otros issues: cómo armar un ABM nuevo
+
+Copiar la estructura de Categoría:
+
+1. **Repositorio:** `interface XRepository extends BaseRepository<X>` (en vez de `JpaRepository`).
+2. **DTOs:** `record XRequest(...)` con Jakarta Validation y mensajes en español; `record XResponse(...)`. Nunca exponer la entidad.
+3. **Mapper:** `@Mapper(componentModel = "spring") interface XMapper extends CrudMapper<X, XRequest, XResponse> {}`. Si el request trae ids de relaciones (`idDepartamento`), agregar `@Mapping(target = "departamento", ignore = true)` sobrescribiendo `actualizar`, y resolver la relación en `asignar`.
+4. **Service:** `@Service @Transactional(readOnly = true) class XService extends AbstractCrudService<X, XRequest, XResponse>`. Implementar `validar(request, idActual)` (`idActual` es `null` en el alta), `nuevaEntidad()` y `mensajeNoEncontrado()`. Opcionales: `asignar` (normalizar o resolver relaciones; llamar a `super.asignar`), `antesDeEliminar` (hijos activos), `despuesDeGuardar`, `orden()`. Sumar los métodos con nombres del UML (`crearX`, `buscarX`, `listarXActivo`…) que delegan en la plantilla.
+5. **Controller:** `@RestController @RequestMapping("/api/xs") class XController extends AbstractCrudController<XRequest, XResponse>`. Los endpoints propios (p. ej. localidades por departamento) se agregan en la misma clase.
+6. **Pantalla:** `const xApi = crearCrudApi("/xs")` (`client-admin/src/lib/crudApi.js`) y una página en `src/modules/<modulo>/pages/` como `CategoriasPage.jsx`, con ruta en `App.jsx` y entrada en `AdminLayout.jsx`.
+7. **Tests:** como mínimo, el caso duplicado con Mockito (`CategoriaServiceTest`).
+
+Para usar la entidad desde otro service (p. ej. `ProductoService` necesita la `Categoria`), llamar a `categoriaService.buscarEntidad(id)`: devuelve la entidad activa o lanza 404. Los controllers nunca la usan.
