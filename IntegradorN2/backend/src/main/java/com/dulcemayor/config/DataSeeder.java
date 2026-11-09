@@ -6,6 +6,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.dulcemayor.dto.CategoriaRequest;
+import com.dulcemayor.service.CategoriaService;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 
@@ -21,9 +24,11 @@ public class DataSeeder implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
     private final EntityManager entityManager;
+    private final CategoriaService categoriaService;
 
-    public DataSeeder(EntityManager entityManager) {
+    public DataSeeder(EntityManager entityManager, CategoriaService categoriaService) {
         this.entityManager = entityManager;
+        this.categoriaService = categoriaService;
     }
 
     @Override
@@ -66,7 +71,11 @@ public class DataSeeder implements CommandLineRunner {
 
     /** E2-01 a E2-03: categorías, productos, stock inicial y vigencias de precio. */
     private void cargarCatalogo() {
-        // Lo completan E2-01, E2-02 y E2-03.
+        // E0-08: categorías de demo.
+        for (String nombre : new String[] { "Alfajores", "Caramelos", "Chicles", "Chocolates", "Gomitas" }) {
+            categoriaService.crearCategoria(new CategoriaRequest(nombre));
+        }
+        // E2-01, E2-02 y E2-03: productos, stock inicial y vigencias de precio.
     }
 
     /** E2-06: puntos de venta de los minoristas de demo. */

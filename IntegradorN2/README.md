@@ -119,11 +119,12 @@ Para probar el conjunto, avanzá a la segunda página, agregá una categoría, r
 
 ## Cómo correrlo
 
-1. Levantar PostgreSQL. La forma más rápida es Docker (el `docker-compose.yml` completo llega con E0-09):
-   ```
-   docker run -d --name dulcemayor-db -e POSTGRES_DB=dulcemayor -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16
-   ```
-2. Variables de entorno: copiar `.env.example` como `.env` y completarlo. Para el contenedor de arriba no hace falta definir nada, porque los valores por defecto ya apuntan a `localhost:5432/dulcemayor` con usuario y clave `postgres`.
+**Todo con Docker:** ver [Docker · E0-09](#docker--e0-09) (`docker compose up --build -d`).
+
+**Para desarrollar el servidor:**
+
+1. Levantar solo PostgreSQL con el compose: `docker compose up -d db`.
+2. Variables de entorno: copiar `.env.example` como `.env` y completarlo. Con los valores de `.env.example`, el servidor apunta a `localhost:5432/dulcemayor` con usuario y clave `postgres`.
 3. Arrancar el servidor:
    ```
    cd backend
@@ -142,7 +143,7 @@ Para probar el conjunto, avanzá a la segunda página, agregá una categoría, r
 - Perfil `dev` (por defecto): PostgreSQL con `DB_URL`, `DB_USER` y `DB_PASSWORD`. Hibernate crea y actualiza las tablas a partir de las entidades (`ddl-auto=update`).
 - Zona horaria: `DulceMayorApplication.main` fija `America/Argentina/Mendoza`. Sin eso, en Windows con zona Argentina el JVM manda `America/Buenos_Aires` y PostgreSQL 16 rechaza la conexión (`invalid value for parameter "TimeZone"`).
 - Perfil `test`: H2 en memoria en modo PostgreSQL, con el esquema creado de cero en cada corrida.
-- Datos iniciales: `config/DataSeeder` corre solo si **todas** las tablas están vacías. Para volver a cargarlos, vaciar la base (por ejemplo `docker rm -f dulcemayor-db` y crear el contenedor de nuevo).
+- Datos iniciales: `config/DataSeeder` corre solo si **todas** las tablas están vacías. Para volver a cargarlos, vaciar la base (con Docker: `docker compose down -v` borra el volumen de la base).
 
 ## Estructura del backend
 
@@ -154,7 +155,7 @@ com.dulcemayor
  ├─ repository    repositorios Spring Data JPA (uno por entidad)
  ├─ service       lógica de negocio
  ├─ dto           records de request/response
- │   └─ mapper    MapStruct (E0-08)
+ │   └─ mapper    MapStruct: CrudMapper y un mapper por ABM (E0-08)
  ├─ controller    @RestController bajo /api
  ├─ security      JWT (E1-01)
  ├─ scheduler     tareas programadas (E5-05)
@@ -261,3 +262,122 @@ Nunca se devuelven stack traces.
 - **Datos de prueba:** completar el método de `DataSeeder` que le corresponde al issue (`cargarUbicacion` E1-03, `cargarEmpresa` / `cargarFormasDePago` E1-07, `cargarUsuarios` E1-01, `cargarCatalogo` E2-01…03, `cargarPuntosDeVenta` E2-06, `cargarPedidos` E6-04), pasando por los services.
 - **Utilidades:** `TextoUtils.mismoNombre(a, b)` compara sin tildes ni mayúsculas (duplicados) y `TextoUtils.esCorreoValido`. `CuitUtils.esValido` / `CuitUtils.normalizar` validan y formatean CUIT. Las dos vienen de IntegradorN1.
 - **Variables de entorno:** todas están listadas en `.env.example`. Si agregás una, sumala ahí.
+
+## ABM base con Template Method · E0-08
+
+Plantilla de ABM que copian todos los demás (E1-03, E1-07, E2-01, E2-05…) y ABM de **Categoría** completo como referencia, en la API y en el panel.
+
+### Patrones
+
+- **Template Method** · `service/AbstractCrudService<E, Q, S>` (clase abstracta) fija el algoritmo de cada operación y `CategoriaService` (clase concreta) redefine los ganchos:
+  - Alta: `validar` → `nuevaEntidad` → `asignar` → guardar → `despuesDeGuardar` → DTO.
+  - Modificación: buscar → `validar` → `asignar` → guardar → `despuesDeGuardar` → DTO.
+  - Baja lógica: buscar → `antesDeEliminar` → `eliminado = true`.
+
+  Los algoritmos son `protected final`; los métodos públicos (`crear`, `modificar`, `eliminar`, `buscar`, `listarActivos`) no son `final` para que funcione el proxy de `@Transactional` (mismo esquema que `CrudTemplate` de TP2 Ej. 4g). `controller/AbstractCrudController<Q, S>` hace lo mismo del lado REST.
+- **DTO con MapStruct** · `dto/mapper/CrudMapper<E, Q, S>` (`aRespuesta`, `aRespuestas`, `actualizar`, que nunca copia `id` ni `eliminado`). MapStruct genera la implementación al compilar.
+- `repository/BaseRepository<E>` (`@NoRepositoryBean`): `findByIdAndEliminadoFalse` y `findByEliminadoFalse(Sort)`, usados por la plantilla.
+
+### Endpoints
+
+Seguridad todavía abierta. Desde E1-01 los usan JEFE y ADMINISTRATIVO.
+
+| Método | Ruta | Request → Response |
+|---|---|---|
+| GET | `/api/categorias` | → `200 [{id, nombre}]` activas, ordenadas por nombre |
+| GET | `/api/categorias/{id}` | → `200 {id, nombre}` · `404` |
+| POST | `/api/categorias` | `{nombre}` → `201 {id, nombre}` · `400` vacío · `409` duplicado |
+| PUT | `/api/categorias/{id}` | `{nombre}` → `200` · `404` · `409` |
+| DELETE | `/api/categorias/{id}` | → `204` (baja lógica) · `400` si tiene productos activos · `404` |
+
+Reglas (de IntegradorN1): nombre obligatorio de hasta 120 caracteres; no puede repetirse entre las categorías activas sin importar mayúsculas, tildes ni espacios (`TextoUtils.mismoNombre`); una categoría dada de baja libera su nombre; no se da de baja una categoría con productos activos.
+
+Pantalla: **Categorías** en el panel (`/categorias`). Tiene el listado paginado, un formulario de alta y edición que muestra debajo del campo los errores del servidor que traen `campo`, y la baja con modal de confirmación. El seeder carga Alfajores, Caramelos, Chicles, Chocolates y Gomitas.
+
+### Cómo probarlo
+
+- `mvnw.cmd test`:
+  - `CategoriaServiceTest` (Mockito): alta, duplicado con tildes y mayúsculas, modificación conservando el propio nombre, baja con y sin productos, 404.
+  - `CategoriaControllerTest` (`@WebMvcTest`): códigos HTTP y JSON de error.
+  - `CategoriaIntegrationTest` (`@SpringBootTest` + H2): el ABM completo de punta a punta.
+- Sin PostgreSQL, el servidor se puede levantar con H2: `mvnw.cmd spring-boot:run "-Dspring-boot.run.useTestClasspath=true" "-Dspring-boot.run.profiles=test"`.
+- Manual: con el servidor y `npm run dev` corriendo, entrar a <http://localhost:5173/categorias>, crear "Turrones" y después "turrónes": aparece *Ya existe una categoría con ese nombre.* debajo del campo. Editar y dar de baja desde la tabla.
+  ```
+  curl -i -X POST http://localhost:8080/api/categorias -H "Content-Type: application/json" -d "{\"nombre\":\"Alfajores\"}"
+  → 409 {"mensaje":"Ya existe una categoría con ese nombre.","campo":"nombre"}
+  ```
+
+### Para otros issues: cómo armar un ABM nuevo
+
+Copiar la estructura de Categoría:
+
+1. **Repositorio:** `interface XRepository extends BaseRepository<X>` (en vez de `JpaRepository`).
+2. **DTOs:** `record XRequest(...)` con Jakarta Validation y mensajes en español; `record XResponse(...)`. Nunca exponer la entidad.
+3. **Mapper:** `@Mapper(componentModel = "spring") interface XMapper extends CrudMapper<X, XRequest, XResponse> {}`. Si el request trae ids de relaciones (`idDepartamento`), agregar `@Mapping(target = "departamento", ignore = true)` sobrescribiendo `actualizar`, y resolver la relación en `asignar`.
+4. **Service:** `@Service @Transactional(readOnly = true) class XService extends AbstractCrudService<X, XRequest, XResponse>`. Implementar `validar(request, idActual)` (`idActual` es `null` en el alta), `nuevaEntidad()` y `mensajeNoEncontrado()`. Opcionales: `asignar` (normalizar o resolver relaciones; llamar a `super.asignar`), `antesDeEliminar` (hijos activos), `despuesDeGuardar`, `orden()`. Sumar los métodos con nombres del UML (`crearX`, `buscarX`, `listarXActivo`…) que delegan en la plantilla.
+5. **Controller:** `@RestController @RequestMapping("/api/xs") class XController extends AbstractCrudController<XRequest, XResponse>`. Los endpoints propios (p. ej. localidades por departamento) se agregan en la misma clase.
+6. **Pantalla:** `const xApi = crearCrudApi("/xs")` (`client-admin/src/lib/crudApi.js`) y una página en `src/modules/<modulo>/pages/` como `CategoriasPage.jsx`, con ruta en `App.jsx` y entrada en `AdminLayout.jsx`.
+7. **Tests:** como mínimo, el caso duplicado con Mockito (`CategoriaServiceTest`).
+
+Para usar la entidad desde otro service (p. ej. `ProductoService` necesita la `Categoria`), llamar a `categoriaService.buscarEntidad(id)`: devuelve la entidad activa o lanza 404. Los controllers nunca la usan.
+
+## Docker · E0-09
+
+`docker-compose.yml` levanta la base, el servidor y los dos clientes. Ollama es opcional.
+
+| Servicio | Imagen | URL local | Notas |
+|---|---|---|---|
+| `db` | `postgres:16-alpine` | `localhost:5432` | volumen `dulcemayor-db`; healthcheck con `pg_isready` |
+| `backend` | `backend/Dockerfile` | <http://localhost:8080/api> | arranca cuando `db` está sana; perfil `dev` |
+| `client-admin` | `client-admin/Dockerfile` | <http://localhost:5173> | nginx; `/api` → `backend:8080` |
+| `client-public` | `client-public/Dockerfile` | <http://localhost:5174> | ídem |
+| `ollama` | `ollama/ollama` | `localhost:11434` | solo con `--profile ollama` |
+
+### Cómo se usa
+
+```
+cd IntegradorN2
+copy .env.example .env                       (Windows; en Linux/Mac: cp .env.example .env)
+docker compose up --build -d                 levanta todo (la primera vez tarda unos minutos)
+docker compose ps                            estado de los servicios
+docker compose logs -f backend               log del servidor
+docker compose down                          baja los contenedores; los datos quedan en el volumen
+docker compose down -v                       baja todo y BORRA la base (el seeder vuelve a cargar al subir)
+docker compose --profile ollama up -d        también levanta Ollama
+docker compose exec ollama ollama pull <modelo>   descarga el modelo del chatbot (E3-04)
+```
+
+Sin `.env` (o sin `DB_PASSWORD`), `docker compose up` se corta con *Falta DB_PASSWORD - copiá .env.example como .env y completalo*: la clave no está escrita en el compose. Los puertos publicados se cambian con `DB_PORT`, `BACKEND_PORT`, `ADMIN_PORT` y `PUBLIC_PORT` en el `.env`. Mientras corre el compose, `npm run dev` y `mvnw spring-boot:run` chocan con esos puertos: para desarrollar conviene `docker compose up -d db` y nada más.
+
+### Cómo está armado
+
+- **Servidor:** multi-stage. `maven:3.9-eclipse-temurin-21` compila (sin tests, porque los corre Jenkins) y `eclipse-temurin:21-jre` ejecuta el jar con un usuario sin privilegios. Se usa el Maven de la imagen y no `./mvnw`, para no depender de los finales de línea CRLF de Windows. `DB_URL` se arma en el compose apuntando al servicio `db`.
+- **Clientes:** se construyen con contexto en `IntegradorN2/` porque son workspaces de npm y usan `packages/`. `node:22-alpine` corre `npm ci` y `vite build`; `nginx:alpine` sirve el `dist`. Los dos usan `docker/nginx-cliente.conf`:
+  - las rutas de React Router devuelven `index.html`;
+  - `/api/` se reenvía a `backend:8080`, así el navegador ve un solo origen y no hace falta CORS;
+  - `/assets/` se cachea un año (los nombres llevan hash).
+- Las variables `VITE_*` se pasan como `args` al construir y quedan dentro del JavaScript: **nunca** poner secretos ahí.
+- `.env` no se versiona (`.gitignore`) y tampoco entra en las imágenes (`.dockerignore`).
+
+### Cómo probarlo
+
+Criterio: `docker compose up` levanta todos los servicios y la API responde.
+
+```
+docker compose up --build -d
+docker compose ps                                   db (healthy), backend, client-admin y client-public "Up"
+curl http://localhost:8080/api/categorias           200 con las categorías del seeder (API sobre PostgreSQL)
+curl http://localhost:5173/api/categorias           200 (API a través del nginx del panel)
+curl http://localhost:5173/categorias               200 con el index.html (ruta de React servida por nginx)
+curl http://localhost:5174/                         200 (sitio promocional)
+docker compose down && docker compose up -d         los datos siguen; el log dice "La base ya tiene datos"
+```
+
+Hasta que Spring termina de iniciar (unos 10 segundos), nginx responde `502` en `/api`.
+
+### Para otros issues
+
+- **Variable de entorno nueva:** sumarla en `.env.example` y en `environment` del servicio `backend` (`NOMBRE: ${NOMBRE:-}`).
+- **E1-09 (Jenkins):** construye las imágenes con `docker compose build` desde `IntegradorN2/`.
+- **E3-04 (chatbot):** dentro de Docker, Ollama está en `http://ollama:11434` (valor por defecto de `OLLAMA_URL` en el compose); el modelo se elige con `OLLAMA_MODEL`.
+- **E1-05 (imágenes):** nginx ya acepta cuerpos de hasta 3 MB en `/api`, así el límite de 2 MB lo controla el servidor y responde 413 con su JSON.
