@@ -3,6 +3,7 @@ import GuidePage from "../modules/help/pages/GuidePage.jsx";
 import DesignPage from "../modules/design/DesignPage.jsx";
 import CategoriasPage from "../modules/categorias/pages/CategoriasPage.jsx";
 import EmpresaPage from "../modules/empresa/pages/EmpresaPage.jsx";
+import ProductosPage from "../modules/productos/pages/ProductosPage.jsx";
 import UbicacionPage from "../modules/ubicacion/pages/UbicacionPage.jsx";
 import { homes } from "./access.js";
 
@@ -32,6 +33,12 @@ export const sections = [
     label: "Distribución",
     roles: ["DISTRIBUIDOR"],
     element: <HomePage title="Distribución" />,
+  },
+  {
+    to: "/productos",
+    label: "Productos",
+    roles: gestion,
+    element: <ProductosPage />,
   },
   {
     to: "/categorias",

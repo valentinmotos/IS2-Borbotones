@@ -90,7 +90,7 @@ public class SecurityConfig {
                         // Sesión propia: cambio de clave, datos de la sesión y logout
                         .requestMatchers("/api/auth/**").authenticated()
                         // Reglas por recurso (cada issue agrega las suyas acá)
-                        .requestMatchers("/api/categorias/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
+                        .requestMatchers("/api/categorias/**", "/api/productos/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
                         .requestMatchers("/api/empresas/**", "/api/sucursales/**", "/api/formas-de-pago/**")
                         .hasAnyRole("JEFE", "ADMINISTRATIVO")
                         .requestMatchers("/api/minorista/**").hasRole("MINORISTA")

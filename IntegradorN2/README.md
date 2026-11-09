@@ -340,6 +340,16 @@ El seeder crea Dulce Mayor, la sede central con foto y las tres formas de pago d
 
 Las pruebas `EmpresaServiceTest`, `SucursalServiceTest` y `FormaDePagoServiceTest` cubren el formato del CUIT, CUIT inválido, sede central duplicada, alias obligatorio y el alta de un medio de pago activo. Para ejecutarlas: `mvnw.cmd -Dtest=EmpresaServiceTest,SucursalServiceTest,FormaDePagoServiceTest test` desde `backend`.
 
+## E2-01 · ABM de productos
+
+Ingresá al panel como Jefe o Administrativo y abrí [Productos](http://localhost:5173/productos). Completá código, nombre, categoría, presentación y unidades por bulto o pack. Podés agregar una descripción y tenés que adjuntar una imagen JPG, PNG o WEBP de hasta 2 MB. Al editar, el producto conserva la imagen actual si no elegís otra.
+
+El listado admite búsqueda por código o nombre y filtro por categoría. La baja es lógica y el código queda reservado para mantener la identificación del producto. La API normaliza el código y devuelve `409` con `campo: "codigo"` ante un duplicado.
+
+- `GET /api/productos` lista los productos activos. `GET /api/productos/buscar` admite `busqueda` y `categoriaId`.
+- `POST /api/productos` y `PUT /api/productos/{id}` reciben `multipart/form-data`. Los campos de texto son `codigo`, `nombre`, `descripcion`, `presentacion`, `unidadesPorBulto` y `categoriaId`. El archivo se envía en `imagen`. Los cambios del producto y su nueva imagen se confirman juntos.
+- `GET /api/productos/{id}` consulta un producto activo y `DELETE /api/productos/{id}` lo da de baja.
+
 ## Docker · E0-09
 
 `docker-compose.yml` levanta la base, el servidor y los dos clientes. Ollama es opcional.
