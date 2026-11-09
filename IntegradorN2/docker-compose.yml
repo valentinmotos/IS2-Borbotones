@@ -1,0 +1,91 @@
+# Dulce Mayor (E0-09): base, servidor y los dos clientes.
+#   docker compose up --build -d             → todo menos Ollama
+#   docker compose --profile ollama up -d    → también Ollama (chatbot, E3-04)
+# Las variables salen de IntegradorN2/.env (copiar .env.example; el .env no se versiona).
+
+name: dulcemayor
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-dulcemayor}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Falta DB_PASSWORD - copiá .env.example como .env y completalo}
+      TZ: America/Argentina/Mendoza
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - dulcemayor-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-dulcemayor}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      APP_URL_PUBLIC: ${APP_URL_PUBLIC:-http://localhost:5174}
+      APP_URL_ADMIN: ${APP_URL_ADMIN:-http://localhost:5173}
+      DOLARAPI_URL: ${DOLARAPI_URL:-https://dolarapi.com/v1/dolares/oficial}
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-}
+      TZ: America/Argentina/Mendoza
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    restart: unless-stopped
+
+  client-admin:
+    build:
+      context: .
+      dockerfile: client-admin/Dockerfile
+      args:
+        VITE_PUBLIC_URL: http://localhost:${PUBLIC_PORT:-5174}
+    depends_on:
+      - backend
+    ports:
+      - "${ADMIN_PORT:-5173}:80"
+    restart: unless-stopped
+
+  client-public:
+    build:
+      context: .
+      dockerfile: client-public/Dockerfile
+      args:
+        VITE_ADMIN_URL: http://localhost:${ADMIN_PORT:-5173}
+    depends_on:
+      - backend
+    ports:
+      - "${PUBLIC_PORT:-5174}:80"
+    restart: unless-stopped
+
+  # Opcional: solo con --profile ollama. El modelo se descarga aparte (ver README).
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - dulcemayor-ollama:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  dulcemayor-db:
+  dulcemayor-ollama:

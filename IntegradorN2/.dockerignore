@@ -1,0 +1,10 @@
+# Contexto de las imágenes de los clientes (se construyen desde IntegradorN2/ por los workspaces)
+**/node_modules
+**/dist
+backend
+docs
+tests
+.local
+**/*.log
+**/.env
+**/.env.*
