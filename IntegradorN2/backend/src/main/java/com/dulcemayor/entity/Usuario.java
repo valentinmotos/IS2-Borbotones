@@ -2,6 +2,7 @@ package com.dulcemayor.entity;
 
 import com.dulcemayor.entity.enums.ProveedorAuth;
 import com.dulcemayor.entity.enums.RolUsuario;
+import org.hibernate.annotations.ColumnDefault;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -38,4 +39,13 @@ public class Usuario extends BaseEntity {
 
     @Column(nullable = false)
     private boolean activo = true;
+
+    /**
+     * E1-01 · no está en el UML: versión que viaja en el JWT. Cerrar sesión o cambiar la clave
+     * la incrementa, y el filtro rechaza los tokens emitidos con una versión anterior
+     * (mismo mecanismo que TPN2 Ej. 5d).
+     */
+    @ColumnDefault("0")
+    @Column(name = "version_token", nullable = false)
+    private int versionToken = 0;
 }

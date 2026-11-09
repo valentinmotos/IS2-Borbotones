@@ -1,6 +1,7 @@
 package com.dulcemayor.dto;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
-public record CotizacionDolarResponse(LocalDateTime fecha, double valorVenta) {
+/** Cotización del dólar oficial (vendedor) de un día (E1-08). */
+public record CotizacionDolarResponse(LocalDate fecha, double valorVenta) {
 }

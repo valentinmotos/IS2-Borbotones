@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,12 +29,15 @@ import com.dulcemayor.dto.CategoriaResponse;
 import com.dulcemayor.exception.DuplicadoException;
 import com.dulcemayor.exception.ErroresSeguridadHandler;
 import com.dulcemayor.exception.RecursoNoEncontradoException;
+import com.dulcemayor.repository.UsuarioRepository;
+import com.dulcemayor.security.JwtService;
 import com.dulcemayor.service.CategoriaService;
 
 /** E0-08: endpoints heredados de AbstractCrudController y sus códigos HTTP. */
 @WebMvcTest(controllers = CategoriaController.class)
-@Import({ SecurityConfig.class, ErroresSeguridadHandler.class })
+@Import({ SecurityConfig.class, ErroresSeguridadHandler.class, JwtService.class })
 @ActiveProfiles("test")
+@WithMockUser(roles = "ADMINISTRATIVO")
 class CategoriaControllerTest {
 
     private static final String BASE = "/api/categorias";
@@ -43,6 +47,10 @@ class CategoriaControllerTest {
 
     @MockitoBean
     private CategoriaService service;
+
+    /** Lo usa JwtFiltro; en estos tests la sesión la simula @WithMockUser. */
+    @MockitoBean
+    private UsuarioRepository usuarioRepository;
 
     @Test
     void listarDevuelveLasActivas() throws Exception {

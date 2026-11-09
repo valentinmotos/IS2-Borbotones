@@ -13,24 +13,33 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.dulcemayor.config.SecurityConfig;
+import com.dulcemayor.repository.UsuarioRepository;
+import com.dulcemayor.security.JwtService;
 
 /**
  * Contrato "Errores" (E0-01): toda respuesta de error es JSON {mensaje, campo} con el código HTTP correcto.
  */
 @WebMvcTest(controllers = ControladorDePrueba.class)
-@Import({ SecurityConfig.class, ErroresSeguridadHandler.class })
+@Import({ SecurityConfig.class, ErroresSeguridadHandler.class, JwtService.class })
 @ActiveProfiles("test")
+@WithMockUser(roles = "ADMINISTRATIVO")
 class GlobalExceptionHandlerTest {
 
-    private static final String BASE = "/prueba-errores";
+    private static final String BASE = "/api/prueba-errores";
 
     @Autowired
     private MockMvc mvc;
+
+    /** Lo usa JwtFiltro; en estos tests la sesión la simula @WithMockUser. */
+    @MockitoBean
+    private UsuarioRepository usuarioRepository;
 
     @Test
     void errorDeNegocioDevuelve400ConMensajeYCampo() throws Exception {
@@ -95,6 +104,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @WithAnonymousUser
     void sinSesionEnEndpointProtegidoDevuelve401() throws Exception {
         mvc.perform(get(BASE + "/solo-jefe"))
                 .andExpect(status().isUnauthorized())
@@ -102,7 +112,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @WithMockUser(roles = "MINORISTA")
+    @WithMockUser(roles = "PREVENTOR")
     void rolSinPermisoDevuelve403() throws Exception {
         mvc.perform(get(BASE + "/solo-jefe"))
                 .andExpect(status().isForbidden())

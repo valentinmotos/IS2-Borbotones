@@ -1,13 +1,18 @@
 package com.dulcemayor.controller;
 
-import com.dulcemayor.dto.CotizacionDolarResponse;
-import com.dulcemayor.service.CotizacionDolarService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dulcemayor.dto.CotizacionDolarResponse;
+import com.dulcemayor.service.CotizacionDolarService;
+
+/**
+ * Cotización vigente del dólar (E1-08). Pública: la muestra el sitio (E3-02, E3-03) sin login,
+ * por eso va bajo /api/publico (abierto en SecurityConfig).
+ */
 @RestController
-@RequestMapping("/api/cotizaciones/dolar")
+@RequestMapping("/api/publico/cotizacion")
 public class CotizacionDolarController {
 
     private final CotizacionDolarService cotizacionDolarService;
@@ -16,8 +21,8 @@ public class CotizacionDolarController {
         this.cotizacionDolarService = cotizacionDolarService;
     }
 
-    @GetMapping("/vigente")
+    @GetMapping
     public CotizacionDolarResponse buscarVigente() {
-        return cotizacionDolarService.buscarVigente();
+        return cotizacionDolarService.buscarCotizacionVigente();
     }
 }

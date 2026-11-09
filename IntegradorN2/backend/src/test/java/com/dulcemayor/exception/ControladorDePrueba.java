@@ -16,7 +16,7 @@ import jakarta.validation.constraints.NotBlank;
  * para verificar cómo lo responde GlobalExceptionHandler.
  */
 @RestController
-@RequestMapping("/prueba-errores")
+@RequestMapping("/api/prueba-errores")
 class ControladorDePrueba {
 
     record PruebaRequest(@NotBlank(message = "El nombre es obligatorio.") String nombre) {

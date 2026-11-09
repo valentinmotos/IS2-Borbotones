@@ -1,17 +1,29 @@
 package com.dulcemayor.service;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+
 import com.dulcemayor.dto.CotizacionDolarResponse;
 import com.dulcemayor.entity.CotizacionDolar;
 import com.dulcemayor.exception.RecursoNoEncontradoException;
 import com.dulcemayor.repository.CotizacionDolarRepository;
-import java.util.Optional;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Cotización del dólar (E1-08). Pide la cotización al CotizacionProvider (Adapter de DolarAPI),
+ * guarda una por día en CotizacionDolar y la expone con caché de una hora. Si la API falla,
+ * devuelve la última guardada.
+ *
+ * Sin @Transactional a propósito: la llamada HTTP no tiene que retener una conexión de la base;
+ * cada operación del repositorio ya es transaccional.
+ */
 @Service
 public class CotizacionDolarService {
+
+    public static final String CACHE = "cotizacionDolarVigente";
 
     private final CotizacionDolarRepository cotizacionRepository;
     private final CotizacionProvider cotizacionProvider;
@@ -22,41 +34,44 @@ public class CotizacionDolarService {
         this.cotizacionProvider = cotizacionProvider;
     }
 
-    /** Devuelve el valor en caché por una hora o actualiza desde el proveedor al vencer. */
-    @Transactional
-    @Cacheable("cotizacionDolarVigente")
-    public CotizacionDolarResponse buscarVigente() {
-        return actualizarDesdeProveedor().map(CotizacionDolarService::aResponse)
-                .orElseGet(() -> cotizacionRepository.findFirstByOrderByFechaDesc()
-                        .map(CotizacionDolarService::aResponse)
-                        .orElseThrow(() -> new RecursoNoEncontradoException(
-                                "No hay cotizaciones guardadas y el proveedor externo no está disponible.")));
+    /** buscarCotizacionVigente() del UML: la vigente, cacheada por una hora. */
+    @Cacheable(CACHE)
+    public CotizacionDolarResponse buscarCotizacionVigente() {
+        return obtenerYGuardar();
     }
 
-    /** Alta o actualización ejecutada por la tarea programada; conserva el último dato ante fallos. */
-    @Transactional
-    @CacheEvict(value = "cotizacionDolarVigente", allEntries = true)
+    /** La usa la tarea programada: consulta la API y deja el resultado en la caché. */
+    @CachePut(CACHE)
     public CotizacionDolarResponse actualizarCotizacion() {
-        return actualizarDesdeProveedor().map(CotizacionDolarService::aResponse)
-                .orElseGet(() -> cotizacionRepository.findFirstByOrderByFechaDesc()
-                        .map(CotizacionDolarService::aResponse)
-                        .orElseThrow(() -> new RecursoNoEncontradoException(
-                                "No hay cotizaciones guardadas y el proveedor externo no está disponible.")));
+        return obtenerYGuardar();
     }
 
-    private Optional<CotizacionDolar> actualizarDesdeProveedor() {
-        return cotizacionProvider.obtenerCotizacionOficial().map(externa -> {
-            java.time.LocalDate diaCotizacion = externa.fecha().toLocalDate();
-            CotizacionDolar entidad = cotizacionRepository.findByFecha(diaCotizacion)
+    /** listarCotizacion() del UML: historial, de la más reciente a la más vieja. */
+    public List<CotizacionDolarResponse> listarCotizacion() {
+        return cotizacionRepository.findAllByOrderByFechaDesc().stream()
+                .map(CotizacionDolarService::aResponse).toList();
+    }
+
+    private CotizacionDolarResponse obtenerYGuardar() {
+        return registrarDesdeProveedor()
+                .or(cotizacionRepository::findFirstByOrderByFechaDesc)
+                .map(CotizacionDolarService::aResponse)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No hay cotizaciones guardadas y el proveedor externo no está disponible."));
+    }
+
+    /** registrarCotizacion del UML: una fila por día; si ya existe la del día, se actualiza el valor. */
+    private Optional<CotizacionDolar> registrarDesdeProveedor() {
+        return cotizacionProvider.obtenerVigente().map(externa -> {
+            CotizacionDolar cotizacion = cotizacionRepository.findByFecha(externa.fecha())
                     .orElseGet(CotizacionDolar::new);
-            entidad.setFecha(externa.fecha());
-            entidad.setValorVenta(externa.valorVenta());
-            return cotizacionRepository.save(entidad);
+            cotizacion.setFecha(externa.fecha());
+            cotizacion.setValorVenta(externa.valorVenta());
+            return cotizacionRepository.save(cotizacion);
         });
     }
 
     private static CotizacionDolarResponse aResponse(CotizacionDolar cotizacion) {
-        return new CotizacionDolarResponse(
-                cotizacion.getFecha(), cotizacion.getValorVenta());
+        return new CotizacionDolarResponse(cotizacion.getFecha(), cotizacion.getValorVenta());
     }
 }
