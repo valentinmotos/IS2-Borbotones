@@ -59,6 +59,48 @@ com.dulcemayor
  └─ utils         TextoUtils, CuitUtils
 ```
 
+## Entidades de ventas, pagos y rutas · E0-07
+
+Entidades JPA y repositorios de `Pedido`, `DetallePedido`, `HistorialEstadoPedido`, `Factura`, `DetalleFactura`, `FormaDePago`, `Pago`, `CotizacionDolar`, `Ruta` y `ParadaRuta`, con los enums `EstadoPedido`, `EstadoFactura`, `TipoPago`, `MonedaPago` y `RutaEstado`. Los nombres son los del UML; los `idX` del diagrama son relaciones JPA (`@ManyToOne` / `@OneToOne`) con clave foránea.
+
+| Tabla | Claves foráneas |
+|---|---|
+| `pedidos` | `punto_de_venta_id`, `preventor_id` |
+| `detalles_pedido` | `pedido_id`, `producto_id` |
+| `historial_estados_pedido` | `pedido_id`, `usuario_id` |
+| `facturas` | `pedido_id` (único: un pedido tiene a lo sumo una factura) |
+| `detalles_factura` | `factura_id`, `producto_id` |
+| `pagos` | `factura_id`, `forma_de_pago_id` |
+| `formas_de_pago`, `cotizaciones_dolar` | — (`cotizaciones_dolar.fecha` es única) |
+| `rutas` | `preventor_id`, `distribuidor_id` (opcionales) |
+| `paradas_ruta` | `ruta_id`, `punto_de_venta_id`, `pedido_id` (opcional) |
+
+**Composiciones** (`@OneToMany(mappedBy, cascade = ALL, orphanRemoval = true)`): `Pedido.detalles`, `Factura.detalles` y `Ruta.paradas` (ordenadas por `orden`). Se guardan junto con el padre y una línea que se quita de la lista se borra. Para agregar, usar `agregarDetalle(...)` / `agregarParada(...)`, que completan las dos puntas de la relación.
+
+Los montos son `double`, igual que en E0-05 (`VigenciaPrecio.precio`).
+
+### Cómo probarlo
+
+`mvnw.cmd test` → `VentasRepositoryTest` (`@DataJpaTest` sobre H2):
+- lee `information_schema` y verifica que existen las 16 claves foráneas de la tabla;
+- guarda un pedido con su detalle en cascada y verifica que quitar una línea la borra;
+- factura con detalle y pago, y la consulta de facturas por minorista;
+- cotización vigente (la de fecha más reciente), ruta con paradas ordenadas e historial de estados.
+
+### Para otros issues
+
+| Repositorio | Consultas | Lo usa |
+|---|---|---|
+| `PedidoRepository` | `findByEliminadoFalse()`, `findByEstadoAndEliminadoFalse(estado)`, `findByPreventor_IdAndEliminadoFalse(id)`, `findByPuntoDeVenta_IdAndEliminadoFalse(id)` | E4-01, E4-02 |
+| `DetallePedidoRepository` | `findByPedido_IdAndEliminadoFalse(idPedido)` | E4-01 |
+| `FacturaRepository` | `findByPedido_IdAndEliminadoFalse(idPedido)`, `findByEliminadoFalse()`, `findByEstadoAndEliminadoFalse(estado)`, `findByPedido_PuntoDeVenta_Minorista_IdAndEliminadoFalse(idMinorista)` | E4-04, E4-06 |
+| `PagoRepository` | `findByFactura_IdAndEliminadoFalse(idFactura)` | E4-05 |
+| `CotizacionDolarRepository` | `findFirstByOrderByFechaDesc()` (última guardada), `findByFecha(fecha)`, `findAllByOrderByFechaDesc()` | E1-08 |
+| `RutaRepository` | `findByFechaAndEliminadoFalse(fecha)`, `findByPreventor_IdAndEliminadoFalse(id)`, `findByDistribuidor_IdAndEliminadoFalse(id)` | E5-01 |
+
+- `HistorialEstadoPedido` y `CotizacionDolar` heredan `eliminado` de `BaseEntity` aunque el UML no lo tenga: no se usa (nunca se dan de baja).
+- `Factura.pedido` es único. Si E4 necesita volver a facturar un pedido cuya factura se anuló, hay que revisar esa restricción.
+
 ## Proyecto base E0-01
 
 Esqueleto del servidor: dependencias (Web, Data JPA, Security, Validation, Mail, PostgreSQL, Lombok), perfiles, estructura de paquetes, `BaseEntity`, manejo global de errores y `DataSeeder`.
