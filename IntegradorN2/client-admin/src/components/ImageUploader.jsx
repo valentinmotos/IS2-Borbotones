@@ -1,55 +1,94 @@
 import { useEffect, useId, useState } from "react";
 
-const maximoPorDefecto = 2 * 1024 * 1024;
-const tiposPermitidos = ["image/jpeg", "image/png", "image/webp"];
+const MAX_BYTES = 2 * 1024 * 1024;
+const ACCEPTED_MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const ACCEPT = ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp";
 
-/** Selector reusable con validación local y vista previa de JPG, PNG y WEBP. */
-export default function ImageUploader({ onFileSelected, imageUrl = "", maxBytes = maximoPorDefecto }) {
+export default function ImageUploader({
+  onFileSelected,
+  label = "Imagen",
+  imageUrl = "",
+  maxBytes = MAX_BYTES,
+}) {
   const inputId = useId();
   const [archivo, setArchivo] = useState(null);
+  const [vistaPrevia, setVistaPrevia] = useState("");
   const [error, setError] = useState("");
-  const [preview, setPreview] = useState("");
 
   useEffect(() => {
-    if (!archivo) {
-      setPreview("");
-      return undefined;
-    }
-    const url = URL.createObjectURL(archivo);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [archivo]);
+    if (!vistaPrevia) return;
+    return () => URL.revokeObjectURL(vistaPrevia);
+  }, [vistaPrevia]);
 
   function seleccionar(event) {
     const file = event.target.files?.[0] ?? null;
     setError("");
+    setVistaPrevia("");
     if (!file) {
       setArchivo(null);
       onFileSelected?.(null);
       return;
     }
-    if (!tiposPermitidos.includes(file.type)) {
-      setError("El archivo debe ser JPG, PNG o WEBP.");
+    const extensionPermitida = /\.(jpe?g|png|webp)$/i.test(file.name);
+    if (!ACCEPTED_MIMES.has(file.type) && !(!file.type && extensionPermitida)) {
       setArchivo(null);
+      setError("El archivo debe ser JPG, PNG o WEBP.");
       onFileSelected?.(null);
+      event.target.value = "";
       return;
     }
     if (file.size > maxBytes) {
-      setError("La imagen no puede superar los 2 MB.");
       setArchivo(null);
+      setError(
+        `La imagen no puede superar los ${maxBytes / (1024 * 1024)} MB.`,
+      );
       onFileSelected?.(null);
+      event.target.value = "";
       return;
     }
     setArchivo(file);
+    setVistaPrevia(URL.createObjectURL(file));
     onFileSelected?.(file);
   }
 
   return (
-    <div className="dm-field">
-      <label htmlFor={inputId}>Foto de sucursal (JPG, PNG o WEBP; hasta 2 MB)</label>
-      <input id={inputId} className="dm-location-select" type="file" accept="image/jpeg,image/png,image/webp" onChange={seleccionar} aria-describedby={error ? `${inputId}-error` : undefined} />
-      {error && <small id={`${inputId}-error`} className="dm-error" role="alert">{error}</small>}
-      {(preview || imageUrl) && <img className="e107-photo" src={preview || imageUrl} alt="Vista previa de la imagen seleccionada" />}
-    </div>
+    <section className="dm-image-uploader" aria-label={label}>
+      <label className="dm-image-uploader__label" htmlFor={inputId}>
+        {label}
+      </label>
+      <input
+        id={inputId}
+        type="file"
+        accept={ACCEPT}
+        onChange={seleccionar}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${inputId}-error` : undefined}
+      />
+      <p className="dm-image-uploader__hint">
+        JPG, PNG o WEBP · hasta {maxBytes / (1024 * 1024)} MB.
+      </p>
+      {(vistaPrevia || imageUrl) && (
+        <figure className="dm-image-uploader__preview">
+          <img
+            src={vistaPrevia || imageUrl}
+            alt={
+              vistaPrevia
+                ? "Vista previa de la imagen seleccionada"
+                : "Imagen guardada"
+            }
+          />
+          {archivo && <figcaption>{archivo.name}</figcaption>}
+        </figure>
+      )}
+      {error && (
+        <p
+          id={`${inputId}-error`}
+          className="dm-image-uploader__error"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
+    </section>
   );
 }

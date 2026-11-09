@@ -28,8 +28,8 @@ test("ambos builds sirven HTML, assets, rutas profundas y el proxy de API", asyn
   const target = `http://127.0.0.1:${backend.address().port}`;
 
   for (const [app, route] of [
-    ["client-admin", "/componentes"],
-    ["client-public", "/como-comprar"],
+    ["client-admin", "/jefatura"],
+    ["client-public", "/cuenta"],
   ]) {
     await t.test(app, async (t) => {
       const server = await preview({
@@ -71,10 +71,10 @@ test("las rutas React renderizan su contenido y una recuperación para rutas des
     [
       "client-admin",
       [
-        ["/", "Administración"],
-        ["/guia", "Guía de trabajo"],
-        ["/componentes", "Sistema de diseño"],
-        ["/inexistente", "Página no encontrada"],
+        ["/login", "Iniciar sesión"],
+        ["/jefatura", null],
+        ["/guia", null],
+        ["/componentes", null],
       ],
     ],
     [
@@ -84,6 +84,8 @@ test("las rutas React renderizan su contenido y una recuperación para rutas des
         ["/empresa", "Mayorista de golosinas en Mendoza"],
         ["/creditos", "Créditos de fotografía"],
         ["/como-comprar", "Cómo comprar"],
+        ["/login", "Iniciar sesión"],
+        ["/cuenta", null],
         ["/inexistente", "Página no encontrada"],
       ],
     ],
@@ -104,13 +106,83 @@ test("las rutas React renderizan su contenido y una recuperación para rutas des
           createElement(App),
         ),
       );
-      assert.ok(
-        html.includes(`<h1>${heading}</h1>`),
-        `${app}${path} debe incluir ${heading}`,
-      );
+      if (heading) {
+        assert.ok(
+          html.includes(`<h1>${heading}</h1>`),
+          `${app}${path} debe incluir ${heading}`,
+        );
+      } else {
+        assert.doesNotMatch(
+          html,
+          /<h1[ >]/,
+          `${app}${path} no debe renderizar contenido protegido`,
+        );
+      }
       assert.match(html, /Saltar al contenido/);
-      assert.match(html, /Navegación principal/);
+      if (app === "client-public") assert.match(html, /Navegación principal/);
     }
     await server.close();
   }
+});
+
+test("el menú y la URL directa respetan el rol y el cambio de clave", async (t) => {
+  const app = `${root}client-admin`;
+  const server = await createServer({
+    root: app,
+    configFile: `${app}/vite.config.js`,
+    server: { middlewareMode: true },
+    appType: "custom",
+  });
+  t.after(() => server.close());
+  const { AdminRoutes } = await server.ssrLoadModule("/src/app/App.jsx");
+  const { SessionContext } = await server.ssrLoadModule(
+    "../packages/auth/session.js",
+  );
+
+  function render({ rol, home, debeCambiarClave = false, path }) {
+    return renderToString(
+      createElement(
+        MemoryRouter,
+        { initialEntries: [path] },
+        createElement(
+          SessionContext.Provider,
+          {
+            value: { status: "ready", home, user: { rol, debeCambiarClave } },
+          },
+          createElement(AdminRoutes),
+        ),
+      ),
+    );
+  }
+
+  const jefe = render({ rol: "JEFE", home: "/jefatura", path: "/categorias" });
+  assert.match(jefe, /<h1>Categorías<\/h1>/);
+  assert.match(jefe, /href="\/categorias"/);
+  const empresa = render({
+    rol: "ADMINISTRATIVO",
+    home: "/administracion",
+    path: "/empresa",
+  });
+  assert.match(empresa, /<h1>Empresa y sucursales<\/h1>/);
+  assert.match(empresa, /href="\/empresa"/);
+  const preventor = render({
+    rol: "PREVENTOR",
+    home: "/preventa",
+    path: "/categorias",
+  });
+  assert.match(preventor, /<h1>Acceso denegado<\/h1>/);
+  assert.match(preventor, /href="\/preventa"/);
+  assert.doesNotMatch(preventor, /href="\/categorias"/);
+  assert.doesNotMatch(preventor, /href="\/empresa"/);
+  assert.match(
+    render({ rol: "PREVENTOR", home: "/preventa", path: "/empresa" }),
+    /<h1>Acceso denegado<\/h1>/,
+  );
+  const temporal = render({
+    rol: "JEFE",
+    home: "/jefatura",
+    path: "/categorias",
+    debeCambiarClave: true,
+  });
+  assert.doesNotMatch(temporal, /<h1>Categorías<\/h1>|class="role-menu"/);
 });

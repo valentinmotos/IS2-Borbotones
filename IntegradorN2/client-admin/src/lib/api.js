@@ -1,7 +1,7 @@
 import { createHttpClient, createTokenStore } from "@dulce-mayor/http";
 
 export const tokenStore = createTokenStore(
-  sessionStorage,
+  typeof window === "undefined" ? undefined : window.sessionStorage,
   "dulcemayor.admin.token",
 );
 export const api = createHttpClient({
