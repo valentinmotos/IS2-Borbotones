@@ -1,83 +1,51 @@
-import { Boxes, Store, Truck } from "lucide-react";
+const sections = [
+  {
+    id: "catalogo",
+    title: "Productos y almacén",
+    description:
+      "Administración mantiene las categorías, imágenes y presentaciones por bulto. Almacén controla las existencias y registra los movimientos. El catálogo muestra los productos con stock y sus precios vigentes.",
+  },
+  {
+    id: "comercios",
+    title: "Comercios y preventa",
+    description:
+      "El preventor visita los puntos de venta, registra a los comercios minoristas y toma los pedidos desde el teléfono. El jefe administrativo coordina los usuarios y consulta los reportes.",
+  },
+  {
+    id: "recorrido",
+    title: "Facturación y entregas",
+    description:
+      "Almacén prepara el pedido y verifica el stock. La facturación precede al reparto. El distribuidor sigue su ruta y registra la entrega en cada comercio. El minorista consulta sus pedidos y facturas desde su cuenta.",
+  },
+];
 
 export default function GuidePage() {
   return (
     <>
-      <div className="page-heading">
+      <header className="dm-page-header">
         <div>
-          <p className="eyebrow">CONOCÉ TU ESPACIO</p>
-          <h1>Un equipo. Todo un recorrido.</h1>
-          <p>Así se conecta el trabajo de cada área de Dulce Mayor.</p>
+          <h1>Guía de trabajo</h1>
+          <p>
+            Responsabilidades de cada área, desde el surtido hasta la entrega.
+          </p>
         </div>
-      </div>
-      <div className="guide-intro">
-        <span className="banner-label">GUÍA DE TRABAJO</span>
-        <h2>
-          Del almacén al comercio,
-          <br />
-          cada paso cuenta.
-        </h2>
-        <p>
-          Esta guía presenta el circuito de la empresa. Las herramientas de
-          gestión se incorporan en las próximas etapas.
-        </p>
-      </div>
-      <div className="guide-sections">
-        <section id="catalogo" className="guide-card">
-          <span className="feature-icon pink">
-            <Boxes />
-          </span>
-          <div>
-            <p className="eyebrow">01 · EL SURTIDO</p>
-            <h2>Productos y almacén</h2>
-            <p>
-              El equipo administrativo mantiene los productos, sus categorías,
-              imágenes y presentaciones por bulto. Almacén controla las
-              existencias y registra cada movimiento.
-            </p>
-            <p>
-              El catálogo público muestra los productos con stock disponible y
-              sus precios mayoristas vigentes.
-            </p>
-          </div>
+      </header>
+      <nav className="guide-index" aria-label="En esta guía">
+        <h2>En esta guía</h2>
+        <ul>
+          {sections.map(({ id, title }) => (
+            <li key={id}>
+              <a href={`#${id}`}>{title}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      {sections.map(({ id, title, description }) => (
+        <section key={id} id={id} className="guide-section">
+          <h2>{title}</h2>
+          <p>{description}</p>
         </section>
-        <section id="comercios" className="guide-card">
-          <span className="feature-icon green">
-            <Store />
-          </span>
-          <div>
-            <p className="eyebrow">02 · LOS COMERCIOS</p>
-            <h2>Cerca de cada minorista</h2>
-            <p>
-              Los preventores visitan los puntos de venta, registran comercios y
-              toman los pedidos desde su teléfono. Cada punto de venta tiene su
-              dirección y ubicación.
-            </p>
-            <p>
-              El jefe administrativo coordina los usuarios y consulta los
-              reportes de la operación.
-            </p>
-          </div>
-        </section>
-        <section id="recorrido" className="guide-card">
-          <span className="feature-icon orange">
-            <Truck />
-          </span>
-          <div>
-            <p className="eyebrow">03 · EL RECORRIDO</p>
-            <h2>Del pedido a la entrega</h2>
-            <p>
-              La operación conecta el control de stock, la facturación y la
-              distribución. El distribuidor sigue su ruta y registra la entrega
-              al comercio.
-            </p>
-            <p>
-              Los minoristas consultan sus pedidos y facturas desde su cuenta en
-              el sitio público.
-            </p>
-          </div>
-        </section>
-      </div>
+      ))}
     </>
   );
 }

@@ -21,10 +21,10 @@ Dos aplicaciones independientes de Vite + React, en la rama de trabajo `e0-02`:
 
 | Cliente | URL local | Rutas disponibles |
 |---|---|---|
-| Administración | http://localhost:5173 | `/`, `/guia` |
-| Sitio promocional | http://localhost:5174 | `/`, `/empresa`, `/como-comprar` |
+| Administración | http://localhost:5173 | `/`, `/guia`, `/componentes` |
+| Sitio promocional | http://localhost:5174 | `/`, `/empresa`, `/como-comprar`, `/creditos` |
 
-Ambas tienen navegación responsive, menú móvil, recuperación de rutas desconocidas, enlace de salto al contenido y títulos por página. Las páginas de inicio funcionan sin el backend. Las fuentes y la ilustración SVG se incluyen localmente. No se simulan usuarios, stock ni ventas. Los ABM, login, catálogo y pedidos corresponden a los siguientes issues; E0-02 deja la estructura y el transporte HTTP preparados para integrarlos.
+Ambas tienen navegación responsive, menú móvil, recuperación de rutas desconocidas, enlace de salto al contenido y títulos por página. Las páginas de inicio funcionan sin el backend. Las tipografías y las fotografías de referencia se sirven localmente. No se simulan usuarios, stock ni ventas. Los ABM, login, catálogo y pedidos corresponden a los siguientes issues; E0-02 deja la estructura y el transporte HTTP preparados para integrarlos.
 
 ### Instalación y desarrollo
 
@@ -98,7 +98,24 @@ npm run build             # genera client-admin/dist y client-public/dist
 
 Las pruebas de integración levantan una API aislada para verificar el proxy y el encabezado Bearer; no requieren PostgreSQL ni modifican datos del proyecto. Verifican el renderizado de las rutas React sin navegador. La revisión visual en un navegador se realiza por separado. `package-lock.json` fija las dependencias para instalaciones reproducibles con `npm ci`.
 
-La presentación inicial es original, sin plantillas externas. Las tipografías DM Sans y Manrope se distribuyen con sus paquetes `@fontsource` (OFL); los iconos son de Lucide (ISC). La selección de plantillas y el sistema de componentes de E0-03 siguen siendo un issue independiente.
+## Sistema de diseño · E0-03
+
+Abrí [Sistema de diseño](http://localhost:5173/componentes) desde el menú de administración tras ejecutar `npm run dev`. También está disponible con `npm run deploy:local`. La galería funciona con datos de ejemplo en memoria y se reinicia al salir de la página. El registro de categorías muestra los ocho componentes en un flujo de trabajo. La sección «Referencia de componentes» indica dónde probar cada uno. La ficha del informe documenta el rediseño con Taste Skill y el origen de las [plantillas y sus licencias](docs/E0-03.md).
+
+Los dos clientes cargan `packages/design/base.css` y `packages/design/components.css`. La base importa los tokens de `packages/design/tokens.css`, que definen la tipografía, la marca, el foco, los colores semánticos, el espaciado y el radio de los controles. Para reutilizar los componentes, importalos desde `packages/design/components.jsx`.
+
+| Componente | Uso |
+|---|---|
+| `DataTable` | Recibe `caption`, `columns` con `key`, `label` y `render(row)` opcional, `rows`, `rowKey(row)` y un mensaje `empty` opcional. |
+| `FormField` | Usalo en un `form` con `label`, los atributos del input y un `hint` o `error`. Para errores de API, pasá `mensaje` como `error` en el campo identificado por `campo`. |
+| `ConfirmDialog` | Se controla con `open`, `title`, `children`, `onConfirm` y `onCancel`. Admite `confirmLabel`. Escape ejecuta la cancelación. Si se quita el control que abrió el modal, mové el foco a un elemento que siga disponible. |
+| `StatusBadge` | Muestra el texto de estado en `children` con `tone` igual a `neutral`, `success`, `warning` o `danger`. |
+| `Kpi` | En un `dl`, recibe `label`, `value` y un `detail` opcional. |
+| `Alert` | Recibe el mensaje en `children`, los mismos tonos del badge y un `onDismiss` opcional. |
+| `Pagination` | Recibe `page` desde 1, `pageCount` y `onPageChange(page)`. El módulo decide cómo recuperar o recortar las filas y ajusta la página si cambia el total. |
+| `FilePicker` | Recibe `label`, `accept`, `maxBytes`, `hint` y `onChange(file, error)`. Devuelve el archivo seleccionado, o `null` si se quita o falla la validación local. La galería acepta JPG, PNG y WebP hasta 2 MiB. |
+
+Para probar el conjunto, avanzá a la segunda página, agregá una categoría, repetí el nombre para ver el error y probá un archivo fuera del tipo admitido. Abrí «Quitar» y probá tanto cancelar con Escape como confirmar. Los KPI, la paginación y los avisos reflejan los cambios del listado.
 
 ## Cómo correrlo
 

@@ -1,122 +1,73 @@
 import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  BookOpen,
-  Boxes,
-  Candy,
-  MapPin,
-  PackageCheck,
-  Store,
-  Truck,
-} from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
+import { useTasteMoment } from "../../../../../packages/design/useTasteMoment.js";
+import lettersAssemble from "../../../../../packages/design/taste/letters-assemble.mjs";
+
+const workflow = [
+  {
+    to: "/guia#catalogo",
+    title: "Productos y almacén",
+    text: "Surtido y existencias.",
+  },
+  {
+    to: "/guia#comercios",
+    title: "Comercios y preventa",
+    text: "Puntos de venta y pedidos.",
+  },
+  {
+    to: "/guia#recorrido",
+    title: "Facturación y entregas",
+    text: "Despacho y confirmación.",
+  },
+];
 
 export default function HomePage() {
+  const statement = useTasteMoment(lettersAssemble, false);
   return (
     <>
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">TU DÍA, UN POCO MÁS SIMPLE</p>
-          <h1>Bienvenido a tu espacio.</h1>
-          <p>Un lugar para acompañar cada paso de Dulce Mayor.</p>
+      <section className="work-intro hero" data-enter>
+        <div className="enter-copy">
+          <h1>Administración</h1>
+          <p>Herramientas y guías para el equipo mayorista de Dulce Mayor.</p>
         </div>
-        <span className="location">
-          <MapPin size={15} /> Mendoza, Argentina
-        </span>
-      </div>
-      <section className="welcome-banner" aria-labelledby="bienvenida">
-        <div>
-          <span className="banner-label">CERCA DE CADA COMERCIO</span>
-          <h2 id="bienvenida">
-            Grandes negocios.
-            <br />
-            Pequeños momentos dulces.
-          </h2>
-          <p>
-            De nuestro almacén a cada punto de venta.
-            <br />
-            Empezá por conocer cómo trabajamos.
-          </p>
-          <Link className="button light" to="/guia">
-            Explorar la guía <ArrowRight size={17} />
-          </Link>
-        </div>
-        <div className="banner-art" aria-hidden="true">
-          <span className="art-circle" />
-          <Candy className="candy-big" strokeWidth={1.1} />
-          <span className="art-label">
-            DULCE
-            <br />
-            <b>MAYOR</b>
-            <small>DESDE MENDOZA</small>
-          </span>
-          <span className="art-spark">✳</span>
-        </div>
-      </section>
-      <div className="section-heading">
-        <h2>Una operación conectada</h2>
-        <Link to="/guia">
-          Conocer el recorrido <ArrowRight size={16} />
-        </Link>
-      </div>
-      <div className="workflow-cards">
-        {[
-          {
-            icon: Boxes,
-            step: "01",
-            title: "El surtido",
-            text: "Productos, presentaciones por bulto y disponibilidad de almacén.",
-            anchor: "catalogo",
-            color: "pink",
-          },
-          {
-            icon: Store,
-            step: "02",
-            title: "Los comercios",
-            text: "El vínculo con cada minorista y su punto de venta.",
-            anchor: "comercios",
-            color: "green",
-          },
-          {
-            icon: Truck,
-            step: "03",
-            title: "El recorrido",
-            text: "Del pedido al despacho y la entrega de mercadería.",
-            anchor: "recorrido",
-            color: "orange",
-          },
-        ].map(({ icon: Icon, step, title, text, anchor, color }) => (
-          <Link className="workflow-card" to={`/guia#${anchor}`} key={step}>
-            <div className="card-top">
-              <span className={`feature-icon ${color}`}>
-                <Icon size={24} />
-              </span>
-              <span className="step">{step}</span>
-            </div>
-            <h3>{title}</h3>
-            <p>{text}</p>
-            <span className="card-link">
-              Ver en la guía <ArrowUpRight size={17} />
+        <div className="work-tools">
+          <Link className="work-tool" to="/componentes">
+            <span>
+              <strong>Sistema de diseño</strong>
+              <small>Probá los componentes en el registro de categorías.</small>
             </span>
+            <ArrowUpRight size={22} aria-hidden="true" />
           </Link>
-        ))}
-      </div>
-      <section className="getting-started">
-        <div className="feature-icon pale">
-          <BookOpen size={23} />
+          <Link className="work-tool" to="/guia">
+            <span>
+              <strong>Guía de trabajo</strong>
+              <small>Consultá las funciones de cada área.</small>
+            </span>
+            <ArrowUpRight size={22} aria-hidden="true" />
+          </Link>
         </div>
-        <div>
-          <h2>¿Es tu primera visita?</h2>
-          <p>Conocé los roles y el circuito de trabajo de Dulce Mayor.</p>
-        </div>
-        <Link className="text-link" to="/guia">
-          Leer la guía <ArrowRight size={17} />
-        </Link>
       </section>
-      <p className="quiet-note">
-        <PackageCheck size={16} /> Cada buena entrega empieza con un equipo
-        conectado.
-      </p>
+      <section
+        ref={statement}
+        className="work-flow"
+        data-moment="letters-assemble"
+      >
+        <h2 className="mo-la__type">Circuito mayorista</h2>
+        <ol>
+          {workflow.map(({ to, title, text }, index) => (
+            <li key={to}>
+              <Link to={to}>
+                <span className="work-number" aria-hidden="true">
+                  0{index + 1}
+                </span>
+                <strong>{title}</strong>
+                <small>{text}</small>
+                <ArrowUpRight size={18} aria-hidden="true" />
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </section>
     </>
   );
 }

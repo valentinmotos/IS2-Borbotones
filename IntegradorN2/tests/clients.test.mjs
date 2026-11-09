@@ -28,7 +28,7 @@ test("ambos builds sirven HTML, assets, rutas profundas y el proxy de API", asyn
   const target = `http://127.0.0.1:${backend.address().port}`;
 
   for (const [app, route] of [
-    ["client-admin", "/guia"],
+    ["client-admin", "/componentes"],
     ["client-public", "/como-comprar"],
   ]) {
     await t.test(app, async (t) => {
@@ -71,18 +71,20 @@ test("las rutas React renderizan su contenido y una recuperación para rutas des
     [
       "client-admin",
       [
-        ["/", "Bienvenido a tu espacio."],
-        ["/guia", "Un equipo. Todo un recorrido."],
-        ["/inexistente", "Esta página no está en tu recorrido."],
+        ["/", "Administración"],
+        ["/guia", "Guía de trabajo"],
+        ["/componentes", "Sistema de diseño"],
+        ["/inexistente", "Página no encontrada"],
       ],
     ],
     [
       "client-public",
       [
-        ["/", "Lo dulce, también."],
-        ["/empresa", "Del lado de tu negocio."],
-        ["/como-comprar", "Un negocio más dulce."],
-        ["/inexistente", "Nos fuimos por otro camino."],
+        ["/", "Golosinas por mayor en Mendoza"],
+        ["/empresa", "Mayorista de golosinas en Mendoza"],
+        ["/creditos", "Créditos de fotografía"],
+        ["/como-comprar", "Cómo comprar"],
+        ["/inexistente", "Página no encontrada"],
       ],
     ],
   ]) {
@@ -103,7 +105,7 @@ test("las rutas React renderizan su contenido y una recuperación para rutas des
         ),
       );
       assert.ok(
-        html.includes(heading),
+        html.includes(`<h1>${heading}</h1>`),
         `${app}${path} debe incluir ${heading}`,
       );
       assert.match(html, /Saltar al contenido/);

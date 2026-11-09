@@ -1,130 +1,101 @@
 import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Boxes,
-  HeartHandshake,
-  MapPin,
-  Store,
-} from "lucide-react";
-import SweetIllustration from "../components/SweetIllustration.jsx";
+import { ArrowUpRight } from "lucide-react";
+import { useTasteMoment } from "../../../../../packages/design/useTasteMoment.js";
+import photoChapters, {
+  phone,
+} from "../../../../../packages/design/taste/photo-chapters.mjs";
+
+const range = [
+  {
+    name: "Chocolates",
+    description: "Bombones y golosinas bañadas.",
+    image: "chocolates",
+    width: 960,
+    height: 488,
+    alt: "Bombones de chocolate en una caja abierta",
+  },
+  {
+    name: "Gomitas",
+    description: "Surtidos para el mostrador.",
+    image: "gomitas",
+    width: 1600,
+    height: 1200,
+    alt: "Gomitas de colores con forma de ositos",
+  },
+  {
+    name: "Caramelos",
+    description: "Caramelos duros para venta por unidad.",
+    image: "caramelos",
+    width: 1600,
+    height: 1007,
+    alt: "Caramelos dorados con envoltorio transparente",
+  },
+];
 
 export default function HomePage() {
+  const chapters = useTasteMoment(photoChapters, phone);
   return (
     <>
-      <section className="hero">
-        <div className="hero-copy">
-          <p className="eyebrow">
-            <span /> DE MENDOZA, PARA TU COMERCIO
-          </p>
-          <h1>
-            Lo bueno
-            <br />
-            se comparte.
-            <br />
-            <em>Lo dulce, también.</em>
-          </h1>
-          <p className="hero-description">
-            Golosinas, chocolates y pequeños antojos con una gran misión: hacer
-            crecer tu negocio.
-          </p>
-          <div className="hero-actions">
-            <Link className="button" to="/empresa">
-              Conocé Dulce Mayor <ArrowUpRight size={19} />
+      <section className="hero shop-hero" data-enter>
+        <picture className="shop-hero-photo">
+          <source
+            media="(max-width: 700px)"
+            srcSet="/fotos/alfajores-780.webp"
+          />
+          <img
+            src="/fotos/alfajores.webp"
+            width="1920"
+            height="1272"
+            fetchPriority="high"
+            alt="Alfajores argentinos de chocolate y maicena cortados al medio"
+          />
+        </picture>
+        <div className="wrap shop-hero-grid">
+          <div className="enter-copy shop-hero-copy">
+            <h1>Golosinas por mayor en Mendoza</h1>
+            <p>
+              Alfajores, chocolates y golosinas por bulto para kioscos,
+              almacenes y comercios minoristas.
+            </p>
+            <Link
+              className="btn btn--primary dm-button dm-button-primary"
+              to="/como-comprar"
+            >
+              Ver cómo comprar <ArrowUpRight size={17} aria-hidden="true" />
             </Link>
-            <Link className="text-link" to="/como-comprar">
-              Cómo comprar <ArrowRight size={17} />
-            </Link>
           </div>
-          <div className="hero-origin">
-            <MapPin size={17} />
-            <span>
-              El lado dulce de Mendoza.
-              <br />
-              <strong>Cerca de cada comercio.</strong>
-            </span>
-          </div>
-        </div>
-        <div className="hero-art">
-          <div className="round-label">
-            PARA TU KIOSCO
-            <br />
-            <b>Y MUCHO MÁS</b>
-            <span>✳</span>
-          </div>
-          <SweetIllustration />
-          <span className="art-caption">
-            Un mundo de cosas ricas, por mayor.
-          </span>
         </div>
       </section>
-      <div className="ticker" aria-hidden="true">
-        <span>GOLOSINAS</span> ✳ <span>CHOCOLATES</span> ✳{" "}
-        <span>ALFAJORES</span> ✳ <span>POR BULTO, POR MAYOR</span> ✳{" "}
-        <span>PARA COMPARTIR</span>
-      </div>
-      <section className="value-section">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">PENSAMOS EN TU NEGOCIO</p>
-            <h2>
-              Más que golosinas.
-              <br />
-              <em>Un aliado para tu comercio.</em>
-            </h2>
+      <section
+        ref={chapters}
+        id="surtido"
+        className="shop-range"
+        data-moment="photo-chapters"
+        aria-labelledby="surtido-h"
+      >
+        <div className="wrap mo-ph">
+          <div className="mo-ph__head">
+            <h2 id="surtido-h">Surtido por bulto</h2>
           </div>
-          <p>
-            Sabemos que detrás de cada mostrador
-            <br />
-            hay alguien con ganas de crecer.
-          </p>
+          <ol className="mo-ph__list">
+            {range.map(({ name, description, image, width, height, alt }) => (
+              <li className="mo-ph__ch" key={image}>
+                <figure className="mo-ph__pic">
+                  <img
+                    src={`/fotos/${image}.webp`}
+                    width={width}
+                    height={height}
+                    loading="lazy"
+                    decoding="async"
+                    alt={alt}
+                  />
+                </figure>
+                <h3>{name}</h3>
+                <p>{description}</p>
+              </li>
+            ))}
+          </ol>
         </div>
-        <div className="value-grid">
-          <article>
-            <span className="feature-icon pink">
-              <Boxes size={27} />
-            </span>
-            <h3>El surtido que buscás</h3>
-            <p>
-              Golosinas y chocolates en presentaciones por bulto o pack,
-              pensados para la venta en tu comercio.
-            </p>
-          </article>
-          <article>
-            <span className="feature-icon green">
-              <HeartHandshake size={27} />
-            </span>
-            <h3>Un trato cercano</h3>
-            <p>
-              El preventor acompaña a cada minorista y recibe sus pedidos en el
-              punto de venta.
-            </p>
-          </article>
-          <article>
-            <span className="feature-icon orange">
-              <Store size={27} />
-            </span>
-            <h3>Espacio para crecer</h3>
-            <p>
-              Una propuesta mayorista para kioscos, almacenes y los comercios de
-              nuestra provincia.
-            </p>
-          </article>
-        </div>
-      </section>
-      <section className="public-cta">
-        <span className="eyebrow">SEAMOS PARTE DE TU DÍA A DÍA</span>
-        <h2>
-          Tu próximo paso
-          <br />
-          tiene un lado dulce.
-        </h2>
-        <Link className="button light" to="/como-comprar">
-          Conocé cómo comprar <ArrowRight size={18} />
-        </Link>
-        <span className="cta-star" aria-hidden="true">
-          ✳
-        </span>
       </section>
     </>
   );
