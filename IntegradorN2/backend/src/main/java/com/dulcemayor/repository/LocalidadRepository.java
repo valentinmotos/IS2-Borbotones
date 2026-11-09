@@ -1,7 +1,12 @@
 package com.dulcemayor.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import com.dulcemayor.entity.Localidad;
+import java.util.List;
+import java.util.Optional;
 
-public interface LocalidadRepository extends JpaRepository<Localidad, String> {
+public interface LocalidadRepository extends BaseRepository<Localidad> {
+
+    List<Localidad> findByDepartamento_IdAndEliminadoFalseOrderByNombreAsc(String departamentoId);
+
+    Optional<Localidad> findByCodigoPostalAndEliminadoFalse(String codigoPostal);
 }

@@ -7,7 +7,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.dulcemayor.dto.CategoriaRequest;
+import com.dulcemayor.dto.DepartamentoRequest;
+import com.dulcemayor.dto.DepartamentoResponse;
+import com.dulcemayor.dto.LocalidadRequest;
 import com.dulcemayor.service.CategoriaService;
+import com.dulcemayor.service.DepartamentoService;
+import com.dulcemayor.service.LocalidadService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
@@ -25,10 +30,15 @@ public class DataSeeder implements CommandLineRunner {
 
     private final EntityManager entityManager;
     private final CategoriaService categoriaService;
+    private final DepartamentoService departamentoService;
+    private final LocalidadService localidadService;
 
-    public DataSeeder(EntityManager entityManager, CategoriaService categoriaService) {
+    public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
+            DepartamentoService departamentoService, LocalidadService localidadService) {
         this.entityManager = entityManager;
         this.categoriaService = categoriaService;
+        this.departamentoService = departamentoService;
+        this.localidadService = localidadService;
     }
 
     @Override
@@ -51,7 +61,19 @@ public class DataSeeder implements CommandLineRunner {
 
     /** E1-03: departamentos y localidades de Mendoza. */
     private void cargarUbicacion() {
-        // Lo completa E1-03.
+        String[][] datos = {
+                { "Capital", "Ciudad de Mendoza", "5500" },
+                { "Godoy Cruz", "Godoy Cruz", "5501" },
+                { "Guaymallén", "Villa Nueva", "5521" },
+                { "Las Heras", "Las Heras", "5539" },
+                { "Luján de Cuyo", "Luján de Cuyo", "5507" },
+                { "Maipú", "Maipú", "5515" }
+        };
+        for (String[] dato : datos) {
+            DepartamentoResponse departamento = departamentoService
+                    .crearDepartamento(new DepartamentoRequest(dato[0]));
+            localidadService.crearLocalidad(new LocalidadRequest(dato[1], dato[2], departamento.id()));
+        }
     }
 
     /** E1-07: datos del mayorista Dulce Mayor y sus sucursales. */

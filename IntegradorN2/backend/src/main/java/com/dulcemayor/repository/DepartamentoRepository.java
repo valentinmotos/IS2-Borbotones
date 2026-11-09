@@ -1,7 +1,11 @@
 package com.dulcemayor.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import com.dulcemayor.entity.Departamento;
+import java.util.List;
 
-public interface DepartamentoRepository extends JpaRepository<Departamento, String> {
+public interface DepartamentoRepository extends BaseRepository<Departamento> {
+
+    List<Departamento> findByEliminadoFalse();
+
+    List<Departamento> findByEliminadoFalseOrderByNombreAsc();
 }

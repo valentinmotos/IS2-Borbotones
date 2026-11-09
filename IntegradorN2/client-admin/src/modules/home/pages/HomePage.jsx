@@ -45,6 +45,13 @@ export default function HomePage() {
             </span>
             <ArrowUpRight size={22} aria-hidden="true" />
           </Link>
+          <Link className="work-tool" to="/ubicacion">
+            <span>
+              <strong>Ubicación</strong>
+              <small>Administrá departamentos y localidades.</small>
+            </span>
+            <ArrowUpRight size={22} aria-hidden="true" />
+          </Link>
         </div>
       </section>
       <section
