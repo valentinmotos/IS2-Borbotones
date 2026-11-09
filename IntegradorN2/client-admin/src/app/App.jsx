@@ -4,6 +4,7 @@ import HomePage from "../modules/home/pages/HomePage.jsx";
 import GuidePage from "../modules/help/pages/GuidePage.jsx";
 import DesignPage from "../modules/design/DesignPage.jsx";
 import CategoriasPage from "../modules/categorias/pages/CategoriasPage.jsx";
+import UbicacionPage from "../modules/ubicacion/pages/UbicacionPage.jsx";
 
 function NotFound() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
       <Route element={<AdminLayout />}>
         <Route index element={<HomePage />} />
         <Route path="categorias" element={<CategoriasPage />} />
+        <Route path="ubicacion" element={<UbicacionPage />} />
         <Route path="guia" element={<GuidePage />} />
         <Route path="componentes" element={<DesignPage />} />
         <Route path="*" element={<NotFound />} />
