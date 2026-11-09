@@ -1,7 +1,7 @@
 package com.dulcemayor.service;
 
-import com.dulcemayor.dto.ImagenContenidoDTO;
 import com.dulcemayor.dto.ImagenCargaDTO;
+import com.dulcemayor.dto.ImagenContenidoDTO;
 import com.dulcemayor.dto.ImagenDTO;
 import com.dulcemayor.dto.mapper.ImagenMapper;
 import com.dulcemayor.entity.Imagen;
@@ -12,6 +12,7 @@ import java.util.Arrays;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.dulcemayor.entity.enums.TipoImagen;
 
 @Service
 public class ImagenService extends AbstractCrudService<Imagen, ImagenCargaDTO, ImagenDTO> {
@@ -26,6 +27,21 @@ public class ImagenService extends AbstractCrudService<Imagen, ImagenCargaDTO, I
     public ImagenContenidoDTO buscarContenido(String id) {
         Imagen imagen = buscarEntidad(id);
         return new ImagenContenidoDTO(imagen.getMime(), imagen.getContenido());
+    }
+
+    /** Guarda una imagen que el seeder lee desde el classpath. */
+    @Transactional
+    public ImagenDTO crearImagen(String nombre, byte[] contenido, TipoImagen tipo) {
+        if (contenido == null || contenido.length == 0 || contenido.length > TAMANIO_MAXIMO) {
+            throw new ErrorServiceException("La imagen debe tener contenido y no superar los 2 MB.", "archivo");
+        }
+        if (tipo == null) throw new ErrorServiceException("El tipo de imagen es obligatorio.", "tipoImagen");
+        Imagen imagen = new Imagen();
+        imagen.setNombre(normalizarNombre(nombre));
+        imagen.setMime(detectarMime(contenido));
+        imagen.setContenido(contenido);
+        imagen.setTipoImagen(tipo);
+        return mapper.aRespuesta(repositorio.save(imagen));
     }
 
     @Override

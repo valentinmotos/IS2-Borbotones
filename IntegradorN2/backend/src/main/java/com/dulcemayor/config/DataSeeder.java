@@ -4,34 +4,40 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.dulcemayor.dto.CategoriaRequest;
 import com.dulcemayor.dto.DepartamentoRequest;
 import com.dulcemayor.dto.DepartamentoResponse;
+import com.dulcemayor.dto.FormaDePagoRequest;
 import com.dulcemayor.dto.LocalidadRequest;
+import com.dulcemayor.dto.MayoristaRequest;
+import com.dulcemayor.dto.SucursalRequest;
 import com.dulcemayor.entity.enums.RolUsuario;
+import com.dulcemayor.entity.enums.TipoEmpresa;
 import com.dulcemayor.entity.enums.TipoImagen;
+import com.dulcemayor.entity.enums.TipoPago;
+import com.dulcemayor.repository.LocalidadRepository;
 import com.dulcemayor.service.CategoriaService;
 import com.dulcemayor.service.DepartamentoService;
+import com.dulcemayor.service.FormaDePagoService;
 import com.dulcemayor.service.ImagenService;
 import com.dulcemayor.service.LocalidadService;
+import com.dulcemayor.service.MayoristaService;
+import com.dulcemayor.service.SucursalService;
 import com.dulcemayor.service.UsuarioService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 
-/**
- * Carga los datos iniciales solo cuando la base está vacía (igual que IntegradorN1).
- * Cada grupo de datos tiene su método y lo completa el issue indicado. Los datos se cargan
- * a través de los services, así pasan por sus validaciones.
- * Para volver a cargar todo, vaciar la base (borrar y recrear el esquema).
- */
+/** Carga los datos iniciales solo cuando la base está vacía y a través de los services. */
 @Component
 public class DataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
+    public static final String CLAVE_DEMO = "Demo1234!";
 
     private final EntityManager entityManager;
     private final CategoriaService categoriaService;
@@ -39,19 +45,26 @@ public class DataSeeder implements CommandLineRunner {
     private final ImagenService imagenService;
     private final DepartamentoService departamentoService;
     private final LocalidadService localidadService;
-
-    /** Clave de los usuarios de demo (no temporal, para no tener que cambiarla en cada base nueva). */
-    public static final String CLAVE_DEMO = "Demo1234!";
+    private final MayoristaService mayoristaService;
+    private final SucursalService sucursalService;
+    private final FormaDePagoService formaDePagoService;
+    private final LocalidadRepository localidadRepository;
 
     public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
             UsuarioService usuarioService, ImagenService imagenService,
-            DepartamentoService departamentoService, LocalidadService localidadService) {
+            DepartamentoService departamentoService, LocalidadService localidadService,
+            MayoristaService mayoristaService, SucursalService sucursalService,
+            FormaDePagoService formaDePagoService, LocalidadRepository localidadRepository) {
         this.entityManager = entityManager;
         this.categoriaService = categoriaService;
         this.usuarioService = usuarioService;
         this.imagenService = imagenService;
         this.departamentoService = departamentoService;
         this.localidadService = localidadService;
+        this.mayoristaService = mayoristaService;
+        this.sucursalService = sucursalService;
+        this.formaDePagoService = formaDePagoService;
+        this.localidadRepository = localidadRepository;
     }
 
     @Override
@@ -62,7 +75,6 @@ public class DataSeeder implements CommandLineRunner {
             return;
         }
         log.info("Base vacía: cargando datos iniciales.");
-        // El orden importa: cada grupo puede usar datos de los anteriores.
         cargarUbicacion();
         cargarEmpresa();
         cargarFormasDePago();
@@ -89,40 +101,41 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
-    /** E1-07: datos del mayorista Dulce Mayor y sus sucursales. */
+    /** E1-07: mayorista y sede central de demostración. */
     private void cargarEmpresa() {
-        // Lo completa E1-07.
+        var empresa = mayoristaService.crearMayorista(new MayoristaRequest("Dulce Mayor S.A.", "30-70000000-8"));
+        var localidad = localidadRepository.findByEliminadoFalse(Sort.by("nombre")).get(0);
+        String imagenId = cargarImagen("imagenes/imagen-prueba.png", TipoImagen.SUCURSAL);
+        sucursalService.crearSucursal(new SucursalRequest("Casa Central", TipoEmpresa.SEDE_CENTRAL,
+                empresa.id(), localidad.getId(), "San Martín", "1234", "Centro", null, null,
+                "Sucursal de demostración", -32.8895, -68.8458, imagenId));
     }
 
-    /** E1-07: formas de pago (efectivo, transferencia, billetera virtual). */
+    /** E1-07: formas de pago habilitadas inicialmente. */
     private void cargarFormasDePago() {
-        // Lo completa E1-07.
+        formaDePagoService.crearFormaDePago(new FormaDePagoRequest(TipoPago.EFECTIVO, null));
+        formaDePagoService.crearFormaDePago(new FormaDePagoRequest(TipoPago.TRANSFERENCIA, "dulcemayor.mp"));
+        formaDePagoService.crearFormaDePago(new FormaDePagoRequest(TipoPago.BILLETERA_VIRTUAL, "Mercado Pago"));
     }
 
-    /** E1-01: usuarios de demo de cada rol (Jefe, Administrativo, Preventor, Distribuidor, Minorista). */
+    /** E1-01: usuarios de demo de cada rol. */
     private void cargarUsuarios() {
         usuarioService.crearUsuario("jefe@dulcemayor.com.ar", RolUsuario.JEFE, CLAVE_DEMO, false);
         usuarioService.crearUsuario("administrativo@dulcemayor.com.ar", RolUsuario.ADMINISTRATIVO, CLAVE_DEMO, false);
         usuarioService.crearUsuario("preventor@dulcemayor.com.ar", RolUsuario.PREVENTOR, CLAVE_DEMO, false);
         usuarioService.crearUsuario("distribuidor@dulcemayor.com.ar", RolUsuario.DISTRIBUIDOR, CLAVE_DEMO, false);
         usuarioService.crearUsuario("minorista@dulcemayor.com.ar", RolUsuario.MINORISTA, CLAVE_DEMO, false);
-        // Alta como la haría el Jefe: clave "dulcemayor" y cambio obligatorio en el primer ingreso.
         usuarioService.crearUsuario("nuevo@dulcemayor.com.ar", RolUsuario.PREVENTOR);
-        // Los datos personales (Persona/Empleado/Minorista) los agregan E2-04 y E2-05.
     }
 
     /** E2-01 a E2-03: categorías, productos, stock inicial y vigencias de precio. */
     private void cargarCatalogo() {
-        // E0-08: categorías de demo.
         for (String nombre : new String[] { "Alfajores", "Caramelos", "Chicles", "Chocolates", "Gomitas" }) {
             categoriaService.crearCategoria(new CategoriaRequest(nombre));
         }
-        // E1-05: imagen de prueba (se ve en /api/imagenes/{id}; E2-01 la reemplaza por las fotos de productos).
         cargarImagen("imagenes/imagen-prueba.png", TipoImagen.PRODUCTO);
-        // E2-01, E2-02 y E2-03: productos, stock inicial y vigencias de precio.
     }
 
-    /** Carga una imagen del classpath (src/main/resources) pasando por las validaciones de ImagenService. */
     private String cargarImagen(String ruta, TipoImagen tipo) {
         try {
             ClassPathResource recurso = new ClassPathResource(ruta);
@@ -132,28 +145,15 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
-    /** E2-06: puntos de venta de los minoristas de demo. */
-    private void cargarPuntosDeVenta() {
-        // Lo completa E2-06.
-    }
+    private void cargarPuntosDeVenta() { /* E2-06. */ }
+    private void cargarPedidos() { /* E6-04. */ }
 
-    /** E6-04: pedidos, facturas y pagos de demo para reportes y dashboard. */
-    private void cargarPedidos() {
-        // Lo completa E6-04.
-    }
-
-    /**
-     * La base está vacía si ninguna entidad JPA tiene filas. Se recorre el metamodelo,
-     * así el chequeo incluye solas las entidades que se vayan agregando.
-     */
     private boolean baseVacia() {
         for (EntityType<?> entidad : entityManager.getMetamodel().getEntities()) {
             Long cantidad = entityManager
                     .createQuery("select count(e) from " + entidad.getName() + " e", Long.class)
                     .getSingleResult();
-            if (cantidad > 0) {
-                return false;
-            }
+            if (cantidad > 0) return false;
         }
         return true;
     }

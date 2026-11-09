@@ -1,7 +1,11 @@
 package com.dulcemayor.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 import com.dulcemayor.entity.Sucursal;
 
-public interface SucursalRepository extends JpaRepository<Sucursal, String> {
+public interface SucursalRepository extends BaseRepository<Sucursal> {
+    List<Sucursal> findByMayorista_IdAndEliminadoFalseOrderByNombreAsc(String idMayorista);
+    boolean existsByMayorista_IdAndEliminadoFalse(String idMayorista);
+    List<Sucursal> findByEliminadoFalse();
+    boolean existsByImagen_IdAndEliminadoFalse(String idImagen);
 }
