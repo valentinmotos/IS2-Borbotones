@@ -42,6 +42,11 @@ public class GlobalExceptionHandler {
         return responder(HttpStatus.NOT_FOUND, ex);
     }
 
+    @ExceptionHandler(NoAutenticadoException.class)
+    public ResponseEntity<ErrorRespuesta> noAutenticado(NoAutenticadoException ex) {
+        return responder(HttpStatus.UNAUTHORIZED, ex);
+    }
+
     @ExceptionHandler(ErrorServiceException.class)
     public ResponseEntity<ErrorRespuesta> negocio(ErrorServiceException ex) {
         return responder(HttpStatus.BAD_REQUEST, ex);

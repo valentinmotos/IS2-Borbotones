@@ -7,7 +7,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.dulcemayor.dto.CategoriaRequest;
+import com.dulcemayor.entity.enums.RolUsuario;
 import com.dulcemayor.service.CategoriaService;
+import com.dulcemayor.service.UsuarioService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
@@ -25,10 +27,16 @@ public class DataSeeder implements CommandLineRunner {
 
     private final EntityManager entityManager;
     private final CategoriaService categoriaService;
+    private final UsuarioService usuarioService;
 
-    public DataSeeder(EntityManager entityManager, CategoriaService categoriaService) {
+    /** Clave de los usuarios de demo (no temporal, para no tener que cambiarla en cada base nueva). */
+    public static final String CLAVE_DEMO = "Demo1234!";
+
+    public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
+            UsuarioService usuarioService) {
         this.entityManager = entityManager;
         this.categoriaService = categoriaService;
+        this.usuarioService = usuarioService;
     }
 
     @Override
@@ -66,7 +74,14 @@ public class DataSeeder implements CommandLineRunner {
 
     /** E1-01: usuarios de demo de cada rol (Jefe, Administrativo, Preventor, Distribuidor, Minorista). */
     private void cargarUsuarios() {
-        // Lo completa E1-01.
+        usuarioService.crearUsuario("jefe@dulcemayor.com.ar", RolUsuario.JEFE, CLAVE_DEMO, false);
+        usuarioService.crearUsuario("administrativo@dulcemayor.com.ar", RolUsuario.ADMINISTRATIVO, CLAVE_DEMO, false);
+        usuarioService.crearUsuario("preventor@dulcemayor.com.ar", RolUsuario.PREVENTOR, CLAVE_DEMO, false);
+        usuarioService.crearUsuario("distribuidor@dulcemayor.com.ar", RolUsuario.DISTRIBUIDOR, CLAVE_DEMO, false);
+        usuarioService.crearUsuario("minorista@dulcemayor.com.ar", RolUsuario.MINORISTA, CLAVE_DEMO, false);
+        // Alta como la haría el Jefe: clave "dulcemayor" y cambio obligatorio en el primer ingreso.
+        usuarioService.crearUsuario("nuevo@dulcemayor.com.ar", RolUsuario.PREVENTOR);
+        // Los datos personales (Persona/Empleado/Minorista) los agregan E2-04 y E2-05.
     }
 
     /** E2-01 a E2-03: categorías, productos, stock inicial y vigencias de precio. */
