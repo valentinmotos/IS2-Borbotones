@@ -3,26 +3,16 @@ package com.dulcemayor.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.EnvironmentAware;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 
 import com.dulcemayor.dto.CategoriaRequest;
-import com.dulcemayor.dto.ImagenCargaDTO;
+import com.dulcemayor.entity.enums.RolUsuario;
 import com.dulcemayor.entity.enums.TipoImagen;
-import com.dulcemayor.repository.ImagenRepository;
 import com.dulcemayor.service.CategoriaService;
 import com.dulcemayor.service.ImagenService;
+import com.dulcemayor.service.UsuarioService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
@@ -34,35 +24,29 @@ import jakarta.persistence.metamodel.EntityType;
  * Para volver a cargar todo, vaciar la base (borrar y recrear el esquema).
  */
 @Component
-public class DataSeeder implements CommandLineRunner, EnvironmentAware {
+public class DataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
     private final EntityManager entityManager;
     private final CategoriaService categoriaService;
-    private final ImagenRepository imagenRepository;
+    private final UsuarioService usuarioService;
     private final ImagenService imagenService;
-    private Environment environment;
+
+    /** Clave de los usuarios de demo (no temporal, para no tener que cambiarla en cada base nueva). */
+    public static final String CLAVE_DEMO = "Demo1234!";
 
     public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
-            ImagenRepository imagenRepository, ImagenService imagenService) {
+            UsuarioService usuarioService, ImagenService imagenService) {
         this.entityManager = entityManager;
         this.categoriaService = categoriaService;
-        this.imagenRepository = imagenRepository;
+        this.usuarioService = usuarioService;
         this.imagenService = imagenService;
-    }
-
-    @Override
-    public void setEnvironment(Environment environment) {
-        this.environment = environment;
     }
 
     @Override
     @Transactional
     public void run(String... args) {
-        if (environment.acceptsProfiles(Profiles.of("dev"))) {
-            cargarImagenPrueba();
-        }
         if (!baseVacia()) {
             log.info("La base ya tiene datos: no se ejecuta el seeder.");
             return;
@@ -76,18 +60,6 @@ public class DataSeeder implements CommandLineRunner, EnvironmentAware {
         cargarCatalogo();
         cargarPuntosDeVenta();
         cargarPedidos();
-    }
-
-    private void cargarImagenPrueba() {
-        if (imagenRepository.existsByNombre("imagen-prueba.png")) {
-            return;
-        }
-        try {
-            byte[] contenido = new ClassPathResource("imagenes/imagen-prueba.png").getContentAsByteArray();
-            imagenService.crear(new ImagenCargaDTO(new ArchivoImagenPrueba(contenido), TipoImagen.PRODUCTO));
-        } catch (IOException ex) {
-            throw new IllegalStateException("No se pudo leer la imagen de prueba.", ex);
-        }
     }
 
     /** E1-03: departamentos y localidades de Mendoza. */
@@ -107,7 +79,14 @@ public class DataSeeder implements CommandLineRunner, EnvironmentAware {
 
     /** E1-01: usuarios de demo de cada rol (Jefe, Administrativo, Preventor, Distribuidor, Minorista). */
     private void cargarUsuarios() {
-        // Lo completa E1-01.
+        usuarioService.crearUsuario("jefe@dulcemayor.com.ar", RolUsuario.JEFE, CLAVE_DEMO, false);
+        usuarioService.crearUsuario("administrativo@dulcemayor.com.ar", RolUsuario.ADMINISTRATIVO, CLAVE_DEMO, false);
+        usuarioService.crearUsuario("preventor@dulcemayor.com.ar", RolUsuario.PREVENTOR, CLAVE_DEMO, false);
+        usuarioService.crearUsuario("distribuidor@dulcemayor.com.ar", RolUsuario.DISTRIBUIDOR, CLAVE_DEMO, false);
+        usuarioService.crearUsuario("minorista@dulcemayor.com.ar", RolUsuario.MINORISTA, CLAVE_DEMO, false);
+        // Alta como la haría el Jefe: clave "dulcemayor" y cambio obligatorio en el primer ingreso.
+        usuarioService.crearUsuario("nuevo@dulcemayor.com.ar", RolUsuario.PREVENTOR);
+        // Los datos personales (Persona/Empleado/Minorista) los agregan E2-04 y E2-05.
     }
 
     /** E2-01 a E2-03: categorías, productos, stock inicial y vigencias de precio. */
@@ -116,7 +95,19 @@ public class DataSeeder implements CommandLineRunner, EnvironmentAware {
         for (String nombre : new String[] { "Alfajores", "Caramelos", "Chicles", "Chocolates", "Gomitas" }) {
             categoriaService.crearCategoria(new CategoriaRequest(nombre));
         }
+        // E1-05: imagen de prueba (se ve en /api/imagenes/{id}; E2-01 la reemplaza por las fotos de productos).
+        cargarImagen("imagenes/imagen-prueba.png", TipoImagen.PRODUCTO);
         // E2-01, E2-02 y E2-03: productos, stock inicial y vigencias de precio.
+    }
+
+    /** Carga una imagen del classpath (src/main/resources) pasando por las validaciones de ImagenService. */
+    private String cargarImagen(String ruta, TipoImagen tipo) {
+        try {
+            ClassPathResource recurso = new ClassPathResource(ruta);
+            return imagenService.crearImagen(recurso.getFilename(), recurso.getContentAsByteArray(), tipo).id();
+        } catch (java.io.IOException ex) {
+            throw new IllegalStateException("No se pudo leer la imagen de demo " + ruta, ex);
+        }
     }
 
     /** E2-06: puntos de venta de los minoristas de demo. */
@@ -143,48 +134,5 @@ public class DataSeeder implements CommandLineRunner, EnvironmentAware {
             }
         }
         return true;
-    }
-
-    private record ArchivoImagenPrueba(byte[] bytes) implements MultipartFile {
-
-        @Override
-        public String getName() {
-            return "archivo";
-        }
-
-        @Override
-        public String getOriginalFilename() {
-            return "imagen-prueba.png";
-        }
-
-        @Override
-        public String getContentType() {
-            return "image/png";
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return bytes.length == 0;
-        }
-
-        @Override
-        public long getSize() {
-            return bytes.length;
-        }
-
-        @Override
-        public byte[] getBytes() {
-            return bytes.clone();
-        }
-
-        @Override
-        public InputStream getInputStream() {
-            return new ByteArrayInputStream(bytes);
-        }
-
-        @Override
-        public void transferTo(File destination) throws IOException {
-            Files.write(destination.toPath(), bytes);
-        }
     }
 }

@@ -5,12 +5,15 @@ import java.io.IOException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import com.dulcemayor.dto.ErrorRespuesta;
+import com.dulcemayor.security.JwtFiltro;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,7 +42,16 @@ public class ErroresSeguridadHandler implements AuthenticationEntryPoint, Access
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
             AccessDeniedException ex) throws IOException {
-        escribir(response, HttpStatus.FORBIDDEN, "No tenés permisos para realizar esta acción.");
+        escribir(response, HttpStatus.FORBIDDEN, tieneClaveTemporal()
+                ? "Tenés que cambiar tu clave antes de continuar."
+                : "No tenés permisos para realizar esta acción.");
+    }
+
+    /** E1-01: el usuario con clave temporal solo tiene la autoridad CLAVE_TEMPORAL (ver JwtFiltro). */
+    private static boolean tieneClaveTemporal() {
+        Authentication autenticacion = SecurityContextHolder.getContext().getAuthentication();
+        return autenticacion != null && autenticacion.getAuthorities().stream()
+                .anyMatch(autoridad -> JwtFiltro.AUTORIDAD_CLAVE_TEMPORAL.equals(autoridad.getAuthority()));
     }
 
     private void escribir(HttpServletResponse response, HttpStatus estado, String mensaje) throws IOException {

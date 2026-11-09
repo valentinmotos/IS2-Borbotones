@@ -48,8 +48,8 @@ public abstract class AbstractCrudController<Q, S> {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> buscar(@PathVariable String id) {
-        return ResponseEntity.ok(servicio.buscar(id));
+    public S buscar(@PathVariable String id) {
+        return servicio.buscar(id);
     }
 
     @PostMapping
