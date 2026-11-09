@@ -3,11 +3,26 @@ package com.dulcemayor.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.EnvironmentAware;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 
 import com.dulcemayor.dto.CategoriaRequest;
+import com.dulcemayor.dto.ImagenCargaDTO;
+import com.dulcemayor.entity.enums.TipoImagen;
+import com.dulcemayor.repository.ImagenRepository;
 import com.dulcemayor.service.CategoriaService;
+import com.dulcemayor.service.ImagenService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
@@ -19,21 +34,35 @@ import jakarta.persistence.metamodel.EntityType;
  * Para volver a cargar todo, vaciar la base (borrar y recrear el esquema).
  */
 @Component
-public class DataSeeder implements CommandLineRunner {
+public class DataSeeder implements CommandLineRunner, EnvironmentAware {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
     private final EntityManager entityManager;
     private final CategoriaService categoriaService;
+    private final ImagenRepository imagenRepository;
+    private final ImagenService imagenService;
+    private Environment environment;
 
-    public DataSeeder(EntityManager entityManager, CategoriaService categoriaService) {
+    public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
+            ImagenRepository imagenRepository, ImagenService imagenService) {
         this.entityManager = entityManager;
         this.categoriaService = categoriaService;
+        this.imagenRepository = imagenRepository;
+        this.imagenService = imagenService;
+    }
+
+    @Override
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
     }
 
     @Override
     @Transactional
     public void run(String... args) {
+        if (environment.acceptsProfiles(Profiles.of("dev"))) {
+            cargarImagenPrueba();
+        }
         if (!baseVacia()) {
             log.info("La base ya tiene datos: no se ejecuta el seeder.");
             return;
@@ -47,6 +76,18 @@ public class DataSeeder implements CommandLineRunner {
         cargarCatalogo();
         cargarPuntosDeVenta();
         cargarPedidos();
+    }
+
+    private void cargarImagenPrueba() {
+        if (imagenRepository.existsByNombre("imagen-prueba.png")) {
+            return;
+        }
+        try {
+            byte[] contenido = new ClassPathResource("imagenes/imagen-prueba.png").getContentAsByteArray();
+            imagenService.crear(new ImagenCargaDTO(new ArchivoImagenPrueba(contenido), TipoImagen.PRODUCTO));
+        } catch (IOException ex) {
+            throw new IllegalStateException("No se pudo leer la imagen de prueba.", ex);
+        }
     }
 
     /** E1-03: departamentos y localidades de Mendoza. */
@@ -102,5 +143,48 @@ public class DataSeeder implements CommandLineRunner {
             }
         }
         return true;
+    }
+
+    private record ArchivoImagenPrueba(byte[] bytes) implements MultipartFile {
+
+        @Override
+        public String getName() {
+            return "archivo";
+        }
+
+        @Override
+        public String getOriginalFilename() {
+            return "imagen-prueba.png";
+        }
+
+        @Override
+        public String getContentType() {
+            return "image/png";
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return bytes.length == 0;
+        }
+
+        @Override
+        public long getSize() {
+            return bytes.length;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            return bytes.clone();
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(bytes);
+        }
+
+        @Override
+        public void transferTo(File destination) throws IOException {
+            Files.write(destination.toPath(), bytes);
+        }
     }
 }

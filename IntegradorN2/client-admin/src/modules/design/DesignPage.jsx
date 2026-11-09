@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import ImageUploader from "../../components/ImageUploader.jsx";
 import {
   Alert,
   ConfirmDialog,
@@ -60,6 +61,7 @@ export default function DesignPage() {
   const [pending, setPending] = useState(null);
   const heading = useRef(null);
   const [formVersion, setFormVersion] = useState(0);
+  const [archivoImagen, setArchivoImagen] = useState(null);
   const nextId = useRef(initialRows.length + 1);
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
   const visibleRows = rows.slice((page - 1) * pageSize, page * pageSize);
@@ -233,6 +235,21 @@ export default function DesignPage() {
           rowKey={(row) => row.name}
         />
       </details>
+
+      <section className="design-image-upload" aria-labelledby="subir-imagen">
+        <div>
+          <h2 id="subir-imagen">Carga de imágenes</h2>
+          <p>Seleccioná una imagen para revisar su vista previa antes de adjuntarla al formulario.</p>
+        </div>
+        <ImageUploader
+          onFileSelected={setArchivoImagen}
+        />
+        {archivoImagen && (
+          <p className="design-image-upload__success" role="status">
+            Archivo listo para adjuntar: {archivoImagen.name}
+          </p>
+        )}
+      </section>
 
       <ConfirmDialog
         open={pending !== null}
