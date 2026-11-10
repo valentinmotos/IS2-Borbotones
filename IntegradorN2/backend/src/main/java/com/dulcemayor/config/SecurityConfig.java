@@ -37,6 +37,8 @@ import jakarta.servlet.DispatcherType;
  * regla general de /api/**):
  * <pre>
  * POST /api/auth/login, /api/publico/**   abiertos
+ * GET  /api/imagenes/{id}                 abierto (E1-05)
+ * POST /api/imagenes                      JEFE, ADMINISTRATIVO (E1-05)
  * /api/auth/**                            cualquier usuario autenticado (también con clave temporal)
  * /api/categorias/**                      JEFE, ADMINISTRATIVO
  * /api/minorista/**                       MINORISTA
@@ -87,12 +89,16 @@ public class SecurityConfig {
                         // Públicos
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers("/api/publico/**").permitAll()
+                        // E1-05: el sitio público muestra fotos de productos y sucursales
+                        .requestMatchers(HttpMethod.GET, "/api/imagenes/*").permitAll()
                         // Sesión propia: cambio de clave, datos de la sesión y logout
                         .requestMatchers("/api/auth/**").authenticated()
                         // Reglas por recurso (cada issue agrega las suyas acá)
                         .requestMatchers("/api/categorias/**", "/api/productos/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
                         .requestMatchers("/api/empresas/**", "/api/sucursales/**", "/api/formas-de-pago/**")
                         .hasAnyRole("JEFE", "ADMINISTRATIVO")
+                        // E1-05: suben imágenes quienes cargan productos, sucursales y la empresa
+                        .requestMatchers(HttpMethod.POST, "/api/imagenes").hasAnyRole("JEFE", "ADMINISTRATIVO")
                         .requestMatchers("/api/minorista/**").hasRole("MINORISTA")
                         // Por defecto, todo /api es interno
                         .requestMatchers("/api/**").hasAnyRole(PERSONAL_INTERNO)
