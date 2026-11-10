@@ -58,6 +58,9 @@ class EmailServiceTest {
                 "etiquetaEnlace", "Ver pedido"));
 
         verify(mailSender).send(mensaje);
+        // El envío real (JavaMailSenderImpl) llama a saveChanges(), que escribe el Content-Type;
+        // con el mailSender mockeado hay que hacerlo acá.
+        mensaje.saveChanges();
         assertThat(mensaje.getSubject()).isEqualTo("Pedido listo");
         assertThat(mensaje.getFrom()[0].toString()).isEqualTo("avisos@dulcemayor.com.ar");
         assertThat(mensaje.getAllRecipients()[0].toString()).isEqualTo("manuel@example.com");
