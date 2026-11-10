@@ -364,6 +364,31 @@ El listado admite búsqueda por código o nombre y filtro por categoría. La baj
 - `POST /api/productos` y `PUT /api/productos/{id}` reciben `multipart/form-data`. Los campos de texto son `codigo`, `nombre`, `descripcion`, `presentacion`, `unidadesPorBulto` y `categoriaId`. El archivo se envía en `imagen`. Los cambios del producto y su nueva imagen se confirman juntos.
 - `GET /api/productos/{id}` consulta un producto activo y `DELETE /api/productos/{id}` lo da de baja.
 
+## E2-03 · Precios mayoristas con vigencias
+
+Cada producto tiene un historial de precios (`VigenciaPrecio`). Al cargar un precio con su fecha desde, el precio vigente se cierra automáticamente el día anterior, así las vigencias nunca se superponen. **El precio vigente es la vigencia sin fecha de cierre.** Las vigencias no se editan ni se borran: un error se corrige cargando un precio nuevo.
+
+Reglas: el precio debe ser mayor que cero; la fecha desde no puede ser anterior a hoy y tiene que ser posterior al inicio del precio vigente (si no, `400` con `campo: "fechaDesde"`). Dos altas simultáneas del mismo producto se serializan con un bloqueo de escritura sobre el producto.
+
+### Endpoints (JEFE y ADMINISTRATIVO)
+
+- `GET /api/productos/{id}/precios`: historial, del más nuevo al más viejo. Cada ítem trae `id`, `productoId`, `fechaDesde`, `fechaHasta` (null si está abierto), `precio` y `vigente`.
+- `GET /api/productos/{id}/precios/vigente`: precio vigente; `404` si el producto todavía no tiene precio.
+- `POST /api/productos/{id}/precios` con `{"fechaDesde": "2026-11-10", "precio": 15000}` → `201` con la vigencia creada.
+
+### Cómo probarlo
+
+1. Ingresá como Jefe o Administrativo, abrí [Productos](http://localhost:5173/productos) y tocá **Precios** en un producto.
+2. Cargá tres precios con fechas crecientes (por ejemplo hoy, hoy + 10 y hoy + 20 días).
+3. El historial muestra tres filas: cada una cierra el día antes de que empiece la siguiente y solo la última aparece como **Vigente**.
+
+Pruebas: `VigenciaPrecioServiceTest` (Mockito) y `VigenciaPrecioIntegrationTest` (criterio de aceptación de punta a punta, validaciones y `403` para un preventor). Para ejecutarlas: `mvnw.cmd -Dtest=VigenciaPrecioServiceTest,VigenciaPrecioIntegrationTest test` desde `backend`.
+
+### Para otros issues
+
+- `VigenciaPrecioService.buscarPrecioVigente(idProducto): Optional<Double>` para el catálogo (E3-01), el presupuesto del chatbot (E3-04) y el precio unitario del pedido (E4-01). Vacío si el producto no tiene precio.
+- `VigenciaPrecioService.buscarVigenciaPrecioVigente(idProducto): VigenciaPrecioResponse` (lanza `RecursoNoEncontradoException` si no hay precio).
+
 ## Docker · E0-09
 
 `docker-compose.yml` levanta la base, el servidor y los dos clientes. Ollama es opcional.
