@@ -21,8 +21,8 @@ Dos aplicaciones independientes de Vite + React, en la rama de trabajo `e0-02`:
 
 | Cliente | URL local | Rutas disponibles |
 |---|---|---|
-| Administración | http://localhost:5173 | `/`, `/guia`, `/componentes` |
-| Sitio promocional | http://localhost:5174 | `/`, `/empresa`, `/como-comprar`, `/creditos` |
+| Administración | http://localhost:5173 | `/login`, inicio por rol, `/guia`, `/componentes` |
+| Sitio promocional | http://localhost:5174 | `/`, `/empresa`, `/como-comprar`, `/creditos`, `/login`, `/cuenta` |
 
 Ambas tienen navegación responsive, menú móvil, recuperación de rutas desconocidas, enlace de salto al contenido y títulos por página. Las páginas de inicio funcionan sin el backend. Las tipografías y las fotografías de referencia se sirven localmente. No se simulan usuarios, stock ni ventas. Los ABM, login, catálogo y pedidos corresponden a los siguientes issues; E0-02 deja la estructura y el transporte HTTP preparados para integrarlos.
 
@@ -85,7 +85,7 @@ scripts/serve-local.mjs       servidor de preview de ambos builds
 tests/clients.test.mjs        integración de rutas, assets y proxy
 ```
 
-Cada módulo consume `api` desde `src/lib/api.js`. Los interceptores agregan `Authorization: Bearer <token>` leyendo la sesión en cada solicitud. El token se guarda en `sessionStorage` con claves distintas (`dulcemayor.admin.token` y `dulcemayor.public.token`), se elimina ante un 401 y se notifica a la interfaz. Un 403 conserva la sesión. `ApiError` expone `message`, `status` y `campo`, respetando el contrato `{mensaje, campo}` del backend. El futuro login puede usar `tokenStore.set(token)` y `{ skipAuth: true }` para la petición de autenticación; no hay credenciales precargadas ni autenticación ficticia. La protección de rutas por rol corresponde a E1-02.
+Cada módulo consume `api` desde `src/lib/api.js`. Los interceptores agregan `Authorization: Bearer <token>` leyendo la sesión en cada solicitud. El token se guarda en `sessionStorage` con claves distintas (`dulcemayor.admin.token` y `dulcemayor.public.token`), se elimina ante un 401 y se notifica a la interfaz. Un 403 conserva la sesión. `ApiError` expone `message`, `status` y `campo`, respetando el contrato `{mensaje, campo}` del backend. El login React usa `{ skipAuth: true }` y guarda el token devuelto por la API. Al recargar, valida la sesión con `GET /api/auth/yo` antes de habilitar las rutas protegidas.
 
 ### Verificaciones
 
@@ -321,6 +321,20 @@ Copiar la estructura de Categoría:
 
 Para usar la entidad desde otro service (p. ej. `ProductoService` necesita la `Categoria`), llamar a `categoriaService.buscarEntidad(id)`: devuelve la entidad activa o lanza 404. Los controllers nunca la usan.
 
+## E1-04 · Dirección con mapa
+
+Ingresá al panel como Jefe o Administrativo y abrí [Sistema de diseño → Dirección con mapa](http://localhost:5173/componentes#demo-direccion). Con los datos iniciales cargados, el ejemplo muestra Capital, Ciudad de Mendoza, el código postal 5500 y un punto en el mapa. Cambiá de departamento para probar la cascada. Elegí otra localidad y comprobá que su código postal se completa automáticamente. Podés marcar un punto con un clic o buscar la calle y numeración de la localidad seleccionada y elegir una coincidencia.
+
+Para incluirlo en un formulario React, importá `DireccionField` desde `packages/address/DireccionField.jsx` y usá el cliente HTTP del portal:
+
+```jsx
+<DireccionField api={api} value={direccion} onChange={setDireccion} />
+```
+
+El componente es controlado. Para editar una dirección, inicializá `value` con `departamentoId`, `localidadId`, los campos de texto y las coordenadas numéricas `latitud` y `longitud`. La localidad seleccionada provee el código postal. El formulario anfitrión se encarga de validar que haya un punto y guardar la dirección.
+
+La búsqueda se ejecuta solo al pulsar el botón y envía calle, numeración y localidad a través de la API del proyecto. El servidor guarda resultados en caché y limita las consultas externas a una por segundo por instancia. Se puede configurar otro servidor compatible con `NOMINATIM_URL`. Para el servicio público, consultá la [política de uso de Nominatim](https://operations.osmfoundation.org/policies/nominatim/).
+
 ## Empresa, sucursales y formas de pago · E1-07
 
 El panel de administración incluye el ABM de empresa y sucursales en `/empresa`. La empresa valida el CUIT argentino y lo almacena normalizado. Cada sucursal guarda dirección, localidad, coordenadas y una foto subida por el servicio E1-05. El formulario muestra la ubicación en OpenStreetMap y permite abrir el punto en el mapa.
@@ -482,7 +496,8 @@ Las claves de demo no son temporales, para no tener que cambiarlas en cada base 
 
 ### Para otros issues
 
-- **E1-02 (login React):** `POST /api/auth/login` con `{ skipAuth: true }`, guardar el `token` con `tokenStore.set(token)` y redirigir según `rol`. Si `debeCambiarClave` es `true`, llevar a la pantalla de cambio de clave (`PUT /api/auth/clave`) y guardar el **token nuevo** que devuelve. Al recargar, `GET /api/auth/yo` devuelve el rol y el estado de la sesión. Para cerrar sesión: `POST /api/auth/logout` y borrar el token.
+- **E1-02 (login React):** el personal inicia sesión en el panel administrativo y el minorista en la vidriera. Cada rol llega a su inicio: `/jefatura`, `/administracion`, `/preventa`, `/distribucion` o `/cuenta`. Jefe y Administrativo acceden a Categorías, Ubicación y Sistema de diseño. Todo el personal tiene acceso a la Guía de trabajo. El menú lateral y las guardas del panel usan la misma lista de permisos. Una URL de otro rol muestra **Acceso denegado**.
+- Si el servidor marca `debeCambiarClave`, el portal lleva a `/cambiar-clave` antes de mostrar los módulos y reemplaza el token con el que devuelve `PUT /api/auth/clave`. Al cerrar sesión, llama a `POST /api/auth/logout` y borra el token local.
 - **Identidad de quien llama:** nunca recibir el id del usuario por URL o cuerpo; sacarlo del token:
   ```java
   @GetMapping("/mis-pedidos")

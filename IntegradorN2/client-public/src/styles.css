@@ -1,5 +1,6 @@
 @import "../../packages/design/base.css";
 @import "../../packages/design/components.css";
+@import "../../packages/auth/styles.css";
 @import "../../packages/design/taste/photo-chapters.css";
 @import "../../packages/design/taste/word-highlight.css";
 
@@ -240,6 +241,7 @@
     justify-content: space-between;
     gap: 8px;
     font-size: 0.875rem;
+    flex-wrap: wrap;
   }
   .shop-hero h1 {
     font-size: clamp(2.9rem, 11vw, 4.125rem);

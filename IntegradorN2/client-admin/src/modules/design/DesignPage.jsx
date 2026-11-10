@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import ImageUploader from "../../components/ImageUploader.jsx";
+import AddressDemo from "./AddressDemo.jsx";
 import {
   Alert,
   ConfirmDialog,
@@ -250,6 +251,8 @@ export default function DesignPage() {
           </p>
         )}
       </section>
+
+      <AddressDemo />
 
       <ConfirmDialog
         open={pending !== null}

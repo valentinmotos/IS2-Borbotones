@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
+import { useSession } from "../../../../../packages/auth/session.js";
 import { useTasteMoment } from "../../../../../packages/design/useTasteMoment.js";
 import lettersAssemble from "../../../../../packages/design/taste/letters-assemble.mjs";
 
@@ -21,23 +22,29 @@ const workflow = [
   },
 ];
 
-export default function HomePage() {
+export default function HomePage({ title }) {
   const statement = useTasteMoment(lettersAssemble, false);
+  const { user } = useSession();
+  const managesCatalog = ["JEFE", "ADMINISTRATIVO"].includes(user.rol);
   return (
     <>
       <section className="work-intro hero" data-enter>
         <div className="enter-copy">
-          <h1>Administración</h1>
+          <h1>{title}</h1>
           <p>Herramientas y guías para el equipo mayorista de Dulce Mayor.</p>
         </div>
         <div className="work-tools">
-          <Link className="work-tool" to="/componentes">
-            <span>
-              <strong>Sistema de diseño</strong>
-              <small>Probá los componentes en el registro de categorías.</small>
-            </span>
-            <ArrowUpRight size={22} aria-hidden="true" />
-          </Link>
+          {managesCatalog && (
+            <Link className="work-tool" to="/componentes">
+              <span>
+                <strong>Sistema de diseño</strong>
+                <small>
+                  Probá los componentes en el registro de categorías.
+                </small>
+              </span>
+              <ArrowUpRight size={22} aria-hidden="true" />
+            </Link>
+          )}
           <Link className="work-tool" to="/guia">
             <span>
               <strong>Guía de trabajo</strong>
@@ -45,13 +52,15 @@ export default function HomePage() {
             </span>
             <ArrowUpRight size={22} aria-hidden="true" />
           </Link>
-          <Link className="work-tool" to="/ubicacion">
-            <span>
-              <strong>Ubicación</strong>
-              <small>Administrá departamentos y localidades.</small>
-            </span>
-            <ArrowUpRight size={22} aria-hidden="true" />
-          </Link>
+          {managesCatalog && (
+            <Link className="work-tool" to="/ubicacion">
+              <span>
+                <strong>Ubicación</strong>
+                <small>Administrá departamentos y localidades.</small>
+              </span>
+              <ArrowUpRight size={22} aria-hidden="true" />
+            </Link>
+          )}
         </div>
       </section>
       <section

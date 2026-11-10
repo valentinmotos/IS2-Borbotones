@@ -65,7 +65,7 @@ export default function EmpresaPage() {
       setEmpresaId(empresa?.id ?? "");
       setRazonSocial(empresa?.razonSocial ?? "");
       setCuit(empresa?.cuit ?? "");
-      if (!sucursal.idMayorista && empresa) setSucursal((actual) => ({ ...actual, idMayorista: empresa.id }));
+      if (empresa) setSucursal((actual) => actual.idMayorista ? actual : { ...actual, idMayorista: empresa.id });
     } catch (error) {
       if (!signal?.aborted) setAviso({ tono: "danger", texto: error.message });
     } finally {
@@ -75,7 +75,9 @@ export default function EmpresaPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    cargar(controller.signal);
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) void cargar(controller.signal);
+    });
     return () => controller.abort();
   }, [cargar]);
 

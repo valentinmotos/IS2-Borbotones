@@ -1,11 +1,25 @@
-import { Link, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes } from "react-router-dom";
+import SessionProvider from "../../../packages/auth/SessionProvider.jsx";
+import {
+  ChangePasswordPage,
+  LoginPage,
+  RequireAccess,
+} from "../../../packages/auth/AuthRoutes.jsx";
+import { useSession } from "../../../packages/auth/session.js";
+import { api, tokenStore } from "../lib/api.js";
+import { homes, publicUrl } from "./access.js";
+import { sections } from "./sections.jsx";
 import AdminLayout from "./AdminLayout.jsx";
-import HomePage from "../modules/home/pages/HomePage.jsx";
-import GuidePage from "../modules/help/pages/GuidePage.jsx";
-import DesignPage from "../modules/design/DesignPage.jsx";
-import CategoriasPage from "../modules/categorias/pages/CategoriasPage.jsx";
-import EmpresaPage from "../modules/empresa/pages/EmpresaPage.jsx";
-import UbicacionPage from "../modules/ubicacion/pages/UbicacionPage.jsx";
+
+const otherLogin = {
+  href: new URL("/login", publicUrl).href,
+  label: "Ingresar al portal minorista",
+};
+
+function HomeRedirect() {
+  const { home } = useSession();
+  return <Navigate to={home} replace />;
+}
 
 function NotFound() {
   return (
@@ -17,18 +31,30 @@ function NotFound() {
   );
 }
 
-export default function App() {
+export function AdminRoutes() {
   return (
     <Routes>
       <Route element={<AdminLayout />}>
-        <Route index element={<HomePage />} />
-        <Route path="categorias" element={<CategoriasPage />} />
-        <Route path="empresa" element={<EmpresaPage />} />
-        <Route path="ubicacion" element={<UbicacionPage />} />
-        <Route path="guia" element={<GuidePage />} />
-        <Route path="componentes" element={<DesignPage />} />
-        <Route path="*" element={<NotFound />} />
+        <Route path="login" element={<LoginPage otherLogin={otherLogin} />} />
+        <Route path="cambiar-clave" element={<ChangePasswordPage />} />
+        <Route element={<RequireAccess />}>
+          <Route index element={<HomeRedirect />} />
+          {sections.map(({ to, roles, element }) => (
+            <Route key={to} element={<RequireAccess roles={roles} />}>
+              <Route path={to} element={element} />
+            </Route>
+          ))}
+          <Route path="*" element={<NotFound />} />
+        </Route>
       </Route>
     </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <SessionProvider api={api} tokenStore={tokenStore} homes={homes}>
+      <AdminRoutes />
+    </SessionProvider>
   );
 }

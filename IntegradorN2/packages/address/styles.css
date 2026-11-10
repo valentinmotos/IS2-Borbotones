@@ -1,0 +1,65 @@
+.dm-address {
+  min-inline-size: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.dm-address legend {
+  padding-inline: 0.4rem;
+  font-weight: 700;
+}
+
+.dm-address-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: 1rem;
+}
+
+.dm-address select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding-inline: 0.6rem;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+}
+
+.dm-address input[readonly] {
+  background: var(--surface);
+}
+
+.dm-address-hint {
+  color: var(--muted);
+}
+
+.dm-address-search {
+  margin-block: 0.75rem;
+}
+
+.dm-address-search ul {
+  display: grid;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+}
+
+.dm-address-search li button {
+  white-space: normal;
+  text-align: start;
+}
+
+.dm-address-map {
+  position: relative;
+  z-index: 0;
+  height: clamp(16rem, 50vw, 24rem);
+  background: #eeeae2;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.dm-address-demo {
+  margin-top: 3rem;
+}
