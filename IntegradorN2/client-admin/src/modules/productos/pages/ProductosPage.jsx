@@ -10,6 +10,7 @@ import ImageUploader from "../../../components/ImageUploader.jsx";
 import { api } from "../../../lib/api.js";
 import { crearCrudApi } from "../../../lib/crudApi.js";
 import { useProductoImagen } from "../useProductoImagen.js";
+import PreciosProducto from "../components/PreciosProducto.jsx";
 
 const productosApi = crearCrudApi("/productos");
 const categoriasApi = crearCrudApi("/categorias");
@@ -176,6 +177,7 @@ export default function ProductosPage() {
   const [pagina, setPagina] = useState(1);
   const [editando, setEditando] = useState(null);
   const [aEliminar, setAEliminar] = useState(null);
+  const [preciosDe, setPreciosDe] = useState(null);
   const [eliminando, setEliminando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState(null);
@@ -248,6 +250,7 @@ export default function ProductosPage() {
     try {
       await productosApi.eliminar(producto.id);
       if (editando?.id === producto.id) setEditando(null);
+      if (preciosDe?.id === producto.id) setPreciosDe(null);
       setAviso({ tono: "success", texto: `Diste de baja ${producto.nombre}.` });
       setVersion((anterior) => anterior + 1);
     } catch (error) {
@@ -283,6 +286,14 @@ export default function ProductosPage() {
             onClick={() => setEditando(producto)}
           >
             Editar
+          </button>
+          <button
+            className="dm-button"
+            type="button"
+            disabled={eliminando}
+            onClick={() => setPreciosDe(producto)}
+          >
+            Precios
           </button>
           <button
             className="dm-button dm-button-danger"
@@ -363,6 +374,13 @@ export default function ProductosPage() {
           onPageChange={setPagina}
         />
       </section>
+      {preciosDe && (
+        <PreciosProducto
+          key={preciosDe.id}
+          producto={preciosDe}
+          onClose={() => setPreciosDe(null)}
+        />
+      )}
       <FormularioProducto
         key={`${editando?.id ?? "nuevo"}-${versionFormulario}`}
         producto={editando}
