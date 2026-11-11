@@ -1,6 +1,12 @@
 package com.dulcemayor.config;
 
 import java.time.LocalDate;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.dulcemayor.dto.CategoriaRequest;
+import com.dulcemayor.dto.CategoriaResponse;
 import com.dulcemayor.dto.DepartamentoRequest;
 import com.dulcemayor.dto.DepartamentoResponse;
 import com.dulcemayor.dto.FormaDePagoRequest;
@@ -18,6 +25,7 @@ import com.dulcemayor.dto.LocalidadRequest;
 import com.dulcemayor.dto.MayoristaRequest;
 import com.dulcemayor.dto.PerfilMinoristaRequest;
 import com.dulcemayor.dto.PuntoDeVentaRequest;
+import com.dulcemayor.dto.ProductoRequest;
 import com.dulcemayor.dto.SucursalRequest;
 import com.dulcemayor.entity.Minorista;
 import com.dulcemayor.entity.Preventor;
@@ -31,6 +39,9 @@ import com.dulcemayor.repository.LocalidadRepository;
 import com.dulcemayor.repository.MinoristaRepository;
 import com.dulcemayor.repository.PreventorRepository;
 import com.dulcemayor.service.CategoriaService;
+import com.dulcemayor.service.ProductoService;
+import com.dulcemayor.service.StockService;
+import com.dulcemayor.service.VigenciaPrecioService;
 import com.dulcemayor.service.DepartamentoService;
 import com.dulcemayor.service.FormaDePagoService;
 import com.dulcemayor.service.ImagenService;
@@ -43,6 +54,7 @@ import com.dulcemayor.service.PuntoDeVentaService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
+import org.springframework.web.multipart.MultipartFile;
 
 /** Carga los datos iniciales solo cuando la base está vacía y a través de los services. */
 @Component
@@ -53,6 +65,9 @@ public class DataSeeder implements CommandLineRunner {
 
     private final EntityManager entityManager;
     private final CategoriaService categoriaService;
+    private final ProductoService productoService;
+    private final StockService stockService;
+    private final VigenciaPrecioService vigenciaPrecioService;
     private final UsuarioService usuarioService;
     private final ImagenService imagenService;
     private final DepartamentoService departamentoService;
@@ -67,6 +82,7 @@ public class DataSeeder implements CommandLineRunner {
     private final MinoristaService minoristaService;
 
     public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
+            ProductoService productoService, StockService stockService, VigenciaPrecioService vigenciaPrecioService,
             UsuarioService usuarioService, ImagenService imagenService,
             DepartamentoService departamentoService, LocalidadService localidadService,
             MayoristaService mayoristaService, SucursalService sucursalService,
@@ -75,6 +91,9 @@ public class DataSeeder implements CommandLineRunner {
             MinoristaRepository minoristaRepository, MinoristaService minoristaService) {
         this.entityManager = entityManager;
         this.categoriaService = categoriaService;
+        this.productoService = productoService;
+        this.stockService = stockService;
+        this.vigenciaPrecioService = vigenciaPrecioService;
         this.usuarioService = usuarioService;
         this.imagenService = imagenService;
         this.departamentoService = departamentoService;
@@ -94,6 +113,7 @@ public class DataSeeder implements CommandLineRunner {
     public void run(String... args) {
         if (!baseVacia()) {
             log.info("La base ya tiene datos: no se ejecuta el seeder.");
+            cargarCatalogo();
             return;
         }
         log.info("Base vacía: cargando datos iniciales.");
@@ -152,10 +172,66 @@ public class DataSeeder implements CommandLineRunner {
 
     /** E2-01 a E2-03: categorías, productos, stock inicial y vigencias de precio. */
     private void cargarCatalogo() {
-        for (String nombre : new String[] { "Alfajores", "Caramelos", "Chicles", "Chocolates", "Gomitas" }) {
-            categoriaService.crearCategoria(new CategoriaRequest(nombre));
+        String[] nombresCategorias = { "Alfajores", "Caramelos", "Chicles", "Chocolates", "Gomitas" };
+        List<CategoriaResponse> categorias = categoriaService.listarCategoriaActivo();
+        for (String nombre : nombresCategorias) {
+            boolean existe = categorias.stream().anyMatch(c -> c.nombre().equalsIgnoreCase(nombre));
+            if (!existe) {
+                categoriaService.crearCategoria(new CategoriaRequest(nombre));
+            }
         }
-        cargarImagen("imagenes/imagen-prueba.png", TipoImagen.PRODUCTO);
+        if (!productoService.listarActivos().isEmpty()) {
+            return;
+        }
+
+        categorias = categoriaService.listarCategoriaActivo();
+        byte[] imagen = leerRecurso("imagenes/imagen-prueba.png");
+        Object[][] productosDemo = {
+                { "ALF-001", "Alfajor de chocolate", "Alfajor relleno de dulce de leche con cobertura de chocolate.", "Caja x12", 12, "Alfajores", 12500.0, 30 },
+                { "CAR-001", "Caramelos frutales", "Caramelos surtidos de frutas.", "Bolsa x100", 100, "Caramelos", 6800.0, 45 },
+                { "CHI-001", "Chicles menta", "Chicles sabor menta en presentación individual.", "Caja x50", 50, "Chicles", 9400.0, 20 },
+                { "CHO-001", "Chocolate con leche", "Tabletas de chocolate con leche.", "Caja x24", 24, "Chocolates", 18200.0, 18 },
+                { "GOM-001", "Gomitas frutales", "Gomitas surtidas sabor frutal.", "Bolsa x1 kg", 1, "Gomitas", 7200.0, 25 }
+        };
+        for (Object[] dato : productosDemo) {
+            CategoriaResponse categoria = categorias.stream()
+                    .filter(c -> c.nombre().equalsIgnoreCase((String) dato[5]))
+                    .findFirst().orElseThrow();
+            ProductoRequest request = new ProductoRequest((String) dato[0], (String) dato[1], (String) dato[2],
+                    (String) dato[3], (Integer) dato[4], categoria.id(),
+                    new ArchivoSeeder("imagen-prueba.png", imagen));
+            var producto = productoService.crear(request);
+            vigenciaPrecioService.crearVigenciaPrecio(producto.id(),
+                    new com.dulcemayor.dto.VigenciaPrecioRequest(LocalDate.now(), (Double) dato[6]));
+            stockService.reponer(producto.id(), (Integer) dato[7], "Stock inicial de demostración");
+        }
+    }
+
+    private byte[] leerRecurso(String ruta) {
+        try {
+            return new ClassPathResource(ruta).getContentAsByteArray();
+        } catch (java.io.IOException ex) {
+            throw new IllegalStateException("No se pudo leer la imagen de demo " + ruta, ex);
+        }
+    }
+
+    private static final class ArchivoSeeder implements MultipartFile {
+        private final String nombre;
+        private final byte[] contenido;
+
+        private ArchivoSeeder(String nombre, byte[] contenido) {
+            this.nombre = nombre;
+            this.contenido = contenido;
+        }
+
+        @Override public String getName() { return "imagen"; }
+        @Override public String getOriginalFilename() { return nombre; }
+        @Override public String getContentType() { return "image/png"; }
+        @Override public boolean isEmpty() { return contenido.length == 0; }
+        @Override public long getSize() { return contenido.length; }
+        @Override public byte[] getBytes() { return contenido.clone(); }
+        @Override public InputStream getInputStream() { return new java.io.ByteArrayInputStream(contenido); }
+        @Override public void transferTo(File destino) throws IOException { Files.write(destino.toPath(), contenido); }
     }
 
     private String cargarImagen(String ruta, TipoImagen tipo) {
