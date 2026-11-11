@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Activá tu cuenta · Dulce Mayor</title>
+</head>
+<body style="margin:0;padding:24px;background-color:#f8f5ef;font-family:Arial,Helvetica,sans-serif;color:#1f1b18;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;margin:0 auto;background-color:#fffdfa;border:1px solid #d9cec0;border-radius:12px;">
+    <tr>
+      <td style="padding:28px 32px 20px;background-color:#f5dfd4;border-radius:12px 12px 0 0;">
+        <p style="margin:0;color:#a9321c;font-size:13px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;">Dulce Mayor</p>
+        <h1 style="margin:12px 0 0;font-family:Georgia,serif;font-size:30px;font-weight:normal;line-height:1.2;">Activá tu cuenta</h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:28px 32px 32px;font-size:16px;line-height:1.6;">
+        <p style="margin:0 0 16px;">Hola <strong th:text="${nombre}">Manuel</strong>,</p>
+        <p style="margin:0 0 20px;">Ingresá este código en el sitio para confirmar tu correo electrónico. Vence en 15 minutos.</p>
+        <p th:text="${codigo}" style="margin:0 auto 24px;padding:14px 18px;width:fit-content;background-color:#f8f5ef;border:1px solid #d9cec0;border-radius:8px;color:#a9321c;font-size:30px;font-weight:bold;letter-spacing:8px;text-align:center;">123456</p>
+        <p style="margin:0;color:#5e5148;font-size:13px;">Si no creaste una cuenta, podés ignorar este correo.</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:18px 32px;border-top:1px solid #d9cec0;color:#5e5148;font-size:12px;line-height:1.5;">
+        Dulce Mayor · Mendoza, Argentina<br>
+        Recibiste este correo por una gestión realizada en nuestro sitio.
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

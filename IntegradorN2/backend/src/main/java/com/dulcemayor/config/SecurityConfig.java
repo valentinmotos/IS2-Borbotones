@@ -97,6 +97,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/categorias/**", "/api/productos/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
                         .requestMatchers("/api/empresas/**", "/api/sucursales/**", "/api/formas-de-pago/**")
                         .hasAnyRole("JEFE", "ADMINISTRATIVO")
+                        .requestMatchers("/api/usuarios/internos/**").hasRole("JEFE")
                         // E1-05: suben imágenes quienes cargan productos, sucursales y la empresa
                         .requestMatchers(HttpMethod.POST, "/api/imagenes").hasAnyRole("JEFE", "ADMINISTRATIVO")
                         .requestMatchers("/api/minorista/**").hasRole("MINORISTA")

@@ -5,6 +5,7 @@ import CategoriasPage from "../modules/categorias/pages/CategoriasPage.jsx";
 import EmpresaPage from "../modules/empresa/pages/EmpresaPage.jsx";
 import ProductosPage from "../modules/productos/pages/ProductosPage.jsx";
 import UbicacionPage from "../modules/ubicacion/pages/UbicacionPage.jsx";
+import UsuariosPage from "../modules/usuarios/pages/UsuariosPage.jsx";
 import { homes } from "./access.js";
 
 const gestion = ["JEFE", "ADMINISTRATIVO"];
@@ -57,6 +58,12 @@ export const sections = [
     label: "Ubicación",
     roles: gestion,
     element: <UbicacionPage />,
+  },
+  {
+    to: "/usuarios",
+    label: "Usuarios internos",
+    roles: ["JEFE"],
+    element: <UsuariosPage />,
   },
   {
     to: "/guia",

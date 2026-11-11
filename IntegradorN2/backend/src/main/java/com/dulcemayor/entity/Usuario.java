@@ -2,6 +2,7 @@ package com.dulcemayor.entity;
 
 import com.dulcemayor.entity.enums.ProveedorAuth;
 import com.dulcemayor.entity.enums.RolUsuario;
+import java.time.Instant;
 import org.hibernate.annotations.ColumnDefault;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -48,4 +49,18 @@ public class Usuario extends BaseEntity {
     @ColumnDefault("0")
     @Column(name = "version_token", nullable = false)
     private int versionToken = 0;
+
+    /** Código de activación de un solo uso, guardado como hash (E2-04). */
+    @Column(name = "codigo_activacion_hash", length = 60)
+    private String codigoActivacionHash;
+
+    @Column(name = "codigo_activacion_expira")
+    private Instant codigoActivacionExpira;
+
+    @Column(name = "codigo_activacion_enviado")
+    private Instant codigoActivacionEnviado;
+
+    @ColumnDefault("0")
+    @Column(name = "intentos_codigo_activacion", nullable = false)
+    private int intentosCodigoActivacion = 0;
 }

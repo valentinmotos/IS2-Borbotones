@@ -2,7 +2,10 @@ package com.dulcemayor.service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.util.List;
 import java.util.UUID;
+import java.time.Duration;
+import java.time.Instant;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -73,6 +76,131 @@ public class UsuarioService {
         usuario.setClave(passwordEncoder.encode(clave));
         usuario.setClaveTemporal(claveTemporal);
         return usuarioRepository.save(usuario);
+    }
+
+    /** Crea el usuario y las credenciales pendientes de activación del registro público. */
+    @Transactional
+    public Usuario crearUsuarioPendienteMinorista(String correo, String clave, String codigo) {
+        validar(correo, clave, RolUsuario.MINORISTA);
+        validarCodigo(codigo);
+        Instant ahora = Instant.now();
+        Usuario usuario = new Usuario();
+        usuario.setNombreUsuario(normalizarCorreo(correo));
+        usuario.setRol(RolUsuario.MINORISTA);
+        usuario.setClave(passwordEncoder.encode(clave));
+        usuario.setClaveTemporal(false);
+        usuario.setActivo(false);
+        usuario.setCodigoActivacionHash(passwordEncoder.encode(codigo));
+        usuario.setCodigoActivacionExpira(ahora.plus(Duration.ofMinutes(15)));
+        usuario.setCodigoActivacionEnviado(ahora);
+        usuario.setIntentosCodigoActivacion(0);
+        return usuarioRepository.save(usuario);
+    }
+
+    /** Activa una cuenta solo si el código es correcto, no venció y aún conserva intentos. */
+    @Transactional(noRollbackFor = ErrorServiceException.class)
+    public Usuario activarCuentaMinorista(String correo, String codigo) {
+        Usuario usuario = usuarioPendiente(correo);
+        Instant ahora = Instant.now();
+        if (usuario.getCodigoActivacionHash() == null || usuario.getCodigoActivacionExpira() == null
+                || !ahora.isBefore(usuario.getCodigoActivacionExpira())
+                || usuario.getIntentosCodigoActivacion() >= 5) {
+            limpiarCodigo(usuario);
+            usuarioRepository.save(usuario);
+            throw new ErrorServiceException("El código no es válido o venció.", "codigo");
+        }
+        if (codigo == null || !codigo.matches("\\d{6}")
+                || !passwordEncoder.matches(codigo, usuario.getCodigoActivacionHash())) {
+            usuario.setIntentosCodigoActivacion(usuario.getIntentosCodigoActivacion() + 1);
+            if (usuario.getIntentosCodigoActivacion() >= 5) limpiarCodigo(usuario);
+            usuarioRepository.save(usuario);
+            throw new ErrorServiceException("El código no es válido o venció.", "codigo");
+        }
+        usuario.setActivo(true);
+        limpiarCodigo(usuario);
+        return usuarioRepository.save(usuario);
+    }
+
+    /** Actualiza el hash y vencimiento para reenviar el código a una cuenta pendiente. */
+    @Transactional
+    public boolean prepararReenvioCodigoMinorista(String correo, String codigo) {
+        if (correo == null || correo.isBlank()) return false;
+        Usuario usuario = usuarioRepository.findByNombreUsuarioAndEliminadoFalse(normalizarCorreo(correo))
+                .orElse(null);
+        if (usuario == null || usuario.getRol() != RolUsuario.MINORISTA || usuario.isActivo()) return false;
+        Instant ahora = Instant.now();
+        if (usuario.getCodigoActivacionEnviado() != null
+                && usuario.getCodigoActivacionEnviado().plusSeconds(60).isAfter(ahora)) return false;
+        validarCodigo(codigo);
+        usuario.setCodigoActivacionHash(passwordEncoder.encode(codigo));
+        usuario.setCodigoActivacionExpira(ahora.plus(Duration.ofMinutes(15)));
+        usuario.setCodigoActivacionEnviado(ahora);
+        usuario.setIntentosCodigoActivacion(0);
+        usuarioRepository.save(usuario);
+        return true;
+    }
+
+    private Usuario usuarioPendiente(String correo) {
+        if (correo == null || correo.isBlank()) {
+            throw new ErrorServiceException("El correo electrónico es obligatorio.", "correo");
+        }
+        Usuario usuario = usuarioRepository.findByNombreUsuarioAndEliminadoFalse(normalizarCorreo(correo))
+                .orElseThrow(() -> new ErrorServiceException("El código no es válido o venció.", "codigo"));
+        if (usuario.getRol() != RolUsuario.MINORISTA || usuario.isActivo()) {
+            throw new ErrorServiceException("El código no es válido o venció.", "codigo");
+        }
+        return usuario;
+    }
+
+    private void limpiarCodigo(Usuario usuario) {
+        usuario.setCodigoActivacionHash(null);
+        usuario.setCodigoActivacionExpira(null);
+        usuario.setCodigoActivacionEnviado(null);
+        usuario.setIntentosCodigoActivacion(0);
+    }
+
+    private void validarCodigo(String codigo) {
+        if (codigo == null || !codigo.matches("\\d{6}")) {
+            throw new ErrorServiceException("El código de activación debe tener seis dígitos.", "codigo");
+        }
+    }
+
+    /** Valida correo y rol del ABM de usuarios internos sin aceptar cuentas de minoristas. */
+    public void validarUsuarioInterno(String correo, RolUsuario rol, String idActual) {
+        validarCorreo(correo);
+        if (rol == null || rol == RolUsuario.MINORISTA) {
+            throw new ErrorServiceException("Elegí un rol interno válido.", "rol");
+        }
+        String normalizado = normalizarCorreo(correo);
+        usuarioRepository.findByNombreUsuario(normalizado).ifPresent(existente -> {
+            if (idActual == null || !existente.getId().equals(idActual)) {
+                throw new DuplicadoException("Ya existe una cuenta registrada con ese correo.", "correo");
+            }
+        });
+    }
+
+    /** Crea o resetea credenciales de personal con la clave temporal del proyecto. */
+    void establecerClaveTemporal(Usuario usuario) {
+        usuario.setClave(passwordEncoder.encode(CLAVE_POR_DEFECTO));
+        usuario.setClaveTemporal(true);
+        usuario.setActivo(true);
+    }
+
+    @Transactional
+    public Usuario resetearClaveTemporal(String id) {
+        Usuario usuario = buscarUsuario(id);
+        establecerClaveTemporal(usuario);
+        usuario.setVersionToken(usuario.getVersionToken() + 1);
+        return usuarioRepository.save(usuario);
+    }
+
+    public List<Usuario> listarUsuariosInternos() {
+        return usuarioRepository.findByEliminadoFalseAndRolInOrderByNombreUsuarioAsc(
+                List.of(RolUsuario.JEFE, RolUsuario.ADMINISTRATIVO, RolUsuario.PREVENTOR, RolUsuario.DISTRIBUIDOR));
+    }
+
+    public long contarJefesActivos() {
+        return usuarioRepository.countByRolAndActivoTrueAndEliminadoFalse(RolUsuario.JEFE);
     }
 
     /** validar(nombreUsuario, clave, rol) del UML: reglas del alta. */
@@ -202,7 +330,7 @@ public class UsuarioService {
         return clave.getBytes(StandardCharsets.UTF_8).length > LARGO_MAXIMO_CLAVE_BYTES;
     }
 
-    private static String normalizarCorreo(String correo) {
+    public static String normalizarCorreo(String correo) {
         return correo.strip().toLowerCase(Locale.ROOT);
     }
 }
