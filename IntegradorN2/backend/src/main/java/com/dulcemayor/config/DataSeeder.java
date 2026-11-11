@@ -28,6 +28,9 @@ import com.dulcemayor.service.LocalidadService;
 import com.dulcemayor.service.MayoristaService;
 import com.dulcemayor.service.SucursalService;
 import com.dulcemayor.service.UsuarioService;
+import com.dulcemayor.service.PuntoDeVentaService;
+import com.dulcemayor.service.PreventorService;
+import com.dulcemayor.service.MinoristaService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
@@ -49,12 +52,16 @@ public class DataSeeder implements CommandLineRunner {
     private final SucursalService sucursalService;
     private final FormaDePagoService formaDePagoService;
     private final LocalidadRepository localidadRepository;
+    private final PuntoDeVentaService puntoDeVentaService;
+    private final PreventorService preventorService;
+    private final MinoristaService minoristaService;
 
     public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
             UsuarioService usuarioService, ImagenService imagenService,
             DepartamentoService departamentoService, LocalidadService localidadService,
             MayoristaService mayoristaService, SucursalService sucursalService,
-            FormaDePagoService formaDePagoService, LocalidadRepository localidadRepository) {
+            FormaDePagoService formaDePagoService, LocalidadRepository localidadRepository,
+            PuntoDeVentaService puntoDeVentaService, PreventorService preventorService, MinoristaService minoristaService) {
         this.entityManager = entityManager;
         this.categoriaService = categoriaService;
         this.usuarioService = usuarioService;
@@ -65,6 +72,9 @@ public class DataSeeder implements CommandLineRunner {
         this.sucursalService = sucursalService;
         this.formaDePagoService = formaDePagoService;
         this.localidadRepository = localidadRepository;
+        this.puntoDeVentaService = puntoDeVentaService;
+        this.preventorService = preventorService;
+        this.minoristaService = minoristaService;
     }
 
     @Override
@@ -145,7 +155,13 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
-    private void cargarPuntosDeVenta() { /* E2-06. */ }
+    private void cargarPuntosDeVenta() {
+        var preventor = preventorService.crearDemo("preventor@dulcemayor.com.ar");
+        var minorista = minoristaService.crearDemo();
+        var localidad = localidadRepository.findByEliminadoFalse(Sort.by("nombre")).get(0);
+        puntoDeVentaService.crearDemo("Kiosco Centro", minorista.getId(), localidad.getId(),
+                "San Martín", "850", -32.8878, -68.8421, preventor.getId());
+    }
     private void cargarPedidos() { /* E6-04. */ }
 
     private boolean baseVacia() {
