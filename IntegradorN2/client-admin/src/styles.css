@@ -449,3 +449,130 @@
   border-radius: 6px;
   object-fit: contain;
 }
+
+.stock-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  max-width: 42rem;
+  margin-block: 1rem 1.5rem;
+}
+
+.stock-grid {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.85fr) minmax(0, 1.15fr);
+  align-items: start;
+  gap: 1rem;
+  margin-block-start: 1rem;
+}
+
+.stock-form fieldset {
+  display: grid;
+  gap: 1rem;
+  min-inline-size: 0;
+  border: 0;
+  padding: 0;
+}
+
+.stock-presentacion {
+  display: block;
+  color: var(--muted, #666);
+  margin-block-start: 0.2rem;
+}
+
+.stock-preview {
+  margin: -0.5rem 0 0;
+  color: var(--muted, #666);
+}
+
+.stock-toast {
+  position: fixed;
+  z-index: 20;
+  inset-block-start: calc(var(--nav, 72px) + 16px);
+  inset-inline-end: clamp(12px, 3vw, 28px);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: min(26rem, calc(100vw - 24px));
+  padding: 14px 16px 14px 18px;
+  color: var(--dm-ink);
+  background: var(--dm-surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: 0 12px 32px rgb(31 27 24 / 18%);
+  animation: stock-toast-arrive 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: transform 380ms cubic-bezier(0.7, 0, 0.84, 0), opacity 320ms ease;
+}
+
+.stock-toast[data-tone="success"] {
+  color: var(--dm-success);
+  background: var(--dm-success-bg);
+}
+
+.stock-toast[data-tone="danger"] {
+  color: var(--dm-danger);
+  background: var(--dm-danger-bg);
+}
+
+.stock-toast p {
+  flex: 1;
+  margin: 0;
+  font-weight: 600;
+}
+
+.stock-toast button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.stock-toast button:hover {
+  background: rgb(31 27 24 / 8%);
+}
+
+.stock-toast button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.stock-toast--leaving {
+  transform: translateX(calc(100% + 36px));
+  opacity: 0;
+}
+
+@keyframes stock-toast-arrive {
+  from { transform: translateY(-8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stock-toast {
+    animation: none;
+    transition: opacity 120ms ease;
+  }
+  .stock-toast--leaving {
+    transform: none;
+    opacity: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .stock-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .stock-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

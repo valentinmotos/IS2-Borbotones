@@ -5,6 +5,7 @@ import CategoriasPage from "../modules/categorias/pages/CategoriasPage.jsx";
 import EmpresaPage from "../modules/empresa/pages/EmpresaPage.jsx";
 import ProductosPage from "../modules/productos/pages/ProductosPage.jsx";
 import UbicacionPage from "../modules/ubicacion/pages/UbicacionPage.jsx";
+import StockPage from "../modules/stock/pages/StockPage.jsx";
 import { homes } from "./access.js";
 
 const gestion = ["JEFE", "ADMINISTRATIVO"];
@@ -39,6 +40,12 @@ export const sections = [
     label: "Productos",
     roles: gestion,
     element: <ProductosPage />,
+  },
+  {
+    to: "/stock",
+    label: "Stock y almacén",
+    roles: gestion,
+    element: <StockPage />,
   },
   {
     to: "/categorias",
