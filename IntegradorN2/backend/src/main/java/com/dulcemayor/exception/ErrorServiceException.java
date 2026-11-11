@@ -10,7 +10,7 @@ package com.dulcemayor.exception;
  * sigue compilando igual.
  *
  * GlobalExceptionHandler la responde con 400. Subclases: DuplicadoException (409) y
- * RecursoNoEncontradoException (404).
+ * RecursoNoEncontradoException (404) y ServicioNoDisponibleException (503).
  */
 public class ErrorServiceException extends RuntimeException {
 
