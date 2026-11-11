@@ -51,8 +51,13 @@ public class UsuarioInternoService extends AbstractCrudService<Usuario, UsuarioI
         return respuesta(usuario);
     }
 
+    /** Modificación por el Jefe. {@code idSolicitante} es el usuario del token: no puede editarse a sí mismo. */
     @Transactional
-    public UsuarioInternoResponse modificarUsuarioInterno(String id, UsuarioInternoRequest request) {
+    public UsuarioInternoResponse modificarUsuarioInterno(String id, UsuarioInternoRequest request,
+            String idSolicitante) {
+        if (esElMismo(id, idSolicitante)) {
+            throw new ErrorServiceException("No podés modificar tu propia cuenta desde esta pantalla.");
+        }
         modificar(id, request);
         Usuario usuario = usuarioService.buscarUsuario(id);
         guardarPerfilEmpleado(usuario, request);
@@ -60,13 +65,23 @@ public class UsuarioInternoService extends AbstractCrudService<Usuario, UsuarioI
     }
 
     @Transactional
-    public void eliminarUsuarioInterno(String id) {
+    public void eliminarUsuarioInterno(String id, String idSolicitante) {
+        if (esElMismo(id, idSolicitante)) {
+            throw new ErrorServiceException("No podés dar de baja tu propia cuenta.");
+        }
         eliminar(id);
     }
 
     @Transactional
-    public UsuarioInternoResponse resetearClave(String id) {
+    public UsuarioInternoResponse resetearClave(String id, String idSolicitante) {
+        if (esElMismo(id, idSolicitante)) {
+            throw new ErrorServiceException("No podés resetear tu propia clave desde esta pantalla.");
+        }
         return respuesta(usuarioService.resetearClaveTemporal(id));
+    }
+
+    private static boolean esElMismo(String id, String idSolicitante) {
+        return idSolicitante != null && idSolicitante.equals(id);
     }
 
     public List<UsuarioInternoResponse> listarUsuariosInternos() {
