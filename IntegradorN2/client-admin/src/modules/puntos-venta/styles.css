@@ -1,0 +1,47 @@
+.pv-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(20rem, 0.8fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+.pv-list {
+  min-width: 0;
+  display: grid;
+  gap: 1rem;
+}
+.pv-zone {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  max-width: 34rem;
+}
+.pv-zone label {
+  font-weight: 650;
+}
+.pv-map-wrap {
+  min-width: 0;
+}
+.pv-map {
+  width: 100%;
+  height: 24rem;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #eee9e2;
+}
+@media (max-width: 900px) {
+  .pv-layout {
+    grid-template-columns: 1fr;
+  }
+  .pv-map {
+    height: 19rem;
+  }
+}
+@media (max-width: 520px) {
+  .pv-zone {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .pv-map {
+    height: 16rem;
+  }
+}

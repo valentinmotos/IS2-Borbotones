@@ -5,6 +5,7 @@ import CategoriasPage from "../modules/categorias/pages/CategoriasPage.jsx";
 import EmpresaPage from "../modules/empresa/pages/EmpresaPage.jsx";
 import ProductosPage from "../modules/productos/pages/ProductosPage.jsx";
 import UbicacionPage from "../modules/ubicacion/pages/UbicacionPage.jsx";
+import PuntosVentaPage from "../modules/puntos-venta/pages/PuntosVentaPage.jsx";
 import StockPage from "../modules/stock/pages/StockPage.jsx";
 import UsuariosPage from "../modules/usuarios/pages/UsuariosPage.jsx";
 import { homes } from "./access.js";
@@ -65,6 +66,12 @@ export const sections = [
     label: "Ubicación",
     roles: gestion,
     element: <UbicacionPage />,
+  },
+  {
+    to: "/puntos-de-venta",
+    label: "Puntos de venta",
+    roles: ["PREVENTOR", "JEFE", "ADMINISTRATIVO"],
+    element: <PuntosVentaPage />,
   },
   {
     to: "/usuarios",

@@ -416,6 +416,33 @@ Pruebas: `VigenciaPrecioServiceTest` (Mockito) y `VigenciaPrecioIntegrationTest`
 - `VigenciaPrecioService.buscarPrecioVigente(idProducto): Optional<Double>` para el catálogo (E3-01), el presupuesto del chatbot (E3-04) y el precio unitario del pedido (E4-01). Vacío si el producto no tiene precio.
 - `VigenciaPrecioService.buscarVigenciaPrecioVigente(idProducto): VigenciaPrecioResponse` (lanza `RecursoNoEncontradoException` si no hay precio).
 
+## E2-06 · Puntos de venta y geolocalización
+
+El preventor da de alta un comercio (`PuntoDeVenta`) de un minorista con su dirección y su ubicación en el mapa, usando el componente `DireccionField` de E1-04. El preventor del alta sale siempre del token. **La zona es el departamento** de la localidad de la dirección (el modelo no tiene otra entidad de zona). Las coordenadas son obligatorias: sin un punto marcado en el mapa el alta se rechaza con `400`.
+
+### Endpoints
+
+- `GET /api/puntos-de-venta?departamentoId=…` (JEFE, ADMINISTRATIVO, PREVENTOR): comercios activos, de todas las zonas o de una. Cada ítem trae nombre, minorista, preventor, dirección, localidad, departamento y `latitud`/`longitud`.
+- `GET /api/puntos-de-venta/{id}` (mismos roles).
+- `GET /api/puntos-de-venta/minoristas` (mismos roles): minoristas activos para elegir el responsable.
+- `POST /api/puntos-de-venta` (solo PREVENTOR) con `{"nombreComercio", "minoristaId", "localidadId", "calle", "numeracion", "barrio", "manzanaPiso", "casaDepartamento", "referencia", "latitud", "longitud"}` → `201`. Un usuario sin perfil de preventor recibe `400` con un mensaje claro.
+
+### Cómo probarlo
+
+1. Ingresá como `preventor@dulcemayor.com.ar` y abrí [Puntos de venta](http://localhost:5173/puntos-de-venta). Los datos de demo ya traen el "Kiosco Centro" en Capital.
+2. Cargá un kiosco nuevo: nombre, minorista, departamento, localidad, calle y numeración, y marcá el punto en el mapa (o buscá la dirección).
+3. Al guardar, la pantalla cambia a la zona del comercio y el marcador aparece en el mapa y en la tabla.
+4. Como Jefe o Administrativo, la misma pantalla muestra el mapa y la tabla, sin el formulario de alta.
+
+Pruebas: `PuntoDeVentaServiceTest` (Mockito) y `PuntoDeVentaIntegrationTest` (criterio de aceptación de punta a punta con un preventor real, coordenadas faltantes, minorista inexistente y `403` para administrativo y distribuidor). Para ejecutarlas: `mvnw.cmd -Dtest=PuntoDeVentaServiceTest,PuntoDeVentaIntegrationTest test` desde `backend`.
+
+### Para otros issues
+
+- `PuntoDeVentaService.listarPuntoDeVentaPorPreventor(idPreventor)` para elegir un comercio existente en el portal del preventor (E4-02).
+- `PuntoDeVentaService.listarPuntoDeVentaPorMinorista(idMinorista)` para el perfil del minorista (E2-07).
+- `PreventorService.buscarPreventorPorUsuario(idUsuario)`: el preventor del token.
+- `DireccionService.crearDireccion(...)`: alta de una dirección con validación de coordenadas, reutilizable por E2-07.
+
 ## Docker · E0-09
 
 `docker-compose.yml` levanta la base, el servidor y los dos clientes. Ollama es opcional.
