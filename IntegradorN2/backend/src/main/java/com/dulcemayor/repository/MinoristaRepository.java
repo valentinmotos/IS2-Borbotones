@@ -9,5 +9,7 @@ public interface MinoristaRepository extends JpaRepository<Minorista, String> {
 
     Optional<Minorista> findByNumeroDocumentoAndEliminadoFalse(String numeroDocumento);
 
+    Optional<Minorista> findByUsuario_NombreUsuarioAndEliminadoFalse(String nombreUsuario);
+
     List<Minorista> findByEliminadoFalse();
 }
