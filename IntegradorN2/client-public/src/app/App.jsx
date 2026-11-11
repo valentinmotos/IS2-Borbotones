@@ -4,6 +4,7 @@ import PublicLayout from "./PublicLayout.jsx";
 import HomePage from "../modules/home/pages/HomePage.jsx";
 import CompanyPage from "../modules/company/pages/CompanyPage.jsx";
 import BuyingPage from "../modules/buying/pages/BuyingPage.jsx";
+import RegistroMinoristaPage from "../modules/registro/pages/RegistroMinoristaPage.jsx";
 import SessionProvider from "../../../packages/auth/SessionProvider.jsx";
 import {
   ChangePasswordPage,
@@ -63,7 +64,8 @@ export default function App() {
           <Route path="empresa" element={<CompanyPage />} />
           <Route path="como-comprar" element={<BuyingPage />} />
           <Route path="creditos" element={<CreditsPage />} />
-          <Route path="login" element={<LoginPage otherLogin={otherLogin} />} />
+          <Route path="login" element={<LoginPage otherLogin={otherLogin} registrationPath="/registro" />} />
+          <Route path="registro" element={<RegistroMinoristaPage />} />
           <Route path="cambiar-clave" element={<ChangePasswordPage />} />
           <Route element={<RequireAccess roles={["MINORISTA"]} />}>
             <Route path="cuenta" element={<AccountPage />} />
