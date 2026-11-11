@@ -1,36 +1,45 @@
-name: CI
+name: Integración continua
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  build-and-test:
+  build-test-docker:
+    name: Maven tests y build de imágenes
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: IntegradorN2
 
     steps:
       - name: Descargar código
         uses: actions/checkout@v4
 
       - name: Configurar Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
           cache: maven
-          cache-dependency-path: backend/pom.xml
+          cache-dependency-path: IntegradorN2/backend/pom.xml
 
-      - name: Ejecutar tests con Maven
+      - name: Compilar y ejecutar tests unitarios
         run: |
           chmod +x backend/mvnw
           ./backend/mvnw -B -f backend/pom.xml test
 
-      - name: Construir imagen del backend
+      - name: Construir imagen Docker del backend
         run: docker build -t dulcemayor-backend:${{ github.run_number }} ./backend
 
-      - name: Construir imagen del cliente admin
+      - name: Construir imagen Docker del cliente admin
         run: docker build -t dulcemayor-client-admin:${{ github.run_number }} -f client-admin/Dockerfile .
 
-      - name: Construir imagen del cliente público
+      - name: Construir imagen Docker del cliente público
         run: docker build -t dulcemayor-client-public:${{ github.run_number }} -f client-public/Dockerfile .
