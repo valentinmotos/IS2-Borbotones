@@ -6,6 +6,8 @@ import EmpresaPage from "../modules/empresa/pages/EmpresaPage.jsx";
 import ProductosPage from "../modules/productos/pages/ProductosPage.jsx";
 import UbicacionPage from "../modules/ubicacion/pages/UbicacionPage.jsx";
 import PuntosVentaPage from "../modules/puntos-venta/pages/PuntosVentaPage.jsx";
+import StockPage from "../modules/stock/pages/StockPage.jsx";
+import UsuariosPage from "../modules/usuarios/pages/UsuariosPage.jsx";
 import { homes } from "./access.js";
 
 const gestion = ["JEFE", "ADMINISTRATIVO"];
@@ -42,6 +44,12 @@ export const sections = [
     element: <ProductosPage />,
   },
   {
+    to: "/stock",
+    label: "Stock y almacén",
+    roles: gestion,
+    element: <StockPage />,
+  },
+  {
     to: "/categorias",
     label: "Categorías",
     roles: gestion,
@@ -62,8 +70,14 @@ export const sections = [
   {
     to: "/puntos-de-venta",
     label: "Puntos de venta",
-    roles: ["PREVENTOR", "JEFE"],
+    roles: ["PREVENTOR", "JEFE", "ADMINISTRATIVO"],
     element: <PuntosVentaPage />,
+  },
+  {
+    to: "/usuarios",
+    label: "Usuarios internos",
+    roles: ["JEFE"],
+    element: <UsuariosPage />,
   },
   {
     to: "/guia",

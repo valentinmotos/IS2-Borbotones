@@ -2,26 +2,57 @@ package com.dulcemayor.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import com.dulcemayor.entity.Direccion;
-import com.dulcemayor.entity.Localidad;
+import com.dulcemayor.exception.ErrorServiceException;
 import com.dulcemayor.repository.DireccionRepository;
 
+/** E2-06: alta de direcciones con su ubicación en el mapa (datos del componente de E1-04). */
 @Service
 @Transactional(readOnly = true)
 public class DireccionService {
+
     private final DireccionRepository direccionRepository;
     private final LocalidadService localidadService;
+
     public DireccionService(DireccionRepository direccionRepository, LocalidadService localidadService) {
-        this.direccionRepository = direccionRepository; this.localidadService = localidadService;
+        this.direccionRepository = direccionRepository;
+        this.localidadService = localidadService;
     }
+
     @Transactional
-    public Direccion crear(String localidadId, String calle, String numero, String barrio, String manzanaPiso,
-            String casaDepartamento, String referencia, double latitud, double longitud) {
-        Localidad localidad = localidadService.buscarEntidad(localidadId);
-        Direccion d = new Direccion(); d.setLocalidad(localidad); d.setCalle(calle.strip()); d.setNumeracion(numero.strip());
-        d.setBarrio(limpiar(barrio)); d.setManzanaPiso(limpiar(manzanaPiso)); d.setCasaDepartamento(limpiar(casaDepartamento));
-        d.setReferencia(limpiar(referencia)); d.setLatitud(latitud); d.setLongitud(longitud);
-        return direccionRepository.save(d);
+    public Direccion crearDireccion(String calle, String numeracion, String barrio, String manzanaPiso,
+            String casaDepartamento, String referencia, Double latitud, Double longitud, String idLocalidad) {
+        validar(calle, numeracion, latitud, longitud);
+        Direccion direccion = new Direccion();
+        direccion.setLocalidad(localidadService.buscarEntidad(idLocalidad));
+        direccion.setCalle(calle.strip());
+        direccion.setNumeracion(numeracion.strip());
+        direccion.setBarrio(limpiar(barrio));
+        direccion.setManzanaPiso(limpiar(manzanaPiso));
+        direccion.setCasaDepartamento(limpiar(casaDepartamento));
+        direccion.setReferencia(limpiar(referencia));
+        direccion.setLatitud(latitud);
+        direccion.setLongitud(longitud);
+        return direccionRepository.save(direccion);
     }
-    private String limpiar(String v) { return v == null || v.isBlank() ? null : v.strip(); }
+
+    void validar(String calle, String numeracion, Double latitud, Double longitud) {
+        if (calle == null || calle.isBlank()) {
+            throw new ErrorServiceException("Ingresá la calle.", "calle");
+        }
+        if (numeracion == null || numeracion.isBlank()) {
+            throw new ErrorServiceException("Ingresá la numeración.", "numeracion");
+        }
+        if (latitud == null || longitud == null || !Double.isFinite(latitud) || !Double.isFinite(longitud)) {
+            throw new ErrorServiceException("Marcá la ubicación en el mapa.", "latitud");
+        }
+        if (Math.abs(latitud) > 90 || Math.abs(longitud) > 180) {
+            throw new ErrorServiceException("La ubicación marcada no es válida.", "latitud");
+        }
+    }
+
+    private static String limpiar(String valor) {
+        return valor == null || valor.isBlank() ? null : valor.strip();
+    }
 }

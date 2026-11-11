@@ -364,6 +364,33 @@ El listado admite búsqueda por código o nombre y filtro por categoría. La baj
 - `POST /api/productos` y `PUT /api/productos/{id}` reciben `multipart/form-data`. Los campos de texto son `codigo`, `nombre`, `descripcion`, `presentacion`, `unidadesPorBulto` y `categoriaId`. El archivo se envía en `imagen`. Los cambios del producto y su nueva imagen se confirman juntos.
 - `GET /api/productos/{id}` consulta un producto activo y `DELETE /api/productos/{id}` lo da de baja.
 
+## E2-02 · Stock y movimientos de almacén
+
+Cada producto tiene un saldo (`Stock`) y cada cambio queda registrado como un `MovimientoStock` con fecha, tipo (`INGRESO`, `AJUSTE` o `EGRESO`) y cantidad con signo. Un producto sin movimientos tiene saldo 0. **El saldo nunca queda negativo:** un movimiento que lo dejaría por debajo de cero se rechaza con `400` y no se registra. Dos movimientos simultáneos del mismo producto se serializan con un bloqueo de escritura sobre el producto. Los movimientos no se editan ni se borran: un error se corrige con un ajuste.
+
+### Endpoints (JEFE y ADMINISTRATIVO)
+
+- `GET /api/stock`: saldo de cada producto activo (`productoId`, `codigo`, `nombre`, `presentacion`, `cantidadActual`, `sinStock`).
+- `GET /api/stock/{productoId}`: saldo de un producto.
+- `GET /api/stock/{productoId}/movimientos`: historial, del más nuevo al más viejo.
+- `POST /api/stock/ingresos` con `{"productoId": "...", "cantidad": 20, "observacion": "Remito 123"}` → `201` con el saldo nuevo.
+- `POST /api/stock/ajustes` con `{"productoId": "...", "diferencia": -3, "observacion": "Rotura"}` → `201`. Si el saldo quedaría negativo: `400` con `campo: "diferencia"`.
+
+### Cómo probarlo
+
+1. Ingresá como Jefe o Administrativo y abrí [Stock y almacén](http://localhost:5173/stock). Los productos sin movimientos aparecen con 0 y una alerta de stock cero.
+2. Registrá un ingreso de 20 unidades: el saldo pasa de 0 a 20 y la alerta desaparece para ese producto.
+3. Cargá un ajuste de -21: la pantalla lo bloquea y la API lo rechaza. Un ajuste de -5 deja el saldo en 15.
+4. El historial del producto muestra los dos movimientos.
+
+Pruebas: `StockServiceTest` (Mockito) y `StockIntegrationTest` (criterio de aceptación de punta a punta, validaciones y `403` para un preventor). Para ejecutarlas: `mvnw.cmd -Dtest=StockServiceTest,StockIntegrationTest test` desde `backend`.
+
+### Para otros issues
+
+- `StockService.hayStock(idProducto, cantidad): boolean` para el catálogo (E3-01) y el estado `SIN_STOCK` del pedido (E4-01).
+- `StockService.descontar(idProducto, cantidad[, observacion])` para la facturación (E4-04): registra un `EGRESO` y lanza `ErrorServiceException` si la cantidad supera el saldo. Corre en la transacción de quien lo llama.
+- `StockService.reponer(idProducto, cantidad, observacion)` y `buscarStockPorProducto(idProducto)` según la firma del UML.
+
 ## E2-03 · Precios mayoristas con vigencias
 
 Cada producto tiene un historial de precios (`VigenciaPrecio`). Al cargar un precio con su fecha desde, el precio vigente se cierra automáticamente el día anterior, así las vigencias nunca se superponen. **El precio vigente es la vigencia sin fecha de cierre.** Las vigencias no se editan ni se borran: un error se corrige cargando un precio nuevo.
@@ -388,6 +415,33 @@ Pruebas: `VigenciaPrecioServiceTest` (Mockito) y `VigenciaPrecioIntegrationTest`
 
 - `VigenciaPrecioService.buscarPrecioVigente(idProducto): Optional<Double>` para el catálogo (E3-01), el presupuesto del chatbot (E3-04) y el precio unitario del pedido (E4-01). Vacío si el producto no tiene precio.
 - `VigenciaPrecioService.buscarVigenciaPrecioVigente(idProducto): VigenciaPrecioResponse` (lanza `RecursoNoEncontradoException` si no hay precio).
+
+## E2-06 · Puntos de venta y geolocalización
+
+El preventor da de alta un comercio (`PuntoDeVenta`) de un minorista con su dirección y su ubicación en el mapa, usando el componente `DireccionField` de E1-04. El preventor del alta sale siempre del token. **La zona es el departamento** de la localidad de la dirección (el modelo no tiene otra entidad de zona). Las coordenadas son obligatorias: sin un punto marcado en el mapa el alta se rechaza con `400`.
+
+### Endpoints
+
+- `GET /api/puntos-de-venta?departamentoId=…` (JEFE, ADMINISTRATIVO, PREVENTOR): comercios activos, de todas las zonas o de una. Cada ítem trae nombre, minorista, preventor, dirección, localidad, departamento y `latitud`/`longitud`.
+- `GET /api/puntos-de-venta/{id}` (mismos roles).
+- `GET /api/puntos-de-venta/minoristas` (mismos roles): minoristas activos para elegir el responsable.
+- `POST /api/puntos-de-venta` (solo PREVENTOR) con `{"nombreComercio", "minoristaId", "localidadId", "calle", "numeracion", "barrio", "manzanaPiso", "casaDepartamento", "referencia", "latitud", "longitud"}` → `201`. Un usuario sin perfil de preventor recibe `400` con un mensaje claro.
+
+### Cómo probarlo
+
+1. Ingresá como `preventor@dulcemayor.com.ar` y abrí [Puntos de venta](http://localhost:5173/puntos-de-venta). Los datos de demo ya traen el "Kiosco Centro" en Capital.
+2. Cargá un kiosco nuevo: nombre, minorista, departamento, localidad, calle y numeración, y marcá el punto en el mapa (o buscá la dirección).
+3. Al guardar, la pantalla cambia a la zona del comercio y el marcador aparece en el mapa y en la tabla.
+4. Como Jefe o Administrativo, la misma pantalla muestra el mapa y la tabla, sin el formulario de alta.
+
+Pruebas: `PuntoDeVentaServiceTest` (Mockito) y `PuntoDeVentaIntegrationTest` (criterio de aceptación de punta a punta con un preventor real, coordenadas faltantes, minorista inexistente y `403` para administrativo y distribuidor). Para ejecutarlas: `mvnw.cmd -Dtest=PuntoDeVentaServiceTest,PuntoDeVentaIntegrationTest test` desde `backend`.
+
+### Para otros issues
+
+- `PuntoDeVentaService.listarPuntoDeVentaPorPreventor(idPreventor)` para elegir un comercio existente en el portal del preventor (E4-02).
+- `PuntoDeVentaService.listarPuntoDeVentaPorMinorista(idMinorista)` para el perfil del minorista (E2-07).
+- `PreventorService.buscarPreventorPorUsuario(idUsuario)`: el preventor del token.
+- `DireccionService.crearDireccion(...)`: alta de una dirección con validación de coordenadas, reutilizable por E2-07.
 
 ## Docker · E0-09
 
@@ -543,8 +597,8 @@ Las claves de demo no son temporales, para no tener que cambiarlas en cada base 
   `UsuarioAutenticado` trae `id`, `nombreUsuario`, `rol` y `claveTemporal`.
 - **Reglas por rol de un recurso nuevo:** sumar una línea en `SecurityConfig` antes de la regla general de `/api/**`, p. ej. `.requestMatchers(HttpMethod.POST, "/api/pedidos/**").hasAnyRole("JEFE", "PREVENTOR")`. Para reglas finas sobre un método, `@PreAuthorize("hasRole('JEFE')")`. Lo que no se marque queda para el personal interno, nunca para el minorista.
 - **Endpoints del minorista (E2-07, E4…):** van bajo `/api/minorista/**`. **Endpoints públicos** (catálogo, sucursales, cotización, chatbot, imágenes): bajo `/api/publico/**`.
-- **E2-04 (registro de minoristas):** `usuarioService.crearUsuario(correo, RolUsuario.MINORISTA, clave, false)` y después `usuario.setActivo(false)` hasta activar la cuenta; el login de una cuenta inactiva responde 401 *Tu cuenta todavía no está activada…*.
-- **E2-05 (ABM de usuarios internos):** `usuarioService.crearUsuario(correo, rol)` crea con `dulcemayor` temporal. Para el reseteo de clave, volver a poner la clave por defecto con `claveTemporal = true` e incrementar `versionToken`.
+- **E2-04 (registro de minoristas):** el portal público ofrece `/registro` con nombre, apellido, fecha de nacimiento, tipo y número de documento, correo y clave. `POST /api/publico/registro` crea el usuario inactivo, el perfil `Minorista` y el contacto de correo; envía un código de seis dígitos por SMTP que vence a los 15 minutos. `POST /api/publico/registro/activar` valida el correo y el código; hay hasta cinco intentos y `POST /api/publico/registro/reenviar` permite solicitar otro código con un intervalo mínimo de 60 segundos. El código se guarda con BCrypt. El login de una cuenta pendiente responde 401 *Tu cuenta todavía no está activada…*.
+- **E2-05 (ABM de usuarios internos):** `/usuarios` y `/api/usuarios/internos` son exclusivos de Jefe. El alta permite Administrativo, Preventor y Distribuidor, con clave `dulcemayor` y cambio obligatorio. Preventores y Distribuidores incluyen nombre, apellido, fecha de nacimiento, tipo y número de documento y legajo; Administrativo solo requiere correo y rol. El reseteo vuelve a la clave temporal e invalida tokens anteriores. Se pueden editar roles, excepto el cambio directo entre Preventor y Distribuidor porque cada uno tiene una entidad de perfil distinta; nunca se permite cambiar el rol o dar de baja al último Jefe activo. La baja es lógica. El controller usa `AbstractCrudController` y el service `AbstractCrudService` (Template Method).
 - **Tests con seguridad:** en `@WebMvcTest`, `@Import({ SecurityConfig.class, ErroresSeguridadHandler.class, JwtService.class })`, `@MockitoBean UsuarioRepository` y `@WithMockUser(roles = "ADMINISTRATIVO")` (ver `CategoriaControllerTest`). En `@SpringBootTest` alcanza con `@WithMockUser`, o con un token real como en `SeguridadIntegrationTest`.
 
 ## Servicio de correo asíncrono

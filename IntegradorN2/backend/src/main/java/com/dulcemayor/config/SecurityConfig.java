@@ -41,6 +41,8 @@ import jakarta.servlet.DispatcherType;
  * POST /api/imagenes                      JEFE, ADMINISTRATIVO (E1-05)
  * /api/auth/**                            cualquier usuario autenticado (también con clave temporal)
  * /api/categorias/**                      JEFE, ADMINISTRATIVO
+ * POST /api/puntos-de-venta               PREVENTOR (E2-06)
+ * GET  /api/puntos-de-venta/**            JEFE, ADMINISTRATIVO, PREVENTOR (E2-06)
  * /api/minorista/**                       MINORISTA
  * /api/**                                 personal interno: JEFE, ADMINISTRATIVO, PREVENTOR, DISTRIBUIDOR
  * cualquier otra ruta                     denegada
@@ -95,8 +97,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").authenticated()
                         // Reglas por recurso (cada issue agrega las suyas acá)
                         .requestMatchers("/api/categorias/**", "/api/productos/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
+                        // E2-02: stock y movimientos de almacén
+                        .requestMatchers("/api/stock/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
+                        // E2-06: el preventor da de alta comercios; gestión y preventa los consultan
+                        .requestMatchers(HttpMethod.POST, "/api/puntos-de-venta").hasRole("PREVENTOR")
+                        .requestMatchers(HttpMethod.GET, "/api/puntos-de-venta", "/api/puntos-de-venta/**")
+                        .hasAnyRole("JEFE", "ADMINISTRATIVO", "PREVENTOR")
+                        .requestMatchers("/api/puntos-de-venta/**").denyAll()
                         .requestMatchers("/api/empresas/**", "/api/sucursales/**", "/api/formas-de-pago/**")
                         .hasAnyRole("JEFE", "ADMINISTRATIVO")
+                        .requestMatchers("/api/usuarios/internos/**").hasRole("JEFE")
                         // E1-05: suben imágenes quienes cargan productos, sucursales y la empresa
                         .requestMatchers(HttpMethod.POST, "/api/imagenes").hasAnyRole("JEFE", "ADMINISTRATIVO")
                         .requestMatchers("/api/minorista/**").hasRole("MINORISTA")

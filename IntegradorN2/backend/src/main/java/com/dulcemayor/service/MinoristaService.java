@@ -1,34 +1,41 @@
 package com.dulcemayor.service;
 
 import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.dulcemayor.dto.MinoristaOpcion;
-import com.dulcemayor.repository.MinoristaRepository;
-import com.dulcemayor.entity.Minorista;
-import com.dulcemayor.entity.enums.TipoDocumento;
-import java.time.LocalDate;
 
+import com.dulcemayor.dto.MinoristaOpcion;
+import com.dulcemayor.entity.Minorista;
+import com.dulcemayor.exception.RecursoNoEncontradoException;
+import com.dulcemayor.repository.MinoristaRepository;
+
+/** E2-06: consultas de minoristas que necesitan los puntos de venta. El registro es de E2-04. */
 @Service
 @Transactional(readOnly = true)
 public class MinoristaService {
+
+    private static final String MINORISTA_NO_ENCONTRADO = "No se encontró el minorista.";
+
     private final MinoristaRepository minoristaRepository;
-    public MinoristaService(MinoristaRepository minoristaRepository) { this.minoristaRepository = minoristaRepository; }
-    public List<MinoristaOpcion> listarActivos() {
-        return minoristaRepository.findByEliminadoFalse().stream()
-                .sorted(java.util.Comparator.comparing(com.dulcemayor.entity.Minorista::getApellido)
-                        .thenComparing(com.dulcemayor.entity.Minorista::getNombre))
-                .map(m -> new MinoristaOpcion(m.getId(), m.getNombre(), m.getApellido(), m.getNumeroDocumento())).toList();
+
+    public MinoristaService(MinoristaRepository minoristaRepository) {
+        this.minoristaRepository = minoristaRepository;
     }
-    public com.dulcemayor.entity.Minorista buscarEntidad(String id) {
+
+    /** Minoristas activos ordenados por apellido y nombre. */
+    public List<MinoristaOpcion> listarMinoristaActivo() {
+        return minoristaRepository.findByEliminadoFalseOrderByApellidoAscNombreAsc().stream()
+                .map(m -> new MinoristaOpcion(m.getId(), m.getNombre(), m.getApellido(), m.getNumeroDocumento()))
+                .toList();
+    }
+
+    /** Para otros services: el minorista activo o 404. */
+    public Minorista buscarEntidad(String id) {
+        if (id == null || id.isBlank()) {
+            throw new RecursoNoEncontradoException(MINORISTA_NO_ENCONTRADO);
+        }
         return minoristaRepository.findByIdAndEliminadoFalse(id)
-                .orElseThrow(() -> new com.dulcemayor.exception.RecursoNoEncontradoException("No se encontró el minorista."));
-    }
-    @Transactional
-    public Minorista crearDemo() {
-        Minorista m = new Minorista(); m.setNombre("Kiosco"); m.setApellido("Centro");
-        m.setFechaNacimiento(LocalDate.of(1985, 1, 1)); m.setTipoDocumento(TipoDocumento.DNI);
-        m.setNumeroDocumento("30000002");
-        return minoristaRepository.save(m);
+                .orElseThrow(() -> new RecursoNoEncontradoException(MINORISTA_NO_ENCONTRADO));
     }
 }

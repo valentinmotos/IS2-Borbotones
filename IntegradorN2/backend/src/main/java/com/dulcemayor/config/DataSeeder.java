@@ -1,5 +1,7 @@
 package com.dulcemayor.config;
 
+import java.time.LocalDate;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -14,12 +16,19 @@ import com.dulcemayor.dto.DepartamentoResponse;
 import com.dulcemayor.dto.FormaDePagoRequest;
 import com.dulcemayor.dto.LocalidadRequest;
 import com.dulcemayor.dto.MayoristaRequest;
+import com.dulcemayor.dto.PuntoDeVentaRequest;
 import com.dulcemayor.dto.SucursalRequest;
+import com.dulcemayor.entity.Minorista;
+import com.dulcemayor.entity.Preventor;
+import com.dulcemayor.entity.Usuario;
 import com.dulcemayor.entity.enums.RolUsuario;
+import com.dulcemayor.entity.enums.TipoDocumento;
 import com.dulcemayor.entity.enums.TipoEmpresa;
 import com.dulcemayor.entity.enums.TipoImagen;
 import com.dulcemayor.entity.enums.TipoPago;
 import com.dulcemayor.repository.LocalidadRepository;
+import com.dulcemayor.repository.MinoristaRepository;
+import com.dulcemayor.repository.PreventorRepository;
 import com.dulcemayor.service.CategoriaService;
 import com.dulcemayor.service.DepartamentoService;
 import com.dulcemayor.service.FormaDePagoService;
@@ -29,8 +38,6 @@ import com.dulcemayor.service.MayoristaService;
 import com.dulcemayor.service.SucursalService;
 import com.dulcemayor.service.UsuarioService;
 import com.dulcemayor.service.PuntoDeVentaService;
-import com.dulcemayor.service.PreventorService;
-import com.dulcemayor.service.MinoristaService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
@@ -53,15 +60,16 @@ public class DataSeeder implements CommandLineRunner {
     private final FormaDePagoService formaDePagoService;
     private final LocalidadRepository localidadRepository;
     private final PuntoDeVentaService puntoDeVentaService;
-    private final PreventorService preventorService;
-    private final MinoristaService minoristaService;
+    private final PreventorRepository preventorRepository;
+    private final MinoristaRepository minoristaRepository;
 
     public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
             UsuarioService usuarioService, ImagenService imagenService,
             DepartamentoService departamentoService, LocalidadService localidadService,
             MayoristaService mayoristaService, SucursalService sucursalService,
             FormaDePagoService formaDePagoService, LocalidadRepository localidadRepository,
-            PuntoDeVentaService puntoDeVentaService, PreventorService preventorService, MinoristaService minoristaService) {
+            PuntoDeVentaService puntoDeVentaService, PreventorRepository preventorRepository,
+            MinoristaRepository minoristaRepository) {
         this.entityManager = entityManager;
         this.categoriaService = categoriaService;
         this.usuarioService = usuarioService;
@@ -73,8 +81,8 @@ public class DataSeeder implements CommandLineRunner {
         this.formaDePagoService = formaDePagoService;
         this.localidadRepository = localidadRepository;
         this.puntoDeVentaService = puntoDeVentaService;
-        this.preventorService = preventorService;
-        this.minoristaService = minoristaService;
+        this.preventorRepository = preventorRepository;
+        this.minoristaRepository = minoristaRepository;
     }
 
     @Override
@@ -155,13 +163,34 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
+    /** E2-06: perfiles de demo del preventor y del minorista, y un kiosco en el centro de Mendoza. */
     private void cargarPuntosDeVenta() {
-        var preventor = preventorService.crearDemo("preventor@dulcemayor.com.ar");
-        var minorista = minoristaService.crearDemo();
+        Usuario usuarioPreventor = usuarioService.buscarUsuarioPorNombre("preventor@dulcemayor.com.ar");
+        Preventor preventor = new Preventor();
+        preventor.setNombre("Pedro");
+        preventor.setApellido("Preventor");
+        preventor.setFechaNacimiento(LocalDate.of(1990, 1, 1));
+        preventor.setTipoDocumento(TipoDocumento.DNI);
+        preventor.setNumeroDocumento("30000001");
+        preventor.setLegajo("P-001");
+        preventor.setUsuario(usuarioPreventor);
+        preventorRepository.save(preventor);
+
+        Minorista minorista = new Minorista();
+        minorista.setNombre("Marta");
+        minorista.setApellido("Minorista");
+        minorista.setFechaNacimiento(LocalDate.of(1985, 1, 1));
+        minorista.setTipoDocumento(TipoDocumento.DNI);
+        minorista.setNumeroDocumento("30000002");
+        minorista.setUsuario(usuarioService.buscarUsuarioPorNombre("minorista@dulcemayor.com.ar"));
+        minorista = minoristaRepository.save(minorista);
+
         var localidad = localidadRepository.findByEliminadoFalse(Sort.by("nombre")).get(0);
-        puntoDeVentaService.crearDemo("Kiosco Centro", minorista.getId(), localidad.getId(),
-                "San Martín", "850", -32.8878, -68.8421, preventor.getId());
+        puntoDeVentaService.crearPuntoDeVenta(new PuntoDeVentaRequest("Kiosco Centro", minorista.getId(),
+                localidad.getId(), "San Martín", "850", "Centro", null, null, "Punto de venta de demostración",
+                -32.8878, -68.8421), usuarioPreventor.getId());
     }
+
     private void cargarPedidos() { /* E6-04. */ }
 
     private boolean baseVacia() {

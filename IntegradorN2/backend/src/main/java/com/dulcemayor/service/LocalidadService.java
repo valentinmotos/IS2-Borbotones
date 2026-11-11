@@ -49,12 +49,6 @@ public class LocalidadService extends AbstractCrudService<Localidad, LocalidadRe
         return buscar(id);
     }
 
-    public Localidad buscarEntidad(String id) {
-        if (id == null || id.isBlank()) throw new RecursoNoEncontradoException("No se encontró la localidad.");
-        return localidadRepository.findByIdAndEliminadoFalse(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró la localidad."));
-    }
-
     public LocalidadResponse buscarLocalidadPorCodigoPostal(String codigoPostal) {
         String codigo = codigoPostal == null ? "" : codigoPostal.strip();
         Localidad localidad = localidadRepository.findByCodigoPostalAndEliminadoFalse(codigo)
