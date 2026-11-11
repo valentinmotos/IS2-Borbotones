@@ -1,26 +1,29 @@
 package com.dulcemayor.controller;
 
 import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.dulcemayor.dto.UsuarioInternoRequest;
 import com.dulcemayor.dto.UsuarioInternoResponse;
-import com.dulcemayor.exception.ErrorServiceException;
 import com.dulcemayor.security.UsuarioAutenticado;
 import com.dulcemayor.service.UsuarioInternoService;
-import jakarta.validation.Valid;
 
+/**
+ * E2-05: ABM de usuarios internos (solo JEFE, regla en SecurityConfig). Extiende el
+ * AbstractCrudController de E0-08 y redefine sus métodos con la MISMA firma, así las rutas
+ * GET/POST/PUT/DELETE se heredan sin duplicarse. Las reglas sobre la propia cuenta (no editarse,
+ * no darse de baja, no resetearse la clave) las valida el service con el usuario del token.
+ */
 @RestController
 @RequestMapping("/api/usuarios/internos")
 public class UsuarioInternoController extends AbstractCrudController<UsuarioInternoRequest, UsuarioInternoResponse> {
@@ -33,37 +36,23 @@ public class UsuarioInternoController extends AbstractCrudController<UsuarioInte
     }
 
     @Override
-    @GetMapping
     public List<UsuarioInternoResponse> listar() {
         return usuarioInternoService.listarUsuariosInternos();
     }
 
     @Override
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public UsuarioInternoResponse crear(@Valid @RequestBody UsuarioInternoRequest request) {
+    public UsuarioInternoResponse crear(UsuarioInternoRequest request) {
         return usuarioInternoService.crearUsuarioInterno(request);
     }
 
     @Override
-    @PutMapping("/{id}")
-    public UsuarioInternoResponse modificar(@PathVariable String id,
-            @Valid @RequestBody UsuarioInternoRequest request,
-            @AuthenticationPrincipal UsuarioAutenticado actual) {
-        if (actual != null && actual.id().equals(id)) {
-            throw new ErrorServiceException("No podés modificar tu propia cuenta desde esta pantalla.");
-        }
-        return usuarioInternoService.modificarUsuarioInterno(id, request);
+    public UsuarioInternoResponse modificar(String id, UsuarioInternoRequest request) {
+        return usuarioInternoService.modificarUsuarioInterno(id, request, idUsuarioActual());
     }
 
     @Override
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable String id,
-            @AuthenticationPrincipal UsuarioAutenticado actual) {
-        if (actual != null && actual.id().equals(id)) {
-            throw new ErrorServiceException("No podés dar de baja tu propia cuenta.");
-        }
-        usuarioInternoService.eliminarUsuarioInterno(id);
+    public ResponseEntity<Void> eliminar(String id) {
+        usuarioInternoService.eliminarUsuarioInterno(id, idUsuarioActual());
         return ResponseEntity.noContent().build();
     }
 
@@ -71,9 +60,14 @@ public class UsuarioInternoController extends AbstractCrudController<UsuarioInte
     @ResponseStatus(HttpStatus.OK)
     public UsuarioInternoResponse resetearClave(@PathVariable String id,
             @AuthenticationPrincipal UsuarioAutenticado actual) {
-        if (actual != null && actual.id().equals(id)) {
-            throw new ErrorServiceException("No podés resetear tu propia clave desde esta pantalla.");
-        }
-        return usuarioInternoService.resetearClave(id);
+        return usuarioInternoService.resetearClave(id, actual == null ? null : actual.id());
+    }
+
+    /** Id del usuario del token (los métodos heredados no pueden sumar el parámetro del principal). */
+    private static String idUsuarioActual() {
+        Authentication autenticacion = SecurityContextHolder.getContext().getAuthentication();
+        return autenticacion != null && autenticacion.getPrincipal() instanceof UsuarioAutenticado usuario
+                ? usuario.id()
+                : null;
     }
 }

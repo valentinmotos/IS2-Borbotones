@@ -40,7 +40,8 @@ export default function RegistroMinoristaPage() {
     setPendiente(true);
     setError(null);
     try {
-      const { confirmarClave, ...request } = datos;
+      // La confirmación solo se controla en la pantalla; la API no la recibe.
+      const { confirmarClave: _confirmarClave, ...request } = datos;
       const respuesta = await api.post("/publico/registro", request);
       setMensaje(respuesta.data.mensaje);
       setFase("activacion");

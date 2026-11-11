@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, ConfirmDialog, DataTable, FormField } from "../../../../../packages/design/components.jsx";
 import { api } from "../../../lib/api.js";
 
@@ -31,22 +31,27 @@ export default function UsuariosPage() {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
 
-  const cargar = useCallback(async (signal) => {
-    try {
-      const respuesta = await api.get(url, { signal });
-      if (!signal?.aborted) setUsuarios(respuesta.data);
-    } catch (error) {
-      if (!signal?.aborted) setAviso({ tono: "danger", texto: error.message });
-    } finally {
-      if (!signal?.aborted) setCargando(false);
-    }
-  }, []);
+  const [version, setVersion] = useState(0);
+  const cargar = () => setVersion((v) => v + 1);
 
   useEffect(() => {
     const controller = new AbortController();
-    void cargar(controller.signal);
+    const { signal } = controller;
+    api
+      .get(url, { signal })
+      .then(
+        (respuesta) => {
+          if (!signal.aborted) setUsuarios(respuesta.data);
+        },
+        (error) => {
+          if (!signal.aborted) setAviso({ tono: "danger", texto: error.message });
+        },
+      )
+      .finally(() => {
+        if (!signal.aborted) setCargando(false);
+      });
     return () => controller.abort();
-  }, [cargar]);
+  }, [version]);
 
   function limpiar() {
     setCorreo("");
@@ -90,7 +95,7 @@ export default function UsuariosPage() {
           ? `Actualizaste la cuenta ${respuesta.data.correo}.`
           : `Creaste la cuenta ${respuesta.data.correo}. Su clave inicial es «dulcemayor» y deberá cambiarla al ingresar.`,
       });
-      await cargar();
+      cargar();
     } catch (error) {
       setAviso({ tono: "danger", texto: error.message });
     } finally {
@@ -105,7 +110,7 @@ export default function UsuariosPage() {
         tono: "success",
         texto: `La clave de ${usuario.correo} se restableció a «dulcemayor»; deberá cambiarla al ingresar.`,
       });
-      await cargar();
+      cargar();
     } catch (error) {
       setAviso({ tono: "danger", texto: error.message });
     }
@@ -118,7 +123,7 @@ export default function UsuariosPage() {
       await api.delete(`${url}/${encodeURIComponent(usuario.id)}`);
       if (editando?.id === usuario.id) limpiar();
       setAviso({ tono: "success", texto: `Diste de baja la cuenta ${usuario.correo}.` });
-      await cargar();
+      cargar();
     } catch (error) {
       setAviso({ tono: "danger", texto: error.message });
     }
