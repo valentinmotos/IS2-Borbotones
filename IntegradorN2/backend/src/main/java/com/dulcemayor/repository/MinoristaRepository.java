@@ -12,6 +12,9 @@ public interface MinoristaRepository extends BaseRepository<Minorista> {
 
     List<Minorista> findByEliminadoFalse();
 
+    /** E2-07: el minorista del usuario autenticado. */
+    Optional<Minorista> findByUsuario_IdAndEliminadoFalse(String usuarioId);
+
     /** E2-06: minoristas activos para elegir como responsables de un punto de venta. */
     List<Minorista> findByEliminadoFalseOrderByApellidoAscNombreAsc();
 }

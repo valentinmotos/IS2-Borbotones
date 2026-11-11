@@ -16,6 +16,7 @@ import com.dulcemayor.dto.DepartamentoResponse;
 import com.dulcemayor.dto.FormaDePagoRequest;
 import com.dulcemayor.dto.LocalidadRequest;
 import com.dulcemayor.dto.MayoristaRequest;
+import com.dulcemayor.dto.PerfilMinoristaRequest;
 import com.dulcemayor.dto.PuntoDeVentaRequest;
 import com.dulcemayor.dto.SucursalRequest;
 import com.dulcemayor.entity.Minorista;
@@ -37,6 +38,7 @@ import com.dulcemayor.service.LocalidadService;
 import com.dulcemayor.service.MayoristaService;
 import com.dulcemayor.service.SucursalService;
 import com.dulcemayor.service.UsuarioService;
+import com.dulcemayor.service.MinoristaService;
 import com.dulcemayor.service.PuntoDeVentaService;
 
 import jakarta.persistence.EntityManager;
@@ -62,6 +64,7 @@ public class DataSeeder implements CommandLineRunner {
     private final PuntoDeVentaService puntoDeVentaService;
     private final PreventorRepository preventorRepository;
     private final MinoristaRepository minoristaRepository;
+    private final MinoristaService minoristaService;
 
     public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
             UsuarioService usuarioService, ImagenService imagenService,
@@ -69,7 +72,7 @@ public class DataSeeder implements CommandLineRunner {
             MayoristaService mayoristaService, SucursalService sucursalService,
             FormaDePagoService formaDePagoService, LocalidadRepository localidadRepository,
             PuntoDeVentaService puntoDeVentaService, PreventorRepository preventorRepository,
-            MinoristaRepository minoristaRepository) {
+            MinoristaRepository minoristaRepository, MinoristaService minoristaService) {
         this.entityManager = entityManager;
         this.categoriaService = categoriaService;
         this.usuarioService = usuarioService;
@@ -83,6 +86,7 @@ public class DataSeeder implements CommandLineRunner {
         this.puntoDeVentaService = puntoDeVentaService;
         this.preventorRepository = preventorRepository;
         this.minoristaRepository = minoristaRepository;
+        this.minoristaService = minoristaService;
     }
 
     @Override
@@ -189,6 +193,11 @@ public class DataSeeder implements CommandLineRunner {
         puntoDeVentaService.crearPuntoDeVenta(new PuntoDeVentaRequest("Kiosco Centro", minorista.getId(),
                 localidad.getId(), "San Martín", "850", "Centro", null, null, "Punto de venta de demostración",
                 -32.8878, -68.8421), usuarioPreventor.getId());
+
+        // E2-07: la dirección de entrega del minorista de demo se carga como desde su perfil
+        minoristaService.modificarMinorista(minorista.getUsuario().getId(), new PerfilMinoristaRequest(
+                minorista.getNombre(), minorista.getApellido(), minorista.getFechaNacimiento(), localidad.getId(),
+                "San Martín", "850", "Centro", null, null, "Entregar en el kiosco", -32.8878, -68.8421));
     }
 
     private void cargarPedidos() { /* E6-04. */ }

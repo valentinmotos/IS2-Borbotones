@@ -7,7 +7,7 @@ import com.dulcemayor.entity.Direccion;
 import com.dulcemayor.exception.ErrorServiceException;
 import com.dulcemayor.repository.DireccionRepository;
 
-/** E2-06: alta de direcciones con su ubicación en el mapa (datos del componente de E1-04). */
+/** E2-06 y E2-07: alta y modificación de direcciones con su ubicación en el mapa (componente de E1-04). */
 @Service
 @Transactional(readOnly = true)
 public class DireccionService {
@@ -23,8 +23,23 @@ public class DireccionService {
     @Transactional
     public Direccion crearDireccion(String calle, String numeracion, String barrio, String manzanaPiso,
             String casaDepartamento, String referencia, Double latitud, Double longitud, String idLocalidad) {
+        return guardar(new Direccion(), calle, numeracion, barrio, manzanaPiso, casaDepartamento, referencia,
+                latitud, longitud, idLocalidad);
+    }
+
+    /** E2-07: actualiza una dirección existente con las mismas validaciones del alta. */
+    @Transactional
+    public Direccion modificarDireccion(Direccion direccion, String calle, String numeracion, String barrio,
+            String manzanaPiso, String casaDepartamento, String referencia, Double latitud, Double longitud,
+            String idLocalidad) {
+        return guardar(direccion, calle, numeracion, barrio, manzanaPiso, casaDepartamento, referencia,
+                latitud, longitud, idLocalidad);
+    }
+
+    private Direccion guardar(Direccion direccion, String calle, String numeracion, String barrio,
+            String manzanaPiso, String casaDepartamento, String referencia, Double latitud, Double longitud,
+            String idLocalidad) {
         validar(calle, numeracion, latitud, longitud);
-        Direccion direccion = new Direccion();
         direccion.setLocalidad(localidadService.buscarEntidad(idLocalidad));
         direccion.setCalle(calle.strip());
         direccion.setNumeracion(numeracion.strip());

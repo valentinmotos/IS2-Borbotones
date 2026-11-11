@@ -1,10 +1,11 @@
-import { Link, NavLink, Route, Routes } from "react-router-dom";
+import { Link, NavLink, Outlet, Route, Routes } from "react-router-dom";
 import CreditsPage from "./CreditsPage.jsx";
 import PublicLayout from "./PublicLayout.jsx";
 import HomePage from "../modules/home/pages/HomePage.jsx";
 import CompanyPage from "../modules/company/pages/CompanyPage.jsx";
 import BuyingPage from "../modules/buying/pages/BuyingPage.jsx";
 import RegistroMinoristaPage from "../modules/registro/pages/RegistroMinoristaPage.jsx";
+import PerfilPage from "../modules/cuenta/pages/PerfilPage.jsx";
 import SessionProvider from "../../../packages/auth/SessionProvider.jsx";
 import {
   ChangePasswordPage,
@@ -22,7 +23,8 @@ const otherLogin = {
   label: "Ingresar al portal del personal",
 };
 
-function AccountPage() {
+// E2-07: la cuenta del minorista es un layout con menú; cada sección se muestra en el Outlet.
+function AccountLayout() {
   const { user, home } = useSession();
   return (
     <section className="wrap shop-notice role-workspace">
@@ -33,15 +35,25 @@ function AccountPage() {
           <NavLink to={home} end>
             Mi cuenta
           </NavLink>
+          <NavLink to={`${home}/datos`}>Mis datos</NavLink>
           <Link to="/">Ver surtido</Link>
         </nav>
         <LogoutButton />
       </aside>
-      <div>
-        <h1>Mi cuenta</h1>
-        <p>Ingresaste al portal minorista de Dulce Mayor.</p>
-      </div>
+      <Outlet />
     </section>
+  );
+}
+
+function AccountHome() {
+  return (
+    <div>
+      <h1>Mi cuenta</h1>
+      <p>Ingresaste al portal minorista de Dulce Mayor.</p>
+      <p>
+        <Link to="datos">Completá tus datos y tu dirección de entrega</Link>
+      </p>
+    </div>
   );
 }
 
@@ -68,7 +80,10 @@ export default function App() {
           <Route path="registro" element={<RegistroMinoristaPage />} />
           <Route path="cambiar-clave" element={<ChangePasswordPage />} />
           <Route element={<RequireAccess roles={["MINORISTA"]} />}>
-            <Route path="cuenta" element={<AccountPage />} />
+            <Route path="cuenta" element={<AccountLayout />}>
+              <Route index element={<AccountHome />} />
+              <Route path="datos" element={<PerfilPage />} />
+            </Route>
           </Route>
           <Route path="*" element={<NotFound />} />
         </Route>

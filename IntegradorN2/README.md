@@ -443,6 +443,33 @@ Pruebas: `PuntoDeVentaServiceTest` (Mockito) y `PuntoDeVentaIntegrationTest` (cr
 - `PreventorService.buscarPreventorPorUsuario(idUsuario)`: el preventor del token.
 - `DireccionService.crearDireccion(...)`: alta de una dirección con validación de coordenadas, reutilizable por E2-07.
 
+## E2-07 · Perfil del minorista
+
+El minorista autenticado edita sus datos personales (nombre, apellido y fecha de nacimiento; tiene que ser mayor de 18) y su **dirección de entrega** con el componente `DireccionField` de E1-04, y puede cambiar su clave cuando quiera. El documento y el correo se muestran pero no se editan: identifican a la persona y a su cuenta. El minorista sale siempre del token, así nadie puede ver ni modificar el perfil de otro.
+
+**Desvío del UML:** el diagrama no le da dirección al `Minorista`. Se agregó `Minorista.direccionEntrega` (relación opcional con `Direccion`, columna `direccion_entrega_id`), porque al registrarse todavía no la tiene. La primera vez que guarda el perfil se crea la dirección; después se modifica la misma.
+
+### Endpoints (MINORISTA)
+
+- `GET /api/minorista/perfil`: datos del minorista, correo, documento y dirección de entrega (`departamentoId`, `localidadId`, `localidad`, `calle`, …, `latitud`, `longitud`; null si todavía no cargó una).
+- `PUT /api/minorista/perfil` con `{"nombre", "apellido", "fechaNacimiento", "localidadId", "calle", "numeracion", "barrio", "manzanaPiso", "casaDepartamento", "referencia", "latitud", "longitud"}` → `200` con el perfil actualizado.
+- Cambio de clave voluntario: `PUT /api/auth/clave` (E1-01), que devuelve un token nuevo.
+- Para usar el componente de dirección, el minorista puede hacer `GET` de `/api/departamentos`, `/api/departamentos/{id}/localidades`, `/api/localidades/**` y `/api/geocodificacion`. Las altas, modificaciones y bajas siguen siendo internas.
+
+### Cómo probarlo
+
+1. Ingresá en el [sitio público](http://localhost:5174/login) con `minorista@dulcemayor.com.ar` y abrí **Mi cuenta → Mis datos**. El minorista de demo ya trae una dirección en el centro.
+2. Cambiá el nombre, elegí otro departamento y localidad (por ejemplo Godoy Cruz), marcá el punto en el mapa y guardá.
+3. Recargá la página: los datos y la dirección siguen en la localidad elegida.
+4. En **Cambiar clave**, ingresá la actual y una nueva; cerrá sesión y entrá con la clave nueva.
+
+Pruebas: `MinoristaServiceTest` (Mockito: dirección en la localidad elegida, segundo guardado sobre la misma dirección, menor de edad y ubicación faltante) y `PerfilMinoristaIntegrationTest` (criterio de aceptación de punta a punta, validaciones, acceso del minorista al componente de dirección y `403` para un preventor). Para ejecutarlas: `mvnw.cmd -Dtest=MinoristaServiceTest,PerfilMinoristaIntegrationTest test` desde `backend`.
+
+### Para otros issues
+
+- `MinoristaService.buscarPerfil(idUsuario)` y `Minorista.getDireccionEntrega()`: dirección de entrega del minorista para pedidos, facturas y rutas.
+- `DireccionService.modificarDireccion(direccion, …)`: modificar una dirección existente con las mismas validaciones del alta.
+
 ## Docker · E0-09
 
 `docker-compose.yml` levanta la base, el servidor y los dos clientes. Ollama es opcional.
