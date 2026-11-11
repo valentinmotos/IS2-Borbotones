@@ -39,12 +39,6 @@ public class ProductoService extends AbstractCrudService<Producto, ProductoReque
         return productos.buscarActivos(texto, categoria);
     }
 
-    /** Bloquea el producto durante una operación de almacén para serializar cambios concurrentes. */
-    public Producto buscarParaMovimientoStock(String productoId) {
-        return productos.buscarActivoParaActualizar(productoId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró el producto."));
-    }
-
     @Override
     public List<ProductoResponse> listarActivos() {
         return buscarActivos("", "");

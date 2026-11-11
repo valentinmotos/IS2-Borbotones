@@ -364,6 +364,33 @@ El listado admite búsqueda por código o nombre y filtro por categoría. La baj
 - `POST /api/productos` y `PUT /api/productos/{id}` reciben `multipart/form-data`. Los campos de texto son `codigo`, `nombre`, `descripcion`, `presentacion`, `unidadesPorBulto` y `categoriaId`. El archivo se envía en `imagen`. Los cambios del producto y su nueva imagen se confirman juntos.
 - `GET /api/productos/{id}` consulta un producto activo y `DELETE /api/productos/{id}` lo da de baja.
 
+## E2-02 · Stock y movimientos de almacén
+
+Cada producto tiene un saldo (`Stock`) y cada cambio queda registrado como un `MovimientoStock` con fecha, tipo (`INGRESO`, `AJUSTE` o `EGRESO`) y cantidad con signo. Un producto sin movimientos tiene saldo 0. **El saldo nunca queda negativo:** un movimiento que lo dejaría por debajo de cero se rechaza con `400` y no se registra. Dos movimientos simultáneos del mismo producto se serializan con un bloqueo de escritura sobre el producto. Los movimientos no se editan ni se borran: un error se corrige con un ajuste.
+
+### Endpoints (JEFE y ADMINISTRATIVO)
+
+- `GET /api/stock`: saldo de cada producto activo (`productoId`, `codigo`, `nombre`, `presentacion`, `cantidadActual`, `sinStock`).
+- `GET /api/stock/{productoId}`: saldo de un producto.
+- `GET /api/stock/{productoId}/movimientos`: historial, del más nuevo al más viejo.
+- `POST /api/stock/ingresos` con `{"productoId": "...", "cantidad": 20, "observacion": "Remito 123"}` → `201` con el saldo nuevo.
+- `POST /api/stock/ajustes` con `{"productoId": "...", "diferencia": -3, "observacion": "Rotura"}` → `201`. Si el saldo quedaría negativo: `400` con `campo: "diferencia"`.
+
+### Cómo probarlo
+
+1. Ingresá como Jefe o Administrativo y abrí [Stock y almacén](http://localhost:5173/stock). Los productos sin movimientos aparecen con 0 y una alerta de stock cero.
+2. Registrá un ingreso de 20 unidades: el saldo pasa de 0 a 20 y la alerta desaparece para ese producto.
+3. Cargá un ajuste de -21: la pantalla lo bloquea y la API lo rechaza. Un ajuste de -5 deja el saldo en 15.
+4. El historial del producto muestra los dos movimientos.
+
+Pruebas: `StockServiceTest` (Mockito) y `StockIntegrationTest` (criterio de aceptación de punta a punta, validaciones y `403` para un preventor). Para ejecutarlas: `mvnw.cmd -Dtest=StockServiceTest,StockIntegrationTest test` desde `backend`.
+
+### Para otros issues
+
+- `StockService.hayStock(idProducto, cantidad): boolean` para el catálogo (E3-01) y el estado `SIN_STOCK` del pedido (E4-01).
+- `StockService.descontar(idProducto, cantidad[, observacion])` para la facturación (E4-04): registra un `EGRESO` y lanza `ErrorServiceException` si la cantidad supera el saldo. Corre en la transacción de quien lo llama.
+- `StockService.reponer(idProducto, cantidad, observacion)` y `buscarStockPorProducto(idProducto)` según la firma del UML.
+
 ## E2-03 · Precios mayoristas con vigencias
 
 Cada producto tiene un historial de precios (`VigenciaPrecio`). Al cargar un precio con su fecha desde, el precio vigente se cierra automáticamente el día anterior, así las vigencias nunca se superponen. **El precio vigente es la vigencia sin fecha de cierre.** Las vigencias no se editan ni se borran: un error se corrige cargando un precio nuevo.
