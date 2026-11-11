@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.dulcemayor.dto.PuntoDeVentaRequest;
+import com.dulcemayor.dto.mapper.PerfilMinoristaMapperImpl;
 import com.dulcemayor.dto.mapper.PuntoDeVentaMapperImpl;
 import com.dulcemayor.entity.Departamento;
 import com.dulcemayor.entity.Direccion;
@@ -42,9 +43,10 @@ class PuntoDeVentaServiceTest {
 
     @BeforeEach
     void setUp() {
+        DireccionService direccionService = new DireccionService(direccionRepository, localidadService);
         service = new PuntoDeVentaService(puntoRepository, new PuntoDeVentaMapperImpl(),
-                new MinoristaService(minoristaRepository), new PreventorService(preventorRepository),
-                new DireccionService(direccionRepository, localidadService));
+                new MinoristaService(minoristaRepository, direccionService, new PerfilMinoristaMapperImpl()),
+                new PreventorService(preventorRepository), direccionService);
     }
 
     private static PuntoDeVentaRequest request(String minoristaId, Double latitud, Double longitud) {

@@ -1,0 +1,32 @@
+/* E2-07: perfil del minorista. */
+.cuenta-perfil {
+  display: grid;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.cuenta-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 44rem;
+  min-width: 0;
+}
+
+.cuenta-form h2 {
+  margin: 0.5rem 0 0;
+}
+
+.cuenta-fijos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin: 0;
+}
+
+.cuenta-fijos dt {
+  font-weight: 650;
+}
+
+.cuenta-fijos dd {
+  margin: 0;
+}
