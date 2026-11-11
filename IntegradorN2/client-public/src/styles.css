@@ -93,6 +93,87 @@
   max-width: 36ch;
   margin-top: var(--s-5);
 }
+.shop-hero-company {
+  display: block;
+  width: fit-content;
+  margin-top: var(--s-4);
+}
+.shop-dollar {
+  border-bottom: 1px solid var(--line);
+}
+.shop-dollar-inner,
+.shop-dollar p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-2) var(--s-4);
+}
+.shop-dollar-inner {
+  padding-block: var(--s-4);
+  justify-content: space-between;
+}
+.shop-dollar h2 {
+  font: inherit;
+  font-weight: 600;
+}
+.shop-dollar time {
+  color: var(--muted);
+}
+.shop-institutional {
+  padding-block: clamp(32px, 7vw, 88px);
+  scroll-margin-top: calc(var(--nav) + 40px);
+}
+.shop-institutional > p {
+  margin-top: var(--s-4);
+}
+.shop-contact-branches {
+  display: grid;
+  gap: var(--s-4);
+  margin-top: var(--s-7);
+}
+.shop-branches {
+  display: grid;
+  gap: var(--s-4);
+}
+#sucursales > h2 {
+  margin-bottom: var(--s-4);
+}
+.shop-branch-map {
+  isolation: isolate;
+  height: clamp(280px, 52vw, 480px);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--line);
+}
+.shop-branch-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr));
+  gap: var(--s-4);
+  padding: 0;
+  list-style: none;
+}
+.shop-branch-card {
+  width: min(100%, 390px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+.shop-branch-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+.shop-branch-details {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  overflow-wrap: anywhere;
+}
+.shop-branch-details address {
+  color: var(--muted);
+  font-style: normal;
+}
 .shop .dm-button-primary {
   margin-top: var(--s-6);
   border-radius: 999px;
@@ -227,6 +308,14 @@
 .shop-editorial h1 {
   max-width: 12ch;
 }
+.shop-company {
+  min-height: auto;
+  border-bottom: 1px solid var(--line);
+}
+.shop-editorial .shop-company-record {
+  margin-top: 0;
+  overflow-wrap: anywhere;
+}
 .shop-buying {
   align-items: start;
   grid-template-columns: minmax(0, 0.75fr) minmax(0, 1fr);
@@ -333,10 +422,7 @@
     grid-template-columns: 1fr;
   }
 }
-@media (max-width: 540px) {
-  .shop {
-    --nav: 90px;
-  }
+@media (max-width: 800px) {
   .shop-bar {
     flex-wrap: wrap;
     align-content: center;
@@ -352,6 +438,11 @@
     gap: 8px;
     font-size: 0.875rem;
     flex-wrap: wrap;
+  }
+}
+@media (max-width: 540px) {
+  .shop {
+    --nav: 120px;
   }
   .shop-hero h1 {
     font-size: clamp(2.9rem, 11vw, 4.125rem);

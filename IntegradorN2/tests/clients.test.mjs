@@ -82,6 +82,7 @@ test("las rutas React renderizan su contenido y una recuperación para rutas des
       [
         ["/", "Golosinas por mayor en Mendoza"],
         ["/empresa", "Mayorista de golosinas en Mendoza"],
+        ["/contacto", "Contacto"],
         ["/creditos", "Créditos de fotografía"],
         ["/como-comprar", "Cómo comprar"],
         ["/login", "Iniciar sesión"],
@@ -120,6 +121,13 @@ test("las rutas React renderizan su contenido y una recuperación para rutas des
       }
       assert.match(html, /Saltar al contenido/);
       if (app === "client-public") assert.match(html, /Navegación principal/);
+      if (app === "client-public" && path === "/") {
+        assert.match(html, /Dólar oficial \(venta\)/);
+        assert.match(html, /href="\/contacto"/);
+      }
+      if (app === "client-public" && path === "/contacto") {
+        assert.match(html, /href="\/empresa#sucursales"/);
+      }
     }
     await server.close();
   }

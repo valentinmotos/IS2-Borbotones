@@ -4,6 +4,7 @@ import PublicLayout from "./PublicLayout.jsx";
 import HomePage from "../modules/home/pages/HomePage.jsx";
 import CatalogoPage from "../modules/catalog/pages/CatalogoPage.jsx";
 import CompanyPage from "../modules/company/pages/CompanyPage.jsx";
+import ContactPage from "../modules/company/pages/ContactPage.jsx";
 import BuyingPage from "../modules/buying/pages/BuyingPage.jsx";
 import RegistroMinoristaPage from "../modules/registro/pages/RegistroMinoristaPage.jsx";
 import PerfilPage from "../modules/cuenta/pages/PerfilPage.jsx";
@@ -76,6 +77,7 @@ export default function App() {
           <Route index element={<HomePage />} />
           <Route path="catalogo" element={<CatalogoPage />} />
           <Route path="empresa" element={<CompanyPage />} />
+          <Route path="contacto" element={<ContactPage />} />
           <Route path="como-comprar" element={<BuyingPage />} />
           <Route path="creditos" element={<CreditsPage />} />
           <Route path="login" element={<LoginPage otherLogin={otherLogin} registrationPath="/registro" />} />
