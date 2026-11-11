@@ -95,6 +95,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").authenticated()
                         // Reglas por recurso (cada issue agrega las suyas acá)
                         .requestMatchers("/api/categorias/**", "/api/productos/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
+                        // E2-02: stock y movimientos de almacén
+                        .requestMatchers("/api/stock/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
                         .requestMatchers("/api/empresas/**", "/api/sucursales/**", "/api/formas-de-pago/**")
                         .hasAnyRole("JEFE", "ADMINISTRATIVO")
                         .requestMatchers("/api/usuarios/internos/**").hasRole("JEFE")
