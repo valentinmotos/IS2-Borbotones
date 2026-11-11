@@ -5,8 +5,8 @@ import { useSession } from "../../../packages/auth/session.js";
 
 const adminUrl = import.meta.env.VITE_ADMIN_URL || "http://localhost:5173";
 const sections = [
-  { to: "/", label: "Catálogo", title: "Golosinas por mayor" },
-  { to: "/catalogo-publico", label: "Catálogo público", title: "Catálogo público" },
+  { to: "/", label: "Surtido", title: "Golosinas por mayor" },
+  { to: "/catalogo", label: "Catálogo", title: "Catálogo" },
   { to: "/empresa", label: "La empresa", title: "Nuestra empresa" },
   { to: "/como-comprar", label: "Ver cómo comprar", title: "Cómo comprar" },
 ];

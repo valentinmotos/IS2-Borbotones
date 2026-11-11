@@ -74,7 +74,7 @@ export default function App() {
       <Routes>
         <Route element={<PublicLayout />}>
           <Route index element={<HomePage />} />
-          <Route path="catalogo-publico" element={<CatalogoPage />} />
+          <Route path="catalogo" element={<CatalogoPage />} />
           <Route path="empresa" element={<CompanyPage />} />
           <Route path="como-comprar" element={<BuyingPage />} />
           <Route path="creditos" element={<CreditsPage />} />

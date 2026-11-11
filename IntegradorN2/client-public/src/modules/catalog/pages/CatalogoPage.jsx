@@ -2,77 +2,85 @@ import { useEffect, useState } from "react";
 import { api } from "../../../lib/api.js";
 
 const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
+const apiUrl = import.meta.env.VITE_API_URL || "/api";
 
+/** E3-01: catálogo público. Solo llegan productos con stock y precio vigente. */
 export default function CatalogoPage() {
-  const [productos, setProductos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
+  const [categorias, setCategorias] = useState({ estado: "loading", data: [] });
   const [nombre, setNombre] = useState("");
+  const [busqueda, setBusqueda] = useState("");
   const [categoriaId, setCategoriaId] = useState("");
-  const [estado, setEstado] = useState("loading");
-  const [errorCategorias, setErrorCategorias] = useState(false);
+  // El resultado guarda los filtros con los que se pidió: si no coinciden con los actuales, está cargando
+  const [resultado, setResultado] = useState(null);
 
   useEffect(() => {
-    const controller = new AbortController();
-    api.get("/publico/catalogo/categorias", { signal: controller.signal }).then(
-      ({ data }) => setCategorias(data),
-      (error) => { if (error.name !== "AbortError") setErrorCategorias(true); },
+    const solicitud = new AbortController();
+    api.get("/publico/catalogo/categorias", { signal: solicitud.signal }).then(
+      ({ data }) => { if (!solicitud.signal.aborted) setCategorias({ estado: "ready", data }); },
+      () => { if (!solicitud.signal.aborted) setCategorias({ estado: "error", data: [] }); },
     );
-    return () => controller.abort();
+    return () => solicitud.abort();
   }, []);
 
+  // Espera a que el usuario deje de escribir antes de consultar
   useEffect(() => {
-    const controller = new AbortController();
-    setEstado("loading");
-    const query = new URLSearchParams();
-    if (nombre.trim()) query.set("nombre", nombre.trim());
-    if (categoriaId) query.set("categoriaId", categoriaId);
-    api.get(`/publico/catalogo${query.size ? `?${query}` : ""}`, { signal: controller.signal }).then(
-      ({ data }) => { setProductos(data); setEstado("ready"); },
-      (error) => { if (error.name !== "AbortError") setEstado("error"); },
+    const espera = setTimeout(() => setBusqueda(nombre.trim()), 300);
+    return () => clearTimeout(espera);
+  }, [nombre]);
+
+  const clave = `${busqueda}|${categoriaId}`;
+  useEffect(() => {
+    const solicitud = new AbortController();
+    const params = {};
+    if (busqueda) params.nombre = busqueda;
+    if (categoriaId) params.categoriaId = categoriaId;
+    api.get("/publico/catalogo", { params, signal: solicitud.signal }).then(
+      ({ data }) => { if (!solicitud.signal.aborted) setResultado({ clave, data }); },
+      () => { if (!solicitud.signal.aborted) setResultado({ clave, error: true }); },
     );
-    return () => controller.abort();
-  }, [nombre, categoriaId]);
+    return () => solicitud.abort();
+  }, [busqueda, categoriaId, clave]);
+
+  const cargando = resultado?.clave !== clave;
+  const productos = !cargando && !resultado.error ? resultado.data : [];
 
   return (
     <section className="shop-range catalog" aria-labelledby="catalogo-titulo">
       <div className="wrap">
         <p className="catalog-kicker">Venta mayorista</p>
-        <h2 id="catalogo-titulo">Catálogo público</h2>
+        <h2 id="catalogo-titulo">Catálogo</h2>
         <p className="catalog-intro">Productos disponibles, con precio mayorista vigente.</p>
-        <div className="catalog-categories" aria-label="Categorías disponibles">
-          {errorCategorias && <p role="alert">No pudimos cargar las categorías.</p>}
-          {!errorCategorias && categorias.length === 0 && <p role="status">Cargando categorías…</p>}
-          {categorias.map((categoria) => <button
-            className={categoriaId === categoria.id ? "is-selected" : ""}
-            type="button"
-            key={categoria.id}
-            aria-pressed={categoriaId === categoria.id}
-            onClick={() => setCategoriaId((actual) => actual === categoria.id ? "" : categoria.id)}
-          >{categoria.nombre}</button>)}
-        </div>
         <div className="catalog-filters">
           <label>Buscar producto
             <input type="search" value={nombre} onChange={(event) => setNombre(event.target.value)} placeholder="Nombre del producto" />
           </label>
-          <label>Categoría
-            <select value={categoriaId} onChange={(event) => setCategoriaId(event.target.value)}>
-              <option value="">Todas las categorías</option>
-              {categorias.map((categoria) => <option value={categoria.id} key={categoria.id}>{categoria.nombre}</option>)}
-            </select>
-          </label>
         </div>
-        {estado === "loading" && <p role="status">Cargando productos…</p>}
-        {estado === "error" && <p role="alert">No pudimos cargar el catálogo. Intentá de nuevo.</p>}
-        {estado === "ready" && productos.length === 0 && <p>No hay productos disponibles para esta búsqueda.</p>}
-        {estado === "ready" && productos.length > 0 && <ul className="catalog-grid">
+        <div className="catalog-categories" role="group" aria-label="Filtrar por categoría">
+          {categorias.estado === "loading" && <p role="status">Cargando categorías…</p>}
+          {categorias.estado === "error" && <p role="alert">No pudimos cargar las categorías.</p>}
+          {categorias.estado === "ready" && categorias.data.length > 0 && <>
+            <button type="button" className={categoriaId === "" ? "is-selected" : ""} aria-pressed={categoriaId === ""} onClick={() => setCategoriaId("")}>Todas</button>
+            {categorias.data.map((categoria) => <button
+              className={categoriaId === categoria.id ? "is-selected" : ""}
+              type="button"
+              key={categoria.id}
+              aria-pressed={categoriaId === categoria.id}
+              onClick={() => setCategoriaId(categoria.id)}
+            >{categoria.nombre}</button>)}
+          </>}
+        </div>
+        {cargando && <p role="status">Cargando productos…</p>}
+        {!cargando && resultado.error && <p role="alert">No pudimos cargar el catálogo. Intentá de nuevo.</p>}
+        {!cargando && !resultado.error && productos.length === 0 && <p>No hay productos disponibles para esta búsqueda.</p>}
+        {productos.length > 0 && <ul className="catalog-grid">
           {productos.map((producto) => <li className="catalog-card" key={producto.id}>
-            {producto.imagenId ? <img src={`${import.meta.env.VITE_API_URL || "/api"}/imagenes/${producto.imagenId}`} alt={producto.nombre} loading="lazy" /> : <div className="catalog-card-placeholder" aria-hidden="true">Dulce Mayor</div>}
+            {producto.imagenId ? <img src={`${apiUrl}/imagenes/${producto.imagenId}`} alt={producto.nombre} loading="lazy" /> : <div className="catalog-card-placeholder" aria-hidden="true">Dulce Mayor</div>}
             <div className="catalog-card-body">
               <span className="catalog-category">{producto.categoriaNombre}</span>
               <h3>{producto.nombre}</h3>
               {producto.descripcion && <p>{producto.descripcion}</p>}
               <p className="catalog-presentation">{producto.presentacion} · {producto.unidadesPorBulto} unidades por bulto</p>
-              <strong className="catalog-price">{money.format(producto.precioMayorista)} <small>por bulto</small></strong>
+              <strong className="catalog-price">{money.format(producto.precio)} <small>por bulto</small></strong>
             </div>
           </li>)}
         </ul>}

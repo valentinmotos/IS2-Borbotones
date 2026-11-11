@@ -642,3 +642,34 @@ El envío usa las variables SMTP `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAI
 - **Endpoint público:** `GET /api/publico/cotizacion` → `200 {"fecha":"2026-11-09","valorVenta":1450.0}` · `404` si nunca se pudo obtener.
 - **Tests:** `CotizacionDolarServiceTest` (criterio: vigente y respaldo con la última guardada) y `CotizacionDolarIntegrationTest` (endpoint sin token y caché), los dos con DolarAPI mockeada.
 - **Para otros issues (E3-02, E3-03, E4-05):** usar `cotizacionDolarService.buscarCotizacionVigente()`; no llamar al provider directo.
+
+## Catálogo público · E3-01
+
+Listado público de productos con foto, descripción, presentación por bulto y precio mayorista vigente. **Solo aparecen los productos activos con stock mayor que cero y precio vigente hoy.** Stock y precio se consultan en cada pedido, sin caché.
+
+- **Consulta:** `ProductoRepository.buscarCatalogo(id, texto, categoria, hoy)`, una sola consulta que arma `ProductoCatalogoDTO` (los parámetros vacíos no filtran). `CatalogoService` la usa para el listado y para el detalle.
+- **Pantalla:** `client-public/src/modules/catalog/pages/CatalogoPage.jsx`, ruta `/catalogo` («Catálogo» en el menú). Búsqueda por nombre (consulta 300 ms después de dejar de escribir) y filtro por categoría.
+
+### Endpoints (públicos)
+
+| Método | Ruta | Respuesta |
+|---|---|---|
+| GET | `/api/publico/catalogo?nombre=&categoriaId=` | `ProductoCatalogoDTO[]` ordenados por nombre |
+| GET | `/api/publico/catalogo/{id}` | `ProductoCatalogoDTO` · `404` si no existe, no tiene stock o no tiene precio |
+| GET | `/api/publico/catalogo/categorias` | categorías activas |
+
+`ProductoCatalogoDTO(id, codigo, nombre, descripcion, presentacion, unidadesPorBulto, precio, stock, categoriaId, categoriaNombre, imagenId)`. La foto se pide a `GET /api/imagenes/{imagenId}`.
+
+### Cómo probarlo
+
+Criterio: un producto que llega a stock 0 deja de mostrarse en el catálogo sin recargar la base.
+
+1. Con la base recién creada (el seeder carga 5 productos; «Chupetín frutal» sin stock), abrir <http://localhost:5174/catalogo>: aparecen 4 productos y el chupetín no.
+2. En el panel, descontar todo el stock de «Chocolate con leche 25 g» (Stock → ajuste) y actualizar el catálogo: el chocolate ya no aparece.
+
+Test: `CatalogoPublicoIntegrationTest` (sin token, solo con stock, búsqueda, categoría, detalle con 404 y el criterio).
+
+### Para otros issues
+
+- **E3-03 (detalle):** `GET /api/publico/catalogo/{id}` ya trae precio en pesos y `stock`; el precio en dólares se calcula con `GET /api/publico/cotizacion`.
+- **E4-02 (pedido del preventor):** `CatalogoService.buscar(nombre, categoriaId)` o el endpoint del listado; el `stock` sirve para avisar antes de cargar más de lo disponible.
