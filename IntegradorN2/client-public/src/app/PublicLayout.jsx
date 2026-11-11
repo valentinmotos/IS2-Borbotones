@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, matchPath, NavLink, Outlet, useLocation } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { useSession } from "../../../packages/auth/session.js";
 
@@ -17,7 +17,9 @@ export default function PublicLayout() {
 
   useEffect(() => {
     const section = sections.find(({ to }) => to === pathname);
-    document.title = `${section?.title || (pathname === "/creditos" ? "Créditos de fotografía" : "Página no encontrada")} · Dulce Mayor`;
+    const isProduct = matchPath("/catalogo/:productoId", pathname);
+    const title = section?.title ?? (isProduct ? "Detalle de producto" : null);
+    document.title = `${title ?? (pathname === "/creditos" ? "Créditos de fotografía" : "Página no encontrada")} · Dulce Mayor`;
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
     else window.scrollTo(0, 0);
   }, [pathname, hash]);
