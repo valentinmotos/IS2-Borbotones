@@ -1,6 +1,8 @@
 package com.dulcemayor.config;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +21,10 @@ import com.dulcemayor.dto.MayoristaRequest;
 import com.dulcemayor.dto.PerfilMinoristaRequest;
 import com.dulcemayor.dto.PuntoDeVentaRequest;
 import com.dulcemayor.dto.SucursalRequest;
+import com.dulcemayor.dto.VigenciaPrecioRequest;
 import com.dulcemayor.entity.Minorista;
 import com.dulcemayor.entity.Preventor;
+import com.dulcemayor.entity.Producto;
 import com.dulcemayor.entity.Usuario;
 import com.dulcemayor.entity.enums.RolUsuario;
 import com.dulcemayor.entity.enums.TipoDocumento;
@@ -30,6 +34,7 @@ import com.dulcemayor.entity.enums.TipoPago;
 import com.dulcemayor.repository.LocalidadRepository;
 import com.dulcemayor.repository.MinoristaRepository;
 import com.dulcemayor.repository.PreventorRepository;
+import com.dulcemayor.repository.ProductoRepository;
 import com.dulcemayor.service.CategoriaService;
 import com.dulcemayor.service.DepartamentoService;
 import com.dulcemayor.service.FormaDePagoService;
@@ -40,6 +45,8 @@ import com.dulcemayor.service.SucursalService;
 import com.dulcemayor.service.UsuarioService;
 import com.dulcemayor.service.MinoristaService;
 import com.dulcemayor.service.PuntoDeVentaService;
+import com.dulcemayor.service.StockService;
+import com.dulcemayor.service.VigenciaPrecioService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
@@ -65,6 +72,9 @@ public class DataSeeder implements CommandLineRunner {
     private final PreventorRepository preventorRepository;
     private final MinoristaRepository minoristaRepository;
     private final MinoristaService minoristaService;
+    private final ProductoRepository productoRepository;
+    private final VigenciaPrecioService vigenciaPrecioService;
+    private final StockService stockService;
 
     public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
             UsuarioService usuarioService, ImagenService imagenService,
@@ -72,7 +82,9 @@ public class DataSeeder implements CommandLineRunner {
             MayoristaService mayoristaService, SucursalService sucursalService,
             FormaDePagoService formaDePagoService, LocalidadRepository localidadRepository,
             PuntoDeVentaService puntoDeVentaService, PreventorRepository preventorRepository,
-            MinoristaRepository minoristaRepository, MinoristaService minoristaService) {
+            MinoristaRepository minoristaRepository, MinoristaService minoristaService,
+            ProductoRepository productoRepository, VigenciaPrecioService vigenciaPrecioService,
+            StockService stockService) {
         this.entityManager = entityManager;
         this.categoriaService = categoriaService;
         this.usuarioService = usuarioService;
@@ -87,6 +99,9 @@ public class DataSeeder implements CommandLineRunner {
         this.preventorRepository = preventorRepository;
         this.minoristaRepository = minoristaRepository;
         this.minoristaService = minoristaService;
+        this.productoRepository = productoRepository;
+        this.vigenciaPrecioService = vigenciaPrecioService;
+        this.stockService = stockService;
     }
 
     @Override
@@ -152,10 +167,39 @@ public class DataSeeder implements CommandLineRunner {
 
     /** E2-01 a E2-03: categorías, productos, stock inicial y vigencias de precio. */
     private void cargarCatalogo() {
+        Map<String, String> categorias = new HashMap<>();
         for (String nombre : new String[] { "Alfajores", "Caramelos", "Chicles", "Chocolates", "Gomitas" }) {
-            categoriaService.crearCategoria(new CategoriaRequest(nombre));
+            categorias.put(nombre, categoriaService.crearCategoria(new CategoriaRequest(nombre)).id());
         }
         cargarImagen("imagenes/imagen-prueba.png", TipoImagen.PRODUCTO);
+
+        // E3-04: productos de demo para el chatbot. El chupetín queda sin stock a propósito
+        // («quiero 10 alfajores y 5 chupetines» lo excluye) y el chocolate con stock bajo.
+        cargarProducto("ALF-001", "Alfajor de chocolate", "Caja x 12", 12, categorias.get("Alfajores"), 6000, 50);
+        cargarProducto("CAR-001", "Chupetín frutal", "Bolsa x 50", 50, categorias.get("Caramelos"), 3500, 0);
+        cargarProducto("CHI-001", "Chicle de menta", "Caja x 20", 20, categorias.get("Chicles"), 2500, 30);
+        cargarProducto("CHO-001", "Chocolate con leche 25 g", "Caja x 24", 24, categorias.get("Chocolates"), 9000, 5);
+        cargarProducto("GOM-001", "Gomitas ácidas", "Bolsa x 1 kg", 1, categorias.get("Gomitas"), 4200, 40);
+    }
+
+    /**
+     * Producto con imagen propia, precio vigente desde hoy y stock inicial. Se guarda por repositorio
+     * porque ProductoService.crear espera la imagen como archivo subido (MultipartFile).
+     */
+    private void cargarProducto(String codigo, String nombre, String presentacion, int unidadesPorBulto,
+            String categoriaId, double precio, int stockInicial) {
+        Producto producto = new Producto();
+        producto.setCodigo(codigo);
+        producto.setNombre(nombre);
+        producto.setPresentacion(presentacion);
+        producto.setUnidadesPorBulto(unidadesPorBulto);
+        producto.setCategoria(categoriaService.buscarEntidad(categoriaId));
+        producto.setImagen(imagenService.buscarEntidad(cargarImagen("imagenes/imagen-prueba.png", TipoImagen.PRODUCTO)));
+        producto = productoRepository.save(producto);
+        vigenciaPrecioService.crearVigenciaPrecio(producto.getId(), new VigenciaPrecioRequest(LocalDate.now(), precio));
+        if (stockInicial > 0) {
+            stockService.reponer(producto.getId(), stockInicial, "Stock inicial de demostración");
+        }
     }
 
     private String cargarImagen(String ruta, TipoImagen tipo) {
