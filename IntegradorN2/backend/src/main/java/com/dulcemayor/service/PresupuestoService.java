@@ -3,10 +3,13 @@ package com.dulcemayor.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
@@ -117,10 +120,22 @@ public class PresupuestoService {
                 unitario.multiply(BigDecimal.valueOf(pedido.cantidad()))));
     }
 
+    /** Palabras que no identifican al producto: conectores y formas de empaque («3 cajas de chicles»). */
+    private static final Set<String> PALABRAS_IGNORADAS = Set.of("de", "del", "la", "las", "el", "los", "con",
+            "y", "x", "caja", "cajas", "bolsa", "bolsas", "paquete", "paquetes", "pack", "packs", "bulto",
+            "bultos", "unidad", "unidades");
+
     /**
-     * Primero busca el nombre exacto (sin importar mayúsculas ni tildes), que es lo que se le pide a
-     * la IA. Si no hay, acepta coincidencias parciales («alfajores» ↔ «Alfajor de chocolate»), pero
-     * solo si son únicas: con varias devuelve todas para que el renglón se excluya por ambiguo.
+     * Busca el producto que la IA nombró. La IA no siempre copia el nombre exacto («chicles de menta»
+     * en vez de «Chicle de menta»), así que la coincidencia la decide el backend:
+     * <ol>
+     * <li>nombre exacto, sin importar mayúsculas ni tildes;</li>
+     * <li>si no, productos cuyo nombre contiene todas las palabras pedidas, tolerando plurales
+     * («alfajores» ↔ «Alfajor de chocolate»);</li>
+     * <li>si quedan varios, se prefieren los que empiezan con la primera palabra pedida
+     * («chocolates» → «Chocolate con leche» y no «Alfajor de chocolate»).</li>
+     * </ol>
+     * Devuelve todas las coincidencias: si no hay exactamente una, el renglón se excluye.
      */
     static List<Producto> buscarEnCatalogo(String nombre, List<Producto> catalogo) {
         String buscado = TextoUtils.normalizar(nombre);
@@ -129,28 +144,52 @@ public class PresupuestoService {
         if (!exactos.isEmpty()) {
             return exactos;
         }
-        String raiz = singular(buscado);
-        return catalogo.stream()
+        List<String> pedidas = palabras(buscado);
+        if (pedidas.isEmpty()) {
+            return List.of();
+        }
+        List<Producto> candidatos = catalogo.stream()
                 .filter(p -> {
-                    String nombreProducto = TextoUtils.normalizar(p.getNombre());
-                    return nombreProducto.contains(raiz) || buscado.contains(nombreProducto);
+                    List<String> delProducto = palabras(TextoUtils.normalizar(p.getNombre()));
+                    return pedidas.stream().allMatch(
+                            pedida -> delProducto.stream().anyMatch(propia -> mismaPalabra(pedida, propia)));
                 })
+                .toList();
+        if (candidatos.size() <= 1) {
+            return candidatos;
+        }
+        List<Producto> empiezanIgual = candidatos.stream()
+                .filter(p -> {
+                    List<String> delProducto = palabras(TextoUtils.normalizar(p.getNombre()));
+                    return !delProducto.isEmpty() && mismaPalabra(pedidas.get(0), delProducto.get(0));
+                })
+                .toList();
+        return empiezanIgual.isEmpty() ? candidatos : empiezanIgual;
+    }
+
+    /** Palabras significativas de un texto ya normalizado. */
+    private static List<String> palabras(String texto) {
+        return Arrays.stream(texto.split("[^\\p{Alnum}]+"))
+                .filter(palabra -> !palabra.isEmpty() && !PALABRAS_IGNORADAS.contains(palabra))
                 .toList();
     }
 
-    /** «alfajores» → «alfajor», «chupetines» → «chupetin», «gomitas» → «gomita». Solo la primera palabra. */
-    private static String singular(String texto) {
-        if (texto.isEmpty()) {
-            return texto;
+    /** Iguales salvo el plural: «chicles» = «chicle», «chupetines» = «chupetin», «alfajores» = «alfajor». */
+    private static boolean mismaPalabra(String a, String b) {
+        Set<String> formasDeA = formas(a);
+        return formas(b).stream().anyMatch(formasDeA::contains);
+    }
+
+    private static Set<String> formas(String palabra) {
+        Set<String> formas = new HashSet<>();
+        formas.add(palabra);
+        if (palabra.length() > 3 && palabra.endsWith("s")) {
+            formas.add(palabra.substring(0, palabra.length() - 1));
         }
-        String[] palabras = texto.split("\\s+", 2);
-        String primera = palabras[0];
-        if (primera.endsWith("es") && primera.length() > 4) {
-            primera = primera.substring(0, primera.length() - 2);
-        } else if (primera.endsWith("s") && primera.length() > 3) {
-            primera = primera.substring(0, primera.length() - 1);
+        if (palabra.length() > 4 && palabra.endsWith("es")) {
+            formas.add(palabra.substring(0, palabra.length() - 2));
         }
-        return palabras.length > 1 ? primera + " " + palabras[1] : primera;
+        return formas;
     }
 
     /** Si la IA nombra dos veces el mismo producto, se suman las cantidades (respetando el orden). */

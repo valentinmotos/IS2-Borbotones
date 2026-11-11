@@ -493,7 +493,7 @@ docker compose logs -f backend               log del servidor
 docker compose down                          baja los contenedores; los datos quedan en el volumen
 docker compose down -v                       baja todo y BORRA la base (el seeder vuelve a cargar al subir)
 docker compose --profile ollama up -d        también levanta Ollama
-docker compose exec ollama ollama pull <modelo>   descarga el modelo del chatbot (E3-04)
+docker compose exec ollama ollama pull qwen2.5:3b   descarga el modelo del chatbot (E3-04, una sola vez)
 ```
 
 Sin `.env` (o sin `DB_PASSWORD`), `docker compose up` se corta con *Falta DB_PASSWORD - copiá .env.example como .env y completalo*: la clave no está escrita en el compose. Los puertos publicados se cambian con `DB_PORT`, `BACKEND_PORT`, `ADMIN_PORT` y `PUBLIC_PORT` en el `.env`. Mientras corre el compose, `npm run dev` y `mvnw spring-boot:run` chocan con esos puertos: para desarrollar conviene `docker compose up -d db` y nada más.
@@ -528,7 +528,7 @@ Hasta que Spring termina de iniciar (unos 10 segundos), nginx responde `502` en 
 
 - **Variable de entorno nueva:** sumarla en `.env.example` y en `environment` del servicio `backend` (`NOMBRE: ${NOMBRE:-}`).
 - **E1-09 (Jenkins):** construye las imágenes con `docker compose build` desde `IntegradorN2/`.
-- **E3-04 (chatbot):** dentro de Docker, Ollama está en `http://ollama:11434` (valor por defecto de `OLLAMA_URL` en el compose); el modelo se elige con `OLLAMA_MODEL`.
+- **E3-04 (chatbot):** dentro de Docker, Ollama está en `http://ollama:11434` (valor por defecto de `OLLAMA_URL` en el compose); el modelo se elige con `OLLAMA_MODEL` (por defecto `qwen2.5:3b`). Ver la sección del chatbot.
 - **E1-05 (imágenes):** nginx ya acepta cuerpos de hasta 3 MB en `/api`, así el límite de 2 MB lo controla el servidor y responde 413 con su JSON.
 
 ## Seguridad: JWT, BCrypt y roles · E1-01
@@ -642,3 +642,50 @@ El envío usa las variables SMTP `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAI
 - **Endpoint público:** `GET /api/publico/cotizacion` → `200 {"fecha":"2026-11-09","valorVenta":1450.0}` · `404` si nunca se pudo obtener.
 - **Tests:** `CotizacionDolarServiceTest` (criterio: vigente y respaldo con la última guardada) y `CotizacionDolarIntegrationTest` (endpoint sin token y caché), los dos con DolarAPI mockeada.
 - **Para otros issues (E3-02, E3-03, E4-05):** usar `cotizacionDolarService.buscarCotizacionVigente()`; no llamar al provider directo.
+
+## Chatbot de presupuesto con Ollama · E3-04
+
+El visitante escribe qué quiere («quiero 10 alfajores y 5 chupetines») y recibe un presupuesto. **La IA solo interpreta el texto** y devuelve productos y cantidades; el backend valida cada producto contra el catálogo, el stock y el precio vigente, y calcula los totales.
+
+- **Adapter:** `service/ChatbotProvider` (Target, contrato `interpretar(mensaje, productosDelCatalogo)`) y `service/adapter/OllamaChatbotAdapter` (Adapter de `POST /api/chat` de Ollama). Le exige al modelo un JSON con forma fija (`format` con JSON Schema: `{"items":[{"producto","cantidad"}]}`), temperatura 0 y un prompt de sistema con los nombres del catálogo. Si Ollama no responde, da error o devuelve algo que no es JSON, lanza `ServicioNoDisponibleException` (503).
+- **Servicio:** `PresupuestoService.armarPresupuesto(mensaje)`. Busca cada renglón por nombre exacto (sin mayúsculas ni tildes); si no, por palabras tolerando plurales e ignorando conectores y empaques («3 cajas de chicles» ↔ «Chicle de menta»), y ante un empate prefiere el nombre que empieza con la palabra pedida («chocolates» → «Chocolate con leche», no «Alfajor de chocolate»). La IA no siempre copia el nombre exacto, por eso lo decide el backend. Excluye, con su motivo: lo que no está en el catálogo, lo ambiguo, lo que no tiene stock, lo que tiene stock insuficiente (informa los disponibles) y lo que no tiene precio vigente. Totales con `BigDecimal`; el total en dólares usa `CotizacionDolarService` (E1-08) y queda en `null` si no hay cotización. No reserva stock.
+- **Configuración** (`.env`): `OLLAMA_URL` (vacío = `http://localhost:11434`; en Docker, `http://ollama:11434`), `OLLAMA_MODEL` (vacío = `qwen2.5:3b`) y `OLLAMA_TIMEOUT_MS` (vacío = 60000, porque sin GPU el modelo tarda unos segundos).
+- **Datos de demo:** el seeder carga 5 productos con precio y stock. «Chupetín frutal» queda **sin stock** y «Chocolate con leche 25 g» con solo 5 unidades, para probar las exclusiones.
+
+### Endpoint (público)
+
+| Método | Ruta | Request → Response |
+|---|---|---|
+| POST | `/api/publico/chatbot/presupuesto` | `{"mensaje": "..."}` (obligatorio, hasta 500 caracteres) → `200` presupuesto · `400` mensaje vacío o largo · `503` Ollama no disponible |
+
+```json
+{
+  "items": [{"idProducto": "…", "codigo": "ALF-001", "nombre": "Alfajor de chocolate", "presentacion": "Caja x 12",
+             "cantidad": 10, "precioUnitario": 6000.00, "subtotal": 60000.00}],
+  "excluidos": [{"producto": "Chupetín frutal", "cantidad": 5, "motivo": "Sin stock."}],
+  "total": 60000.00, "cotizacionDolar": 1450.0, "fechaCotizacion": "2026-11-11", "totalDolares": 41.38
+}
+```
+
+### Cómo probarlo
+
+Criterio: con «quiero 10 alfajores y 5 chupetines» devuelve un presupuesto con total correcto y excluye productos sin stock.
+
+```
+cd IntegradorN2
+docker compose --profile ollama up -d ollama
+docker compose exec ollama ollama pull qwen2.5:3b         una sola vez (~1,9 GB)
+cd backend && ./mvnw spring-boot:run                      con la base recién creada, para que corra el seeder
+
+curl -X POST http://localhost:8080/api/publico/chatbot/presupuesto -H "Content-Type: application/json" \
+     -d "{\"mensaje\":\"quiero 10 alfajores y 5 chupetines\"}"
+```
+
+Devuelve el alfajor con subtotal 60000 y el chupetín en `excluidos` con «Sin stock.». Con Ollama apagado (`docker compose stop ollama`) responde `503` con el mensaje para el usuario.
+
+Tests (no necesitan Ollama): `OllamaChatbotAdapterTest` (traducción de la API con `MockRestServiceServer`), `PresupuestoServiceTest` (criterio y exclusiones) y `ChatbotIntegrationTest` (endpoint sin token, contra los productos del seeder, 400 y 503).
+
+### Para otros issues
+
+- **E3-05 (chat del sitio):** `POST /api/publico/chatbot/presupuesto` con `{mensaje}`. Mostrar `items`, `excluidos` con su `motivo`, `total` y `totalDolares` (con `cotizacionDolar` y `fechaCotizacion`). Ante un `503`, mostrar el formulario de presupuesto (plan B). Una respuesta tarda varios segundos: mostrar un indicador de "escribiendo".
+- **`ServicioNoDisponibleException`:** cualquier service que dependa de un servicio externo sin respaldo puede lanzarla para responder `503` con `{mensaje}`.

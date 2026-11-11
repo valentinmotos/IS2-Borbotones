@@ -190,6 +190,25 @@ class PresupuestoServiceTest {
     }
 
     @Test
+    void reconoceNombresQueLaIaNoCopioExactos() {
+        Producto chocolate = producto("p-cho", "CHO-001", "Chocolate con leche 25 g");
+        when(productos.findByEliminadoFalse()).thenReturn(List.of(alfajor, chupetin, chicle, chocolate));
+
+        // Casos reales devueltos por qwen2.5:3b en la prueba manual
+        assertThat(PresupuestoService.buscarEnCatalogo("chicles de menta", productos.findByEliminadoFalse()))
+                .containsExactly(chicle);
+        assertThat(PresupuestoService.buscarEnCatalogo("cajas de chicles", productos.findByEliminadoFalse()))
+                .containsExactly(chicle);
+        // «chocolates» aparece en dos nombres: gana el que empieza con esa palabra
+        assertThat(PresupuestoService.buscarEnCatalogo("chocolates", productos.findByEliminadoFalse()))
+                .containsExactly(chocolate);
+        assertThat(PresupuestoService.buscarEnCatalogo("Chupetines", productos.findByEliminadoFalse()))
+                .containsExactly(chupetin);
+        assertThat(PresupuestoService.buscarEnCatalogo("helados", productos.findByEliminadoFalse())).isEmpty();
+        assertThat(PresupuestoService.buscarEnCatalogo("cajas", productos.findByEliminadoFalse())).isEmpty();
+    }
+
+    @Test
     void unNombreQueCoincideConVariosProductosSeExcluyePorAmbiguo() {
         Producto otroAlfajor = producto("p-alf2", "ALF-002", "Alfajor de dulce de leche");
         when(productos.findByEliminadoFalse()).thenReturn(List.of(alfajor, otroAlfajor));

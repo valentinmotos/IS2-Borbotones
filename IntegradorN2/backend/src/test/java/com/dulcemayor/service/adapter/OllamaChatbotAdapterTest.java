@@ -108,6 +108,15 @@ class OllamaChatbotAdapterTest {
     }
 
     @Test
+    void elTiempoDeEsperaVacioOInvalidoUsaElValorPorDefecto() {
+        assertThat(OllamaChatbotAdapter.timeout("")).isEqualTo(OllamaChatbotAdapter.TIMEOUT_POR_DEFECTO_MS);
+        assertThat(OllamaChatbotAdapter.timeout(null)).isEqualTo(OllamaChatbotAdapter.TIMEOUT_POR_DEFECTO_MS);
+        assertThat(OllamaChatbotAdapter.timeout("abc")).isEqualTo(OllamaChatbotAdapter.TIMEOUT_POR_DEFECTO_MS);
+        assertThat(OllamaChatbotAdapter.timeout("0")).isEqualTo(OllamaChatbotAdapter.TIMEOUT_POR_DEFECTO_MS);
+        assertThat(OllamaChatbotAdapter.timeout(" 90000 ")).isEqualTo(90_000);
+    }
+
+    @Test
     void sinModeloConfiguradoUsaElModeloPorDefecto() throws Exception {
         RestClient.Builder builder = RestClient.builder().baseUrl("http://ollama:11434");
         MockRestServiceServer otro = MockRestServiceServer.bindTo(builder).build();

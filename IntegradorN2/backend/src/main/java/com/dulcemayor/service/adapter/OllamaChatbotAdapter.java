@@ -33,6 +33,7 @@ public class OllamaChatbotAdapter implements ChatbotProvider {
 
     static final String URL_POR_DEFECTO = "http://localhost:11434";
     static final String MODELO_POR_DEFECTO = "qwen2.5:3b";
+    static final long TIMEOUT_POR_DEFECTO_MS = 60_000;
     static final String MENSAJE_NO_DISPONIBLE =
             "El asistente no está disponible en este momento. Probá armar el presupuesto con el formulario.";
 
@@ -57,7 +58,7 @@ public class OllamaChatbotAdapter implements ChatbotProvider {
     public OllamaChatbotAdapter(RestClient.Builder builder, ObjectMapper objectMapper,
             @Value("${app.chatbot.url:}") String url,
             @Value("${app.chatbot.modelo:}") String modelo,
-            @Value("${app.chatbot.timeout-ms:60000}") long timeoutMs) {
+            @Value("${app.chatbot.timeout-ms:}") String timeoutMs) {
         this(construirCliente(builder, url, timeoutMs), modelo, objectMapper);
     }
 
@@ -68,12 +69,23 @@ public class OllamaChatbotAdapter implements ChatbotProvider {
         this.objectMapper = objectMapper;
     }
 
-    private static RestClient construirCliente(RestClient.Builder builder, String url, long timeoutMs) {
+    private static RestClient construirCliente(RestClient.Builder builder, String url, String timeoutMs) {
         SimpleClientHttpRequestFactory fabrica = new SimpleClientHttpRequestFactory();
         fabrica.setConnectTimeout(Duration.ofSeconds(3));
         // Sin GPU el modelo puede tardar varios segundos en contestar
-        fabrica.setReadTimeout(Duration.ofMillis(timeoutMs));
+        fabrica.setReadTimeout(Duration.ofMillis(timeout(timeoutMs)));
         return builder.baseUrl(vacio(url) ? URL_POR_DEFECTO : url.trim()).requestFactory(fabrica).build();
+    }
+
+    /** OLLAMA_TIMEOUT_MS vacía (como queda en el compose) o inválida = 60 segundos. */
+    static long timeout(String valor) {
+        try {
+            long ms = vacio(valor) ? TIMEOUT_POR_DEFECTO_MS : Long.parseLong(valor.trim());
+            return ms > 0 ? ms : TIMEOUT_POR_DEFECTO_MS;
+        } catch (NumberFormatException ex) {
+            log.warn("OLLAMA_TIMEOUT_MS no es un número ({}): se usan {} ms.", valor, TIMEOUT_POR_DEFECTO_MS);
+            return TIMEOUT_POR_DEFECTO_MS;
+        }
     }
 
     @Override
@@ -129,11 +141,15 @@ public class OllamaChatbotAdapter implements ChatbotProvider {
                 Tu única tarea es extraer del mensaje del cliente qué productos pide y en qué cantidad.
                 Reglas:
                 1. Si lo que pide se corresponde con un producto de la lista, usá exactamente el nombre de la lista.
-                2. Si pide algo que no está en la lista, devolvelo con el nombre que usó el cliente.
+                2. Si pide algo que no está en la lista, devolvelo igual, con la palabra que usó el cliente
+                   (por ejemplo "turrones"). Nunca lo omitas ni lo cambies por otro producto.
                 3. La cantidad es un número entero mayor que cero; si no la dice, usá 1.
                 4. No calcules precios, totales ni stock, y no agregues productos que el cliente no pidió.
                 5. Si el mensaje no pide ningún producto, devolvé la lista vacía.
-                Respondé solo con JSON: {"items": [{"producto": "nombre", "cantidad": 1}]}
+                Respondé solo con JSON con la forma {"items": [{"producto": ..., "cantidad": ...}]}.
+                Ejemplo: si la lista tiene "Caramelo de miel" y el cliente escribe
+                "quiero 4 caramelos de miel y 2 turrones", respondé
+                {"items": [{"producto": "Caramelo de miel", "cantidad": 4}, {"producto": "turrones", "cantidad": 2}]}
                 Productos del catálogo:
                 %s""".formatted(lista);
     }
