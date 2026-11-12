@@ -19,6 +19,9 @@ public interface FacturaRepository extends JpaRepository<Factura, String> {
 
     Optional<Factura> findByIdAndEliminadoFalse(String id);
 
+    /** E4-08: una factura solo si es de un punto de venta del minorista indicado. */
+    Optional<Factura> findByIdAndPedido_PuntoDeVenta_Minorista_IdAndEliminadoFalse(String id, String minoristaId);
+
     /**
      * E4-04: último número emitido (0 si no hay facturas). Cuenta también las dadas de baja para que
      * un número nunca se reutilice.

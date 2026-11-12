@@ -1,0 +1,108 @@
+/* E4-08: compras y facturas del minorista. */
+.compras {
+  display: grid;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.compras h1,
+.compras h2 {
+  margin: 0;
+}
+
+.compras-subtitulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--dm-muted);
+}
+
+.compras-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.compras-importes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.compras-factura {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.compras-factura p {
+  margin: 0;
+}
+
+/* Línea de tiempo vertical: un punto por estado unido por una línea. */
+.compras-tiempo {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+}
+
+.compras-tiempo li {
+  position: relative;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0 0 1.25rem 1.75rem;
+  border-left: 2px solid var(--dm-line);
+  margin-left: 0.45rem;
+}
+
+.compras-tiempo li:last-child {
+  border-left-color: transparent;
+  padding-bottom: 0;
+}
+
+.compras-tiempo li::before {
+  content: "";
+  position: absolute;
+  left: -0.55rem;
+  top: 0.15rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid var(--dm-accent);
+  background: var(--dm-accent);
+}
+
+.compras-tiempo li[data-tono="success"]::before {
+  border-color: var(--dm-success);
+  background: var(--dm-success);
+}
+
+.compras-tiempo li[data-tono="warning"]::before {
+  border-color: var(--dm-warning);
+  background: var(--dm-warning);
+}
+
+.compras-tiempo li[data-tono="danger"]::before {
+  border-color: var(--dm-danger);
+  background: var(--dm-danger);
+}
+
+.compras-tiempo li[data-paso="pendiente"] {
+  color: var(--dm-muted);
+}
+
+.compras-tiempo li[data-paso="pendiente"]::before {
+  border-color: var(--dm-control-line);
+  background: var(--dm-surface);
+}
+
+.compras-tiempo time,
+.compras-tiempo span {
+  font-size: 0.925rem;
+}
+
+.compras-tiempo li[aria-current="step"] strong {
+  color: var(--dm-accent);
+}
