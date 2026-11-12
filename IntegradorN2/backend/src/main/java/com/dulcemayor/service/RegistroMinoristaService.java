@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.dulcemayor.dto.ActivarCuentaRequest;
+import com.dulcemayor.dto.MinoristaOpcion;
 import com.dulcemayor.dto.RegistroMinoristaRequest;
 import com.dulcemayor.entity.ContactoCorreoElectronico;
 import com.dulcemayor.entity.Minorista;
@@ -44,6 +45,12 @@ public class RegistroMinoristaService {
 
     @Transactional
     public String registrar(RegistroMinoristaRequest request) {
+        registrarPerfil(request);
+        return "Te enviamos un código de activación. Revisá tu correo para continuar.";
+    }
+
+    @Transactional
+    public MinoristaOpcion registrarPerfil(RegistroMinoristaRequest request) {
         validarDocumento(request.tipoDocumento(), request.numeroDocumento());
         String correo = request.correo().strip().toLowerCase(Locale.ROOT);
         String documento = normalizarDocumento(request.tipoDocumento(), request.numeroDocumento());
@@ -69,7 +76,8 @@ public class RegistroMinoristaService {
         contactoRepository.save(contacto);
 
         enviarCodigo(correo, request.nombre(), codigo);
-        return "Te enviamos un código de activación. Revisá tu correo para continuar.";
+        return new MinoristaOpcion(guardado.getId(), guardado.getNombre(), guardado.getApellido(),
+                guardado.getNumeroDocumento());
     }
 
     @Transactional

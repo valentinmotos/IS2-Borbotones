@@ -28,4 +28,7 @@ public interface PuntoDeVentaRepository extends BaseRepository<PuntoDeVenta> {
     List<PuntoDeVenta> findByMinorista_IdAndEliminadoFalseOrderByNombreComercioAsc(String minoristaId);
 
     boolean existsByMinorista_IdAndEliminadoFalse(String minoristaId);
+
+    Optional<PuntoDeVenta> findByIdAndPreventor_IdAndEliminadoFalseAndMinorista_EliminadoFalse(
+            String id, String preventorId);
 }

@@ -2,30 +2,14 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   DataTable,
-  FormField,
 } from "../../../../../packages/design/components.jsx";
-import DireccionField from "../../../../../packages/address/DireccionField.jsx";
 import { useSession } from "../../../../../packages/auth/session.js";
 import { api } from "../../../lib/api.js";
 import PuntosVentaMap from "../components/PuntosVentaMap.jsx";
+import PuntoVentaForm from "../components/PuntoVentaForm.jsx";
 import "../styles.css";
 
 // E2-06: puntos de venta por zona (departamento) en mapa y tabla. Solo el preventor da de alta.
-
-const vacio = {
-  nombreComercio: "",
-  minoristaId: "",
-  departamentoId: "",
-  localidadId: "",
-  calle: "",
-  numeracion: "",
-  barrio: "",
-  manzanaPiso: "",
-  casaDepartamento: "",
-  referencia: "",
-  latitud: null,
-  longitud: null,
-};
 
 const columnas = [
   { key: "nombreComercio", label: "Comercio" },
@@ -58,8 +42,6 @@ export default function PuntosVentaPage() {
   const [minoristas, setMinoristas] = useState([]);
   const [zona, setZona] = useState("");
   const [version, setVersion] = useState(0);
-  const [form, setForm] = useState(vacio);
-  const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState(null);
 
   useEffect(() => {
@@ -101,38 +83,13 @@ export default function PuntosVentaPage() {
     return () => controller.abort();
   }, [zona, version]);
 
-  async function guardar(event) {
-    event.preventDefault();
-    if (guardando) return;
-    if (form.latitud == null || form.longitud == null) {
-      setAviso({
-        tono: "danger",
-        texto: "Marcá la ubicación del comercio en el mapa.",
-      });
-      return;
-    }
-    setGuardando(true);
-    setAviso(null);
-    try {
-      const { departamentoId, ...datos } = form;
-      const { data: creado } = await api.post("/puntos-de-venta", {
-        ...datos,
-        latitud: Number(form.latitud),
-        longitud: Number(form.longitud),
-      });
-      setAviso({
-        tono: "success",
-        texto: `Se agregó ${creado.nombreComercio} al mapa de ${creado.departamento}.`,
-      });
-      setForm({ ...vacio, departamentoId });
-      // Muestra la zona del comercio nuevo para que se vea en el mapa.
-      setZona(creado.idDepartamento);
-      setVersion((v) => v + 1);
-    } catch (failure) {
-      setAviso({ tono: "danger", texto: failure.message });
-    } finally {
-      setGuardando(false);
-    }
+  function puntoCreado(creado) {
+    setAviso({
+      tono: "success",
+      texto: `Se agregó ${creado.nombreComercio} al mapa de ${creado.departamento}.`,
+    });
+    setZona(creado.idDepartamento);
+    setVersion((v) => v + 1);
   }
 
   const lista = puntos ?? [];
@@ -189,52 +146,7 @@ export default function PuntosVentaPage() {
           />
         </div>
         {esPreventor && (
-          <form className="design-form" onSubmit={guardar}>
-            <h2>Nuevo punto de venta</h2>
-            <FormField
-              label="Nombre del comercio"
-              name="nombreComercio"
-              value={form.nombreComercio}
-              required
-              maxLength={160}
-              onChange={(e) =>
-                setForm({ ...form, nombreComercio: e.target.value })
-              }
-            />
-            <label className="dm-field">
-              <span>Minorista responsable</span>
-              <select
-                className="dm-input"
-                value={form.minoristaId}
-                onChange={(e) =>
-                  setForm({ ...form, minoristaId: e.target.value })
-                }
-                required
-              >
-                <option value="">Seleccioná un minorista</option>
-                {minoristas.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.apellido}, {m.nombre} · DNI {m.numeroDocumento}
-                  </option>
-                ))}
-              </select>
-              {minoristas.length === 0 && (
-                <small>
-                  Primero debe existir un minorista para asociar al comercio.
-                </small>
-              )}
-            </label>
-            <DireccionField api={api} value={form} onChange={setForm} />
-            <div className="dm-actions">
-              <button
-                className="dm-button dm-button-primary"
-                type="submit"
-                disabled={guardando || !minoristas.length}
-              >
-                {guardando ? "Guardando…" : "Guardar punto de venta"}
-              </button>
-            </div>
-          </form>
+          <PuntoVentaForm minoristas={minoristas} onCreado={puntoCreado} />
         )}
       </section>
     </>
