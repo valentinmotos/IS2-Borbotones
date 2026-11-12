@@ -49,7 +49,7 @@ public class AuthService {
                 usuario.isClaveTemporal());
     }
 
-    private LoginResponse respuesta(Usuario usuario) {
+    LoginResponse respuesta(Usuario usuario) {
         return new LoginResponse(jwtService.emitir(usuario), usuario.getRol(), usuario.isClaveTemporal(),
                 usuario.getNombreUsuario(), jwtService.getDuracionSegundos());
     }

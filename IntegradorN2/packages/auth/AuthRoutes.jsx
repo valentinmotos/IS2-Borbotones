@@ -100,7 +100,12 @@ export function RequireAccess({ roles }) {
   return !roles || roles.includes(user.rol) ? <Outlet /> : <AccessDenied />;
 }
 
-function AuthForm({ changing = false, otherLogin, registrationPath }) {
+function AuthForm({
+  changing = false,
+  otherLogin,
+  registrationPath,
+  alternateLogin,
+}) {
   const { login, changePassword, notice } = useSession();
   const [error, setError] = useState(null);
   const [pending, setPending] = useState(false);
@@ -177,6 +182,7 @@ function AuthForm({ changing = false, otherLogin, registrationPath }) {
         <LogoutButton />
       ) : (
         <>
+          {alternateLogin}
           <a href={otherLogin.href}>{otherLogin.label}</a>
           {registrationPath && (
             <p className="auth-register-link">
@@ -189,12 +195,19 @@ function AuthForm({ changing = false, otherLogin, registrationPath }) {
   );
 }
 
-export function LoginPage({ otherLogin, registrationPath }) {
+export function LoginPage({ otherLogin, registrationPath, alternateLogin }) {
   const { status, user, home, signingOut } = useSession();
   const { state } = useLocation();
   if (signingOut || status === "loading" || status === "error")
     return <SessionStatus />;
-  if (status === "guest") return <AuthForm otherLogin={otherLogin} registrationPath={registrationPath} />;
+  if (status === "guest")
+    return (
+      <AuthForm
+        otherLogin={otherLogin}
+        registrationPath={registrationPath}
+        alternateLogin={alternateLogin}
+      />
+    );
   if (!home) return <AccessDenied />;
   if (user.debeCambiarClave)
     return <Navigate to="/cambiar-clave" replace state={state} />;

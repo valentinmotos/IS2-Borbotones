@@ -92,11 +92,15 @@ public class MinoristaService {
         }
         validarTexto(request.nombre(), "El nombre", "nombre");
         validarTexto(request.apellido(), "El apellido", "apellido");
-        LocalDate nacimiento = request.fechaNacimiento();
-        if (nacimiento == null || !nacimiento.isBefore(LocalDate.now())) {
+        validarEdad(request.fechaNacimiento());
+    }
+
+    static void validarEdad(LocalDate nacimiento) {
+        LocalDate hoy = LocalDate.now();
+        if (nacimiento == null || !nacimiento.isBefore(hoy)) {
             throw new ErrorServiceException("Ingresá una fecha de nacimiento válida.", "fechaNacimiento");
         }
-        if (nacimiento.plusYears(EDAD_MINIMA).isAfter(LocalDate.now())) {
+        if (nacimiento.plusYears(EDAD_MINIMA).isAfter(hoy)) {
             throw new ErrorServiceException("Tenés que ser mayor de edad.", "fechaNacimiento");
         }
     }

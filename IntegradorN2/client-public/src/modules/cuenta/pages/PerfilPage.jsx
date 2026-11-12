@@ -6,6 +6,7 @@ import {
 import DireccionField from "../../../../../packages/address/DireccionField.jsx";
 import { api } from "../../../lib/api.js";
 import CambioClaveForm from "../components/CambioClaveForm.jsx";
+import GoogleAccount from "../../acceso/GoogleAccount.jsx";
 import "../styles.css";
 
 // E2-07: perfil del minorista autenticado. Datos personales, dirección de entrega con el
@@ -167,6 +168,7 @@ export default function PerfilPage() {
         </div>
       </form>
       <CambioClaveForm />
+      <GoogleAccount />
     </div>
   );
 }

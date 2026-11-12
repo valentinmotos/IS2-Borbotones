@@ -86,6 +86,7 @@ test("las rutas React renderizan su contenido y una recuperación para rutas des
         ["/creditos", "Créditos de fotografía"],
         ["/como-comprar", "Cómo comprar"],
         ["/login", "Iniciar sesión"],
+        ["/acceso/google?error=acceso", "Acceso con Google"],
         ["/cuenta", null],
         ["/inexistente", "Página no encontrada"],
       ],

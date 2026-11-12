@@ -44,6 +44,10 @@ export default function SessionProvider({ api, tokenStore, homes, children }) {
     const { data } = await api.post("/auth/login", credentials, {
       skipAuth: true,
     });
+    return acceptLogin(data);
+  }
+
+  function acceptLogin(data) {
     if (!Object.hasOwn(homes, data.rol)) return false;
     save(data);
     return true;
@@ -85,6 +89,7 @@ export default function SessionProvider({ api, tokenStore, homes, children }) {
         ...session,
         home,
         login,
+        acceptLogin,
         logout,
         signingOut,
         changePassword,

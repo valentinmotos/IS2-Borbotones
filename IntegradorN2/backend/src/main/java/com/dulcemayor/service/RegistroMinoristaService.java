@@ -5,6 +5,8 @@ import java.util.Locale;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import com.dulcemayor.dto.ActivarCuentaRequest;
 import com.dulcemayor.dto.MinoristaOpcion;
 import com.dulcemayor.dto.RegistroMinoristaRequest;
@@ -75,7 +77,12 @@ public class RegistroMinoristaService {
         contacto.setMinorista(guardado);
         contactoRepository.save(contacto);
 
-        enviarCodigo(correo, request.nombre(), codigo);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                enviarCodigo(correo, request.nombre(), codigo);
+            }
+        });
         return new MinoristaOpcion(guardado.getId(), guardado.getNombre(), guardado.getApellido(),
                 guardado.getNumeroDocumento());
     }
