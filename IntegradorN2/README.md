@@ -807,3 +807,48 @@ Tests: `FacturacionServiceTest` (con stock, sin stock, SIN_STOCK repetido, produ
 Al facturar un pedido, individualmente o en lote, se envía en segundo plano un correo al contacto registrado del minorista del punto de venta. Si no hay un contacto válido, se usa el correo de su cuenta. El mensaje incluye el comercio, el número de pedido, sus productos, los importes y la factura PDF adjunta. El envío se activa después de confirmar la transacción.
 
 Para probarlo, configurá el [SMTP de desarrollo](#servicio-de-correo-asíncrono), cargá un pedido con stock desde Preventa y facturalo con `POST /api/pedidos/{id}/facturar` como Jefe o Administrativo. En la bandeja de prueba, abrí «Factura N° … · Dulce Mayor» y comprobá el detalle y el adjunto `factura-00000001.pdf` (el número depende de la factura emitida).
+
+## Panel del minorista: compras y facturas · E4-08
+
+En el sitio público, **Mi cuenta → Mis compras** muestra al minorista todos los pedidos de sus puntos de venta, del más nuevo al más viejo, con el estado del envío y el de la factura. El detalle de cada pedido trae los productos, los importes, la **línea de tiempo** del envío (historial de E4-01) y la factura, que se puede descargar en PDF. Si la factura está pendiente de pago y tiene saldo, aparece **«Pagar ahora»**, que abre el Checkout Pro de Mercado Pago de E4-05.
+
+El minorista sale siempre del token y cada consulta filtra por `pedido.puntoDeVenta.minorista`. Si pide un pedido o una factura de otro minorista recibe **404**, aunque conozca el id (igual que el checkout de E4-05), así no se revela que existe. La línea de tiempo no expone el usuario interno que hizo cada cambio; solo el estado, la fecha, la observación y el transportista.
+
+- **Service:** `CompraMinoristaService` (`listarPedidoPorMinorista`, `buscarPedidoDelMinorista`, `descargarFacturaDelMinorista`, todos con el id del usuario del token). El PDF lo arma `FacturaPdfService` de E4-04 y el saldo sale de `PagoService.saldoPendienteEnPesos` de E4-05.
+- **Pantallas:** `client-public/src/modules/compras/` (`ComprasPage`, `CompraDetallePage`, `LineaTiempo`, `AccionesFactura`).
+- **Reutilizado de:** `IntegradorN1/.../CompraClienteController` (el cliente sale de la sesión y una compra ajena se rechaza) y su `CompraClienteIntegrationTest`.
+
+### Endpoints (MINORISTA)
+
+| Método | Ruta | Respuesta |
+|---|---|---|
+| GET | `/api/minorista/compras` | `CompraMinoristaResponse[]` del más nuevo al más viejo |
+| GET | `/api/minorista/compras/{pedidoId}` | `CompraMinoristaDetalleResponse` · `404` si no es suyo o no existe |
+| GET | `/api/minorista/facturas/{facturaId}/pdf` | `application/pdf` con `Content-Disposition: attachment; filename="factura-00000012.pdf"` · `404` si no es suya |
+| POST | `/api/minorista/facturas/{facturaId}/checkout` | Ya existía (E4-05): «Pagar ahora» lo llama y redirige a `checkoutUrl` |
+
+`CompraMinoristaResponse(pedidoId, numeroPedido, fechaHoraCarga, comercio, subtotal, descuento, total, estadoPedido, facturaId, numeroFactura, fechaFactura, estadoFactura, saldoPendiente, puedePagar)`. Los campos de factura y `saldoPendiente` son `null` mientras el pedido no se facturó; `numeroFactura` es el número visible con ceros.
+`CompraMinoristaDetalleResponse(compra, codigoPromocion, detalles[{productoId, codigo, producto, presentacion, cantidad, precioUnitario, subtotal}], lineaDeTiempo[{estado, fechaHora, observacion, transportista}])`.
+
+Para que Mercado Pago devuelva al minorista a su panel después de pagar, configurá `MERCADOPAGO_SUCCESS_URL` (y, si querés, `MERCADOPAGO_FAILURE_URL` y `MERCADOPAGO_PENDING_URL`) con `http://localhost:5174/cuenta/compras` o la URL pública equivalente.
+
+### Cómo probarlo
+
+Criterio: el minorista ve todos sus pedidos, descarga cada factura y no puede ver pedidos de otro minorista.
+
+1. Como `preventor@dulcemayor.com.ar`, cargar dos pedidos para «Kiosco Centro» desde el portal de preventa (E4-02).
+2. Como `administrativo@dulcemayor.com.ar`, facturar uno con `POST /api/pedidos/{id}/facturar`.
+3. Entrar al [sitio público](http://localhost:5174/login) con `minorista@dulcemayor.com.ar` y abrir **Mi cuenta → Mis compras**: aparecen los dos pedidos; el facturado muestra «Pendiente de pago», «Descargar factura» y «Pagar ahora».
+4. Abrir el detalle: la línea de tiempo muestra Recibido → Facturado con fecha y hora, y En reparto y Entregado como pendientes. «Descargar factura» baja `factura-0000000N.pdf`.
+5. «Pagar ahora» redirige a Mercado Pago si están las credenciales de E4-05; si no, muestra el mensaje del servidor (503).
+6. Con el token del minorista, pedir `GET /api/minorista/compras/{id}` de un pedido de otro minorista → `404`. Con un token de preventor, `GET /api/minorista/compras` → `403`.
+
+Tests: `CompraMinoristaServiceTest` (Mockito: listado con y sin factura, `puedePagar` solo con saldo, detalle con líneas y línea de tiempo, pedido y factura ajenos → 404, usuario sin perfil) y `CompraMinoristaIntegrationTest` (criterio de punta a punta con dos minoristas, PDF descargable, 401/403/404). Para ejecutarlas: `mvnw.cmd "-Dtest=CompraMinoristaServiceTest,CompraMinoristaIntegrationTest" test` desde `backend`.
+
+### Para otros issues
+
+- **«Pagar ahora» y la forma de pago (desvío del plan):** el plan pide el botón solo en los pedidos "pendientes de pago con billetera", pero `Pedido` no guarda la forma de pago elegida (ni en el UML ni en el código). Por eso `puedePagar` es true para toda factura `PENDIENTE_PAGO` con saldo. Si un issue agrega la forma de pago al pedido, filtrar por `BILLETERA_VIRTUAL` en `CompraMinoristaService.compra(...)`. Está comentado con `NOTA (E4-08)`.
+- **Página de pago:** E4-05 quedó como Checkout Pro (redirección a Mercado Pago), no como una página de QR dentro del sitio; el botón usa ese checkout tal cual.
+- **UML:** `listarFacturaPorMinorista(idMinorista)` no se agregó a `FacturacionService`. La lectura del minorista vive en `CompraMinoristaService` y recibe el id del **usuario** del token, para que nadie pida las compras de otro pasando un id.
+- **E5-02 (entrega):** cuando el distribuidor marca EN_REPARTO o ENTREGADO, el historial de E4-01 registra el transportista y la línea de tiempo del minorista lo muestra sin cambios.
+- **E5-03 (reportes):** `PedidoRepository.findByPuntoDeVenta_Minorista_IdAndEliminadoFalseOrderByFechaHoraCargaDescIdDesc(minoristaId)` sirve para reportes por cliente.
