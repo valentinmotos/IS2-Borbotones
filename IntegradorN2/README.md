@@ -795,12 +795,20 @@ Tests: `FacturacionServiceTest` (con stock, sin stock, SIN_STOCK repetido, produ
 ### Para otros issues
 
 - **Firma del contrato:** es `FacturacionService.facturarPedido(idPedido, idUsuario)`, no `facturarPedido(idPedido)`. Se agregó `idUsuario` porque E4-01 exige el responsable en el historial; se saca del token (`@AuthenticationPrincipal UsuarioAutenticado`). Está comentado en el código (`NOTA (E4-04)`).
-- **E4-06 (panel de almacén):** el botón «Procesar y facturar» llama a `POST /api/pedidos/{id}/facturar`; mostrar `mensaje` y, si vuelve `SIN_STOCK`, la tabla de `faltantes`. Hay un botón opcional para procesar todos con `POST /api/pedidos/procesar`. La descarga es `GET /api/facturas/{id}/pdf` (blob con el token).
+- **E4-06 (panel de almacén):** [Almacén y facturación](#almacén-y-facturación--e4-06) usa la facturación individual y la descarga de PDF.
 - **E4-07 (correo de factura):** cada factura confirmada activa el envío descrito en [Correo de confirmación de factura](#correo-de-confirmación-de-factura--e4-07).
 - **E4-05 (pagos):** la factura nace en `PENDIENTE_PAGO`; `PagoService.registrar` o la confirmación acreditada del Webhook de Mercado Pago la pasa a `PAGADA` cuando se cubre el saldo.
 - **E4-08 (minorista):** no usar `/api/facturas/**` (solo gestión). Exponer las facturas bajo `/api/minorista/**`, validar que la factura sea de un punto de venta del minorista logueado (`FacturaRepository.findByPedido_PuntoDeVenta_Minorista_IdAndEliminadoFalse`) y recién ahí llamar a `FacturaPdfService`.
 - **E5-03 (reportes):** OpenPDF ya está en el `pom.xml` (`openpdf.version`).
 - **Numeración:** es el último número + 1, y la columna `numero_factura` es única. Si se necesitara más concurrencia, se reemplaza por una secuencia de la base sin cambiar la firma.
+
+## Almacén y facturación · E4-06
+
+El panel `/almacen` está disponible para Jefe y Administrativo. El listado admite un filtro por estado (`GET /api/pedidos?estado=`). Al abrir un pedido (`GET /api/pedidos/{id}`), el detalle muestra productos, importes, faltantes de stock y, cuando ya se facturó, la factura y los pagos registrados.
+
+1. Como Preventor, cargá un pedido en `/preventa`. Como Administrativo, abrí **Almacén y facturación**, filtrá por **Cargado** y abrí su detalle.
+2. Pulsá **Procesar y facturar**. Con stock suficiente, el pedido queda **Facturado**, se descuentan las unidades y se habilita **Descargar PDF**. Si hay faltantes, el pedido queda **Sin stock** y podés volver a procesarlo después de reponer.
+3. Registrá un pago parcial en efectivo y completá el saldo por transferencia. El detalle muestra los dos cobros y la factura queda **Pagada** al cubrir el total.
 
 ## Correo de confirmación de factura · E4-07
 

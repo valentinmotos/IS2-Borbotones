@@ -155,7 +155,7 @@ public class FacturacionService {
 
     /** Solo se procesan pedidos CARGADO o SIN_STOCK que todavía no tengan factura. */
     void validar(Pedido pedido) {
-        if (pedido.getEstado() != EstadoPedido.CARGADO && pedido.getEstado() != EstadoPedido.SIN_STOCK) {
+        if (!esProcesable(pedido.getEstado())) {
             throw new ErrorServiceException("El pedido está en " + pedido.getEstado()
                     + " y no se puede facturar.", "estado");
         }
@@ -165,6 +165,10 @@ public class FacturacionService {
         if (pedido.getDetalles().isEmpty()) {
             throw new ErrorServiceException("El pedido no tiene productos para facturar.", "detalles");
         }
+    }
+
+    static boolean esProcesable(EstadoPedido estado) {
+        return estado == EstadoPedido.CARGADO || estado == EstadoPedido.SIN_STOCK;
     }
 
     /**
@@ -204,7 +208,7 @@ public class FacturacionService {
         }
     }
 
-    private List<FaltanteStockDTO> buscarFaltantes(Pedido pedido) {
+    List<FaltanteStockDTO> buscarFaltantes(Pedido pedido) {
         Map<String, Producto> productos = new TreeMap<>();
         pedido.getDetalles().forEach(linea -> productos.put(linea.getProducto().getId(), linea.getProducto()));
         List<FaltanteStockDTO> faltantes = new ArrayList<>();
