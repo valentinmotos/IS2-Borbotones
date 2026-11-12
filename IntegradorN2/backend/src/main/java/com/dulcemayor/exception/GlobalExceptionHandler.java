@@ -47,6 +47,11 @@ public class GlobalExceptionHandler {
         return responder(HttpStatus.UNAUTHORIZED, ex);
     }
 
+    @ExceptionHandler(ServicioNoDisponibleException.class)
+    public ResponseEntity<ErrorRespuesta> servicioNoDisponible(ServicioNoDisponibleException ex) {
+        return responder(HttpStatus.SERVICE_UNAVAILABLE, ex);
+    }
+
     @ExceptionHandler(ErrorServiceException.class)
     public ResponseEntity<ErrorRespuesta> negocio(ErrorServiceException ex) {
         return responder(HttpStatus.BAD_REQUEST, ex);
