@@ -15,6 +15,7 @@ import com.dulcemayor.entity.enums.RolUsuario;
 import com.dulcemayor.entity.enums.TipoDocumento;
 import com.dulcemayor.repository.DetallePedidoRepository;
 import com.dulcemayor.repository.HistorialEstadoPedidoRepository;
+import com.dulcemayor.repository.LocalidadRepository;
 import com.dulcemayor.repository.PedidoRepository;
 import com.dulcemayor.repository.PreventorRepository;
 import com.dulcemayor.repository.UsuarioRepository;
@@ -55,6 +56,7 @@ class PreventaIntegrationTest {
     @Autowired private DetallePedidoRepository detalles;
     @Autowired private HistorialEstadoPedidoRepository historial;
     @Autowired private PromocionService promociones;
+    @Autowired private LocalidadRepository localidades;
 
     @Test
     void registraMinoristaYPuntoYCargaPedidoConStockYPreciosDelServidor() throws Exception {
@@ -150,6 +152,70 @@ class PreventaIntegrationTest {
         }
     }
 
+    /** E5-01: al cerrar un pedido el sistema propone el siguiente punto y devuelve la ruta para el mapa. */
+    @Test
+    void alCerrarUnPedidoLaRutaProponeElSiguientePuntoMasCercano() throws Exception {
+        String preventor = crearPreventor("ruta-e501@example.invalid", "32126804", "P-E5-01");
+        String minorista = id(mvc.perform(post(PREVENTA + "/minoristas").header("Authorization", preventor)
+                        .contentType(MediaType.APPLICATION_JSON).content("""
+                                {"nombre":"Rita","apellido":"Ruta","fechaNacimiento":"1990-01-01",
+                                 "tipoDocumento":"DNI","numeroDocumento":"32126805",
+                                 "correo":"e5-01-minorista@example.invalid","clave":"Prueba1234!"}
+                                """))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+        String centro = crearPunto(preventor, minorista, "Ruta Centro", -32.8878, -68.8421);
+        String godoyCruz = crearPunto(preventor, minorista, "Ruta Godoy Cruz", -32.9260, -68.8440);
+        String lasHeras = crearPunto(preventor, minorista, "Ruta Las Heras", -32.8300, -68.8200);
+
+        // Desde Las Heras: primero Las Heras, después Centro y por último Godoy Cruz.
+        String ruta = mvc.perform(get(PREVENTA + "/ruta").header("Authorization", preventor)
+                        .param("latitud", "-32.8310").param("longitud", "-68.8210"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("PENDIENTE"))
+                .andExpect(jsonPath("$.paradas.length()").value(3))
+                .andExpect(jsonPath("$.siguiente.puntoDeVentaId").value(lasHeras))
+                .andExpect(jsonPath("$.recorridoSugerido.length()").value(3))
+                .andReturn().getResponse().getContentAsString();
+        String rutaId = id(ruta);
+
+        var producto = catalogo.buscar(null, null).stream().filter(p -> p.stock() >= 1).findFirst().orElseThrow();
+        String pedidoId = id(mvc.perform(post(PREVENTA + "/pedidos").header("Authorization", preventor)
+                        .contentType(MediaType.APPLICATION_JSON).content("""
+                                {"claveCarga":"%s","puntoDeVentaId":"%s",
+                                 "lineas":[{"productoId":"%s","cantidad":1}]}
+                                """.formatted(UUID.randomUUID(), lasHeras, producto.id())))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+
+        // Sin GPS se parte del punto recién cerrado (Las Heras): el más cercano pendiente es Centro.
+        mvc.perform(get(PREVENTA + "/ruta").header("Authorization", preventor))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(rutaId))
+                .andExpect(jsonPath("$.paradas[?(@.puntoDeVentaId == '%s')].visitada".formatted(lasHeras)).value(true))
+                .andExpect(jsonPath("$.paradas[?(@.puntoDeVentaId == '%s')].pedidoId".formatted(lasHeras)).value(pedidoId))
+                .andExpect(jsonPath("$.siguiente.puntoDeVentaId").value(centro))
+                .andExpect(jsonPath("$.recorridoSugerido.length()").value(2));
+        mvc.perform(get(PREVENTA + "/ruta").header("Authorization", preventor)
+                        .param("latitud", "-32.9200").param("longitud", "-68.8440"))
+                .andExpect(jsonPath("$.siguiente.puntoDeVentaId").value(godoyCruz));
+
+        mvc.perform(get(PREVENTA + "/ruta").header("Authorization", preventor).param("latitud", "-32.9"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.mensaje").value("La posición actual no es válida."));
+        mvc.perform(get(PREVENTA + "/ruta").header("Authorization", token("administrativo")))
+                .andExpect(status().isForbidden());
+        mvc.perform(get(PREVENTA + "/ruta")).andExpect(status().isUnauthorized());
+    }
+
+    private String crearPunto(String preventor, String minorista, String nombre, double latitud, double longitud)
+            throws Exception {
+        String localidad = localidades.findByCodigoPostalAndEliminadoFalse("5500").orElseThrow().getId();
+        return id(mvc.perform(post("/api/puntos-de-venta").header("Authorization", preventor)
+                        .contentType(MediaType.APPLICATION_JSON).content("""
+                                {"nombreComercio":"%s","minoristaId":"%s","localidadId":"%s",
+                                 "calle":"San Martín","numeracion":"100","latitud":%s,"longitud":%s}
+                                """.formatted(nombre, minorista, localidad, latitud, longitud)))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+    }
+
     private String pedido(String punto, String producto, int cantidad, UUID clave) {
         return """
                 {"claveCarga":"%s","puntoDeVentaId":"%s","codigoPromocion":" PROMO-E4 ",
@@ -170,14 +236,18 @@ class PreventaIntegrationTest {
     }
 
     private String crearOtroPreventor() {
-        var usuario = usuarioService.crearUsuario("otro-e402@example.invalid", RolUsuario.PREVENTOR, "Prueba1234!", false);
+        return crearPreventor("otro-e402@example.invalid", "32126803", "P-E4-02");
+    }
+
+    private String crearPreventor(String correo, String documento, String legajo) {
+        var usuario = usuarioService.crearUsuario(correo, RolUsuario.PREVENTOR, "Prueba1234!", false);
         var preventor = new Preventor();
         preventor.setNombre("Otro");
         preventor.setApellido("Preventor");
         preventor.setFechaNacimiento(LocalDate.of(1990, 1, 1));
         preventor.setTipoDocumento(TipoDocumento.DNI);
-        preventor.setNumeroDocumento("32126803");
-        preventor.setLegajo("P-E4-02");
+        preventor.setNumeroDocumento(documento);
+        preventor.setLegajo(legajo);
         preventor.setUsuario(usuario);
         preventores.save(preventor);
         return "Bearer " + jwt.emitir(usuario);

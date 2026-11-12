@@ -237,11 +237,26 @@ public class DataSeeder implements CommandLineRunner {
         puntoDeVentaService.crearPuntoDeVenta(new PuntoDeVentaRequest("Kiosco Centro", minorista.getId(),
                 localidad.getId(), "San Martín", "850", "Centro", null, null, "Punto de venta de demostración",
                 -32.8878, -68.8421), usuarioPreventor.getId());
+        // E5-01: más comercios del mismo preventor, en otros departamentos, para que la ruta del día
+        // tenga varios puntos y se vea el próximo punto más cercano y el recorrido en el mapa.
+        cargarPuntoDeVenta("Almacén Godoy Cruz", minorista.getId(), "5501", "Perú", "1200", -32.9260, -68.8440,
+                usuarioPreventor.getId());
+        cargarPuntoDeVenta("Maxikiosco Villa Nueva", minorista.getId(), "5521", "Bandera de los Andes", "2500",
+                -32.8960, -68.7940, usuarioPreventor.getId());
+        cargarPuntoDeVenta("Kiosco Las Heras", minorista.getId(), "5539", "San Miguel", "800", -32.8500,
+                -68.8290, usuarioPreventor.getId());
 
         // E2-07: la dirección de entrega del minorista de demo se carga como desde su perfil
         minoristaService.modificarMinorista(minorista.getUsuario().getId(), new PerfilMinoristaRequest(
                 minorista.getNombre(), minorista.getApellido(), minorista.getFechaNacimiento(), localidad.getId(),
                 "San Martín", "850", "Centro", null, null, "Entregar en el kiosco", -32.8878, -68.8421));
+    }
+
+    private void cargarPuntoDeVenta(String nombre, String idMinorista, String codigoPostal, String calle,
+            String numeracion, double latitud, double longitud, String idUsuarioPreventor) {
+        var localidad = localidadRepository.findByCodigoPostalAndEliminadoFalse(codigoPostal).orElseThrow();
+        puntoDeVentaService.crearPuntoDeVenta(new PuntoDeVentaRequest(nombre, idMinorista, localidad.getId(), calle,
+                numeracion, null, null, null, "Punto de venta de demostración", latitud, longitud), idUsuarioPreventor);
     }
 
     private void cargarPedidos() { /* E6-04. */ }
