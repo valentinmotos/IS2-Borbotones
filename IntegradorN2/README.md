@@ -689,3 +689,33 @@ Tests (no necesitan Ollama): `OllamaChatbotAdapterTest` (traducción de la API c
 
 - **E3-05 (chat del sitio):** `POST /api/publico/chatbot/presupuesto` con `{mensaje}`. Mostrar `items`, `excluidos` con su `motivo`, `total` y `totalDolares` (con `cotizacionDolar` y `fechaCotizacion`). Ante un `503`, mostrar el formulario de presupuesto (plan B). Una respuesta tarda varios segundos: mostrar un indicador de "escribiendo".
 - **`ServicioNoDisponibleException`:** cualquier service que dependa de un servicio externo sin respaldo puede lanzarla para responder `503` con `{mensaje}`.
+## Catálogo público · E3-01
+
+Listado público de productos con foto, descripción, presentación por bulto y precio mayorista vigente. **Solo aparecen los productos activos con stock mayor que cero y precio vigente hoy.** Stock y precio se consultan en cada pedido, sin caché.
+
+- **Consulta:** `ProductoRepository.buscarCatalogo(id, texto, categoria, hoy)`, una sola consulta que arma `ProductoCatalogoDTO` (los parámetros vacíos no filtran). `CatalogoService` la usa para el listado y para el detalle.
+- **Pantalla:** `client-public/src/modules/catalog/pages/CatalogoPage.jsx`, ruta `/catalogo` («Catálogo» en el menú). Búsqueda por nombre (consulta 300 ms después de dejar de escribir) y filtro por categoría.
+
+### Endpoints (públicos)
+
+| Método | Ruta | Respuesta |
+|---|---|---|
+| GET | `/api/publico/catalogo?nombre=&categoriaId=` | `ProductoCatalogoDTO[]` ordenados por nombre |
+| GET | `/api/publico/catalogo/{id}` | `ProductoCatalogoDTO` · `404` si no existe, no tiene stock o no tiene precio |
+| GET | `/api/publico/catalogo/categorias` | categorías activas |
+
+`ProductoCatalogoDTO(id, codigo, nombre, descripcion, presentacion, unidadesPorBulto, precio, stock, categoriaId, categoriaNombre, imagenId)`. La foto se pide a `GET /api/imagenes/{imagenId}`.
+
+### Cómo probarlo
+
+Criterio: un producto que llega a stock 0 deja de mostrarse en el catálogo sin recargar la base.
+
+1. Con la base recién creada (el seeder carga 5 productos; «Chupetín frutal» sin stock), abrir <http://localhost:5174/catalogo>: aparecen 4 productos y el chupetín no.
+2. En el panel, descontar todo el stock de «Chocolate con leche 25 g» (Stock → ajuste) y actualizar el catálogo: el chocolate ya no aparece.
+
+Test: `CatalogoPublicoIntegrationTest` (sin token, solo con stock, búsqueda, categoría, detalle con 404 y el criterio).
+
+### Para otros issues
+
+- **E3-03 (detalle):** `GET /api/publico/catalogo/{id}` ya trae precio en pesos y `stock`; el precio en dólares se calcula con `GET /api/publico/cotizacion`.
+- **E4-02 (pedido del preventor):** `CatalogoService.buscar(nombre, categoriaId)` o el endpoint del listado; el `stock` sirve para avisar antes de cargar más de lo disponible.
