@@ -91,6 +91,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
                         // Públicos
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        // E4-05: la firma del Webhook se valida dentro del controller.
+                        .requestMatchers(HttpMethod.POST, "/api/webhooks/mercadopago/orders").permitAll()
                         .requestMatchers("/api/publico/**").permitAll()
                         // E1-05: el sitio público muestra fotos de productos y sucursales
                         .requestMatchers(HttpMethod.GET, "/api/imagenes/*").permitAll()

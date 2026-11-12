@@ -643,6 +643,36 @@ El envío usa las variables SMTP `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAI
 - **Tests:** `CotizacionDolarServiceTest` (criterio: vigente y respaldo con la última guardada) y `CotizacionDolarIntegrationTest` (endpoint sin token y caché), los dos con DolarAPI mockeada.
 - **Para otros issues (E3-02, E3-03, E4-05):** usar `cotizacionDolarService.buscarCotizacionVigente()`; no llamar al provider directo.
 
+## Pagos y Checkout Pro · E4-05
+
+`PagoService` registra pagos parciales o totales en ARS o USD. Para USD toma y persiste la cotización vigente mediante `CotizacionDolarService`; al completar el saldo, marca la factura como pagada. Checkout Pro se integra del lado del servidor con Orders API (`POST /v1/orders`): el minorista inicia un checkout y el backend devuelve `checkoutUrl`. Solo un Webhook firmado seguido de una consulta de la Order a Mercado Pago puede confirmar el pago.
+
+### Endpoints
+
+| Método | Ruta | Acceso | Uso |
+|---|---|---|---|
+| POST | `/api/pagos` | JEFE, ADMINISTRATIVO | Registra un pago con `facturaId`, `formaDePagoId`, `monto`, `moneda` (`ARS`/`USD`) y `observacion`. |
+| GET | `/api/pagos/factura/{facturaId}` | JEFE, ADMINISTRATIVO | Lista los pagos activos de una factura. |
+| POST | `/api/minorista/facturas/{facturaId}/checkout` | Minorista dueño de la factura | Crea o reutiliza una Order pendiente y devuelve la URL a la que debe redirigir el cliente. |
+| GET | `/api/minorista/facturas/{facturaId}/checkout` | Minorista dueño de la factura | Consulta el estado local del último checkout de esa factura. |
+| POST | `/api/webhooks/mercadopago/orders` | Público; valida `x-signature` | Recibe el evento Order, consulta `/v1/orders/{id}` y registra el pago cuando está acreditado. |
+
+El checkout cobra el saldo pendiente en ARS. El backend no toma montos del navegador: calcula el saldo desde la factura y los pagos registrados. Mientras haya una Order activa no permite registrar otro pago para esa factura.
+
+### Credenciales y Webhook
+
+Copiá `.env.example` como `.env` y completá `MERCADOPAGO_ACCESS_TOKEN` y `MERCADOPAGO_WEBHOOK_SECRET` al final del proyecto. Son valores privados del backend; no los pongas en `client-admin` ni `client-public`, ni los subas al repositorio. Si Mercado Pago te da credenciales de prueba, usalas primero. Las URLs opcionales de resultado se configuran en `MERCADOPAGO_SUCCESS_URL`, `MERCADOPAGO_FAILURE_URL` y `MERCADOPAGO_PENDING_URL`.
+
+En **Tus integraciones → tu aplicación → Webhooks**, configura el evento **Order (Mercado Pago)**. La ruta que debe recibir es:
+
+```text
+https://<dominio-publico-del-backend>/api/webhooks/mercadopago/orders
+```
+
+Mercado Pago necesita una URL HTTPS pública; para probar en tu PC usá un túnel HTTPS que apunte al backend local (por ejemplo, puerto `8080`) y pega esa URL completa. Copiá la firma secreta que genera esa configuración a `MERCADOPAGO_WEBHOOK_SECRET`. El Access Token se copia en `MERCADOPAGO_ACCESS_TOKEN`.
+
+Con las credenciales vacías el servidor compila y arranca, pero al intentar crear un checkout responde `503` hasta configurar el Access Token. `mvnw.cmd test` cubre pagos, creación de Orders, verificación de firma e idempotencia sin contactar Mercado Pago.
+
 ## Chatbot de presupuesto con Ollama · E3-04
 
 El visitante escribe qué quiere («quiero 10 alfajores y 5 chupetines») y recibe un presupuesto. **La IA solo interpreta el texto** y devuelve productos y cantidades; el backend valida cada producto contra el catálogo, el stock y el precio vigente, y calcula los totales.
@@ -767,13 +797,13 @@ Tests: `FacturacionServiceTest` (con stock, sin stock, SIN_STOCK repetido, produ
 - **Firma del contrato:** es `FacturacionService.facturarPedido(idPedido, idUsuario)`, no `facturarPedido(idPedido)`. Se agregó `idUsuario` porque E4-01 exige el responsable en el historial; se saca del token (`@AuthenticationPrincipal UsuarioAutenticado`). Está comentado en el código (`NOTA (E4-04)`).
 - **E4-06 (panel de almacén):** el botón «Procesar y facturar» llama a `POST /api/pedidos/{id}/facturar`; mostrar `mensaje` y, si vuelve `SIN_STOCK`, la tabla de `faltantes`. Hay un botón opcional para procesar todos con `POST /api/pedidos/procesar`. La descarga es `GET /api/facturas/{id}/pdf` (blob con el token).
 - **E4-07 (correo de factura):** cada factura confirmada activa el envío descrito en [Correo de confirmación de factura](#correo-de-confirmación-de-factura--e4-07).
+- **E4-05 (pagos):** la factura nace en `PENDIENTE_PAGO`; `PagoService.registrar` o la confirmación acreditada del Webhook de Mercado Pago la pasa a `PAGADA` cuando se cubre el saldo.
+- **E4-08 (minorista):** no usar `/api/facturas/**` (solo gestión). Exponer las facturas bajo `/api/minorista/**`, validar que la factura sea de un punto de venta del minorista logueado (`FacturaRepository.findByPedido_PuntoDeVenta_Minorista_IdAndEliminadoFalse`) y recién ahí llamar a `FacturaPdfService`.
+- **E5-03 (reportes):** OpenPDF ya está en el `pom.xml` (`openpdf.version`).
+- **Numeración:** es el último número + 1, y la columna `numero_factura` es única. Si se necesitara más concurrencia, se reemplaza por una secuencia de la base sin cambiar la firma.
 
 ## Correo de confirmación de factura · E4-07
 
 Al facturar un pedido, individualmente o en lote, se envía en segundo plano un correo al contacto registrado del minorista del punto de venta. Si no hay un contacto válido, se usa el correo de su cuenta. El mensaje incluye el comercio, el número de pedido, sus productos, los importes y la factura PDF adjunta. El envío se activa después de confirmar la transacción.
 
 Para probarlo, configurá el [SMTP de desarrollo](#servicio-de-correo-asíncrono), cargá un pedido con stock desde Preventa y facturalo con `POST /api/pedidos/{id}/facturar` como Jefe o Administrativo. En la bandeja de prueba, abrí «Factura N° … · Dulce Mayor» y comprobá el detalle y el adjunto `factura-00000001.pdf` (el número depende de la factura emitida).
-- **E4-05 (pagos):** la factura nace en `PENDIENTE_PAGO`; `PagoService.confirmar` la pasa a `PAGADA`.
-- **E4-08 (minorista):** no usar `/api/facturas/**` (solo gestión). Exponer las facturas bajo `/api/minorista/**`, validar que la factura sea de un punto de venta del minorista logueado (`FacturaRepository.findByPedido_PuntoDeVenta_Minorista_IdAndEliminadoFalse`) y recién ahí llamar a `FacturaPdfService`.
-- **E5-03 (reportes):** OpenPDF ya está en el `pom.xml` (`openpdf.version`).
-- **Numeración:** es el último número + 1, y la columna `numero_factura` es única. Si se necesitara más concurrencia, se reemplaza por una secuencia de la base sin cambiar la firma.
