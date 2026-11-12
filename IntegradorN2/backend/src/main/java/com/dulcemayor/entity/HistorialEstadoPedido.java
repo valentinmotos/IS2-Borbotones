@@ -35,4 +35,8 @@ public class HistorialEstadoPedido extends BaseEntity {
 
     @Column(length = 500)
     private String observacion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transportista_id")
+    private Distribuidor transportista;
 }
