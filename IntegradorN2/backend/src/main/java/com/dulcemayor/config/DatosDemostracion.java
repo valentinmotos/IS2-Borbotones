@@ -477,10 +477,13 @@ public class DatosDemostracion {
      * Pedidos de hoy en todos los estados, cargados como desde las pantallas: dos CARGADO para facturar en
      * vivo, uno SIN_STOCK, uno FACTURADO con la factura pendiente de pago (el minorista de demo puede usar
      * «Pagar ahora»), uno FACTURADO y pagado listo para reparto y dos EN_REPARTO en la ruta del distribuidor.
+     * Pedro (preventor de demo) solo visita hoy dos de sus cuatro comercios: su ruta arranca con puntos
+     * pendientes y muestra el próximo más cercano (E6-01).
      */
     private void cargarPedidosDeHoy() {
         String pedro = usuarios.buscarUsuarioPorNombre("preventor@dulcemayor.com.ar").getId();
         String lucia = usuarios.buscarUsuarioPorNombre("preventor2@dulcemayor.com.ar").getId();
+        String tomas = usuarios.buscarUsuarioPorNombre("preventor3@dulcemayor.com.ar").getId();
         String administrativo = usuarios.buscarUsuarioPorNombre("administrativo@dulcemayor.com.ar").getId();
         String distribuidor = usuarios.buscarUsuarioPorNombre("distribuidor@dulcemayor.com.ar").getId();
         String efectivo = formaDePagoRepository.findByEliminadoFalse().stream()
@@ -500,11 +503,11 @@ public class DatosDemostracion {
         facturar(pedido(pedro, "Kiosco Centro", Map.of("CHO-004", 3, "CAR-003", 4)), administrativo);
 
         // FACTURADO y pagado: listo para reparto
-        pagar(facturar(pedido(pedro, "Kiosco Las Heras", Map.of("ALF-003", 2, "CHI-003", 2)), administrativo),
+        pagar(facturar(pedido(tomas, "Almacén Lo de Ana", Map.of("ALF-003", 2, "CHI-003", 2)), administrativo),
                 efectivo);
 
         // EN_REPARTO: el distribuidor ya los tomó para su ruta de hoy
-        var reparto1 = pedido(pedro, "Maxikiosco Villa Nueva", Map.of("GOM-003", 5, "CAR-004", 1));
+        var reparto1 = pedido(tomas, "Kiosco Plaza Maipú", Map.of("GOM-003", 5, "CAR-004", 1));
         var reparto2 = pedido(lucia, "Kiosco El Trébol", Map.of("CHO-002", 2, "GOM-004", 4));
         pagar(facturar(reparto1, administrativo), efectivo);
         pagar(facturar(reparto2, administrativo), efectivo);
