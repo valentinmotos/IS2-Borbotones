@@ -9,7 +9,10 @@ import com.dulcemayor.entity.Usuario;
 import com.dulcemayor.entity.enums.RolUsuario;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 /** E1-01: emisión y validación del JWT. */
 class JwtServiceTest {
@@ -43,6 +46,19 @@ class JwtServiceTest {
 
         assertThatThrownBy(() -> jwt.validar(token)).isInstanceOf(JwtException.class);
         assertThatThrownBy(() -> jwt.validar(jwt.emitir(usuario()) + "x")).isInstanceOf(JwtException.class);
+    }
+
+    /** E6-02: sesión vencida. Un token firmado con la clave correcta pero ya expirado se rechaza. */
+    @Test
+    void unTokenVencidoSeRechaza() {
+        JwtService jwt = new JwtService(SECRETO, "600");
+        long ahora = System.currentTimeMillis();
+        String vencido = Jwts.builder().subject("id-1").claim("rol", "PREVENTOR").claim("version", 3)
+                .issuedAt(new java.util.Date(ahora - 7_200_000)).expiration(new java.util.Date(ahora - 3_600_000))
+                .signWith(Keys.hmacShaKeyFor(SECRETO.getBytes(java.nio.charset.StandardCharsets.UTF_8)))
+                .compact();
+
+        assertThatThrownBy(() -> jwt.validar(vencido)).isInstanceOf(ExpiredJwtException.class);
     }
 
     @Test

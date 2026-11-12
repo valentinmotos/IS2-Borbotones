@@ -979,3 +979,12 @@ Usuarios: ver [Usuarios de demo](#usuarios-de-demo) (todos con clave `Demo1234!`
 
 - Los tests corren con `app.seeder.demo=false` (`application-test.properties`) porque varios esperan solo los cinco productos base. Un test nuevo que necesite datos de demo usa `@SpringBootTest(properties = "app.seeder.demo=true")`.
 - Las ventas históricas se guardan por repositorio (los services fechan "ahora") pero sus estados pasan por `Pedido.registrarCarga`/`avanzar`. No generan movimientos de stock: el stock es el saldo actual.
+
+## Revisión de seguridad · E6-02
+
+El checklist completo, con el resultado de cada punto y su test, está en [docs/E6-02-seguridad.md](docs/E6-02-seguridad.md).
+
+- **Corregido:** el alta, la modificación y la baja de departamentos y localidades quedan solo para JEFE y ADMINISTRATIVO. Antes las podían usar el preventor y el distribuidor (`SecurityConfig`, `NOTA (E6-02)`).
+- `MatrizDeAccesoIntegrationTest` prueba cada rol contra un endpoint de cada módulo. **Para otros issues:** si sumás un módulo nuevo, agregá su fila a la matriz.
+- `JwtServiceTest.unTokenVencidoSeRechaza` cubre las sesiones vencidas.
+- Quedan para Trello: el límite de intentos de login y `JWT_SECRET` obligatorio en el despliegue (E6-05).
