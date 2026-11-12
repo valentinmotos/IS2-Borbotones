@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PagoRepository extends JpaRepository<Pago, String> {
     List<Pago> findByFactura_IdAndEliminadoFalse(String facturaId);
+    boolean existsByReferenciaAndEliminadoFalse(String referencia);
 }
