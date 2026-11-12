@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -17,7 +17,7 @@ import {
   Kpi,
 } from "../../../../packages/design/components.jsx";
 import useApiResource from "../../lib/useApiResource.js";
-import { numero, resumirPedidos } from "./datos.js";
+import { numero, porcionesDeStock, resumirPedidos } from "./datos.js";
 import "./styles.css";
 
 const colores = [
@@ -33,6 +33,17 @@ const colores = [
 const formatoMes = new Intl.DateTimeFormat("es-AR", {
   month: "long",
   timeZone: "UTC",
+});
+const formatoHora = new Intl.DateTimeFormat("es-AR", {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+});
+/** HU-01, criterio 4: el panel se vuelve a consultar solo cada 30 s y al volver a la pestaña. */
+const REFRESCO_MS = 30_000;
+const porcentaje = new Intl.NumberFormat("es-AR", {
+  style: "percent",
+  maximumFractionDigits: 1,
 });
 const meses = Array.from({ length: 12 }, (_, indice) => ({
   valor: String(indice + 1).padStart(2, "0"),
@@ -75,13 +86,8 @@ function PanelEstadisticas({ data, anio, mes }) {
     (total, producto) => total + producto.cantidadActual,
     0,
   );
-  const porcionesStock = data.stock
-    .filter((producto) => producto.cantidadActual > 0)
-    .map((producto, indice) => ({
-      ...producto,
-      etiqueta: `${producto.nombre} (${producto.codigo})`,
-      fill: colores[indice % colores.length],
-    }));
+  // HU-01, criterio 3: los productos con más stock y el resto agrupado en «Otros», con su proporción
+  const porcionesStock = porcionesDeStock(data.stock, colores);
 
   return (
     <>
@@ -157,16 +163,39 @@ function PanelEstadisticas({ data, anio, mes }) {
         >
           <h2 id="stock-producto">Stock actual por producto</h2>
           {porcionesStock.length > 0 ? (
-            <PieChart responsive style={{ width: "100%", height: 260 }}>
-              <Pie
-                data={porcionesStock}
-                dataKey="cantidadActual"
-                nameKey="etiqueta"
-                outerRadius="85%"
-                isAnimationActive={false}
-              />
-              <Tooltip formatter={(valor) => numero.format(valor)} />
-            </PieChart>
+            <div className="estadisticas-torta">
+              <PieChart responsive style={{ width: "100%", height: 260 }}>
+                <Pie
+                  data={porcionesStock}
+                  dataKey="cantidadActual"
+                  nameKey="etiqueta"
+                  innerRadius="45%"
+                  outerRadius="85%"
+                  isAnimationActive={false}
+                />
+                <Tooltip
+                  formatter={(valor, _nombre, { payload }) =>
+                    `${numero.format(valor)} bultos (${porcentaje.format(payload.proporcion)})`
+                  }
+                />
+              </PieChart>
+              <ul
+                className="estadisticas-leyenda"
+                aria-label="Proporción del stock por producto"
+              >
+                {porcionesStock.map((porcion) => (
+                  <li key={porcion.productoId}>
+                    <span
+                      className="estadisticas-color"
+                      style={{ background: porcion.fill }}
+                      aria-hidden="true"
+                    />
+                    <span>{porcion.etiqueta}</span>
+                    <strong>{porcentaje.format(porcion.proporcion)}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : (
             <p>No hay productos con stock disponible.</p>
           )}
@@ -216,10 +245,24 @@ export default function EstadisticasPage() {
   const mes = periodo.grupo === "dia" ? periodo.mes : null;
   const params = new URLSearchParams({ anio });
   if (mes) params.set("mes", mes);
-  const { data, cargando, error } = useApiResource(
+  const [refresco, setRefresco] = useState(0);
+  const { data, cargando, actualizando, recibido, error } = useApiResource(
     `/estadisticas?${params}`,
-    version,
+    `${version}-${refresco}`,
+    { conservar: true },
   );
+
+  useEffect(() => {
+    const refrescar = () => {
+      if (document.visibilityState === "visible") setRefresco((n) => n + 1);
+    };
+    const intervalo = setInterval(refrescar, REFRESCO_MS);
+    document.addEventListener("visibilitychange", refrescar);
+    return () => {
+      clearInterval(intervalo);
+      document.removeEventListener("visibilitychange", refrescar);
+    };
+  }, []);
 
   function aplicar(event) {
     event.preventDefault();
@@ -284,6 +327,13 @@ export default function EstadisticasPage() {
         </button>
       </form>
       {cargando && <p role="status">Cargando estadísticas…</p>}
+      {recibido && (
+        <p className="estadisticas-actualizado" role="status">
+          {actualizando
+            ? "Actualizando…"
+            : `Actualizado a las ${formatoHora.format(recibido)} · se actualiza solo cada 30 segundos`}
+        </p>
+      )}
       {error && <Alert tone="danger">{error.message}</Alert>}
       {data && <PanelEstadisticas data={data} anio={anio} mes={mes} />}
     </div>

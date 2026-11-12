@@ -54,3 +54,34 @@ export function resumirPedidos(pedidos, anio, mes) {
     ),
   };
 }
+
+/**
+ * HU-01: porciones de la torta de stock. Los `maximo - 1` productos con más bultos van solos y el resto
+ * se agrupa en «Otros», así los colores no se repiten. Cada porción lleva su proporción sobre el total.
+ */
+export function porcionesDeStock(stock, colores, maximo = 8) {
+  const conStock = stock
+    .filter((producto) => producto.cantidadActual > 0)
+    .sort((a, b) => b.cantidadActual - a.cantidadActual);
+  const total = conStock.reduce((suma, p) => suma + p.cantidadActual, 0);
+  const visibles =
+    conStock.length > maximo ? conStock.slice(0, maximo - 1) : conStock;
+  const porciones = visibles.map((producto) => ({
+    productoId: producto.productoId,
+    etiqueta: `${producto.nombre} (${producto.codigo})`,
+    cantidadActual: producto.cantidadActual,
+  }));
+  const resto = conStock.slice(visibles.length);
+  if (resto.length > 0) {
+    porciones.push({
+      productoId: "otros",
+      etiqueta: `Otros (${resto.length} productos)`,
+      cantidadActual: resto.reduce((suma, p) => suma + p.cantidadActual, 0),
+    });
+  }
+  return porciones.map((porcion, indice) => ({
+    ...porcion,
+    proporcion: total ? porcion.cantidadActual / total : 0,
+    fill: colores[indice % colores.length],
+  }));
+}
