@@ -1,27 +1,38 @@
 @import "./tokens.css";
-@import "./taste/motion.css";
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 body {
   margin: 0;
-  color: var(--ink);
+  color: var(--c-text);
   background: var(--bg);
-  font: 400 1rem/1.5 var(--font-text);
+  font: 400 var(--fs-base) / 1.6 var(--font-text);
+  -webkit-font-smoothing: antialiased;
 }
 h1,
 h2,
 h3,
+h4,
 p,
 dl,
-dd {
+dd,
+figure {
   margin: 0;
 }
 h1,
 h2,
-h3 {
-  line-height: 1.05;
+h3,
+h4 {
+  color: var(--c-ink);
+  line-height: 1.2;
+  text-wrap: balance;
 }
 h1,
 h2 {
@@ -30,21 +41,39 @@ h2 {
   letter-spacing: var(--display-tracking);
 }
 h1 {
-  font-size: clamp(3.25rem, 7vw, 6rem);
+  font-size: var(--fs-h1);
 }
 h2 {
-  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-size: var(--fs-h2);
 }
 h3 {
-  font-size: 1.125rem;
+  font-size: var(--fs-h3);
+  font-weight: 600;
+}
+h4 {
+  font-size: var(--fs-base);
+  font-weight: 600;
+}
+p {
+  text-wrap: pretty;
 }
 a {
   color: var(--action);
-  text-underline-offset: 4px;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+a:hover {
+  color: var(--c-red-deep);
+}
+img {
+  max-width: 100%;
 }
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
+  color: inherit;
 }
 button {
   cursor: pointer;
@@ -53,71 +82,129 @@ svg {
   flex-shrink: 0;
   vertical-align: middle;
 }
+fieldset {
+  min-inline-size: 0;
+}
+legend {
+  font-weight: 600;
+  color: var(--c-ink);
+}
 :focus-visible {
   outline: 2px solid var(--dm-focus);
-  outline-offset: 4px;
+  outline-offset: 3px;
 }
 main:focus {
   outline: none;
 }
-section[id] {
-  scroll-margin-top: calc(var(--nav, 64px) + 16px);
+section[id],
+[id]:target {
+  scroll-margin-top: calc(var(--nav, 72px) + 16px);
+}
+::selection {
+  background: var(--c-amber-soft);
+  color: var(--c-ink);
 }
 
 .wrap {
-  width: min(calc(100% - 2 * var(--dm-gutter)), 1280px);
+  width: min(calc(100% - 2 * var(--dm-gutter)), 1200px);
   margin-inline: auto;
 }
 .skip-link {
   position: fixed;
-  z-index: 20;
+  z-index: 100;
   top: 12px;
   left: 12px;
   padding: 8px 16px;
-  background: var(--dm-surface);
+  color: #fff;
+  background: var(--c-ink);
+  border-radius: var(--r-pill);
 }
 .skip-link:not(:focus) {
   clip-path: inset(50%);
 }
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Marca: ícono circular + nombre en Playfair, como el logo de Sarab */
 .dm-brand {
-  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--c-ink);
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 1.375rem;
+  font-weight: 900;
   line-height: 1;
   text-decoration: none;
   white-space: nowrap;
 }
+.dm-brand:hover {
+  color: var(--c-ink);
+}
+.dm-brand::before {
+  content: "";
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 50%;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 7.5 6 4l-.5 3.5L2 8l3.5 3.5'/%3E%3Cpath d='m14.5 16.5 3.5 3.5.5-3.5L22 16l-3.5-3.5'/%3E%3Ccircle cx='12' cy='12' r='4.2'/%3E%3C/svg%3E")
+      center / 20px no-repeat,
+    linear-gradient(135deg, var(--c-red), var(--c-amber));
+  box-shadow: 0 4px 14px rgb(232 40 26 / 30%);
+}
+.dm-brand span {
+  color: var(--c-red);
+}
+
+/* Encabezado de página reutilizable en ambos sitios */
 .dm-page-header {
   display: grid;
-  gap: 12px;
-  margin-bottom: var(--s-6);
+  gap: var(--s-2);
+  margin-bottom: var(--s-5);
 }
 .dm-page-header p,
 .error-page p {
   color: var(--muted);
-  max-width: 56ch;
+  max-width: 62ch;
 }
 .error-page {
-  width: min(calc(100% - 2 * var(--dm-gutter)), 1280px);
+  width: min(calc(100% - 2 * var(--dm-gutter)), 640px);
   margin-inline: auto;
-  padding-block: 48px;
+  padding-block: clamp(48px, 10vw, 112px);
+  text-align: center;
 }
 .error-page p {
-  margin-top: 16px;
+  margin: var(--s-3) auto 0;
 }
 .error-page a {
-  display: inline-block;
-  margin-top: 24px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: var(--s-5);
+  padding: 10px 24px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--c-red), var(--c-red-strong));
+  border-radius: var(--r-pill);
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--sh-red);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   [data-enter] .enter-copy {
-    animation: dm-enter 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: dm-enter 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
   @keyframes dm-enter {
     from {
-      opacity: 0.2;
-      transform: translateY(14px);
+      opacity: 0;
+      transform: translateY(12px);
     }
     to {
       opacity: 1;

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import ImageUploader from "../../components/ImageUploader.jsx";
 import AddressDemo from "./AddressDemo.jsx";
+import "./styles.css";
 import {
   Alert,
   ConfirmDialog,
@@ -149,28 +150,26 @@ export default function DesignPage() {
   ];
 
   return (
-    <>
-      <header className="dm-page-header">
+    <div className="design-page">
+      <header className="page-head">
         <div>
+          <span className="eyebrow">Ayuda</span>
           <h1>Sistema de diseño</h1>
-          <p>
-            Probá los componentes con categorías de muestra. Los cambios duran
-            hasta que salís de esta página.
+          <p className="lead">
+            Probá los componentes del panel con categorías de muestra. Los
+            cambios duran hasta que salís de esta página.
           </p>
         </div>
       </header>
+      <dl className="kpi-grid">
+        <Kpi label="Categorías de muestra" value={rows.length} />
+        <Kpi label="Activas" value={rows.filter((row) => row.active).length} />
+      </dl>
       <div className="design-content">
         <section className="design-register" aria-labelledby="listado">
           <h2 id="listado" ref={heading} tabIndex={-1}>
             Registro de muestra
           </h2>
-          <dl className="design-totals">
-            <Kpi label="Categorías" value={rows.length} />
-            <Kpi
-              label="Activas"
-              value={rows.filter((row) => row.active).length}
-            />
-          </dl>
           {notice && (
             <Alert
               tone={notice.tone}
@@ -224,33 +223,41 @@ export default function DesignPage() {
           </button>
         </form>
       </div>
-      <details className="design-catalog">
-        <summary>Referencia de componentes</summary>
-        <DataTable
-          caption="Componentes usados en esta página"
-          columns={[
-            { key: "name", label: "Componente" },
-            { key: "usage", label: "Dónde probarlo" },
-          ]}
-          rows={componentGuide}
-          rowKey={(row) => row.name}
-        />
-      </details>
-
-      <section className="design-image-upload" aria-labelledby="subir-imagen">
-        <div>
-          <h2 id="subir-imagen">Carga de imágenes</h2>
-          <p>Seleccioná una imagen para revisar su vista previa antes de adjuntarla al formulario.</p>
-        </div>
-        <ImageUploader
-          onFileSelected={setArchivoImagen}
-        />
-        {archivoImagen && (
-          <p className="design-image-upload__success" role="status">
-            Archivo listo para adjuntar: {archivoImagen.name}
-          </p>
-        )}
-      </section>
+      <div className="design-extras">
+        <section
+          className="panel design-image-upload"
+          aria-labelledby="subir-imagen"
+        >
+          <div className="panel-head">
+            <h2 id="subir-imagen">Carga de imágenes</h2>
+            <p>
+              Elegí una imagen para revisar su vista previa antes de adjuntarla
+              a un formulario.
+            </p>
+          </div>
+          <ImageUploader onFileSelected={setArchivoImagen} />
+          {archivoImagen && (
+            <p className="design-image-upload__success" role="status">
+              Archivo listo para adjuntar: {archivoImagen.name}
+            </p>
+          )}
+        </section>
+        <section className="panel" aria-labelledby="referencia">
+          <div className="panel-head">
+            <h2 id="referencia">Referencia de componentes</h2>
+            <p>Qué hacer en esta página para ver cada componente.</p>
+          </div>
+          <DataTable
+            caption="Componentes usados en esta página"
+            columns={[
+              { key: "name", label: "Componente" },
+              { key: "usage", label: "Dónde probarlo" },
+            ]}
+            rows={componentGuide}
+            rowKey={(row) => row.name}
+          />
+        </section>
+      </div>
 
       <AddressDemo />
 
@@ -263,6 +270,6 @@ export default function DesignPage() {
       >
         <p>¿Querés quitar «{pending?.name}» del listado de muestra?</p>
       </ConfirmDialog>
-    </>
+    </div>
   );
 }

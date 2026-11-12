@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LocateFixed, MapPin } from "lucide-react";
 import { Alert } from "../../../../../packages/design/components.jsx";
 import { api } from "../../../lib/api.js";
 import RutaMap from "./RutaMap.jsx";
@@ -76,57 +77,78 @@ export default function MiRuta({ version, ultimoPuntoId, onElegir }) {
           )}
         </div>
         <button
-          className="dm-button"
+          className="dm-button dm-button-sm"
           type="button"
           disabled={cargando}
           onClick={() => setSolicitud((previa) => previa + 1)}
         >
+          <LocateFixed size={14} aria-hidden="true" />
           {cargando ? "Ubicando…" : "Actualizar ubicación"}
         </button>
       </div>
+      {ruta && ruta.paradas.length > 0 && (
+        <div className="ruta-progreso" aria-hidden="true">
+          <span
+            style={{ width: `${(visitadas / ruta.paradas.length) * 100}%` }}
+          />
+        </div>
+      )}
       {error && <Alert tone="danger">{error}</Alert>}
-      {!ruta && !error && <p role="status">Cargando la ruta…</p>}
+      {!ruta && !error && (
+        <p className="muted" role="status">
+          Cargando la ruta…
+        </p>
+      )}
       {ruta && ruta.paradas.length === 0 && (
-        <p>Todavía no tenés puntos de venta asignados.</p>
+        <p className="preventa-vacio">
+          Todavía no tenés puntos de venta asignados.
+        </p>
       )}
       {ruta && ruta.paradas.length > 0 && (
-        <>
-          {siguiente ? (
-            <div className="ruta-siguiente" aria-live="polite">
-              <div>
-                <span>
-                  {version > 0 ? "Pedido cerrado. " : ""}Próximo punto
-                </span>
-                <strong>{siguiente.nombreComercio}</strong>
-                <span>
-                  {siguiente.calle} {siguiente.numeracion}
-                  {siguiente.localidad && ` · ${siguiente.localidad}`}
-                  {ruta.distanciaKm != null &&
-                    ` · a ${kilometros.format(ruta.distanciaKm)} km`}
-                </span>
+        <div className="ruta-cuerpo">
+          <div className="ruta-info">
+            {siguiente ? (
+              <div className="ruta-siguiente" aria-live="polite">
+                <MapPin
+                  className="ruta-siguiente-icono"
+                  size={22}
+                  aria-hidden="true"
+                />
+                <div>
+                  <span>
+                    {version > 0 ? "Pedido cerrado. " : ""}Próximo punto
+                  </span>
+                  <strong>{siguiente.nombreComercio}</strong>
+                  <span>
+                    {siguiente.calle} {siguiente.numeracion}
+                    {siguiente.localidad && ` · ${siguiente.localidad}`}
+                    {ruta.distanciaKm != null &&
+                      ` · a ${kilometros.format(ruta.distanciaKm)} km`}
+                  </span>
+                </div>
+                <button
+                  className="dm-button dm-button-primary dm-button-lg"
+                  type="button"
+                  onClick={() => onElegir(siguiente.puntoDeVentaId)}
+                >
+                  Cargar pedido aquí
+                </button>
               </div>
-              <button
-                className="dm-button dm-button-primary"
-                type="button"
-                onClick={() => onElegir(siguiente.puntoDeVentaId)}
-              >
-                Cargar pedido aquí
-              </button>
-            </div>
-          ) : (
-            <Alert tone="success">
-              Visitaste todos los puntos de la ruta de hoy.
-            </Alert>
-          )}
-          {!posicion && siguiente && (
-            <p className="ruta-nota">
-              {visitadas > 0
-                ? "No tenemos tu ubicación: el recorrido parte del último punto visitado."
-                : "No tenemos tu ubicación: el recorrido empieza por el primer punto pendiente."}
-            </p>
-          )}
+            ) : (
+              <Alert tone="success">
+                Visitaste todos los puntos de la ruta de hoy.
+              </Alert>
+            )}
+            {!posicion && siguiente && (
+              <p className="ruta-nota">
+                {visitadas > 0
+                  ? "No tenemos tu ubicación: el recorrido parte del último punto visitado."
+                  : "No tenemos tu ubicación: el recorrido empieza por el primer punto pendiente."}
+              </p>
+            )}
+          </div>
           <RutaMap ruta={ruta} posicion={posicion} origen={ultima} />
-        </>
+        </div>
       )}
     </section>
   );

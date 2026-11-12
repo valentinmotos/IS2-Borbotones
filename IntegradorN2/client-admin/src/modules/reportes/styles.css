@@ -1,51 +1,52 @@
-.reportes-panel {
+/* Reportes de ventas: filtros en barra, KPI y paneles de resumen y detalle. */
+.reportes {
   display: grid;
-  gap: 1rem;
-  margin-block: 1.25rem;
+  gap: clamp(16px, 2.5vw, 24px);
+  min-width: 0;
 }
 
-.reportes-panel h2,
-.reportes-panel p {
-  margin-block: 0;
+.reportes > .page-head,
+.reportes > .kpi-grid {
+  margin: 0;
 }
 
 .reportes-filtros {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
-  align-items: end;
-  gap: 1rem;
+  margin-bottom: 0;
 }
 
-.reportes-filtros .dm-button {
-  justify-self: start;
+.reportes-filtros > .dm-field {
+  flex: 1 1 160px;
+  max-width: 240px;
 }
 
 .reportes-validacion {
-  color: var(--color-danger, #a12a35);
+  margin-top: var(--s-3);
+  color: var(--dm-danger);
+  font-size: var(--fs-sm);
+  font-weight: 500;
 }
 
-.reportes-kpis {
+.reportes .panel > .dm-alert {
+  margin-top: var(--s-3);
+}
+
+.reportes-titulo {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
-  gap: 1rem;
-  margin-block: 1.25rem;
-}
-
-.reportes-encabezado {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
+  gap: 4px;
+  min-width: 0;
 }
 
 .reportes-acciones {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--s-2);
 }
 
 @media (max-width: 640px) {
+  .reportes-filtros > .dm-field {
+    max-width: none;
+  }
+  .reportes-filtros > .dm-button,
   .reportes-acciones,
   .reportes-acciones .dm-button {
     width: 100%;

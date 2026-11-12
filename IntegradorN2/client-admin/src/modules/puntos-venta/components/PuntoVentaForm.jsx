@@ -5,6 +5,7 @@ import {
 } from "../../../../../packages/design/components.jsx";
 import DireccionField from "../../../../../packages/address/DireccionField.jsx";
 import { api } from "../../../lib/api.js";
+import "../styles.css";
 
 const vacio = {
   nombreComercio: "",
@@ -56,8 +57,11 @@ export default function PuntoVentaForm({
   }
 
   return (
-    <form className="design-form" onSubmit={guardar}>
-      <h2>Nuevo punto de venta</h2>
+    <form className="design-form pv-form" onSubmit={guardar}>
+      <div className="pv-form-head">
+        <h2>Nuevo punto de venta</h2>
+        <p>Cargá el comercio y marcá su ubicación en el mapa.</p>
+      </div>
       {error && <Alert tone="danger">{error}</Alert>}
       <FormField
         label="Nombre del comercio"

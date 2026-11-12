@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Plus } from "lucide-react";
 import {
   Alert,
   ConfirmDialog,
@@ -8,6 +9,7 @@ import {
 } from "../../../../../packages/design/components.jsx";
 import { api } from "../../../lib/api.js";
 import { crearCrudApi } from "../../../lib/crudApi.js";
+import "../styles.css";
 
 const departamentosApi = crearCrudApi("/departamentos");
 const localidadesApi = crearCrudApi("/localidades");
@@ -72,7 +74,8 @@ export default function UbicacionPage() {
         return datos;
       })
       .catch((error) => {
-        if (!signal?.aborted) setAviso({ tono: "danger", texto: error.message });
+        if (!signal?.aborted)
+          setAviso({ tono: "danger", texto: error.message });
         return [];
       })
       .finally(() => {
@@ -95,9 +98,12 @@ export default function UbicacionPage() {
     const controlador = new AbortController();
     setCargandoLocalidades(true);
     api
-      .get(`/departamentos/${encodeURIComponent(departamentoFiltro)}/localidades`, {
-        signal: controlador.signal,
-      })
+      .get(
+        `/departamentos/${encodeURIComponent(departamentoFiltro)}/localidades`,
+        {
+          signal: controlador.signal,
+        },
+      )
       .then((respuesta) => setLocalidades(respuesta.data))
       .catch((error) => {
         if (!controlador.signal.aborted)
@@ -204,7 +210,8 @@ export default function UbicacionPage() {
       errores.nombre = "El nombre de la localidad es obligatorio.";
     if (!/^\d{4}$/.test(codigoPostal.trim()))
       errores.codigoPostal = "El código postal debe tener 4 dígitos.";
-    if (!departamentoId) errores.departamentoId = "Debés seleccionar un departamento.";
+    if (!departamentoId)
+      errores.departamentoId = "Debés seleccionar un departamento.";
     if (Object.keys(errores).length) {
       setErroresLocalidad(errores);
       if (errores.nombre) campoLocalidad.current?.focus();
@@ -237,7 +244,10 @@ export default function UbicacionPage() {
     } catch (error) {
       const campo = error.campo;
       if (["nombre", "codigoPostal", "departamentoId"].includes(campo)) {
-        setErroresLocalidad((actuales) => ({ ...actuales, [campo]: error.message }));
+        setErroresLocalidad((actuales) => ({
+          ...actuales,
+          [campo]: error.message,
+        }));
         if (campo === "nombre") campoLocalidad.current?.focus();
         if (campo === "codigoPostal") campoCodigoPostal.current?.focus();
       } else setAviso({ tono: "danger", texto: error.message });
@@ -252,14 +262,22 @@ export default function UbicacionPage() {
     try {
       if (objetivo.tipo === "departamento") {
         await departamentosApi.eliminar(objetivo.registro.id);
-        if (editandoDepartamento?.id === objetivo.registro.id) limpiarDepartamento();
-        if (editandoLocalidad?.departamentoId === objetivo.registro.id) limpiarLocalidad();
-        setAviso({ tono: "success", texto: `Diste de baja «${objetivo.registro.nombre}».` });
+        if (editandoDepartamento?.id === objetivo.registro.id)
+          limpiarDepartamento();
+        if (editandoLocalidad?.departamentoId === objetivo.registro.id)
+          limpiarLocalidad();
+        setAviso({
+          tono: "success",
+          texto: `Diste de baja «${objetivo.registro.nombre}».`,
+        });
         await cargarDepartamentos();
       } else {
         await localidadesApi.eliminar(objetivo.registro.id);
         if (editandoLocalidad?.id === objetivo.registro.id) limpiarLocalidad();
-        setAviso({ tono: "success", texto: `Diste de baja «${objetivo.registro.nombre}».` });
+        setAviso({
+          tono: "success",
+          texto: `Diste de baja «${objetivo.registro.nombre}».`,
+        });
         const respuesta = await api.get(
           `/departamentos/${encodeURIComponent(departamentoFiltro)}/localidades`,
         );
@@ -297,7 +315,9 @@ export default function UbicacionPage() {
             type="button"
             className="dm-button dm-button-danger"
             aria-label={`Dar de baja ${departamento.nombre}`}
-            onClick={() => setAEliminar({ tipo: "departamento", registro: departamento })}
+            onClick={() =>
+              setAEliminar({ tipo: "departamento", registro: departamento })
+            }
           >
             Dar de baja
           </button>
@@ -326,7 +346,9 @@ export default function UbicacionPage() {
             type="button"
             className="dm-button dm-button-danger"
             aria-label={`Dar de baja ${localidad.nombre}`}
-            onClick={() => setAEliminar({ tipo: "localidad", registro: localidad })}
+            onClick={() =>
+              setAEliminar({ tipo: "localidad", registro: localidad })
+            }
           >
             Dar de baja
           </button>
@@ -335,14 +357,32 @@ export default function UbicacionPage() {
     },
   ];
 
-  const departamentoElegido = departamentos.find((item) => item.id === departamentoFiltro);
+  const departamentoElegido = departamentos.find(
+    (item) => item.id === departamentoFiltro,
+  );
 
   return (
-    <>
-      <header className="dm-page-header">
+    <div className="ubicacion-page">
+      <header className="page-head">
         <div>
+          <span className="eyebrow">Configuración</span>
           <h1>Ubicación</h1>
-          <p>Organizá los departamentos y las localidades que se usan en las direcciones.</p>
+          <p className="lead">
+            Organizá los departamentos y las localidades que se usan en las
+            direcciones de sucursales y comercios.
+          </p>
+        </div>
+        <div className="page-head-actions">
+          <a className="dm-button" href="#departamento-formulario">
+            Nuevo departamento
+          </a>
+          <a
+            className="dm-button dm-button-primary"
+            href="#localidad-formulario"
+          >
+            <Plus size={16} aria-hidden="true" />
+            Nueva localidad
+          </a>
         </div>
       </header>
 
@@ -352,15 +392,31 @@ export default function UbicacionPage() {
         </Alert>
       )}
 
-      <section className="design-content" aria-labelledby="departamentos-titulo">
+      <section
+        className="design-content"
+        aria-labelledby="departamentos-titulo"
+      >
         <div className="design-register">
-          <h2 id="departamentos-titulo">Departamentos</h2>
+          <div className="panel-head">
+            <h2 id="departamentos-titulo">Departamentos</h2>
+            {!cargandoDepartamentos && (
+              <p>
+                {departamentos.length === 1
+                  ? "1 departamento"
+                  : `${departamentos.length} departamentos`}
+              </p>
+            )}
+          </div>
           <DataTable
             caption="Departamentos activos"
             columns={columnasDepartamentos}
             rows={departamentosVisibles.filas}
             rowKey={(departamento) => departamento.id}
-            empty={cargandoDepartamentos ? "Cargando departamentos…" : "No hay departamentos."}
+            empty={
+              cargandoDepartamentos
+                ? "Cargando departamentos…"
+                : "No hay departamentos. Creá el primero con el formulario."
+            }
           />
           <Pagination
             page={departamentosVisibles.pagina}
@@ -368,8 +424,24 @@ export default function UbicacionPage() {
             onPageChange={setPaginaDepartamentos}
           />
         </div>
-        <form className="design-form" onSubmit={guardarDepartamento} noValidate>
-          <h2>{editandoDepartamento ? "Editar departamento" : "Nuevo departamento"}</h2>
+        <form
+          id="departamento-formulario"
+          className="design-form"
+          onSubmit={guardarDepartamento}
+          noValidate
+        >
+          <div>
+            <h2>
+              {editandoDepartamento
+                ? "Editar departamento"
+                : "Nuevo departamento"}
+            </h2>
+            <p className="muted small">
+              {editandoDepartamento
+                ? `Estás cambiando el nombre de «${editandoDepartamento.nombre}».`
+                : "Después vas a poder cargarle localidades."}
+            </p>
+          </div>
           <FormField
             ref={campoDepartamento}
             label="Nombre"
@@ -384,11 +456,19 @@ export default function UbicacionPage() {
             }}
           />
           <div className="dm-actions">
-            <button className="dm-button dm-button-primary" type="submit" disabled={guardando}>
+            <button
+              className="dm-button dm-button-primary"
+              type="submit"
+              disabled={guardando}
+            >
               {guardando ? "Guardando…" : "Guardar departamento"}
             </button>
             {editandoDepartamento && (
-              <button className="dm-button" type="button" onClick={limpiarDepartamento}>
+              <button
+                className="dm-button"
+                type="button"
+                onClick={limpiarDepartamento}
+              >
                 Cancelar
               </button>
             )}
@@ -398,8 +478,11 @@ export default function UbicacionPage() {
 
       <section className="design-content" aria-labelledby="localidades-titulo">
         <div className="design-register">
-          <h2 id="localidades-titulo">Localidades</h2>
-          <div className="dm-location-filter">
+          <div className="panel-head">
+            <h2 id="localidades-titulo">Localidades</h2>
+            <p>Elegí un departamento para ver sus localidades.</p>
+          </div>
+          <div className="toolbar">
             <SelectField
               label="Filtrar por departamento"
               name="filtroDepartamento"
@@ -433,8 +516,22 @@ export default function UbicacionPage() {
             onPageChange={setPaginaLocalidades}
           />
         </div>
-        <form className="design-form" onSubmit={guardarLocalidad} noValidate>
-          <h2>{editandoLocalidad ? "Editar localidad" : "Nueva localidad"}</h2>
+        <form
+          id="localidad-formulario"
+          className="design-form"
+          onSubmit={guardarLocalidad}
+          noValidate
+        >
+          <div>
+            <h2>
+              {editandoLocalidad ? "Editar localidad" : "Nueva localidad"}
+            </h2>
+            <p className="muted small">
+              {editandoLocalidad
+                ? `Estás editando «${editandoLocalidad.nombre}».`
+                : "Completá el departamento, el nombre y el código postal."}
+            </p>
+          </div>
           <SelectField
             label="Departamento"
             name="departamentoId"
@@ -443,7 +540,10 @@ export default function UbicacionPage() {
             hint="La localidad queda asociada a este departamento."
             onChange={(event) => {
               seleccionarDepartamento(event.target.value);
-              setErroresLocalidad((actuales) => ({ ...actuales, departamentoId: "" }));
+              setErroresLocalidad((actuales) => ({
+                ...actuales,
+                departamentoId: "",
+              }));
             }}
           >
             <option value="">Seleccioná un departamento</option>
@@ -476,8 +576,13 @@ export default function UbicacionPage() {
             error={erroresLocalidad.codigoPostal}
             value={codigoPostal}
             onChange={(event) => {
-              setCodigoPostal(event.target.value.replace(/\D/g, "").slice(0, 4));
-              setErroresLocalidad((actuales) => ({ ...actuales, codigoPostal: "" }));
+              setCodigoPostal(
+                event.target.value.replace(/\D/g, "").slice(0, 4),
+              );
+              setErroresLocalidad((actuales) => ({
+                ...actuales,
+                codigoPostal: "",
+              }));
             }}
           />
           <div className="dm-actions">
@@ -489,7 +594,11 @@ export default function UbicacionPage() {
               {guardando ? "Guardando…" : "Guardar localidad"}
             </button>
             {editandoLocalidad && (
-              <button className="dm-button" type="button" onClick={limpiarLocalidad}>
+              <button
+                className="dm-button"
+                type="button"
+                onClick={limpiarLocalidad}
+              >
                 Cancelar
               </button>
             )}
@@ -506,6 +615,6 @@ export default function UbicacionPage() {
       >
         <p>¿Querés dar de baja «{aEliminar?.registro.nombre}»?</p>
       </ConfirmDialog>
-    </>
+    </div>
   );
 }

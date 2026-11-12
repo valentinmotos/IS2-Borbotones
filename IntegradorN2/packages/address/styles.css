@@ -1,65 +1,154 @@
+/*
+ * Campo de dirección con búsqueda y mapa (sitio público y panel). Va plano: sin recuadro propio,
+ * porque siempre se usa dentro del panel o formulario que lo contiene.
+ */
 .dm-address {
+  display: grid;
+  gap: var(--s-4);
   min-inline-size: 0;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: clamp(1rem, 3vw, 1.5rem);
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
-
-.dm-address legend {
-  padding-inline: 0.4rem;
-  font-weight: 700;
+.dm-address > legend {
+  float: left;
+  width: 100%;
+  margin-bottom: var(--s-1);
+  padding: 0;
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  font-weight: 600;
 }
 
 .dm-address-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: var(--s-4);
 }
-
-.dm-address select {
-  width: 100%;
-  min-height: 44px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding-inline: 0.6rem;
-  background: var(--bg);
-  color: var(--ink);
-  font: inherit;
+.dm-address-wide {
+  grid-column: 1 / -1;
 }
-
 .dm-address input[readonly] {
-  background: var(--surface);
+  color: var(--muted);
+  background: var(--c-light);
+  border-style: dashed;
 }
 
+/* Bloque "ubicar en el mapa": texto de ayuda + búsqueda */
+.dm-address-locate {
+  display: grid;
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-line);
+}
 .dm-address-hint {
   color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.dm-address-lead {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.dm-address-lead svg {
+  margin-top: 2px;
+  color: var(--c-red);
+}
+.dm-address-lead strong {
+  color: var(--c-ink);
+  font-weight: 600;
 }
 
 .dm-address-search {
-  margin-block: 0.75rem;
-}
-
-.dm-address-search ul {
   display: grid;
-  gap: 0.5rem;
-  list-style: none;
-  padding: 0;
+  justify-items: start;
+  gap: var(--s-2);
 }
-
-.dm-address-search li button {
-  white-space: normal;
+.dm-address-search > .dm-error,
+.dm-address-empty {
+  font-size: var(--fs-sm);
+}
+.dm-address-empty {
+  color: var(--muted);
+}
+.dm-address-results {
+  display: grid;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-block: 1px solid var(--c-line);
+}
+.dm-address-results li + li {
+  border-top: 1px solid var(--c-line);
+}
+.dm-address-result {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 6px;
+  color: var(--c-text);
+  background: transparent;
+  border: 0;
+  font-size: var(--fs-sm);
   text-align: start;
 }
+.dm-address-result svg {
+  margin-top: 3px;
+  color: var(--c-muted);
+}
+.dm-address-result:hover {
+  color: var(--c-red-strong);
+  background: var(--c-cream);
+}
+.dm-address-result:hover svg {
+  color: var(--c-red);
+}
 
+/* Mapa: alto explícito y contexto de apilado propio para no tapar la cabecera fija. */
+.dm-address-mapbox {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
 .dm-address-map {
   position: relative;
   z-index: 0;
-  height: clamp(16rem, 50vw, 24rem);
+  isolation: isolate;
+  height: clamp(15rem, 45vw, 22rem);
+  overflow: hidden;
   background: #eeeae2;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+}
+.dm-address-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-xs);
+}
+.dm-address-status::before {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  background: var(--c-line-strong);
+  border-radius: 50%;
+}
+.dm-address-status[data-estado="ok"] {
+  color: var(--dm-success);
+}
+.dm-address-status[data-estado="ok"]::before {
+  background: var(--dm-success);
+}
+.dm-address-status[data-estado="error"] {
+  color: var(--dm-danger);
+}
+.dm-address-status[data-estado="error"]::before {
+  background: var(--dm-danger);
 }
 
 .dm-address-demo {
-  margin-top: 3rem;
+  margin-top: var(--s-6);
 }

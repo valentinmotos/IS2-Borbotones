@@ -1,7 +1,11 @@
-/* E5-02: portal del distribuidor. Reutiliza los estilos de mapa y paneles de preventa. */
+/* E5-02: portal del distribuidor (celular). Reutiliza paneles, mapa y "próximo punto"
+   de preventa/styles.css; acá van las listas con objetivos táctiles grandes. */
+.distribucion > .page-head {
+  margin-bottom: 0;
+}
+
 .distribucion-lista {
   display: grid;
-  gap: 0.75rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -12,34 +16,144 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  gap: var(--s-2) var(--s-3);
+  padding-block: var(--s-3);
+  border-bottom: 1px solid var(--c-line);
+  overflow-wrap: anywhere;
+}
+
+.distribucion-lista > li:last-child {
+  border-bottom: 0;
 }
 
 .distribucion-item > div,
 .distribucion-item label > span {
   display: grid;
-  gap: 0.15rem;
+  gap: 2px;
   min-width: 0;
+}
+
+.distribucion-item strong {
+  color: var(--c-ink);
+}
+
+.distribucion-item > div > span,
+.distribucion-item label > span > span {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+/* Paradas pendientes numeradas igual que los marcadores del mapa */
+.distribucion-paradas {
+  counter-reset: parada;
+}
+
+.distribucion-paradas > li {
+  counter-increment: parada;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.distribucion-paradas > li::before {
+  content: counter(parada);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: var(--c-red-strong);
+  background: var(--c-white);
+  border: 2.5px solid var(--c-red);
+  border-radius: 50%;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.distribucion-paradas > li .dm-button {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-height: 48px;
+}
+
+/* Lista de pedidos listos: toda la fila es la casilla */
+.distribucion-listos > li {
+  margin-inline: calc(-1 * var(--s-2));
+  padding-inline: var(--s-2);
+  border-radius: var(--r-md);
+}
+
+.distribucion-listos > li:has(input:checked) {
+  background: var(--c-cream);
 }
 
 .distribucion-item label {
   display: flex;
+  flex: 1 1 220px;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--s-3);
   min-width: 0;
+  min-height: 48px;
+  cursor: pointer;
 }
 
 .distribucion-item input[type="checkbox"] {
-  width: 1.4rem;
-  height: 1.4rem;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: var(--c-red-strong);
+  cursor: pointer;
 }
 
-@media (max-width: 600px) {
-  .distribucion-item .dm-button {
+.distribucion-monto {
+  margin-left: auto;
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Acciones siempre a mano al final de la lista */
+.distribucion-acciones {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 0 calc(-1 * clamp(16px, 2.4vw, 24px))
+    calc(-1 * clamp(16px, 2.4vw, 24px));
+  padding: var(--s-3) clamp(16px, 2.4vw, 24px);
+  background: rgb(255 255 255 / 96%);
+  border-top: 1px solid var(--c-line);
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+}
+
+.distribucion-acciones .dm-button {
+  flex: 1 1 160px;
+  min-height: 48px;
+}
+
+@container (min-width: 560px) {
+  .distribucion-paradas > li {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .distribucion-paradas > li .dm-button {
+    grid-column: auto;
+    width: auto;
+  }
+  .distribucion-acciones .dm-button {
+    flex: 0 1 auto;
+  }
+}
+
+@container (min-width: 900px) {
+  .distribucion-ruta {
+    grid-template-columns: minmax(300px, 1fr) minmax(0, 1fr);
+  }
+  .distribucion-ruta .distribucion-paradas > li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .distribucion-ruta .distribucion-paradas > li .dm-button {
+    grid-column: 1 / -1;
     width: 100%;
-    min-height: 3rem;
   }
 }

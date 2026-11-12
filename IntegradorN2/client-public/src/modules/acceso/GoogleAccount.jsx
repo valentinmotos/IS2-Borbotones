@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useSession } from "../../../../packages/auth/session.js";
 import { Alert } from "../../../../packages/design/components.jsx";
+import "./styles.css";
 import GooglePasswordForm from "./GooglePasswordForm.jsx";
 import {
   googlePost,
@@ -41,11 +42,21 @@ function GoogleAccountControls() {
   }
 
   return (
-    <section className="cuenta-form" aria-labelledby="cuenta-google">
+    <section
+      className="panel cuenta-form cuenta-google"
+      aria-labelledby="cuenta-google"
+    >
       <h2 id="cuenta-google">Acceso con Google</h2>
+      <p className="cuenta-nota">
+        Con Google entrás a tu cuenta sin escribir la clave de Dulce Mayor.
+      </p>
       {notice && <Alert tone="success">{notice}</Alert>}
       {error && <Alert tone="danger">{error}</Alert>}
-      {!result && !error && <p>Consultando el vínculo…</p>}
+      {!result && !error && (
+        <p className="google-status" role="status">
+          Consultando el vínculo…
+        </p>
+      )}
       {result?.vinculada && (
         <GooglePasswordForm
           label="Desvincular cuenta de Google"
@@ -53,7 +64,10 @@ function GoogleAccountControls() {
         />
       )}
       {result && !result.vinculada && (
-        <a className="dm-button" href={googleStart}>
+        <a
+          className="dm-button dm-button-block google-button"
+          href={googleStart}
+        >
           Vincular cuenta de Google
         </a>
       )}

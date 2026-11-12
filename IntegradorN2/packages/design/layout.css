@@ -1,0 +1,324 @@
+/*
+ * Vocabulario de maquetación compartido por el sitio y el panel (rediseño Sarab).
+ * Reglas: una sola capa de "panel" por bloque (nada de cards dentro de cards),
+ * títulos de página con --fs-h1 y de panel con 1.125–1.25rem, espacios contenidos.
+ */
+
+/* ---------- Página ---------- */
+.page {
+  padding-block: clamp(24px, 4vw, 48px) clamp(40px, 6vw, 72px);
+}
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-4) var(--s-5);
+  margin-bottom: clamp(20px, 3vw, 32px);
+}
+.page-head > :first-child {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  max-width: 70ch;
+}
+.page-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-red-strong);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.lead {
+  color: var(--muted);
+  font-size: var(--fs-md);
+  line-height: 1.65;
+  max-width: 62ch;
+}
+.muted {
+  color: var(--muted);
+}
+.small {
+  font-size: var(--fs-sm);
+}
+
+/* ---------- Secciones de landing (sitio público) ---------- */
+.section {
+  padding-block: clamp(48px, 7vw, 88px);
+}
+.section-alt {
+  background: var(--c-cream);
+}
+.section-head {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  max-width: 640px;
+  margin: 0 auto clamp(28px, 4vw, 44px);
+  text-align: center;
+}
+.section-head.is-left {
+  justify-items: start;
+  margin-inline: 0;
+  text-align: left;
+}
+.section-head h2 {
+  font-size: clamp(1.625rem, 1.2rem + 1.6vw, 2.375rem);
+  font-weight: 900;
+}
+.section-head h2 em,
+.display em {
+  color: var(--c-red);
+  font-style: normal;
+}
+.section-head p {
+  color: var(--muted);
+}
+.script-label {
+  color: var(--c-red);
+  font-family: var(--font-script);
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.sline {
+  width: 56px;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--c-red), var(--c-amber));
+}
+.display {
+  font-size: var(--fs-display);
+  font-weight: 900;
+  line-height: 1.08;
+}
+
+/* ---------- Paneles ---------- */
+.panel {
+  min-width: 0;
+  padding: clamp(16px, 2.4vw, 24px);
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-sm);
+}
+.panel > h2,
+.panel-head h2 {
+  font-family: var(--font-text);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.panel > h2 {
+  margin-bottom: var(--s-4);
+}
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-4);
+  margin-bottom: var(--s-4);
+}
+.panel-head p {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.panel-flush {
+  padding: 0;
+  overflow: hidden;
+}
+.panel-tint {
+  background: var(--c-cream);
+  border-color: var(--c-cream-2);
+  box-shadow: none;
+}
+
+/* ---------- Grillas ---------- */
+.stack {
+  display: grid;
+  gap: var(--s-4);
+  align-content: start;
+}
+.stack-lg {
+  display: grid;
+  gap: clamp(20px, 3vw, 32px);
+  align-content: start;
+}
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  align-items: start;
+  gap: clamp(16px, 2.5vw, 28px);
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 2.5vw, 28px);
+  align-items: start;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(16px, 2.5vw, 24px);
+}
+.grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: clamp(14px, 2vw, 24px);
+}
+
+/* ---------- Formularios ---------- */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--s-4);
+  align-items: start;
+}
+.form-grid > .span-all,
+.form-grid > fieldset,
+.form-grid > .form-actions,
+.form-grid > .dm-alert {
+  grid-column: 1 / -1;
+}
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
+}
+.toolbar > .dm-field {
+  flex: 1 1 200px;
+  max-width: 320px;
+}
+
+/* ---------- Estados y datos ---------- */
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: clamp(28px, 5vw, 48px) 16px;
+  color: var(--muted);
+  text-align: center;
+}
+.empty-state strong {
+  color: var(--c-ink);
+  font-size: var(--fs-md);
+}
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: var(--s-3);
+  margin: 0 0 var(--s-5);
+}
+
+/* Chips (filtros de categoría, estados) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 6px 16px;
+  color: var(--c-text);
+  background: var(--c-white);
+  border: 1.5px solid var(--c-line);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    color 150ms;
+}
+.chip:hover {
+  color: var(--c-red-strong);
+  border-color: var(--c-red);
+}
+.chip.is-selected,
+.chip[aria-pressed="true"],
+.chip[aria-current="page"] {
+  color: #fff;
+  background: var(--c-red-strong);
+  border-color: var(--c-red-strong);
+  box-shadow: var(--sh-red);
+}
+
+/* Pasos numerados (cómo comprar, flujos) */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: clamp(14px, 2vw, 24px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: paso;
+}
+.steps > li {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 22px 20px 20px;
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  counter-increment: paso;
+}
+.steps > li::before {
+  content: counter(paso);
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 4px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--c-red), var(--c-amber));
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 900;
+}
+.steps h3 {
+  font-size: var(--fs-md);
+}
+.steps p {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+@media (max-width: 960px) {
+  .split,
+  .grid-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 720px) {
+  .grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .page-head {
+    align-items: flex-start;
+  }
+}

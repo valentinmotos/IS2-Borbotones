@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ChevronRight, ShoppingBag } from "lucide-react";
 import {
   Alert,
   DataTable,
+  Kpi,
   StatusBadge,
 } from "../../../../../packages/design/components.jsx";
 import { api } from "../../../lib/api.js";
@@ -85,36 +87,75 @@ export default function ComprasPage() {
       label: "Acciones",
       render: (c) => (
         <div className="compras-acciones">
-          <Link className="dm-button" to={c.pedidoId}>
-            Ver detalle
-          </Link>
+          {c.puedePagar && <PagarAhoraButton compra={c} onError={setAviso} />}
           {c.facturaId && (
             <DescargarFacturaButton compra={c} onError={setAviso} />
           )}
-          {c.puedePagar && <PagarAhoraButton compra={c} onError={setAviso} />}
+          <Link className="dm-button dm-button-ghost" to={c.pedidoId}>
+            Ver detalle
+            <ChevronRight size={14} aria-hidden="true" />
+          </Link>
         </div>
       ),
     },
   ];
 
+  // Resumen para la cabecera: solo cuenta lo que ya trajo la lista.
+  const porPagar = compras?.filter((c) => c.puedePagar).length ?? 0;
+  const enReparto =
+    compras?.filter((c) => c.estadoPedido === "EN_REPARTO").length ?? 0;
+
   return (
     <div className="compras">
-      <h1>Mis compras</h1>
+      <header className="page-head">
+        <div>
+          <h1>Mis compras</h1>
+          <p className="lead">
+            Tus pedidos con el estado del envío y la factura. Las facturas
+            pendientes las pagás desde acá con «Pagar ahora».
+          </p>
+        </div>
+      </header>
       {aviso && (
         <Alert tone="danger" onDismiss={() => setAviso(null)}>
           {aviso}
         </Alert>
       )}
       {compras === null ? (
-        <p>Cargando tus pedidos…</p>
+        <p className="compras-cargando" role="status">
+          Cargando tus pedidos…
+        </p>
+      ) : compras.length === 0 ? (
+        <div className="panel empty-state">
+          <span className="compras-vacio-icono" aria-hidden="true">
+            <ShoppingBag size={26} />
+          </span>
+          <strong>Todavía no tenés pedidos</strong>
+          <p>
+            Tu preventor los carga cuando visita tu comercio. Apenas lo haga,
+            vas a verlos acá.
+          </p>
+          <Link className="dm-button" to="/catalogo">
+            Mirar el catálogo
+          </Link>
+        </div>
       ) : (
-        <DataTable
-          caption="Tus pedidos, del más nuevo al más viejo"
-          columns={columnas}
-          rows={compras}
-          rowKey={(c) => c.pedidoId}
-          empty="Todavía no tenés pedidos. Tu preventor los carga cuando visita tu comercio."
-        />
+        <>
+          <dl className="kpi-grid compras-resumen">
+            <Kpi label="Pedidos" value={compras.length} />
+            <Kpi label="Facturas por pagar" value={porPagar} />
+            <Kpi label="En reparto" value={enReparto} />
+          </dl>
+          <div className="compras-lista">
+            <DataTable
+              caption="Tus pedidos, del más nuevo al más viejo"
+              columns={columnas}
+              rows={compras}
+              rowKey={(c) => c.pedidoId}
+              empty="Todavía no tenés pedidos. Tu preventor los carga cuando visita tu comercio."
+            />
+          </div>
+        </>
       )}
     </div>
   );

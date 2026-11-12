@@ -1,0 +1,52 @@
+/* Stock: indicadores, existencias y, debajo, movimiento + historial lado a lado. */
+.stock-page {
+  display: grid;
+  gap: clamp(16px, 2.5vw, 24px);
+}
+.stock-page > .page-head,
+.stock-page > .kpi-grid {
+  margin-bottom: 0;
+}
+.stock-page h2[id] {
+  scroll-margin-top: calc(var(--nav, 64px) + 24px);
+}
+.stock-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.15fr);
+  align-items: start;
+  gap: clamp(16px, 2.5vw, 24px);
+}
+.stock-form fieldset {
+  display: grid;
+  gap: var(--s-4);
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.stock-form button[type="submit"] {
+  justify-self: start;
+}
+.stock-presentacion {
+  display: block;
+  margin-top: 2px;
+  color: var(--c-muted);
+  font-size: var(--fs-xs);
+}
+.stock-preview {
+  margin: calc(-1 * var(--s-2)) 0 0;
+  padding: 8px 12px;
+  color: var(--c-text);
+  background: var(--c-cream);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+}
+.stock-page .toolbar > .dm-field {
+  max-width: 420px;
+}
+
+@media (max-width: 1000px) {
+  .stock-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

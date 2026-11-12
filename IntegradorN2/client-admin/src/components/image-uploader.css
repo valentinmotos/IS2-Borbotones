@@ -1,0 +1,63 @@
+/* Selector de imagen con vista previa (productos, sucursales, sistema de diseño). */
+.dm-image-uploader {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.dm-image-uploader__label {
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+.dm-image-uploader__box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3);
+  background: var(--c-cream);
+  border-radius: var(--r-md);
+}
+.dm-image-uploader__preview {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  flex: none;
+  overflow: hidden;
+  color: var(--c-line-strong);
+  background: var(--c-white);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-sm);
+}
+.dm-image-uploader__preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.dm-image-uploader__body {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 160px;
+}
+.dm-image-uploader__name {
+  max-width: 100%;
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.dm-image-uploader__hint {
+  color: var(--c-muted);
+  font-size: var(--fs-xs);
+}
+.dm-image-uploader__error {
+  color: var(--dm-danger);
+  font-size: var(--fs-sm);
+}
+.dm-image-uploader:has([aria-invalid="true"]) .dm-image-uploader__box {
+  box-shadow: inset 0 0 0 1.5px var(--dm-danger);
+}

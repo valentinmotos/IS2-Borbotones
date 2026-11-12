@@ -1,52 +1,109 @@
+/*
+ * Tokens del rediseño (rama refactor-front), basado en la paleta del template Sarab:
+ * rojo intenso, ámbar y crema, con Playfair Display para títulos y Poppins para texto.
+ * Los nombres viejos (--bg, --ink, --action, --dm-*) se mantienen como alias para que
+ * ningún módulo pierda estilos; los nuevos (--c-*, --sh-*, --fs-*) son los de referencia.
+ */
 :root {
-  --bg: #f8f5ef;
-  --surface: #ede7dc;
-  --ink: #1f1b18;
-  --accent: #b8381f;
-  --action: #a9321c;
-  --muted: #5e5148;
-  --line: #d9cec0;
-  --font-display: "Instrument Serif", Georgia, serif;
-  --font-text: "Instrument Sans", system-ui, sans-serif;
-  --display-weight: 400;
-  --display-tracking: -0.016em;
+  /* Paleta */
+  --c-red: #e8281a;
+  --c-red-strong: #c41f12;
+  --c-red-deep: #9b1a10;
+  --c-amber: #f6a623;
+  --c-amber-soft: #fff1d6;
+  --c-ink: #1a1a1a;
+  --c-text: #3d3a37;
+  --c-muted: #6f6a64;
+  --c-cream: #fff8f0;
+  --c-cream-2: #fef0dc;
+  --c-light: #f9f5f0;
+  --c-white: #ffffff;
+  --c-line: #ece4da;
+  --c-line-strong: #d8cdbf;
+  --c-night: #161211;
+  --c-night-2: #231b19;
+
+  /* Tipografía */
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-text: "Poppins", system-ui, sans-serif;
+  --font-script: "Dancing Script", "Playfair Display", cursive;
+  --display-weight: 800;
+  --display-tracking: -0.01em;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 0.9375rem;
+  --fs-md: 1.0625rem;
+  --fs-lg: 1.25rem;
+  --fs-h3: 1.125rem;
+  --fs-h2: clamp(1.375rem, 1.1rem + 0.9vw, 1.75rem);
+  --fs-h1: clamp(1.75rem, 1.35rem + 1.4vw, 2.5rem);
+  --fs-display: clamp(2.25rem, 1.4rem + 3.2vw, 3.75rem);
+
+  /* Forma y profundidad */
+  --r-sm: 8px;
   --r-md: 12px;
   --r-lg: 18px;
-  --t-small: 0.875rem;
-  --t-lead: 1.125rem;
-  --t-h3: 2rem;
+  --r-pill: 999px;
+  --radius-md: var(--r-md);
+  --sh-sm: 0 2px 10px rgb(26 26 26 / 6%);
+  --sh-md: 0 8px 30px rgb(26 26 26 / 8%);
+  --sh-lg: 0 18px 48px rgb(26 26 26 / 13%);
+  --sh-red: 0 8px 22px rgb(232 40 26 / 28%);
+
+  /* Espaciado */
+  --s-1: 4px;
   --s-2: 8px;
   --s-3: 12px;
   --s-4: 16px;
   --s-5: 24px;
   --s-6: 32px;
   --s-7: 48px;
+  --s-8: 72px;
+
+  /* Alias heredados (no borrar: los usan módulos existentes) */
+  --bg: var(--c-light);
+  --surface: var(--c-cream-2);
+  --ink: var(--c-ink);
+  --accent: var(--c-red);
+  --action: var(--c-red-strong);
+  --action-ink: var(--c-red-strong);
+  --muted: var(--c-muted);
+  --line: var(--c-line);
+  --line-strong: var(--c-line-strong);
+  --card: var(--c-white);
+  --focus: #b01c10;
+  --danger: #b4231a;
+  --color-danger: var(--danger);
+  --t-small: var(--fs-sm);
+  --t-lead: var(--fs-md);
+  --t-h2: var(--fs-h2);
+  --t-h3: var(--fs-h3);
 
   --dm-font: var(--font-text);
-  --dm-ink: var(--ink);
-  --dm-muted: var(--muted);
-  --dm-accent: var(--action);
-  --dm-accent-hover: #852412;
+  --dm-ink: var(--c-ink);
+  --dm-muted: var(--c-muted);
+  --dm-accent: var(--c-red-strong);
+  --dm-accent-hover: var(--c-red-deep);
   --dm-on-accent: #fff;
-  --dm-paper: var(--bg);
-  --dm-canvas: var(--surface);
-  --dm-surface: #fffdfa;
-  --dm-tint: #f5dfd4;
-  --dm-line: var(--line);
-  --dm-control-line: #8c7768;
-  --dm-focus: #98321d;
-  --dm-radius: 8px;
-  --dm-success: #24543b;
-  --dm-success-bg: #dceade;
-  --dm-warning: #6a491c;
-  --dm-warning-bg: #f4e6c6;
-  --dm-danger: #892e27;
-  --dm-danger-bg: #f7e0d9;
-  --dm-1: 4px;
+  --dm-paper: var(--c-light);
+  --dm-canvas: var(--c-light);
+  --dm-surface: var(--c-white);
+  --dm-tint: #fde7e3;
+  --dm-line: var(--c-line);
+  --dm-control-line: var(--c-line-strong);
+  --dm-focus: var(--focus);
+  --dm-radius: var(--r-sm);
+  --dm-success: #1f6b45;
+  --dm-success-bg: #def3e6;
+  --dm-warning: #7a4d00;
+  --dm-warning-bg: var(--c-amber-soft);
+  --dm-danger: #b4231a;
+  --dm-danger-bg: #fde4e1;
+  --dm-1: var(--s-1);
   --dm-2: var(--s-2);
   --dm-3: var(--s-3);
   --dm-4: var(--s-4);
   --dm-5: var(--s-5);
   --dm-6: var(--s-6);
-  --dm-gutter: clamp(20px, 5.55vw, 80px);
+  --dm-gutter: clamp(16px, 4vw, 40px);
 }

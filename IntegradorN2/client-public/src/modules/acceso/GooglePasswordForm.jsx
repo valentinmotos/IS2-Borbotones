@@ -23,7 +23,7 @@ export default function GooglePasswordForm({ label, submit }) {
   }
 
   return (
-    <form onSubmit={confirm} aria-busy={pending}>
+    <form className="auth-form" onSubmit={confirm} aria-busy={pending}>
       {error && <Alert tone="danger">{error.message}</Alert>}
       <FormField
         label="Clave actual de Dulce Mayor"
@@ -33,7 +33,10 @@ export default function GooglePasswordForm({ label, submit }) {
         required
         maxLength={72}
       />
-      <button className="dm-button dm-button-primary" disabled={pending}>
+      <button
+        className="dm-button dm-button-primary dm-button-block"
+        disabled={pending}
+      >
         {pending ? "Confirmando…" : label}
       </button>
     </form>

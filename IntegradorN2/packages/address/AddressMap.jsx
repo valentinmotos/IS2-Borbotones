@@ -89,19 +89,23 @@ export default function AddressMap({ latitud, longitud, onPick }) {
   }, [map, hasPoint, latitud, longitud]);
 
   return (
-    <>
+    <div className="dm-address-mapbox">
       <div
         className="dm-address-map"
         ref={container}
         role="region"
         aria-label="Mapa de la dirección"
       />
-      <p className="dm-address-hint" role="status">
+      <p
+        className="dm-address-hint dm-address-status"
+        role="status"
+        data-estado={error ? "error" : hasPoint ? "ok" : undefined}
+      >
         {error ||
           (hasPoint
             ? `Punto seleccionado: ${latitud}, ${longitud}`
             : "Todavía no se seleccionó un punto.")}
       </p>
-    </>
+    </div>
   );
 }

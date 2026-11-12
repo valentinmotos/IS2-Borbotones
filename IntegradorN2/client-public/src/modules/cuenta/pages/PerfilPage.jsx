@@ -91,14 +91,27 @@ export default function PerfilPage() {
     }
   }
 
-  if (!perfil) {
-    return (
+  const encabezado = (
+    <header className="page-head">
       <div>
         <h1>Mis datos</h1>
+        <p className="lead">
+          Mantené al día tus datos y la dirección donde recibís los pedidos.
+        </p>
+      </div>
+    </header>
+  );
+
+  if (!perfil) {
+    return (
+      <div className="cuenta-perfil">
+        {encabezado}
         {aviso ? (
           <Alert tone={aviso.tono}>{aviso.texto}</Alert>
         ) : (
-          <p>Cargando tus datos…</p>
+          <p className="cuenta-cargando" role="status">
+            Cargando tus datos…
+          </p>
         )}
       </div>
     );
@@ -106,69 +119,84 @@ export default function PerfilPage() {
 
   return (
     <div className="cuenta-perfil">
-      <h1>Mis datos</h1>
+      {encabezado}
       {aviso && (
         <Alert tone={aviso.tono} onDismiss={() => setAviso(null)}>
           {aviso.texto}
         </Alert>
       )}
-      <form
-        className="cuenta-form"
-        onSubmit={guardar}
-        aria-labelledby="cuenta-datos"
-      >
-        <h2 id="cuenta-datos">Datos personales</h2>
-        <dl className="cuenta-fijos">
-          <div>
-            <dt>Correo</dt>
-            <dd>{perfil.correo}</dd>
+      <div className="cuenta-split">
+        <form
+          className="panel cuenta-form"
+          onSubmit={guardar}
+          aria-labelledby="cuenta-datos"
+        >
+          <div className="cuenta-seccion">
+            <h2 id="cuenta-datos">Datos personales</h2>
+            <dl className="cuenta-fijos">
+              <div>
+                <dt>Correo</dt>
+                <dd>{perfil.correo}</dd>
+              </div>
+              <div>
+                <dt>Documento</dt>
+                <dd>
+                  {nombresDocumento[perfil.tipoDocumento] ??
+                    perfil.tipoDocumento}{" "}
+                  {perfil.numeroDocumento}
+                </dd>
+              </div>
+            </dl>
+            <p className="cuenta-nota">
+              El correo y el documento no se pueden cambiar desde acá.
+            </p>
+            <div className="cuenta-campos">
+              <FormField
+                label="Nombre"
+                name="nombre"
+                required
+                maxLength={100}
+                value={form.nombre}
+                onChange={(e) => cambiar("nombre", e.target.value)}
+              />
+              <FormField
+                label="Apellido"
+                name="apellido"
+                required
+                maxLength={100}
+                value={form.apellido}
+                onChange={(e) => cambiar("apellido", e.target.value)}
+              />
+              <FormField
+                label="Fecha de nacimiento"
+                name="fechaNacimiento"
+                type="date"
+                required
+                value={form.fechaNacimiento}
+                onChange={(e) => cambiar("fechaNacimiento", e.target.value)}
+              />
+            </div>
           </div>
-          <div>
-            <dt>Documento</dt>
-            <dd>
-              {nombresDocumento[perfil.tipoDocumento] ?? perfil.tipoDocumento}{" "}
-              {perfil.numeroDocumento}
-            </dd>
+          <div className="cuenta-seccion">
+            <h2>Dirección de entrega</h2>
+            <p className="cuenta-nota">Marcá el punto exacto en el mapa.</p>
+            <DireccionField api={api} value={form} onChange={setForm} />
           </div>
-        </dl>
-        <FormField
-          label="Nombre"
-          name="nombre"
-          required
-          maxLength={100}
-          value={form.nombre}
-          onChange={(e) => cambiar("nombre", e.target.value)}
-        />
-        <FormField
-          label="Apellido"
-          name="apellido"
-          required
-          maxLength={100}
-          value={form.apellido}
-          onChange={(e) => cambiar("apellido", e.target.value)}
-        />
-        <FormField
-          label="Fecha de nacimiento"
-          name="fechaNacimiento"
-          type="date"
-          required
-          value={form.fechaNacimiento}
-          onChange={(e) => cambiar("fechaNacimiento", e.target.value)}
-        />
-        <h2>Dirección de entrega</h2>
-        <DireccionField api={api} value={form} onChange={setForm} />
-        <div className="dm-actions">
-          <button
-            className="dm-button dm-button-primary"
-            type="submit"
-            disabled={guardando}
-          >
-            {guardando ? "Guardando…" : "Guardar mis datos"}
-          </button>
+          <div className="form-actions cuenta-acciones">
+            <button
+              className="dm-button dm-button-primary"
+              type="submit"
+              disabled={guardando}
+            >
+              {guardando ? "Guardando…" : "Guardar mis datos"}
+            </button>
+          </div>
+        </form>
+        <div className="cuenta-lado">
+          <CambioClaveForm />
+          <GoogleAccount />
         </div>
-      </form>
-      <CambioClaveForm />
-      <GoogleAccount />
+      </div>
     </div>
   );
 }

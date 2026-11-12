@@ -1,0 +1,111 @@
+/* Guía de trabajo: índice fijo a la izquierda en escritorio y secciones en paneles. */
+.guide-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(16px, 2.5vw, 28px);
+}
+.guide-index {
+  position: sticky;
+  top: calc(var(--nav, 64px) + 20px);
+  display: grid;
+  gap: var(--s-2);
+}
+.guide-index p {
+  color: var(--c-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.guide-index ol {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-left: 2px solid var(--c-line);
+}
+.guide-index a {
+  display: block;
+  margin-left: -2px;
+  padding: 6px 12px;
+  color: var(--c-text);
+  border-left: 2px solid transparent;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-decoration: none;
+}
+.guide-index a:hover {
+  color: var(--c-red-strong);
+  border-left-color: var(--c-red);
+}
+.guide-sections {
+  display: grid;
+  gap: var(--s-4);
+  max-width: 820px;
+}
+.guide-section-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: var(--s-4);
+}
+.guide-section-head h2 {
+  font-family: var(--font-text);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.guide-section-head p {
+  color: var(--c-muted);
+  font-size: var(--fs-sm);
+}
+.guide-section-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  color: #fff;
+  background: linear-gradient(135deg, var(--c-red), var(--c-amber));
+  border-radius: 50%;
+}
+.guide-section ul {
+  display: grid;
+  gap: var(--s-2);
+  max-width: 68ch;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+.guide-section li {
+  line-height: 1.65;
+}
+.guide-section li::marker {
+  color: var(--c-red);
+}
+
+@media (max-width: 840px) {
+  .guide-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .guide-index {
+    position: static;
+  }
+  .guide-index ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    border-left: 0;
+  }
+  .guide-index a {
+    margin-left: 0;
+    padding: 6px 14px;
+    background: var(--c-white);
+    border: 1.5px solid var(--c-line);
+    border-radius: var(--r-pill);
+  }
+  .guide-index a:hover {
+    border-color: var(--c-red);
+  }
+}

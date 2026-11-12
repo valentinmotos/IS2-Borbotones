@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { MapPinned } from "lucide-react";
 import AddressMap from "./AddressMap.jsx";
 import AddressSearch from "./AddressSearch.jsx";
 import { useLocationOptions } from "./useLocationOptions.js";
@@ -137,7 +138,12 @@ export default function DireccionField({ api, value = {}, onChange }) {
           />
         </div>
         {fields.map(({ name, label, ...props }) => (
-          <div key={name} className="dm-field">
+          <div
+            key={name}
+            className={
+              name === "referencia" ? "dm-field dm-address-wide" : "dm-field"
+            }
+          >
             <label htmlFor={`${id}-${name}`}>{label}</label>
             <input
               id={`${id}-${name}`}
@@ -151,11 +157,16 @@ export default function DireccionField({ api, value = {}, onChange }) {
           </div>
         ))}
       </div>
-      <p className="dm-address-hint">
-        Hacé clic en el mapa para marcar un punto o buscá por calle, numeración
-        y localidad.
-      </p>
-      <AddressSearch key={query} api={api} query={query} onPick={pick} />
+      <div className="dm-address-locate">
+        <p className="dm-address-hint dm-address-lead">
+          <MapPinned size={18} aria-hidden="true" />
+          <span>
+            <strong>Ubicación en el mapa.</strong> Hacé clic en el mapa para
+            marcar un punto o buscá por calle, numeración y localidad.
+          </span>
+        </p>
+        <AddressSearch key={query} api={api} query={query} onPick={pick} />
+      </div>
       <AddressMap latitud={latitud} longitud={longitud} onPick={pick} />
     </fieldset>
   );

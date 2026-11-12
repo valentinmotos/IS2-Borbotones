@@ -1,0 +1,19 @@
+/* Ubicación: dos ABM (departamentos y localidades), cada uno con listado y formulario lateral. */
+.ubicacion-page {
+  display: grid;
+  gap: clamp(16px, 2.5vw, 24px);
+}
+.ubicacion-page > .page-head {
+  margin-bottom: 0;
+}
+.ubicacion-page .design-content + .design-content {
+  margin-top: 0;
+}
+.ubicacion-page .toolbar > .dm-field {
+  max-width: 360px;
+}
+
+/* Destinos de los enlaces "Nuevo…" de la cabecera: que no queden bajo la barra fija. */
+.ubicacion-page form[id] {
+  scroll-margin-top: calc(var(--nav, 64px) + 24px);
+}

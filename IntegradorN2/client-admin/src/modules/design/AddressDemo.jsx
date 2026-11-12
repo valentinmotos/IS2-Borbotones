@@ -18,15 +18,21 @@ export default function AddressDemo() {
   };
 
   return (
-    <section className="dm-address-demo" aria-labelledby="demo-direccion">
-      <h2 id="demo-direccion">Dirección con mapa</h2>
-      <p>
-        Probá una dirección de ejemplo. Los cambios de esta demostración duran
-        hasta que salís de la página.
-      </p>
-      {example.loading && <p role="status">Cargando dirección de ejemplo…</p>}
+    <section className="panel dm-address-demo" aria-labelledby="demo-direccion">
+      <div className="panel-head">
+        <h2 id="demo-direccion">Dirección con mapa</h2>
+        <p>
+          Probá una dirección de ejemplo. Los cambios de esta demostración duran
+          hasta que salís de la página.
+        </p>
+      </div>
+      {example.loading && (
+        <p className="muted" role="status">
+          Cargando dirección de ejemplo…
+        </p>
+      )}
       {example.error && (
-        <p role="status">
+        <p className="muted" role="status">
           La localidad de ejemplo no está disponible. Podés completar una
           dirección desde cero.
         </p>

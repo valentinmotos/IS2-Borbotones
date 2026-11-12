@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, FileText } from "lucide-react";
 import {
   Alert,
   DataTable,
@@ -69,17 +70,27 @@ export default function CompraDetallePage() {
   if (noEncontrado) {
     return (
       <div className="compras">
-        <h1>Detalle del pedido</h1>
+        <header className="page-head">
+          <div>
+            <h1>Detalle del pedido</h1>
+          </div>
+        </header>
         <Alert tone="danger">{noEncontrado}</Alert>
         <p>
-          <Link to=".." relative="path">
+          <Link className="dm-button" to=".." relative="path">
+            <ArrowLeft size={16} aria-hidden="true" />
             Volver a mis compras
           </Link>
         </p>
       </div>
     );
   }
-  if (!detalle) return <p>Cargando el pedido…</p>;
+  if (!detalle)
+    return (
+      <p className="compras-cargando" role="status">
+        Cargando el pedido…
+      </p>
+    );
 
   const { compra } = detalle;
   const envio = estadosPedido[compra.estadoPedido];
@@ -87,26 +98,31 @@ export default function CompraDetallePage() {
 
   return (
     <div className="compras">
-      <p>
-        <Link to=".." relative="path">
-          ← Mis compras
-        </Link>
-      </p>
-      <h1>Pedido N° {compra.numeroPedido}</h1>
-      <p className="compras-subtitulo">
-        {compra.comercio} · cargado el{" "}
-        {formatearFechaHora(compra.fechaHoraCarga)}{" "}
-        <StatusBadge tone={envio?.tono}>
-          {envio?.etiqueta ?? compra.estadoPedido}
-        </StatusBadge>
-      </p>
+      <Link className="compras-volver" to=".." relative="path">
+        <ArrowLeft size={16} aria-hidden="true" />
+        Mis compras
+      </Link>
+      <header className="page-head">
+        <div>
+          <h1>Pedido N° {compra.numeroPedido}</h1>
+          <p className="compras-subtitulo">
+            <span>
+              {compra.comercio} · cargado el{" "}
+              {formatearFechaHora(compra.fechaHoraCarga)}
+            </span>
+            <StatusBadge tone={envio?.tono}>
+              {envio?.etiqueta ?? compra.estadoPedido}
+            </StatusBadge>
+          </p>
+        </div>
+      </header>
       {aviso && (
         <Alert tone="danger" onDismiss={() => setAviso(null)}>
           {aviso}
         </Alert>
       )}
 
-      <dl className="compras-importes">
+      <dl className="kpi-grid compras-importes">
         <Kpi label="Subtotal" value={pesos.format(compra.subtotal)} />
         <Kpi
           label="Descuento"
@@ -120,7 +136,7 @@ export default function CompraDetallePage() {
         <Kpi label="Total" value={pesos.format(compra.total)} />
       </dl>
 
-      <section aria-labelledby="titulo-envio">
+      <section className="panel" aria-labelledby="titulo-envio">
         <h2 id="titulo-envio">Estado del envío</h2>
         <LineaTiempo
           eventos={detalle.lineaDeTiempo}
@@ -128,41 +144,60 @@ export default function CompraDetallePage() {
         />
       </section>
 
-      <section aria-labelledby="titulo-factura" className="compras-factura">
-        <h2 id="titulo-factura">Factura</h2>
-        {compra.facturaId ? (
-          <>
-            <p>
-              Factura N° {compra.numeroFactura} del{" "}
-              {formatearFecha(compra.fechaFactura)}{" "}
-              <StatusBadge tone={factura?.tono}>
-                {factura?.etiqueta ?? compra.estadoFactura}
-              </StatusBadge>
-            </p>
-            {compra.puedePagar && (
-              <p>Saldo pendiente: {pesos.format(compra.saldoPendiente)}</p>
-            )}
-            <div className="compras-acciones">
-              <DescargarFacturaButton compra={compra} onError={setAviso} />
+      <div className="compras-detalle">
+        <section
+          aria-labelledby="titulo-factura"
+          className="panel compras-factura"
+          data-pendiente={compra.puedePagar || undefined}
+        >
+          <h2 id="titulo-factura">Factura</h2>
+          {compra.facturaId ? (
+            <>
+              <p className="compras-factura-numero">
+                <span>
+                  Factura N° {compra.numeroFactura} del{" "}
+                  {formatearFecha(compra.fechaFactura)}
+                </span>
+                <StatusBadge tone={factura?.tono}>
+                  {factura?.etiqueta ?? compra.estadoFactura}
+                </StatusBadge>
+              </p>
               {compra.puedePagar && (
-                <PagarAhoraButton compra={compra} onError={setAviso} />
+                <p className="compras-saldo">
+                  <span>Saldo pendiente</span>
+                  <strong>{pesos.format(compra.saldoPendiente)}</strong>
+                </p>
               )}
-            </div>
-          </>
-        ) : (
-          <p>
-            La factura se emite cuando el almacén procesa el pedido. Te llega
-            también por correo.
-          </p>
-        )}
-      </section>
+              <div className="compras-factura-acciones">
+                {compra.puedePagar && (
+                  <PagarAhoraButton compra={compra} onError={setAviso} />
+                )}
+                <DescargarFacturaButton compra={compra} onError={setAviso} />
+              </div>
+            </>
+          ) : (
+            <p className="compras-factura-espera">
+              <FileText size={18} aria-hidden="true" />
+              <span>
+                La factura se emite cuando el almacén procesa el pedido. Te
+                llega también por correo.
+              </span>
+            </p>
+          )}
+        </section>
 
-      <DataTable
-        caption="Productos del pedido"
-        columns={columnas}
-        rows={detalle.detalles.map((linea, indice) => ({ ...linea, indice }))}
-        rowKey={(l) => l.indice}
-      />
+        <div className="compras-productos">
+          <DataTable
+            caption="Productos del pedido"
+            columns={columnas}
+            rows={detalle.detalles.map((linea, indice) => ({
+              ...linea,
+              indice,
+            }))}
+            rowKey={(l) => l.indice}
+          />
+        </div>
+      </div>
     </div>
   );
 }

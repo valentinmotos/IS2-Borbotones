@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import {
   Alert,
   DataTable,
@@ -95,16 +96,25 @@ export default function PuntosVentaPage() {
   const lista = puntos ?? [];
 
   return (
-    <>
-      <header className="dm-page-header">
+    <div className="pv-page">
+      <header className="page-head">
         <div>
+          <p className="eyebrow">Pedidos</p>
           <h1>Puntos de venta</h1>
-          <p>
+          <p className="lead">
             {esPreventor
               ? "Registrá comercios y consultá los puntos ubicados en cada zona."
               : "Consultá los comercios registrados por los preventores en cada zona."}
           </p>
         </div>
+        {esPreventor && (
+          <div className="page-head-actions">
+            <a className="dm-button dm-button-primary" href="#alta-punto-venta">
+              <Plus size={16} aria-hidden="true" />
+              Nuevo punto de venta
+            </a>
+          </div>
+        )}
       </header>
       {aviso && (
         <Alert tone={aviso.tono} onDismiss={() => setAviso(null)}>
@@ -112,25 +122,39 @@ export default function PuntosVentaPage() {
         </Alert>
       )}
       <section
-        className={`design-content${esPreventor ? " pv-layout" : ""}`}
+        className={`pv-layout${esPreventor ? " pv-layout-alta" : ""}`}
         aria-label="Puntos de venta por zona"
       >
-        <div className="pv-list">
-          <div className="pv-zone">
-            <label htmlFor="pv-zona">Zona</label>
-            <select
-              id="pv-zona"
-              className="dm-input"
-              value={zona}
-              onChange={(e) => setZona(e.target.value)}
-            >
-              <option value="">Todas las zonas</option>
-              {departamentos.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.nombre}
-                </option>
-              ))}
-            </select>
+        <div className="panel pv-list">
+          <div className="panel-head">
+            <div className="pv-list-title">
+              <h2>Comercios por zona</h2>
+              <p>
+                {puntos === null
+                  ? "Cargando…"
+                  : lista.length === 1
+                    ? "1 comercio en el mapa"
+                    : `${lista.length} comercios en el mapa`}
+              </p>
+            </div>
+          </div>
+          <div className="toolbar pv-zone">
+            <label className="dm-field">
+              <span>Zona</span>
+              <select
+                id="pv-zona"
+                className="dm-input"
+                value={zona}
+                onChange={(e) => setZona(e.target.value)}
+              >
+                <option value="">Todas las zonas</option>
+                {departamentos.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <PuntosVentaMap puntos={lista} />
           <DataTable
@@ -146,9 +170,11 @@ export default function PuntosVentaPage() {
           />
         </div>
         {esPreventor && (
-          <PuntoVentaForm minoristas={minoristas} onCreado={puntoCreado} />
+          <div id="alta-punto-venta" className="pv-alta">
+            <PuntoVentaForm minoristas={minoristas} onCreado={puntoCreado} />
+          </div>
         )}
       </section>
-    </>
+    </div>
   );
 }

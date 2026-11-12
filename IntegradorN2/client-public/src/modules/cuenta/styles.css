@@ -1,32 +1,438 @@
-/* E2-07: perfil del minorista. */
+/* ================= Área de cuenta del minorista (App.jsx: AccountLayout y AccountHome) ================= */
+.account {
+  display: grid;
+  gap: var(--s-5);
+  align-content: start;
+}
+
+/* Cabecera: inicial, usuario y salida */
+.account-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3) var(--s-4);
+}
+.account-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--c-red), var(--c-amber));
+  border-radius: 50%;
+  box-shadow: var(--sh-red);
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 900;
+}
+.account-who {
+  display: grid;
+  flex: 1 1 200px;
+  min-width: 0;
+  line-height: 1.3;
+}
+.account-who span {
+  color: var(--c-red-strong);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.account-who strong {
+  overflow: hidden;
+  color: var(--c-ink);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Pestañas de la cuenta */
+.account-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 1px solid var(--c-line);
+}
+.account-nav a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.account-nav a svg {
+  color: var(--c-muted);
+}
+.account-nav a::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--c-red);
+  transform: scaleX(0);
+  transition: transform 200ms;
+}
+.account-nav a:hover,
+.account-nav a[aria-current="page"] {
+  color: var(--c-red-strong);
+}
+.account-nav a:hover svg,
+.account-nav a[aria-current="page"] svg {
+  color: var(--c-red);
+}
+.account-nav a:hover::after,
+.account-nav a[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+.account-nav a:last-child {
+  margin-left: auto;
+}
+
+/* Contenido de cada sección: títulos un escalón más chicos que en las páginas del sitio */
+.account-body {
+  min-width: 0;
+}
+.account-body .page-head {
+  margin-bottom: var(--s-5);
+}
+.account-body .page-head h1 {
+  font-size: clamp(1.5rem, 1.25rem + 0.9vw, 2rem);
+}
+.account-body .lead {
+  font-size: var(--fs-base);
+}
+
+/* Resumen */
+.account-home {
+  display: grid;
+  gap: var(--s-5);
+}
+.account-home > .page-head {
+  margin-bottom: 0;
+}
+.account-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: var(--s-4);
+}
+.account-shortcut {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 8px;
+  padding: clamp(18px, 2.4vw, 24px);
+  color: var(--c-text);
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-sm);
+  text-decoration: none;
+  transition:
+    border-color 150ms,
+    box-shadow 150ms;
+}
+.account-shortcut:hover {
+  color: var(--c-text);
+  border-color: var(--c-red);
+  box-shadow: var(--sh-md);
+}
+.account-shortcut-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 4px;
+  color: var(--c-red);
+  background: var(--dm-tint);
+  border-radius: var(--r-md);
+}
+.account-shortcut h2 {
+  font-family: var(--font-text);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.account-shortcut p {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.account-shortcut-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: var(--c-red-strong);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.account-shortcut:hover .account-shortcut-cta svg {
+  transform: translateX(3px);
+}
+.account-shortcut-cta svg {
+  transition: transform 150ms;
+}
+
+.account-howto {
+  display: grid;
+  gap: var(--s-4);
+}
+.account-howto h2 {
+  font-family: var(--font-text);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.account-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: var(--s-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: paso;
+}
+.account-steps li {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  column-gap: 12px;
+  counter-increment: paso;
+}
+.account-steps li::before {
+  content: counter(paso);
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--c-red), var(--c-amber));
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-weight: 900;
+}
+.account-steps strong {
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.account-steps span {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+@media (max-width: 640px) {
+  .account {
+    gap: var(--s-4);
+  }
+  .account-head .dm-button {
+    margin-left: auto;
+  }
+  /* Pestañas en dos columnas: todas visibles sin scroll lateral */
+  .account-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    border-bottom: 0;
+  }
+  .account-nav a {
+    justify-content: center;
+    padding: 8px 10px;
+    background: var(--c-white);
+    border: 1.5px solid var(--c-line);
+    border-radius: var(--r-pill);
+  }
+  .account-nav a:last-child {
+    margin-left: 0;
+  }
+  .account-nav a::after {
+    display: none;
+  }
+  .account-nav a[aria-current="page"] {
+    color: #fff;
+    background: var(--c-red-strong);
+    border-color: var(--c-red-strong);
+  }
+  .account-nav a[aria-current="page"] svg {
+    color: #fff;
+  }
+}
+@media (max-width: 360px) {
+  .account-nav a {
+    gap: 6px;
+    font-size: var(--fs-xs);
+  }
+}
+
+/* ================= Página no encontrada (App.jsx) ================= */
+.error-page .error-code {
+  margin: 0 auto 4px;
+  color: transparent;
+  background: linear-gradient(135deg, var(--c-red), var(--c-amber));
+  background-clip: text;
+  -webkit-background-clip: text;
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 3rem + 5vw, 6.5rem);
+  font-weight: 900;
+  line-height: 1;
+}
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2) var(--s-3);
+}
+.error-page .error-secondary {
+  color: var(--c-ink);
+  background: var(--c-white);
+  border: 1.5px solid var(--c-line-strong);
+  box-shadow: none;
+}
+.error-page .error-secondary:hover {
+  color: var(--c-red-strong);
+  border-color: var(--c-red);
+}
+
+/* ================= Mis datos (E2-07) ================= */
 .cuenta-perfil {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--s-4);
   min-width: 0;
 }
-
+.cuenta-perfil > .page-head {
+  margin-bottom: var(--s-1);
+}
+.cuenta-cargando {
+  color: var(--muted);
+}
+.cuenta-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  align-items: start;
+  gap: clamp(16px, 2.5vw, 28px);
+}
 .cuenta-form {
   display: grid;
-  gap: 1rem;
-  max-width: 44rem;
+  gap: var(--s-4);
   min-width: 0;
 }
-
 .cuenta-form h2 {
-  margin: 0.5rem 0 0;
+  font-family: var(--font-text);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: 0;
 }
-
+.cuenta-seccion {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+.cuenta-seccion + .cuenta-seccion {
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--c-line);
+}
+/* El título de la sección ya nombra la dirección: la leyenda del campo queda para lectores. */
+.cuenta-seccion .dm-address > legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.cuenta-nota {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
 .cuenta-fijos {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 2rem;
+  gap: var(--s-3) var(--s-6);
   margin: 0;
+  padding: 12px 16px;
+  background: var(--c-light);
+  border-radius: var(--r-md);
 }
-
+.cuenta-fijos div {
+  min-width: 0;
+}
 .cuenta-fijos dt {
-  font-weight: 650;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
-
 .cuenta-fijos dd {
   margin: 0;
+  color: var(--c-ink);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.cuenta-campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: var(--s-4);
+}
+.cuenta-acciones {
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-line);
+}
+
+/* Cambio de clave: columna lateral */
+.cuenta-lado {
+  position: sticky;
+  top: calc(var(--nav, 76px) + 16px);
+  display: grid;
+  gap: clamp(16px, 2.5vw, 28px);
+  min-width: 0;
+}
+.cuenta-clave-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cuenta-clave-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--c-red);
+  background: var(--dm-tint);
+  border-radius: var(--r-sm);
+}
+
+@media (max-width: 960px) {
+  .cuenta-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cuenta-lado {
+    position: static;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-nav a::after,
+  .account-shortcut,
+  .account-shortcut-cta svg {
+    transition: none;
+  }
+}
+
+/* Acceso con Google (vincular / desvincular) en la columna lateral de Mis datos */
+.cuenta-google .dm-button {
+  width: 100%;
+}
+.cuenta-google > p {
+  color: var(--muted);
+  font-size: var(--fs-sm);
 }

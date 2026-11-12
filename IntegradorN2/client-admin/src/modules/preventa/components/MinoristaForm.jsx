@@ -44,9 +44,15 @@ export default function MinoristaForm({ onCreado }) {
 
   return (
     <form className="design-form preventa-minorista" onSubmit={guardar}>
-      <h2>Nuevo minorista</h2>
+      <div className="preventa-subform-head">
+        <h3>Nuevo minorista</h3>
+        <p>
+          Registrá al dueño del comercio. Después lo asociás a un punto de
+          venta.
+        </p>
+      </div>
       {error && <Alert tone="danger">{error}</Alert>}
-      <div className="preventa-campos">
+      <div className="form-grid">
         <FormField
           label="Nombre"
           autoComplete="off"

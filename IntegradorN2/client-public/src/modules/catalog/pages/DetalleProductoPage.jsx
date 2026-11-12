@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../../../lib/api.js";
+import {
+  ArrowLeft,
+  Candy,
+  CircleAlert,
+  MessageCircle,
+  PackageX,
+  UserPlus,
+} from "lucide-react";
 import { pesos } from "../precios.js";
+import "../styles.css";
 
 const apiUrl = import.meta.env.VITE_API_URL || "/api";
 const dolares = new Intl.NumberFormat("es-AR", {
@@ -28,7 +37,7 @@ function PrecioEnDolares({ precio, cotizacion }) {
   const { valorVenta, fecha } = cotizacion;
   return (
     <>
-      <p>
+      <p className="product-detail-usd-value">
         <strong>{dolares.format(precio / valorVenta)}</strong> por bulto
       </p>
       <p className="product-detail-rate">
@@ -76,34 +85,58 @@ function FichaProducto({ productoId }) {
     return () => solicitud.abort();
   }, [productoId]);
 
-  if (!resultado) return <p role="status">Cargando producto…</p>;
+  if (!resultado)
+    return (
+      <p className="product-loading" role="status">
+        Cargando producto…
+      </p>
+    );
   const { producto, noDisponible } = resultado;
   if (!producto) {
     return noDisponible ? (
-      <h1>Producto no disponible</h1>
+      <div className="empty-state product-state">
+        <PackageX size={36} aria-hidden="true" />
+        <h1>Producto no disponible</h1>
+        <p>
+          Puede que se haya quedado sin stock. Mirá el catálogo para ver los
+          productos disponibles.
+        </p>
+        <Link className="dm-button dm-button-primary" to="/catalogo">
+          Ver catálogo
+        </Link>
+      </div>
     ) : (
-      <p role="alert">
-        No pudimos cargar el producto. Volvé al catálogo e intentá de nuevo.
-      </p>
+      <div className="empty-state product-state" role="alert">
+        <CircleAlert size={36} aria-hidden="true" />
+        <strong>No pudimos cargar el producto.</strong>
+        <p>Volvé al catálogo e intentá de nuevo.</p>
+      </div>
     );
   }
 
   return (
     <article className="product-detail">
-      {producto.imagenId && !imagenFallida ? (
-        <img
-          className="product-detail-image"
-          src={`${apiUrl}/imagenes/${encodeURIComponent(producto.imagenId)}`}
-          alt={producto.nombre}
-          onError={() => setImagenFallida(true)}
-        />
-      ) : (
-        <div className="catalog-card-placeholder">Imagen no disponible</div>
-      )}
+      <div className="product-detail-media">
+        {producto.imagenId && !imagenFallida ? (
+          <img
+            className="product-detail-image"
+            src={`${apiUrl}/imagenes/${encodeURIComponent(producto.imagenId)}`}
+            alt={producto.nombre}
+            onError={() => setImagenFallida(true)}
+          />
+        ) : (
+          <div className="catalog-card-placeholder">
+            <Candy size={44} aria-hidden="true" />
+            Imagen no disponible
+          </div>
+        )}
+      </div>
       <div className="product-detail-body">
-        <p className="catalog-category">{producto.categoriaNombre}</p>
+        <p className="catalog-tag">{producto.categoriaNombre}</p>
         <h1>{producto.nombre}</h1>
-        {producto.descripcion && <p>{producto.descripcion}</p>}
+        {producto.descripcion && (
+          <p className="product-detail-desc">{producto.descripcion}</p>
+        )}
         <dl className="product-detail-specs">
           <div>
             <dt>Presentación</dt>
@@ -123,11 +156,33 @@ function FichaProducto({ productoId }) {
           </div>
         </dl>
         <div className="product-detail-prices">
-          <p>
+          <p className="product-detail-price-label">Precio mayorista</p>
+          <p className="product-detail-price">
             <strong>{pesos.format(producto.precio)}</strong> ARS por bulto
           </p>
-          <PrecioEnDolares precio={producto.precio} cotizacion={cotizacion} />
+          <div className="product-detail-usd">
+            <PrecioEnDolares precio={producto.precio} cotizacion={cotizacion} />
+          </div>
         </div>
+        <section className="product-howto" aria-labelledby="como-pedir">
+          <h2 id="como-pedir">¿Cómo lo pido?</h2>
+          <p>
+            Los pedidos los carga nuestro preventor cuando visita tu comercio.
+            Mientras tanto, podés pedir una cotización estimada en el chat, y
+            con tu cuenta de comercio seguís y pagás tus pedidos online.
+          </p>
+          <div className="product-howto-actions">
+            <Link className="dm-button dm-button-primary" to="/registro">
+              <UserPlus size={16} aria-hidden="true" /> Crear cuenta de comercio
+            </Link>
+            <Link className="dm-button" to="/presupuesto">
+              <MessageCircle size={16} aria-hidden="true" /> Armar presupuesto
+            </Link>
+            <Link className="product-howto-link" to="/como-comprar">
+              Ver cómo comprar
+            </Link>
+          </div>
+        </section>
       </div>
     </article>
   );
@@ -136,10 +191,10 @@ function FichaProducto({ productoId }) {
 export default function DetalleProductoPage() {
   const { productoId } = useParams();
   return (
-    <section className="shop-range catalog" aria-label="Detalle de producto">
+    <section className="page product-page" aria-label="Detalle de producto">
       <div className="wrap">
         <Link className="product-detail-back" to="/catalogo">
-          Volver al catálogo
+          <ArrowLeft size={16} aria-hidden="true" /> Volver al catálogo
         </Link>
         <FichaProducto key={productoId} productoId={productoId} />
       </div>

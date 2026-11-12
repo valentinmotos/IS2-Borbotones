@@ -1,0 +1,56 @@
+/* ================= Créditos de fotografía ================= */
+.credits-list {
+  display: grid;
+  max-width: 760px;
+  margin: 0;
+  padding-block: 8px;
+  list-style: none;
+}
+.credits-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding-block: 14px;
+  border-top: 1px solid var(--c-line);
+}
+.credits-list li:first-child {
+  border-top: 0;
+}
+.credits-list img {
+  width: 96px;
+  height: 72px;
+  flex: none;
+  object-fit: cover;
+  border-radius: var(--r-md);
+  background: var(--c-light);
+}
+.credits-list li > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.credits-list li > div > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  color: var(--c-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.credits-list li > div > a:hover {
+  color: var(--c-red-strong);
+  text-decoration: underline;
+}
+.credits-list p {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 420px) {
+  .credits-list img {
+    width: 72px;
+    height: 54px;
+  }
+}

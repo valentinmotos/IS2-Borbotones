@@ -69,7 +69,11 @@ export default function PuntosVentaMap({ puntos }) {
         role="region"
         aria-label="Mapa de puntos de venta de la zona"
       />
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="pv-map-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

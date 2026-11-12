@@ -1,0 +1,4 @@
+/* Categorías: el enlace "Nueva categoría" lleva al formulario sin dejarlo bajo la barra fija. */
+#categoria-formulario {
+  scroll-margin-top: calc(var(--nav, 64px) + 24px);
+}

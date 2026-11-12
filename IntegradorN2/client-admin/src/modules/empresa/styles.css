@@ -1,0 +1,79 @@
+/* Empresa y sucursales: paneles a lo ancho; el formulario de sucursal se agrupa en bloques. */
+.empresa-page {
+  display: grid;
+  gap: clamp(16px, 2.5vw, 24px);
+}
+.empresa-page > .page-head {
+  margin-bottom: 0;
+}
+.empresa-datos {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+/* Bloques del formulario de sucursal: separados por línea, sin recuadro propio */
+.empresa-bloques {
+  display: grid;
+  gap: var(--s-5);
+}
+.empresa-bloque {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.empresa-bloque + .empresa-bloque {
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--c-line);
+}
+.empresa-bloque legend {
+  float: left;
+  width: 100%;
+  margin-bottom: var(--s-3);
+  padding: 0;
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.empresa-bloque legend + * {
+  clear: both;
+}
+
+/* Mapa de vista previa y foto, lado a lado */
+.empresa-media {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(16px, 2.5vw, 28px);
+}
+.empresa-mapa {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+.empresa-mapa-vista {
+  display: block;
+  width: 100%;
+  height: clamp(220px, 32vw, 300px);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  isolation: isolate;
+}
+.empresa-form-pie {
+  margin-top: var(--s-5);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-line);
+}
+
+@media (max-width: 860px) {
+  .empresa-datos,
+  .empresa-media {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Destinos de los enlaces "Nuevo…" de la cabecera: que no queden bajo la barra fija. */
+.empresa-page form[id] {
+  scroll-margin-top: calc(var(--nav, 64px) + 24px);
+}

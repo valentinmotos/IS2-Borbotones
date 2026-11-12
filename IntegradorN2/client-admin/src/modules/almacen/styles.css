@@ -1,54 +1,211 @@
-.almacen-panel,
-.almacen-bloque {
-  display: grid;
-  gap: 1rem;
-}
-
-.almacen-panel > *,
-.almacen-bloque > * {
+/* Almacén y facturación: lista de pedidos a la izquierda y detalle a la derecha
+   (pegajoso) cuando hay espacio; apilados en pantallas angostas. */
+.almacen {
+  container-type: inline-size;
   min-width: 0;
 }
 
-.almacen-encabezado,
+.almacen-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(16px, 2.5vw, 24px);
+}
+
+@container (min-width: 960px) {
+  .almacen-layout {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  }
+  .almacen-detalle,
+  .almacen-sin-detalle {
+    position: sticky;
+    top: calc(var(--nav, 64px) + 16px);
+  }
+  .almacen-detalle {
+    max-height: calc(100svh - var(--nav, 64px) - 32px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+}
+
+/* En pantallas angostas el aviso vacío no aporta: la lista ya explica qué hacer. */
+@container (max-width: 959px) {
+  .almacen-sin-detalle {
+    display: none;
+  }
+}
+
+/* ---------- Lista ---------- */
+.almacen-toolbar > .dm-field {
+  flex: 1 1 200px;
+  max-width: 280px;
+}
+
+.almacen-lista .dm-table .dm-button[aria-pressed="true"] {
+  color: #fff;
+  background: var(--c-red-strong);
+  border-color: var(--c-red-strong);
+}
+
+.almacen-sin-detalle .empty-state {
+  padding-block: clamp(24px, 4vw, 40px);
+}
+
+.almacen-sin-detalle .empty-state svg {
+  color: var(--c-red);
+}
+
+.almacen-sin-detalle .empty-state p {
+  max-width: 34ch;
+  font-size: var(--fs-sm);
+}
+
+/* ---------- Detalle ---------- */
+.almacen-detalle {
+  display: grid;
+  gap: var(--s-4);
+  border-top: 4px solid var(--c-red);
+}
+
+.almacen-detalle > * {
+  min-width: 0;
+}
+
+.almacen-detalle > .panel-head {
+  margin-bottom: 0;
+}
+
+.almacen-detalle:focus {
+  outline: none;
+}
+
+.almacen-detalle:focus-visible {
+  outline: 2px solid var(--dm-focus);
+  outline-offset: 3px;
+}
+
+.almacen-titulo {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.almacen-comercio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-ink);
+  font-weight: 600;
+}
+
+.almacen-comercio svg {
+  color: var(--c-red);
+}
+
 .almacen-totales {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
-  gap: 0.75rem 1.25rem;
-}
-
-.almacen-encabezado h2,
-.almacen-encabezado h3 {
-  flex: 1 1 auto;
+  justify-content: flex-end;
+  gap: var(--s-2) var(--s-5);
   margin: 0;
+  padding: var(--s-3) var(--s-4);
+  background: var(--c-cream);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
 }
 
-.almacen-filtro {
-  max-width: 18rem;
+.almacen-totales > div {
+  display: grid;
+  justify-items: end;
 }
 
-.almacen-totales {
-  margin: 0;
+.almacen-totales dt {
+  color: var(--muted);
+  font-size: var(--fs-xs);
 }
 
 .almacen-totales dd {
   margin: 0;
-  font-weight: 700;
+  color: var(--c-ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
-.almacen-panel > .dm-button,
-.almacen-pago > .dm-button {
+.almacen-total dd {
+  color: var(--c-red-strong);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+/* Subsecciones del detalle: separadas por una línea, sin recuadros anidados. */
+.almacen-procesar,
+.almacen-bloque {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.almacen-procesar,
+.almacen-detalle > .almacen-bloque {
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-line);
+}
+
+.almacen-procesar > .dm-button {
   justify-self: start;
 }
 
-.almacen-pago {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
-  gap: 1rem;
+.almacen-bloque > * {
   min-width: 0;
-  align-items: end;
+}
+
+.almacen-bloque h3 {
+  font-size: var(--fs-md);
+}
+
+.almacen-encabezado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+}
+
+.almacen-encabezado h3 {
+  margin: 0;
+}
+
+.almacen-encabezado .dm-button {
+  margin-left: auto;
+}
+
+.almacen-saldo {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.almacen-saldo strong {
+  color: var(--c-ink);
+  font-size: var(--fs-md);
+}
+
+/* ---------- Registrar pago ---------- */
+.almacen-pago {
+  padding: var(--s-4);
+  background: var(--c-cream);
+  border-radius: var(--r-md);
+}
+
+.almacen-pago fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .almacen-pago legend {
-  font-weight: 700;
+  margin-bottom: var(--s-3);
+  padding: 0;
+  font-size: var(--fs-md);
 }

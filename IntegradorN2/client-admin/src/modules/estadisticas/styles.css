@@ -1,9 +1,15 @@
+/* Estadísticas: filtros en barra, KPI y paneles de gráficos. */
 .estadisticas,
 .estadisticas-detalle,
 .estadisticas-panel {
   display: grid;
-  gap: var(--dm-4);
+  gap: clamp(16px, 2.5vw, 24px);
   min-width: 0;
+}
+
+.estadisticas > .page-head,
+.estadisticas .kpi-grid {
+  margin: 0;
 }
 
 .estadisticas-detalle {
@@ -13,83 +19,101 @@
 
 .estadisticas-panel {
   grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-4);
 }
 
-.estadisticas-kpis {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
-  gap: var(--dm-4);
-  margin: 0;
+.estadisticas-panel > .panel-head,
+.estadisticas-panel > h2 {
+  margin-bottom: 0;
 }
 
-.estadisticas-kpis .dm-kpi {
-  display: grid;
-  align-content: start;
-  padding: var(--dm-4);
-  border: 1px solid var(--dm-line);
-  border-radius: var(--r-lg);
-  background: var(--dm-surface);
-}
-
-.estadisticas-kpis .dm-kpi dd:not(.dm-kpi-detail) {
-  font-size: 1.5rem;
-}
-
+/* ---------- Filtros ---------- */
 .estadisticas-filtros {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--dm-4);
   margin: 0;
 }
 
-.estadisticas-filtros {
-  align-items: end;
+.estadisticas-filtros > .dm-field {
+  flex: 0 1 180px;
+  min-width: 140px;
 }
 
-.estadisticas-filtros .dm-field {
-  min-width: 7rem;
-  max-width: 12rem;
-  margin: 0;
+.estadisticas-actualizado {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: var(--fs-xs);
 }
 
-.estadisticas-filtros select {
-  min-height: 40px;
-  padding: 6px var(--dm-2);
-  border: 1px solid var(--dm-control-line);
-  border-radius: var(--dm-radius);
-  background: var(--dm-surface);
-  color: var(--dm-ink);
-}
-
-.estadisticas-panel h2 {
-  margin: 0;
+.estadisticas-actualizado svg {
+  color: var(--c-amber);
 }
 
 .estadisticas-periodo {
-  margin: 0;
-  color: var(--dm-muted);
+  padding: 3px 12px;
+  color: var(--c-red-strong);
+  background: var(--dm-tint);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  font-weight: 600;
 }
 
-.estadisticas-panel summary {
-  cursor: pointer;
-  margin-bottom: var(--dm-2);
-}
-
+/* ---------- Gráficos ---------- */
 .estadisticas-grafico-scroll {
   min-width: 0;
   overflow-x: auto;
+  border-radius: var(--r-md);
 }
 
-@media (max-width: 960px) {
-  .estadisticas-detalle {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-/* HU-01: leyenda de la torta con la proporción de cada producto */
 .estadisticas-torta {
   display: grid;
-  gap: 1rem;
+  gap: var(--s-4);
+}
+
+.estadisticas-leyenda {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+}
+
+.estadisticas-leyenda li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.estadisticas-leyenda strong {
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.estadisticas-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.estadisticas-existencias {
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--c-line);
+}
+
+.estadisticas-existencias summary {
+  width: fit-content;
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.estadisticas-existencias[open] summary {
+  margin-bottom: var(--s-3);
 }
 
 @media (min-width: 640px) {
@@ -99,30 +123,20 @@
   }
 }
 
-.estadisticas-leyenda {
-  display: grid;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: 0.9rem;
+@media (max-width: 1100px) {
+  .estadisticas-detalle {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
-.estadisticas-leyenda li {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.estadisticas-color {
-  width: 0.8rem;
-  height: 0.8rem;
-  border-radius: 50%;
-}
-
-.estadisticas-actualizado {
-  margin: 0;
-  color: var(--dm-muted, inherit);
-  font-size: 0.85rem;
+@media (max-width: 640px) {
+  .estadisticas-filtros > .dm-field {
+    flex: 1 1 140px;
+  }
+  .estadisticas-filtros > .dm-button {
+    width: 100%;
+  }
+  .estadisticas-actualizado {
+    margin-left: 0;
+  }
 }

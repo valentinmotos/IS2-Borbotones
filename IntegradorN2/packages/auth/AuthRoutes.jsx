@@ -1,5 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
+import {
+  KeyRound,
+  LoaderCircle,
+  LogIn,
+  LogOut,
+  RefreshCw,
+  ShieldAlert,
+  TriangleAlert,
+  UserPlus,
+} from "lucide-react";
 import { Alert } from "../design/components.jsx";
 import { useSession } from "./session.js";
 
@@ -47,6 +57,7 @@ export function LogoutButton() {
       onClick={logout}
       disabled={signingOut}
     >
+      <LogOut size={16} aria-hidden="true" />
       {signingOut ? "Cerrando sesión…" : "Cerrar sesión"}
     </button>
   );
@@ -54,15 +65,33 @@ export function LogoutButton() {
 
 function SessionStatus() {
   const { status, notice, retry, signingOut } = useSession();
-  if (signingOut) return <p role="status">Cerrando sesión…</p>;
-  if (status === "loading") return <p role="status">Verificando tu sesión…</p>;
+  if (signingOut || status === "loading")
+    return (
+      <p className="auth-status" role="status">
+        <LoaderCircle className="auth-spin" size={20} aria-hidden="true" />
+        {signingOut ? "Cerrando sesión…" : "Verificando tu sesión…"}
+      </p>
+    );
   return (
     <section className="auth-panel">
+      <div className="auth-head">
+        <span className="auth-icon" data-tone="danger" aria-hidden="true">
+          <TriangleAlert size={22} />
+        </span>
+        <h2>No pudimos verificar tu sesión</h2>
+      </div>
       <Alert tone="danger">{notice}</Alert>
-      <button type="button" className="dm-button" onClick={retry}>
-        Reintentar
-      </button>
-      <LogoutButton />
+      <div className="auth-actions">
+        <button
+          type="button"
+          className="dm-button dm-button-primary"
+          onClick={retry}
+        >
+          <RefreshCw size={16} aria-hidden="true" />
+          Reintentar
+        </button>
+        <LogoutButton />
+      </div>
     </section>
   );
 }
@@ -74,9 +103,22 @@ function AccessDenied() {
   }, []);
   return (
     <section className="auth-panel">
-      <h1>Acceso denegado</h1>
-      <p>Tu rol no tiene permiso para acceder a esta página.</p>
-      {home ? <Link to={home}>Volver a mi inicio</Link> : <LogoutButton />}
+      <div className="auth-head">
+        <span className="auth-icon" data-tone="danger" aria-hidden="true">
+          <ShieldAlert size={22} />
+        </span>
+        <h1>Acceso denegado</h1>
+        <p>Tu rol no tiene permiso para acceder a esta página.</p>
+      </div>
+      <div className="auth-actions">
+        {home ? (
+          <Link className="dm-button dm-button-primary" to={home}>
+            Volver a mi inicio
+          </Link>
+        ) : (
+          <LogoutButton />
+        )}
+      </div>
     </section>
   );
 }
@@ -143,12 +185,19 @@ function AuthForm({
 
   return (
     <section className="auth-panel">
-      <h1>{title}</h1>
-      {changing && (
-        <p>Para continuar, reemplazá tu clave temporal por una nueva.</p>
-      )}
+      <div className="auth-head">
+        <span className="auth-icon" aria-hidden="true">
+          {changing ? <KeyRound size={22} /> : <LogIn size={22} />}
+        </span>
+        <h1>{title}</h1>
+        <p>
+          {changing
+            ? "Para continuar, reemplazá tu clave temporal por una nueva."
+            : "Ingresá con el correo y la clave de tu cuenta."}
+        </p>
+      </div>
       {!changing && notice && <Alert tone="warning">{notice}</Alert>}
-      <form onSubmit={submit} aria-busy={pending}>
+      <form className="auth-form" onSubmit={submit} aria-busy={pending}>
         {error && (
           <Alert tone="danger">
             <span id="auth-error">{error.message}</span>
@@ -171,7 +220,7 @@ function AuthForm({
           </div>
         ))}
         <button
-          className="dm-button dm-button-primary"
+          className="dm-button dm-button-primary dm-button-lg dm-button-block"
           type="submit"
           disabled={pending}
         >
@@ -179,16 +228,29 @@ function AuthForm({
         </button>
       </form>
       {changing ? (
-        <LogoutButton />
+        <div className="auth-foot">
+          <span>¿No es tu cuenta?</span>
+          <LogoutButton />
+        </div>
       ) : (
         <>
-          {alternateLogin}
-          <a href={otherLogin.href}>{otherLogin.label}</a>
+          {/* Ingreso alternativo (p. ej. Google); el separador se oculta si viene vacío. */}
+          <div className="auth-alt">{alternateLogin}</div>
           {registrationPath && (
-            <p className="auth-register-link">
-              ¿Primera vez? <Link to={registrationPath}>Crear cuenta minorista</Link>
-            </p>
+            <div className="auth-register">
+              <p>
+                <strong>¿No tenés cuenta?</strong> Registrá tu comercio para
+                seguir tus pedidos y pagar tus facturas.
+              </p>
+              <Link className="dm-button dm-button-block" to={registrationPath}>
+                <UserPlus size={17} aria-hidden="true" />
+                Creá tu cuenta
+              </Link>
+            </div>
           )}
+          <p className="auth-other">
+            <a href={otherLogin.href}>{otherLogin.label}</a>
+          </p>
         </>
       )}
     </section>
