@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factura emitida · Dulce Mayor</title>
+</head>
+<body style="margin:0;padding:20px;background:#f8f5ef;color:#1f1b18;font-family:Arial,Helvetica,sans-serif;">
+  <main style="max-width:640px;margin:auto;padding:24px;background:#fffdfa;border:1px solid #d9cec0;">
+    <p style="margin:0;color:#8b1e3f;font-weight:bold;">Dulce Mayor</p>
+    <h1 style="font-family:Georgia,serif;font-size:26px;" th:text="|Factura N° ${factura.numeroVisible()}|">Factura</h1>
+    <p>Emitimos la factura del pedido <strong th:text="|N° ${factura.numeroPedido()}|"></strong>
+      de <strong th:text="${factura.comercio()}"></strong> el
+      <span th:text="${#temporals.format(factura.fechaFactura(), 'dd/MM/yyyy')}"></span>.
+      Encontrá el comprobante PDF adjunto.</p>
+
+    <table style="width:100%;border-collapse:collapse;font-size:14px;">
+      <caption style="padding:12px 0;text-align:left;font-weight:bold;">Detalle del pedido (ARS)</caption>
+      <thead style="background:#f5dfd4;">
+        <tr>
+          <th scope="col" style="padding:8px;text-align:left;">Producto</th>
+          <th scope="col" style="padding:8px;text-align:right;">Cantidad</th>
+          <th scope="col" style="padding:8px;text-align:right;">Precio unitario</th>
+          <th scope="col" style="padding:8px;text-align:right;">Importe</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="linea : ${factura.detalles()}">
+          <td style="padding:8px;border-bottom:1px solid #d9cec0;" th:text="${linea.producto()}"></td>
+          <td style="padding:8px;text-align:right;border-bottom:1px solid #d9cec0;" th:text="${linea.cantidad()}"></td>
+          <td style="padding:8px;text-align:right;border-bottom:1px solid #d9cec0;"
+              th:text="${#numbers.formatDecimal(linea.precioUnitario(), 1, 'POINT', 2, 'COMMA')}"></td>
+          <td style="padding:8px;text-align:right;border-bottom:1px solid #d9cec0;"
+              th:text="${#numbers.formatDecimal(linea.subtotal(), 1, 'POINT', 2, 'COMMA')}"></td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="text-align:right;">
+      Subtotal $ <span th:text="${#numbers.formatDecimal(factura.subtotal(), 1, 'POINT', 2, 'COMMA')}"></span><br>
+      <span th:if="${factura.descuento() > 0}">
+        Descuento $ <span th:text="${#numbers.formatDecimal(factura.descuento(), 1, 'POINT', 2, 'COMMA')}"></span><br>
+      </span>
+      <strong>Total $ <span th:text="${#numbers.formatDecimal(factura.total(), 1, 'POINT', 2, 'COMMA')}"></span></strong>
+    </p>
+  </main>
+</body>
+</html>

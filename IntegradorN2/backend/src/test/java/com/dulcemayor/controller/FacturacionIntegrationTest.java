@@ -1,6 +1,8 @@
 package com.dulcemayor.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -24,18 +26,30 @@ import com.dulcemayor.service.PedidoService;
 import com.dulcemayor.service.StockService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** E4-04: criterio de aceptación de punta a punta (pedido con stock → factura, stock descontado, PDF). */
-@SpringBootTest
+@SpringBootTest(properties = "spring.datasource.url=jdbc:h2:mem:facturacion;MODE=PostgreSQL;"
+        + "DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1")
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class FacturacionIntegrationTest {
@@ -49,6 +63,19 @@ class FacturacionIntegrationTest {
     @Autowired private PedidoRepository pedidoRepository;
     @Autowired private PedidoService pedidos;
     @Autowired private StockService stock;
+    @MockitoBean private JavaMailSender mailSender;
+
+    private final ConcurrentMap<String, CompletableFuture<MimeMessage>> correos = new ConcurrentHashMap<>();
+
+    @BeforeEach
+    void prepararCorreo() {
+        when(mailSender.createMimeMessage()).thenAnswer(invocacion -> new MimeMessage((Session) null));
+        doAnswer(invocacion -> {
+            MimeMessage correo = invocacion.getArgument(0);
+            correoPorAsunto(correo.getSubject()).complete(correo);
+            return null;
+        }).when(mailSender).send(ArgumentMatchers.any(MimeMessage.class));
+    }
 
     @Test
     void unPedidoConStockSeFacturaDescuentaElStockYDejaLaFacturaDescargable() throws Exception {
@@ -84,6 +111,7 @@ class FacturacionIntegrationTest {
                         "attachment; filename=\"factura-%08d.pdf\"".formatted(numero)))
                 .andReturn().getResponse().getContentAsByteArray();
         assertThat(new String(pdf, 0, 5, StandardCharsets.US_ASCII)).isEqualTo("%PDF-");
+        verificarCorreo(numero, producto.getNombre());
 
         // Numeración secuencial y un pedido no se factura dos veces.
         mvc.perform(post("/api/pedidos/" + segundo + "/facturar").header(HttpHeaders.AUTHORIZATION, administrativo))
@@ -95,6 +123,31 @@ class FacturacionIntegrationTest {
                         .header(HttpHeaders.AUTHORIZATION, administrativo))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.id == '%s')].numeroPedido".formatted(facturaId)).value(4401));
+    }
+
+    private void verificarCorreo(long numero, String producto) throws Exception {
+        String asunto = "Factura N° %08d · Dulce Mayor".formatted(numero);
+        MimeMessage correo = correoPorAsunto(asunto).get(5, TimeUnit.SECONDS);
+        correo.saveChanges();
+        assertThat(correo.getSubject()).isEqualTo(asunto);
+        assertThat(correo.getAllRecipients()).extracting(Object::toString)
+                .containsExactly("minorista@dulcemayor.com.ar");
+
+        MimeMultipart mensaje = (MimeMultipart) correo.getContent();
+        var html = ((MimeMultipart) mensaje.getBodyPart(0).getContent()).getBodyPart(0);
+        assertThat(html.isMimeType("text/html")).isTrue();
+        assertThat(html.getContent().toString()).contains("4401", producto, "3.000,00");
+
+        var adjunto = mensaje.getBodyPart(1);
+        assertThat(adjunto.getFileName()).isEqualTo("factura-%08d.pdf".formatted(numero));
+        assertThat(adjunto.isMimeType("application/pdf")).isTrue();
+        try (var contenido = adjunto.getInputStream()) {
+            assertThat(new String(contenido.readNBytes(5), StandardCharsets.US_ASCII)).isEqualTo("%PDF-");
+        }
+    }
+
+    private CompletableFuture<MimeMessage> correoPorAsunto(String asunto) {
+        return correos.computeIfAbsent(asunto, clave -> new CompletableFuture<>());
     }
 
     @Test

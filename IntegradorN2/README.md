@@ -766,7 +766,13 @@ Tests: `FacturacionServiceTest` (con stock, sin stock, SIN_STOCK repetido, produ
 
 - **Firma del contrato:** es `FacturacionService.facturarPedido(idPedido, idUsuario)`, no `facturarPedido(idPedido)`. Se agregó `idUsuario` porque E4-01 exige el responsable en el historial; se saca del token (`@AuthenticationPrincipal UsuarioAutenticado`). Está comentado en el código (`NOTA (E4-04)`).
 - **E4-06 (panel de almacén):** el botón «Procesar y facturar» llama a `POST /api/pedidos/{id}/facturar`; mostrar `mensaje` y, si vuelve `SIN_STOCK`, la tabla de `faltantes`. Hay un botón opcional para procesar todos con `POST /api/pedidos/procesar`. La descarga es `GET /api/facturas/{id}/pdf` (blob con el token).
-- **E4-07 (correo de factura):** no hace falta tocar la facturación. Escuchar `FacturaEmitidaEvent(facturaId, pedidoId)` con `@TransactionalEventListener(phase = AFTER_COMMIT)` y adjuntar `FacturaPdfService.generarFacturaPdf(facturaId)`. Si la facturación se deshace, el evento no llega.
+- **E4-07 (correo de factura):** cada factura confirmada activa el envío descrito en [Correo de confirmación de factura](#correo-de-confirmación-de-factura--e4-07).
+
+## Correo de confirmación de factura · E4-07
+
+Al facturar un pedido, individualmente o en lote, se envía en segundo plano un correo al contacto registrado del minorista del punto de venta. Si no hay un contacto válido, se usa el correo de su cuenta. El mensaje incluye el comercio, el número de pedido, sus productos, los importes y la factura PDF adjunta. El envío se activa después de confirmar la transacción.
+
+Para probarlo, configurá el [SMTP de desarrollo](#servicio-de-correo-asíncrono), cargá un pedido con stock desde Preventa y facturalo con `POST /api/pedidos/{id}/facturar` como Jefe o Administrativo. En la bandeja de prueba, abrí «Factura N° … · Dulce Mayor» y comprobá el detalle y el adjunto `factura-00000001.pdf` (el número depende de la factura emitida).
 - **E4-05 (pagos):** la factura nace en `PENDIENTE_PAGO`; `PagoService.confirmar` la pasa a `PAGADA`.
 - **E4-08 (minorista):** no usar `/api/facturas/**` (solo gestión). Exponer las facturas bajo `/api/minorista/**`, validar que la factura sea de un punto de venta del minorista logueado (`FacturaRepository.findByPedido_PuntoDeVenta_Minorista_IdAndEliminadoFalse`) y recién ahí llamar a `FacturaPdfService`.
 - **E5-03 (reportes):** OpenPDF ya está en el `pom.xml` (`openpdf.version`).
