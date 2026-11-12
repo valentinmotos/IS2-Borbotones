@@ -3,6 +3,7 @@ import CreditsPage from "./CreditsPage.jsx";
 import PublicLayout from "./PublicLayout.jsx";
 import HomePage from "../modules/home/pages/HomePage.jsx";
 import CatalogoPage from "../modules/catalog/pages/CatalogoPage.jsx";
+import ChatPresupuestoPage from "../modules/presupuesto/pages/ChatPresupuestoPage.jsx";
 import CompanyPage from "../modules/company/pages/CompanyPage.jsx";
 import BuyingPage from "../modules/buying/pages/BuyingPage.jsx";
 import RegistroMinoristaPage from "../modules/registro/pages/RegistroMinoristaPage.jsx";
@@ -75,6 +76,7 @@ export default function App() {
         <Route element={<PublicLayout />}>
           <Route index element={<HomePage />} />
           <Route path="catalogo" element={<CatalogoPage />} />
+          <Route path="presupuesto" element={<ChatPresupuestoPage />} />
           <Route path="empresa" element={<CompanyPage />} />
           <Route path="como-comprar" element={<BuyingPage />} />
           <Route path="creditos" element={<CreditsPage />} />

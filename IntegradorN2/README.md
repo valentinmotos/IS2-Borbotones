@@ -687,7 +687,7 @@ Tests (no necesitan Ollama): `OllamaChatbotAdapterTest` (traducción de la API c
 
 ### Para otros issues
 
-- **E3-05 (chat del sitio):** `POST /api/publico/chatbot/presupuesto` con `{mensaje}`. Mostrar `items`, `excluidos` con su `motivo`, `total` y `totalDolares` (con `cotizacionDolar` y `fechaCotizacion`). Ante un `503`, mostrar el formulario de presupuesto (plan B). Una respuesta tarda varios segundos: mostrar un indicador de "escribiendo".
+- **E3-05 (chat del sitio):** disponible en `/presupuesto`, desde la navegación y la página de inicio. Envía `POST /api/publico/chatbot/presupuesto` con `{mensaje}` (hasta 500 caracteres), muestra `items`, `excluidos` con su `motivo`, `total` y `totalDolares` (con `cotizacionDolar` y `fechaCotizacion`), y señala cuando el asistente está procesando. Ante un `503`, ofrece un formulario alternativo que arma el presupuesto con productos del catálogo, valida el stock y muestra totales en pesos y, si hay cotización, en dólares.
 - **`ServicioNoDisponibleException`:** cualquier service que dependa de un servicio externo sin respaldo puede lanzarla para responder `503` con `{mensaje}`.
 ## Catálogo público · E3-01
 
