@@ -7,6 +7,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -41,6 +42,17 @@ public class EmailService {
      */
     @Async
     public void enviar(String destino, String asunto, String plantilla, Map<String, Object> variables) {
+        enviarMensaje(destino, asunto, plantilla, variables, null);
+    }
+
+    @Async
+    public void enviar(String destino, String asunto, String plantilla, Map<String, Object> variables,
+            Adjunto adjunto) {
+        enviarMensaje(destino, asunto, plantilla, variables, adjunto);
+    }
+
+    private void enviarMensaje(String destino, String asunto, String plantilla, Map<String, Object> variables,
+            Adjunto adjunto) {
         try {
             Context contexto = new Context(Locale.forLanguageTag("es-AR"));
             if (variables != null) {
@@ -49,11 +61,14 @@ public class EmailService {
             String html = templateEngine.process(plantilla, contexto);
 
             MimeMessage mensaje = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mensaje, false, StandardCharsets.UTF_8.name());
+            MimeMessageHelper helper = new MimeMessageHelper(mensaje, adjunto != null, StandardCharsets.UTF_8.name());
             helper.setTo(destino);
             helper.setFrom(remitente());
             helper.setSubject(asunto);
             helper.setText(html, true);
+            if (adjunto != null) {
+                helper.addAttachment(adjunto.nombre(), new ByteArrayResource(adjunto.contenido()), adjunto.tipo());
+            }
 
             mailSender.send(mensaje);
             log.info("Se envió un correo con la plantilla '{}'.", plantilla);
@@ -61,6 +76,8 @@ public class EmailService {
             log.error("No se pudo enviar un correo con la plantilla '{}'.", plantilla, error);
         }
     }
+
+    public record Adjunto(String nombre, byte[] contenido, String tipo) {}
 
     private String remitente() {
         return remitenteConfigurado == null || remitenteConfigurado.isBlank()
