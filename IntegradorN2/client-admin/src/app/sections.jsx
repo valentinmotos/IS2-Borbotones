@@ -4,6 +4,7 @@ import GuidePage from "../modules/help/pages/GuidePage.jsx";
 import DesignPage from "../modules/design/DesignPage.jsx";
 import CategoriasPage from "../modules/categorias/pages/CategoriasPage.jsx";
 import EmpresaPage from "../modules/empresa/pages/EmpresaPage.jsx";
+import EstadisticasRoute from "../modules/estadisticas/EstadisticasRoute.jsx";
 import ProductosPage from "../modules/productos/pages/ProductosPage.jsx";
 import UbicacionPage from "../modules/ubicacion/pages/UbicacionPage.jsx";
 import PuntosVentaPage from "../modules/puntos-venta/pages/PuntosVentaPage.jsx";
@@ -26,6 +27,12 @@ export const sections = [
     label: "Administración",
     roles: ["ADMINISTRATIVO"],
     element: <HomePage title="Administración" />,
+  },
+  {
+    to: "/estadisticas",
+    label: "Estadísticas",
+    roles: ["JEFE"],
+    element: <EstadisticasRoute />,
   },
   {
     to: homes.PREVENTOR,

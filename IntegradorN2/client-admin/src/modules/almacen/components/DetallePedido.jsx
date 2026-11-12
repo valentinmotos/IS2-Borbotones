@@ -6,7 +6,7 @@ import {
 } from "../../../../../packages/design/components.jsx";
 import { api } from "../../../lib/api.js";
 import { estadosPedido, formasPago, moneda } from "../formato.js";
-import useAlmacenResource from "../useAlmacenResource.js";
+import useApiResource from "../../../lib/useApiResource.js";
 import PagoForm from "./PagoForm.jsx";
 
 const columnasDetalle = [
@@ -128,7 +128,7 @@ function Factura({ factura, pagos, ocupado, descargar, registrar }) {
 }
 
 export default function DetallePedido({ pedidoId, version, refrescar }) {
-  const recurso = useAlmacenResource(`/pedidos/${pedidoId}`, version);
+  const recurso = useApiResource(`/pedidos/${pedidoId}`, version);
   const [aviso, setAviso] = useState(null);
   const [ocupado, setOcupado] = useState(false);
   const panel = useRef(null);

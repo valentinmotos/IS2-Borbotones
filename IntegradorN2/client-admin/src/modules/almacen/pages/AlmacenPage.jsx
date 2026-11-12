@@ -7,7 +7,7 @@ import {
 } from "../../../../../packages/design/components.jsx";
 import DetallePedido from "../components/DetallePedido.jsx";
 import { estadosPedido, fechaHora, moneda } from "../formato.js";
-import useAlmacenResource from "../useAlmacenResource.js";
+import useApiResource from "../../../lib/useApiResource.js";
 import "../styles.css";
 
 const porPagina = 8;
@@ -36,7 +36,7 @@ export default function AlmacenPage() {
   const [pagina, setPagina] = useState(1);
   const [pedidoId, setPedidoId] = useState(null);
   const [version, setVersion] = useState(0);
-  const listado = useAlmacenResource(
+  const listado = useApiResource(
     estado ? `/pedidos?estado=${estado}` : "/pedidos",
     version,
   );
