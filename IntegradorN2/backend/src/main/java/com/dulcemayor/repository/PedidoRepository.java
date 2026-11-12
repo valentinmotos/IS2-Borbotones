@@ -1,8 +1,10 @@
 package com.dulcemayor.repository;
 
+import com.dulcemayor.dto.EstadisticasResponse.PedidosPorDia;
 import com.dulcemayor.entity.Pedido;
 import com.dulcemayor.entity.enums.EstadoPedido;
 import jakarta.persistence.LockModeType;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +14,18 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 public interface PedidoRepository extends JpaRepository<Pedido, String> {
+    @Query("""
+            select new com.dulcemayor.dto.EstadisticasResponse$PedidosPorDia(
+                cast(p.fechaHoraCarga as LocalDate), v.id, v.nombre, v.apellido, v.legajo,
+                count(p), sum(case when p.estado in :estadosFacturados then 1 else 0 end))
+            from Pedido p join p.preventor v
+            where p.eliminado = false and p.fechaHoraCarga >= :desde and p.fechaHoraCarga < :hastaExclusivo
+            group by cast(p.fechaHoraCarga as LocalDate), v.id, v.nombre, v.apellido, v.legajo
+            order by cast(p.fechaHoraCarga as LocalDate), v.apellido, v.nombre, v.legajo
+            """)
+    List<PedidosPorDia> contarPorDiaYPreventor(LocalDateTime desde, LocalDateTime hastaExclusivo,
+            Collection<EstadoPedido> estadosFacturados);
+
     List<Pedido> findByEliminadoFalse();
     List<Pedido> findByEstadoAndEliminadoFalse(EstadoPedido estado);
     List<Pedido> findByPreventor_IdAndEliminadoFalse(String preventorId);
