@@ -24,8 +24,16 @@ function popup(parada, estado) {
  * NOTA (E5-01): el recorrido son tramos en línea recta entre puntos, no el camino por calle.
  * E5-02 puede reutilizarlo pasando su ruta con la misma forma (`paradas`, `siguiente`,
  * `recorridoSugerido`).
+ *
+ * NOTA (E5-02): `etiquetaHecha` permite que el portal del distribuidor diga "Entregado" en vez de
+ * "Visitado"; por defecto se mantiene el texto del preventor.
  */
-export default function RutaMap({ ruta, posicion, origen }) {
+export default function RutaMap({
+  ruta,
+  posicion,
+  origen,
+  etiquetaHecha = "Visitado",
+}) {
   const contenedor = useRef(null);
   const mapa = useRef(null);
   const [leaflet, setLeaflet] = useState(null);
@@ -92,7 +100,7 @@ export default function RutaMap({ ruta, posicion, origen }) {
           popup(
             parada,
             parada.visitada
-              ? "Visitado"
+              ? etiquetaHecha
               : esSiguiente
                 ? "Próximo punto"
                 : "Pendiente",
@@ -124,7 +132,7 @@ export default function RutaMap({ ruta, posicion, origen }) {
       mapa.current.fitBounds(capa.getBounds().pad(0.15), { maxZoom: 15 });
     }
     return () => capa.remove();
-  }, [leaflet, ruta, posicion, origen]);
+  }, [leaflet, ruta, posicion, origen, etiquetaHecha]);
 
   return (
     <div className="ruta-mapa-wrap">

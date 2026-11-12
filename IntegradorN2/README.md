@@ -891,3 +891,44 @@ Pruebas: `RutaServiceTest` (Mockito: armado de la ruta, punto más cercano, reco
 - E5-02 arma la ruta del distribuidor con `crearRuta(fecha, null, idDistribuidor)` + `agregarParada(idRuta, idPuntoDeVenta, idPedido, orden)` y la lista con `listarRutaPorDistribuidor`. El endpoint del distribuidor lo expone E5-02, no `/api/preventa`.
 - `client-admin/src/modules/preventa/components/RutaMap.jsx` recibe `{ruta, posicion, origen}` con la forma de `RutaResponse` y se puede reutilizar en el portal del distribuidor.
 - `DistanciaGeografica.kilometros(...)` y `coordenadasValidas(...)` sirven para cualquier cálculo de distancia.
+
+## Portal móvil del distribuidor · E5-02
+
+La sección [Distribución](http://localhost:5173/distribucion) es el portal del distribuidor y está pensada para usarla desde el celular. Ahí el distribuidor toma los pedidos listos, ve su ruta de reparto en el mapa y marca cada pedido como entregado. Al entregar, el sistema propone el siguiente punto y le avisa por correo a ese comercio que el pedido va en camino.
+
+- **Tomar pedidos:** el portal lista los pedidos `FACTURADO` cuya factura está `PAGADA`, porque E4-05 deja el pedido "pendiente de envío" recién al pagarse. Al tomarlos pasan a `EN_REPARTO` (evento `INICIAR_REPARTO` del State de E4-01), el distribuidor queda como transportista y se suman como paradas a su **ruta de reparto del día**. La operación es todo o nada: si un pedido de la selección no está listo, no se toma ninguno.
+- **Ruta de reparto:** se guarda una `Ruta` por distribuidor y por día, con una `ParadaRuta` por pedido. Si quedaron pedidos sin entregar en rutas de días anteriores, pasan a la de hoy y la ruta vieja queda `INCOMPLETA`. Cuando se entrega el último pedido, la ruta pasa a `REALIZADA`.
+- **Entregado:** el pedido pasa a `ENTREGADO` y el historial registra la fecha, el usuario, el transportista y la observación. Después se calcula el siguiente punto con el mismo criterio de E5-01 (la parada pendiente más cercana) desde el GPS. Sin GPS, se parte del comercio recién entregado.
+- **Correo "en camino":** cuando se confirma la entrega, `PedidoEnCaminoCorreoService` le manda la plantilla `correo/pedido-en-camino` al responsable del comercio siguiente. Si el envío falla, solo queda en el log. Cada parada recibe **un solo** aviso (`ParadaRuta.fechaAvisoEnCamino`), aunque vuelva a quedar como siguiente porque el distribuidor entregó fuera de orden.
+- **Datos de demo:** el `DataSeeder` crea el perfil `Distribuidor` "Dante Distribuidor" (legajo D-001) para `distribuidor@dulcemayor.com.ar`.
+
+### Endpoints (solo DISTRIBUIDOR; el Jefe no hereda este rol)
+
+| Método | Ruta | Request → Response |
+|---|---|---|
+| GET | `/api/distribucion/pedidos-listos` | → `[{id, numeroPedido, numeroFactura, nombreComercio, calle, numeracion, localidad, total}]` |
+| POST | `/api/distribucion/reparto` | `{pedidoIds: [...]}` → `RutaResponse` (`400` si un pedido no está facturado o no está pagado) |
+| GET | `/api/distribucion/ruta?latitud=…&longitud=…` | → `RutaResponse` de la ruta de hoy (la posición es opcional) |
+| GET | `/api/distribucion/pedidos/{id}` | → `PedidoAlmacenResponse` (productos a entregar). `404` si el pedido no está en su ruta |
+| POST | `/api/distribucion/pedidos/{id}/entrega` | `{latitud?, longitud?, observacion?}` → `{historial, ruta, siguiente, avisoEnCaminoA}` (`404` si el pedido no está en su ruta y `400` si ya se entregó) |
+
+Las paradas de `RutaResponse` ahora traen también `numeroPedido` y `estadoPedido`. En la ruta de reparto, `visitada` significa "entregado".
+
+### Cómo probarlo
+
+1. Como preventor, cargá dos pedidos en comercios distintos (por ejemplo Kiosco Centro y Almacén Godoy Cruz).
+2. Como administrativo, entrá a [Almacén y facturación](http://localhost:5173/almacen), procesá los dos pedidos y registrá el pago en efectivo de cada factura.
+3. Ingresá como `distribuidor@dulcemayor.com.ar` (clave de demo) y abrí **Distribución**. En **Listos para reparto** elegí los dos pedidos y tocá **Tomar para reparto**.
+4. El mapa muestra los dos puntos y el **Próximo punto**. Tocá **Entregado** en uno y confirmá. Aparece "Pedido N° … entregado. Le avisamos a … que vas en camino.", el punto pasa a ✓ y en Mailtrap llega el correo "Tu pedido N° … está en camino" para el otro comercio.
+5. El historial del pedido (`GET /api/pedidos/{id}/historial` como administrativo) termina en `ENTREGADO`, con la fecha y el transportista.
+
+Pruebas: `DistribucionServiceTest` (Mockito: tomar pedidos, pedido sin pagar o sin facturar, siguiente punto con y sin GPS, aviso único, ruta realizada, `404` fuera de ruta, pedidos de días anteriores) y `DistribucionIntegrationTest` (criterio de aceptación de punta a punta con el correo mockeado, más `401` y `403` para los otros roles). Para ejecutarlas: `mvnw.cmd -Dtest=DistribucionServiceTest,DistribucionIntegrationTest test` desde `backend`.
+
+### Para otros issues
+
+- El paso de `FACTURADO` a `EN_REPARTO` lo hace E5-02 desde el portal (`DistribucionService.tomarPedidos`). Si más adelante el almacén asigna los repartos, tiene que llamar a `PedidoService.avanzar(id, INICIAR_REPARTO, usuario, obs, idDistribuidor)` y a `RutaService.agregarAReparto(ruta, pedido)`.
+- El criterio de "parada pendiente" ahora vive en `ParadaRuta.estaPendiente()`: sin pedido en la ruta del preventor y pedido no entregado en la de reparto (`Ruta.esDeReparto()`). `RutaService.siguientePunto` (contrato del kickoff) funciona igual para las dos.
+- `DestinatarioMinorista.buscar(minorista)` da el correo del responsable de un comercio. Lo usan E4-07 y E5-02, y sirve para E5-05 o E6-03.
+- `DistribuidorService.buscarDistribuidorPorUsuario(idUsuario)` da el perfil del distribuidor a partir del usuario del token.
+- `RutaMap.jsx` acepta `etiquetaHecha` (por defecto "Visitado"; el portal del distribuidor usa "Entregado").
+- E6-04 puede cargar pedidos en `EN_REPARTO` o `ENTREGADO` con `PedidoService.avanzar(...)` usando el distribuidor de demo como transportista.
