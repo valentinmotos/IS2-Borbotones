@@ -26,6 +26,13 @@ public interface PedidoRepository extends JpaRepository<Pedido, String> {
     @EntityGraph(attributePaths = "puntoDeVenta")
     List<Pedido> findByPreventor_IdAndEliminadoFalseOrderByFechaHoraCargaDescIdDesc(String preventorId);
 
+    /** E4-08: compras del minorista (todos sus puntos de venta), de la más nueva a la más vieja. */
+    @EntityGraph(attributePaths = "puntoDeVenta")
+    List<Pedido> findByPuntoDeVenta_Minorista_IdAndEliminadoFalseOrderByFechaHoraCargaDescIdDesc(String minoristaId);
+
+    /** E4-08: un pedido solo si es de un punto de venta del minorista indicado. */
+    Optional<Pedido> findByIdAndPuntoDeVenta_Minorista_IdAndEliminadoFalse(String id, String minoristaId);
+
     boolean existsByNumeroPedido(long numeroPedido);
 
     /** E4-04: pedidos a procesar, en el orden en que se cargaron. */

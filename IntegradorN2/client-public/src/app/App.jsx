@@ -10,6 +10,8 @@ import ContactPage from "../modules/company/pages/ContactPage.jsx";
 import BuyingPage from "../modules/buying/pages/BuyingPage.jsx";
 import RegistroMinoristaPage from "../modules/registro/pages/RegistroMinoristaPage.jsx";
 import PerfilPage from "../modules/cuenta/pages/PerfilPage.jsx";
+import ComprasPage from "../modules/compras/pages/ComprasPage.jsx";
+import CompraDetallePage from "../modules/compras/pages/CompraDetallePage.jsx";
 import SessionProvider from "../../../packages/auth/SessionProvider.jsx";
 import {
   ChangePasswordPage,
@@ -39,6 +41,7 @@ function AccountLayout() {
           <NavLink to={home} end>
             Mi cuenta
           </NavLink>
+          <NavLink to={`${home}/compras`}>Mis compras</NavLink>
           <NavLink to={`${home}/datos`}>Mis datos</NavLink>
           <Link to="/">Ver surtido</Link>
         </nav>
@@ -54,6 +57,11 @@ function AccountHome() {
     <div>
       <h1>Mi cuenta</h1>
       <p>Ingresaste al portal minorista de Dulce Mayor.</p>
+      <p>
+        <Link to="compras">
+          Mirá tus pedidos, el estado del envío y tus facturas
+        </Link>
+      </p>
       <p>
         <Link to="datos">Completá tus datos y tu dirección de entrega</Link>
       </p>
@@ -78,18 +86,29 @@ export default function App() {
         <Route element={<PublicLayout />}>
           <Route index element={<HomePage />} />
           <Route path="catalogo" element={<CatalogoPage />} />
-          <Route path="catalogo/:productoId" element={<DetalleProductoPage />} />
+          <Route
+            path="catalogo/:productoId"
+            element={<DetalleProductoPage />}
+          />
           <Route path="presupuesto" element={<ChatPresupuestoPage />} />
           <Route path="empresa" element={<CompanyPage />} />
           <Route path="contacto" element={<ContactPage />} />
           <Route path="como-comprar" element={<BuyingPage />} />
           <Route path="creditos" element={<CreditsPage />} />
-          <Route path="login" element={<LoginPage otherLogin={otherLogin} registrationPath="/registro" />} />
+          <Route
+            path="login"
+            element={
+              <LoginPage otherLogin={otherLogin} registrationPath="/registro" />
+            }
+          />
           <Route path="registro" element={<RegistroMinoristaPage />} />
           <Route path="cambiar-clave" element={<ChangePasswordPage />} />
           <Route element={<RequireAccess roles={["MINORISTA"]} />}>
             <Route path="cuenta" element={<AccountLayout />}>
               <Route index element={<AccountHome />} />
+              {/* E4-08: compras y facturas del minorista */}
+              <Route path="compras" element={<ComprasPage />} />
+              <Route path="compras/:pedidoId" element={<CompraDetallePage />} />
               <Route path="datos" element={<PerfilPage />} />
             </Route>
           </Route>
