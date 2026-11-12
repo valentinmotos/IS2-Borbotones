@@ -172,8 +172,19 @@ public class RutaService {
         // El bloqueo del perfil serializa la creación de la ruta con la carga de pedidos del mismo preventor.
         Preventor preventor = preventorService.bloquearPerfilParaCarga(idUsuarioPreventor);
         Ruta ruta = rutaDelDia(preventor);
-        double[] origen = conPosicion ? new double[] {latitud, longitud} : origenSinPosicion(ruta);
-        return aRespuesta(ruta, origen == null ? null : origen[0], origen == null ? null : origen[1]);
+        if (conPosicion) {
+            return aRespuesta(ruta, latitud, longitud);
+        }
+        double[] ultimo = ultimoVisitado(ruta);
+        if (ultimo != null) {
+            return aRespuesta(ruta, ultimo[0], ultimo[1]);
+        }
+        // Sin posición ni visitas: el recorrido empieza en la primera parada pendiente y no hay distancia que informar.
+        double[] primera = pendientes(ruta).stream().findFirst().map(RutaService::coordenadas).orElse(null);
+        RutaResponse respuesta = aRespuesta(ruta, primera == null ? null : primera[0], primera == null ? null : primera[1]);
+        return new RutaResponse(respuesta.id(), respuesta.fecha(), respuesta.estado(), respuesta.preventorId(),
+                respuesta.distribuidorId(), respuesta.paradas(), respuesta.siguiente(), null,
+                respuesta.recorridoSugerido());
     }
 
     /**
@@ -248,13 +259,13 @@ public class RutaService {
         return paradasActivas(ruta).stream().filter(p -> p.getPedido() == null).toList();
     }
 
-    /** Sin GPS se parte del último punto visitado (el del último pedido cargado). */
-    private static double[] origenSinPosicion(Ruta ruta) {
+    /** Sin GPS se parte del último punto visitado (el del último pedido cargado); null si no visitó ninguno. */
+    private static double[] ultimoVisitado(Ruta ruta) {
         return paradasActivas(ruta).stream()
                 .filter(p -> p.getPedido() != null && p.getPedido().getFechaHoraCarga() != null)
                 .max(Comparator.comparing((ParadaRuta p) -> p.getPedido().getFechaHoraCarga()))
-                .map(p -> coordenadas(p))
-                .orElseGet(() -> pendientes(ruta).stream().findFirst().map(RutaService::coordenadas).orElse(null));
+                .map(RutaService::coordenadas)
+                .orElse(null);
     }
 
     private static double[] coordenadas(ParadaRuta parada) {

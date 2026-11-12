@@ -143,3 +143,86 @@
     grid-column: 1 / -1;
   }
 }
+
+/* E5-01: ruta del día */
+.ruta-siguiente {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 2px solid var(--accent);
+  border-radius: var(--r-lg);
+}
+
+.ruta-siguiente > div {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ruta-siguiente strong {
+  font-size: 1.15rem;
+}
+
+.ruta-nota {
+  color: var(--muted);
+}
+
+.ruta-mapa-wrap {
+  min-width: 0;
+}
+
+.ruta-mapa {
+  width: 100%;
+  height: 22rem;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #eee9e2;
+}
+
+.ruta-marcador {
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--muted);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
+}
+
+.ruta-marcador-siguiente {
+  background: var(--accent);
+  font-size: 1rem;
+}
+
+.ruta-marcador-visitado {
+  background: #9a948e;
+  opacity: 0.85;
+}
+
+.ruta-linea {
+  stroke: var(--accent);
+  stroke-dasharray: 8 6;
+  fill: none;
+}
+
+.ruta-posicion {
+  stroke: #fff;
+  stroke-width: 3;
+  fill: #1f6fb8;
+  fill-opacity: 1;
+}
+
+@media (max-width: 540px) {
+  .ruta-mapa {
+    height: 17rem;
+  }
+  .ruta-siguiente .dm-button {
+    width: 100%;
+  }
+}

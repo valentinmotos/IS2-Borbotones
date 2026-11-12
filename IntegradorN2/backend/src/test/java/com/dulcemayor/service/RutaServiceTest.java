@@ -105,6 +105,8 @@ class RutaServiceTest {
                 .containsExactly("Kiosco Centro", "Kiosco Godoy Cruz", "Kiosco Las Heras");
         assertThat(ruta.paradas()).extracting(ParadaRutaResponse::orden).containsExactly(1, 2, 3);
         assertThat(ruta.paradas()).noneMatch(ParadaRutaResponse::visitada);
+        // Sin GPS ni visitas no hay distancia que informar.
+        assertThat(ruta.distanciaKm()).isNull();
     }
 
     @Test
