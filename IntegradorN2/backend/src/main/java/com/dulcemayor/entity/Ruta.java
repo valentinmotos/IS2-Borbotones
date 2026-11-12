@@ -43,6 +43,11 @@ public class Ruta extends BaseEntity {
     @OrderBy("orden ASC")
     private List<ParadaRuta> paradas = new ArrayList<>();
 
+    /** E5-02: una ruta con distribuidor es una ruta de reparto (sus paradas son pedidos a entregar). */
+    public boolean esDeReparto() {
+        return distribuidor != null;
+    }
+
     /** Agrega una parada manteniendo las dos puntas de la relación. */
     public void agregarParada(ParadaRuta parada) {
         parada.setRuta(this);

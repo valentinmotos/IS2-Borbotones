@@ -23,6 +23,7 @@ import com.dulcemayor.dto.PuntoDeVentaRequest;
 import com.dulcemayor.dto.SucursalRequest;
 import com.dulcemayor.dto.VigenciaPrecioRequest;
 import com.dulcemayor.entity.Minorista;
+import com.dulcemayor.entity.Distribuidor;
 import com.dulcemayor.entity.Preventor;
 import com.dulcemayor.entity.Producto;
 import com.dulcemayor.entity.Usuario;
@@ -33,6 +34,7 @@ import com.dulcemayor.entity.enums.TipoImagen;
 import com.dulcemayor.entity.enums.TipoPago;
 import com.dulcemayor.repository.LocalidadRepository;
 import com.dulcemayor.repository.MinoristaRepository;
+import com.dulcemayor.repository.DistribuidorRepository;
 import com.dulcemayor.repository.PreventorRepository;
 import com.dulcemayor.repository.ProductoRepository;
 import com.dulcemayor.service.CategoriaService;
@@ -75,6 +77,7 @@ public class DataSeeder implements CommandLineRunner {
     private final ProductoRepository productoRepository;
     private final VigenciaPrecioService vigenciaPrecioService;
     private final StockService stockService;
+    private final DistribuidorRepository distribuidorRepository;
 
     public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
             UsuarioService usuarioService, ImagenService imagenService,
@@ -84,7 +87,7 @@ public class DataSeeder implements CommandLineRunner {
             PuntoDeVentaService puntoDeVentaService, PreventorRepository preventorRepository,
             MinoristaRepository minoristaRepository, MinoristaService minoristaService,
             ProductoRepository productoRepository, VigenciaPrecioService vigenciaPrecioService,
-            StockService stockService) {
+            StockService stockService, DistribuidorRepository distribuidorRepository) {
         this.entityManager = entityManager;
         this.categoriaService = categoriaService;
         this.usuarioService = usuarioService;
@@ -102,6 +105,7 @@ public class DataSeeder implements CommandLineRunner {
         this.productoRepository = productoRepository;
         this.vigenciaPrecioService = vigenciaPrecioService;
         this.stockService = stockService;
+        this.distribuidorRepository = distribuidorRepository;
     }
 
     @Override
@@ -118,6 +122,7 @@ public class DataSeeder implements CommandLineRunner {
         cargarUsuarios();
         cargarCatalogo();
         cargarPuntosDeVenta();
+        cargarDistribuidor();
         cargarPedidos();
     }
 
@@ -257,6 +262,19 @@ public class DataSeeder implements CommandLineRunner {
         var localidad = localidadRepository.findByCodigoPostalAndEliminadoFalse(codigoPostal).orElseThrow();
         puntoDeVentaService.crearPuntoDeVenta(new PuntoDeVentaRequest(nombre, idMinorista, localidad.getId(), calle,
                 numeracion, null, null, null, "Punto de venta de demostración", latitud, longitud), idUsuarioPreventor);
+    }
+
+    /** E5-02: perfil de empleado del distribuidor de demo, para que pueda usar el portal de reparto. */
+    private void cargarDistribuidor() {
+        Distribuidor distribuidor = new Distribuidor();
+        distribuidor.setNombre("Dante");
+        distribuidor.setApellido("Distribuidor");
+        distribuidor.setFechaNacimiento(LocalDate.of(1988, 5, 10));
+        distribuidor.setTipoDocumento(TipoDocumento.DNI);
+        distribuidor.setNumeroDocumento("30000003");
+        distribuidor.setLegajo("D-001");
+        distribuidor.setUsuario(usuarioService.buscarUsuarioPorNombre("distribuidor@dulcemayor.com.ar"));
+        distribuidorRepository.save(distribuidor);
     }
 
     private void cargarPedidos() { /* E6-04. */ }

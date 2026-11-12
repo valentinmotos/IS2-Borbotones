@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,9 +41,11 @@ import org.springframework.transaction.annotation.Transactional;
  * ({@link #obtenerRutaDelDia}): una por preventor y por día, con una parada por cada punto de venta
  * activo que tiene asignado. Los puntos que se dan de alta durante el día se suman como paradas nuevas
  * en la próxima consulta. Una parada queda "visitada" cuando tiene pedido ({@link #registrarVisita}).
- * E5-02 tiene que armar la ruta del distribuidor con {@link #crearRuta} + {@link #agregarParada}
- * (paradas con el pedido a entregar) y puede reutilizar {@link #siguientePunto}; ahí "pendiente"
- * significará otra cosa (pedido no entregado), así que conviene parametrizar el criterio.</p>
+ * La ruta de reparto del distribuidor la arma E5-02 ({@link #rutaDeRepartoDelDia}).</p>
+ *
+ * <p>NOTA (E5-02): el criterio de "parada pendiente" quedó en {@link ParadaRuta#estaPendiente()} y depende
+ * del tipo de ruta: sin pedido en la del preventor, pedido no entregado en la de reparto. Así
+ * {@link #siguientePunto}, el recorrido sugerido y {@code visitada} sirven para las dos.</p>
  *
  * <p>NOTA (E5-01): {@code ParadaRuta.orden} es el orden de alta de la parada. El orden de visita
  * sugerido se calcula en cada consulta (vecino más cercano desde la posición) y no se persiste.</p>
@@ -175,16 +178,7 @@ public class RutaService {
         if (conPosicion) {
             return aRespuesta(ruta, latitud, longitud);
         }
-        double[] ultimo = ultimoVisitado(ruta);
-        if (ultimo != null) {
-            return aRespuesta(ruta, ultimo[0], ultimo[1]);
-        }
-        // Sin posición ni visitas: el recorrido empieza en la primera parada pendiente y no hay distancia que informar.
-        double[] primera = pendientes(ruta).stream().findFirst().map(RutaService::coordenadas).orElse(null);
-        RutaResponse respuesta = aRespuesta(ruta, primera == null ? null : primera[0], primera == null ? null : primera[1]);
-        return new RutaResponse(respuesta.id(), respuesta.fecha(), respuesta.estado(), respuesta.preventorId(),
-                respuesta.distribuidorId(), respuesta.paradas(), respuesta.siguiente(), null,
-                respuesta.recorridoSugerido());
+        return respuestaSinPosicion(ruta, ultimoVisitado(ruta));
     }
 
     /**
@@ -207,7 +201,107 @@ public class RutaService {
         }
     }
 
+    // ---------------------------------------------------------------- E5-02 (reparto)
+
+    /**
+     * E5-02: la ruta de reparto de hoy del distribuidor; si no existe la crea. Los pedidos que quedaron
+     * sin entregar en rutas de reparto de días anteriores pasan a la de hoy y esas rutas quedan INCOMPLETA.
+     * El llamador tiene que tener bloqueado el perfil del distribuidor para no crear dos rutas del mismo día.
+     */
+    @Transactional
+    public Ruta rutaDeRepartoDelDia(Distribuidor distribuidor) {
+        LocalDate hoy = LocalDate.now();
+        Ruta ruta = rutaRepository.findFirstByDistribuidor_IdAndFechaAndEliminadoFalse(distribuidor.getId(), hoy)
+                .orElseGet(() -> {
+                    Ruta nueva = new Ruta();
+                    nueva.setFecha(hoy);
+                    nueva.setEstado(RutaEstado.PENDIENTE);
+                    nueva.setDistribuidor(distribuidor);
+                    return rutaRepository.save(nueva);
+                });
+        for (Ruta anterior : rutaRepository.findByDistribuidor_IdAndFechaBeforeAndEstadoAndEliminadoFalse(
+                distribuidor.getId(), hoy, RutaEstado.PENDIENTE)) {
+            List<ParadaRuta> sinEntregar = pendientes(anterior);
+            if (!sinEntregar.isEmpty()) {
+                sinEntregar.forEach(parada -> agregarAReparto(ruta, parada.getPedido()));
+                anterior.setEstado(RutaEstado.INCOMPLETA);
+            }
+        }
+        return ruta;
+    }
+
+    /** E5-02: suma el pedido como parada de la ruta de reparto (si ya estaba, devuelve esa parada). */
+    @Transactional
+    public ParadaRuta agregarAReparto(Ruta ruta, Pedido pedido) {
+        ParadaRuta existente = paradaDelPedido(ruta, pedido.getId()).orElse(null);
+        if (existente != null) {
+            return existente;
+        }
+        ParadaRuta parada = nuevaParada(ruta, pedido.getPuntoDeVenta());
+        parada.setPedido(pedido);
+        if (ruta.getEstado() == RutaEstado.REALIZADA) {
+            ruta.setEstado(RutaEstado.PENDIENTE);
+        }
+        return parada;
+    }
+
+    /** E5-02: la parada activa de la ruta que lleva ese pedido. */
+    public Optional<ParadaRuta> paradaDelPedido(Ruta ruta, String idPedido) {
+        return paradasActivas(ruta).stream()
+                .filter(p -> p.getPedido() != null && p.getPedido().getId().equals(idPedido))
+                .findFirst();
+    }
+
+    /**
+     * E5-02: se llama después de pasar el pedido de la parada a ENTREGADO. Propone la parada pendiente más
+     * cercana a la posición del distribuidor (o, sin GPS, al comercio recién entregado). Si no quedan
+     * pendientes, la ruta queda REALIZADA y devuelve null.
+     */
+    @Transactional
+    public ParadaRuta registrarEntrega(Ruta ruta, ParadaRuta entregada, Double latitud, Double longitud) {
+        double[] desde;
+        if (latitud != null || longitud != null) {
+            validarPosicion(latitud, longitud);
+            desde = new double[] {latitud, longitud};
+        } else {
+            desde = coordenadas(entregada);
+        }
+        List<ParadaRuta> pendientes = pendientes(ruta);
+        if (pendientes.isEmpty()) {
+            ruta.setEstado(RutaEstado.REALIZADA);
+            return null;
+        }
+        return masCercana(pendientes, desde[0], desde[1]);
+    }
+
+    /**
+     * E5-02: la ruta de reparto como respuesta. Con posición calcula desde ahí; sin posición, desde
+     * {@code origen} (la última parada entregada) o, si no hay, desde la primera parada pendiente.
+     */
+    public RutaResponse respuestaDeReparto(Ruta ruta, Double latitud, Double longitud, ParadaRuta origen) {
+        if (latitud != null || longitud != null) {
+            validarPosicion(latitud, longitud);
+            return aRespuesta(ruta, latitud, longitud);
+        }
+        return respuestaSinPosicion(ruta, origen == null ? null : coordenadas(origen));
+    }
+
     // ---------------------------------------------------------------- auxiliares
+
+    /**
+     * Sin GPS: desde el último punto hecho; si no hay, el recorrido empieza en la primera parada pendiente
+     * y no hay distancia que informar.
+     */
+    private RutaResponse respuestaSinPosicion(Ruta ruta, double[] ultimo) {
+        if (ultimo != null) {
+            return aRespuesta(ruta, ultimo[0], ultimo[1]);
+        }
+        double[] primera = pendientes(ruta).stream().findFirst().map(RutaService::coordenadas).orElse(null);
+        RutaResponse respuesta = aRespuesta(ruta, primera == null ? null : primera[0], primera == null ? null : primera[1]);
+        return new RutaResponse(respuesta.id(), respuesta.fecha(), respuesta.estado(), respuesta.preventorId(),
+                respuesta.distribuidorId(), respuesta.paradas(), respuesta.siguiente(), null,
+                respuesta.recorridoSugerido());
+    }
 
     private Ruta buscarEntidad(String id) {
         if (id == null || id.isBlank()) {
@@ -256,7 +350,7 @@ public class RutaService {
     }
 
     private static List<ParadaRuta> pendientes(Ruta ruta) {
-        return paradasActivas(ruta).stream().filter(p -> p.getPedido() == null).toList();
+        return paradasActivas(ruta).stream().filter(ParadaRuta::estaPendiente).toList();
     }
 
     /** Sin GPS se parte del último punto visitado (el del último pedido cargado); null si no visitó ninguno. */

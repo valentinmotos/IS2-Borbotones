@@ -43,6 +43,7 @@ import jakarta.servlet.DispatcherType;
  * /api/categorias/**                      JEFE, ADMINISTRATIVO
  * POST /api/puntos-de-venta               PREVENTOR (E2-06)
  * GET  /api/puntos-de-venta/**            JEFE, ADMINISTRATIVO, PREVENTOR (E2-06)
+ * /api/distribucion/**                    DISTRIBUIDOR (E5-02)
  * /api/minorista/**                       MINORISTA
  * GET departamentos, localidades, geocod.  personal interno y MINORISTA (E2-07)
  * /api/**                                 personal interno: JEFE, ADMINISTRATIVO, PREVENTOR, DISTRIBUIDOR
@@ -104,6 +105,8 @@ public class SecurityConfig {
                         // E2-02: stock y movimientos de almacén
                         .requestMatchers("/api/stock/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
                         .requestMatchers("/api/preventa/**").hasRole("PREVENTOR")
+                        // E5-02: portal del distribuidor (el JEFE no hereda este rol)
+                        .requestMatchers("/api/distribucion/**").hasRole("DISTRIBUIDOR")
                         // E4-04: facturación y descarga de facturas desde gestión (el minorista usa /api/minorista/**)
                         .requestMatchers("/api/facturas/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
                         // E2-06: el preventor da de alta comercios; gestión y preventa los consultan
