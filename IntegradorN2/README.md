@@ -630,6 +630,37 @@ Las claves de demo no son temporales, para no tener que cambiarlas en cada base 
 - **E2-05 (ABM de usuarios internos):** `/usuarios` y `/api/usuarios/internos` son exclusivos de Jefe. El alta permite Administrativo, Preventor y Distribuidor, con clave `dulcemayor` y cambio obligatorio. Preventores y Distribuidores incluyen nombre, apellido, fecha de nacimiento, tipo y número de documento y legajo; Administrativo solo requiere correo y rol. El reseteo vuelve a la clave temporal e invalida tokens anteriores. Se pueden editar roles, excepto el cambio directo entre Preventor y Distribuidor porque cada uno tiene una entidad de perfil distinta; nunca se permite cambiar el rol o dar de baja al último Jefe activo. La baja es lógica. El controller usa `AbstractCrudController` y el service `AbstractCrudService` (Template Method).
 - **Tests con seguridad:** en `@WebMvcTest`, `@Import({ SecurityConfig.class, ErroresSeguridadHandler.class, JwtService.class })`, `@MockitoBean UsuarioRepository` y `@WithMockUser(roles = "ADMINISTRATIVO")` (ver `CategoriaControllerTest`). En `@SpringBootTest` alcanza con `@WithMockUser`, o con un token real como en `SeguridadIntegrationTest`.
 
+### Acceso con Google para minoristas (E2-04)
+
+El portal público ofrece **Continuar con Google** cuando el backend habilita el proveedor. El flujo usa OpenID Connect con código de autorización, PKCE y el JWT de Dulce Mayor. La identidad de Google se vincula por emisor e identificador estable. En **Mi cuenta → Mis datos** se puede vincular o desvincular Google confirmando la clave de Dulce Mayor. Al desvincular se revocan los JWT anteriores y se renueva la sesión de quien confirmó la operación.
+
+El alta con Google conserva los datos del perfil, la validación del documento, el requisito de mayoría de edad, la clave local de respaldo y la activación por correo. Un correo coincidente con una cuenta existente requiere entrar con clave y vincular Google desde el perfil. El personal interno usa su ingreso habitual.
+
+#### Configuración
+
+1. En Google Cloud, configurá la pantalla de consentimiento y creá un cliente OAuth de tipo **Aplicación web**. Si la aplicación está en modo de prueba, agregá el correo que vas a usar como usuario de prueba.
+2. Registrá esta **URI de redireccionamiento autorizada** para desarrollo: `http://localhost:5174/api/auth/google/callback`. Para DonWeb, registrá también la URL equivalente del dominio HTTPS del portal público, o usá un cliente OAuth separado para producción. El dominio, esquema, puerto y ruta tienen que coincidir con la URL registrada.
+3. Completá el `.env` privado de Docker Compose. Para levantar el backend con Maven, exportá estas mismas variables en su entorno.
+
+   ```dotenv
+   GOOGLE_OAUTH_ENABLED=true
+   GOOGLE_OAUTH_CLIENT_ID=<client-id>
+   GOOGLE_OAUTH_CLIENT_SECRET=<client-secret>
+   GOOGLE_OAUTH_PUBLIC_URL=http://localhost:5174
+   ```
+
+4. Ejecutá `docker compose up --build -d`. Para probar un alta nueva, configurá también el SMTP existente. En la VPS, el proxy del dominio público tiene que servir la SPA y reenviar `/api/` al backend. Usá el origen HTTPS público en `GOOGLE_OAUTH_PUBLIC_URL`. El despliegue estándar con Hibernate `ddl-auto=update` agrega `identidades_externas` y sus restricciones al arrancar. Si se usa un esquema gestionado por otro mecanismo, la tabla debe existir antes de habilitar el flujo.
+
+Para retirar el acceso por Google, configurá `GOOGLE_OAUTH_ENABLED=false` y recreá el backend. Las cuentas conservan su ingreso local y sus vínculos en la base para una futura reactivación.
+
+#### Prueba de punta a punta
+
+1. Abrí `http://localhost:5174/login`. Elegí **Continuar con Google** con un correo de prueba que todavía no esté registrado. Completá el perfil y una clave de respaldo. Activá el alta con el código que llega por correo y volvé a entrar con Google.
+2. Para una cuenta existente, ingresá con correo y clave, abrí **Mi cuenta → Mis datos → Vincular cuenta de Google** y confirmá la clave al volver del proveedor. Cerrá sesión, entrá con Google y revisá **Mis compras**.
+3. En **Mis datos**, desvinculá Google y verificá que la cuenta siga entrando con su correo y clave. Probá cancelar el acceso en Google y verificá que el portal permita reintentarlo.
+
+Desde `backend`, ejecutá `mvnw.cmd -Dtest=GoogleOAuthIntegrationTest test`. La prueba levanta un proveedor OIDC local con intercambio de código e ID token firmado para verificar la integración sin credenciales de Google.
+
 ## Servicio de correo asíncrono
 
 `EmailService.enviar(destino, asunto, plantilla, variables)` procesa una plantilla Thymeleaf ubicada en `backend/src/main/resources/templates/` y manda el mensaje en segundo plano. Por ejemplo, `plantilla = "correo/prueba"` usa `templates/correo/prueba.html`. Pasá las variables de la plantilla en el mapa; el correo de prueba admite `nombre`, `mensaje`, `url` y `etiquetaEnlace`.

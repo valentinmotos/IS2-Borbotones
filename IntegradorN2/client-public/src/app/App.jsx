@@ -9,6 +9,8 @@ import CompanyPage from "../modules/company/pages/CompanyPage.jsx";
 import ContactPage from "../modules/company/pages/ContactPage.jsx";
 import BuyingPage from "../modules/buying/pages/BuyingPage.jsx";
 import RegistroMinoristaPage from "../modules/registro/pages/RegistroMinoristaPage.jsx";
+import GoogleAccessPage from "../modules/acceso/GoogleAccessPage.jsx";
+import GoogleButton from "../modules/acceso/GoogleButton.jsx";
 import PerfilPage from "../modules/cuenta/pages/PerfilPage.jsx";
 import ComprasPage from "../modules/compras/pages/ComprasPage.jsx";
 import CompraDetallePage from "../modules/compras/pages/CompraDetallePage.jsx";
@@ -98,10 +100,15 @@ export default function App() {
           <Route
             path="login"
             element={
-              <LoginPage otherLogin={otherLogin} registrationPath="/registro" />
+              <LoginPage
+                otherLogin={otherLogin}
+                registrationPath="/registro"
+                alternateLogin={<GoogleButton />}
+              />
             }
           />
           <Route path="registro" element={<RegistroMinoristaPage />} />
+          <Route path="acceso/google" element={<GoogleAccessPage />} />
           <Route path="cambiar-clave" element={<ChangePasswordPage />} />
           <Route element={<RequireAccess roles={["MINORISTA"]} />}>
             <Route path="cuenta" element={<AccountLayout />}>
