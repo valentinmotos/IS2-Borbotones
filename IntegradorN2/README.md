@@ -859,4 +859,19 @@ Tests: `CompraMinoristaServiceTest` (Mockito: listado con y sin factura, `puedeP
 - **Página de pago:** E4-05 quedó como Checkout Pro (redirección a Mercado Pago), no como una página de QR dentro del sitio; el botón usa ese checkout tal cual.
 - **UML:** `listarFacturaPorMinorista(idMinorista)` no se agregó a `FacturacionService`. La lectura del minorista vive en `CompraMinoristaService` y recibe el id del **usuario** del token, para que nadie pida las compras de otro pasando un id.
 - **E5-02 (entrega):** cuando el distribuidor marca EN_REPARTO o ENTREGADO, el historial de E4-01 registra el transportista y la línea de tiempo del minorista lo muestra sin cambios.
-- **E5-03 (reportes):** `PedidoRepository.findByPuntoDeVenta_Minorista_IdAndEliminadoFalseOrderByFechaHoraCargaDescIdDesc(minoristaId)` sirve para reportes por cliente.
+- **E5-03 (reportes):** `FacturaRepository.listarVentasParaReporte(...)` recupera las ventas facturadas por período, departamento y preventor.
+
+## Reportes: detalle, PDF y Excel · E5-03
+
+La pantalla **Reportes** está disponible para JEFE y ADMINISTRATIVO. Filtra ventas facturadas por un período inclusivo, departamento y preventor. El detalle muestra factura, pedido, comercio, cliente, departamento, preventor, estado de envío y monto. Se excluyen facturas anuladas y pedidos que todavía no llegaron a FACTURADO, EN_REPARTO o ENTREGADO.
+
+Los botones descargan un PDF del detalle o un Excel con una hoja de resumen por departamento y preventor y otra de detalle. La suma del Excel y los montos de pantalla salen del mismo resultado del backend; el total general se informa en ambos.
+
+| Método | Ruta | Acceso | Uso |
+|---|---|---|---|
+| GET | `/api/reportes/filtros` | JEFE, ADMINISTRATIVO | Opciones activas de departamentos y preventores. |
+| GET | `/api/reportes/ventas?desde=YYYY-MM-DD&hasta=YYYY-MM-DD` | JEFE, ADMINISTRATIVO | Datos para pantalla; admite `departamentoId` y `preventorId`. |
+| GET | `/api/reportes/ventas/pdf?desde=...&hasta=...` | JEFE, ADMINISTRATIVO | Descarga PDF con los mismos filtros. |
+| GET | `/api/reportes/ventas/excel?desde=...&hasta=...` | JEFE, ADMINISTRATIVO | Descarga Excel con resumen y detalle del mismo período. |
+
+Apache POI genera los archivos `.xlsx` en memoria; OpenPDF genera el `.pdf`. La pantalla React está en `/reportes` dentro del panel administrativo.

@@ -10,6 +10,7 @@ import PuntosVentaPage from "../modules/puntos-venta/pages/PuntosVentaPage.jsx";
 import PreventaPage from "../modules/preventa/pages/PreventaPage.jsx";
 import StockPage from "../modules/stock/pages/StockPage.jsx";
 import UsuariosPage from "../modules/usuarios/pages/UsuariosPage.jsx";
+import ReportesPage from "../modules/reportes/pages/ReportesPage.jsx";
 import { homes } from "./access.js";
 
 const gestion = ["JEFE", "ADMINISTRATIVO"];
@@ -56,6 +57,12 @@ export const sections = [
     label: "Almacén y facturación",
     roles: gestion,
     element: <AlmacenPage />,
+  },
+  {
+    to: "/reportes",
+    label: "Reportes",
+    roles: gestion,
+    element: <ReportesPage />,
   },
   {
     to: "/categorias",

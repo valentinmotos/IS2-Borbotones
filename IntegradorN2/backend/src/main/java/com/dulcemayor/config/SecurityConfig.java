@@ -41,6 +41,7 @@ import jakarta.servlet.DispatcherType;
  * POST /api/imagenes                      JEFE, ADMINISTRATIVO (E1-05)
  * /api/auth/**                            cualquier usuario autenticado (también con clave temporal)
  * /api/categorias/**                      JEFE, ADMINISTRATIVO
+ * /api/reportes/**                         JEFE, ADMINISTRATIVO (E5-03)
  * POST /api/puntos-de-venta               PREVENTOR (E2-06)
  * GET  /api/puntos-de-venta/**            JEFE, ADMINISTRATIVO, PREVENTOR (E2-06)
  * /api/minorista/**                       MINORISTA
@@ -106,6 +107,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/preventa/**").hasRole("PREVENTOR")
                         // E4-04: facturación y descarga de facturas desde gestión (el minorista usa /api/minorista/**)
                         .requestMatchers("/api/facturas/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
+                        // E5-03: reportes de ventas y descargas
+                        .requestMatchers("/api/reportes/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
                         // E2-06: el preventor da de alta comercios; gestión y preventa los consultan
                         .requestMatchers(HttpMethod.POST, "/api/puntos-de-venta").hasRole("PREVENTOR")
                         .requestMatchers(HttpMethod.GET, "/api/puntos-de-venta", "/api/puntos-de-venta/**")

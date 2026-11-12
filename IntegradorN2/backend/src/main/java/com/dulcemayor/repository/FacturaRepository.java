@@ -2,8 +2,10 @@ package com.dulcemayor.repository;
 
 import com.dulcemayor.entity.Factura;
 import com.dulcemayor.entity.enums.EstadoFactura;
+import com.dulcemayor.entity.enums.EstadoPedido;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -39,4 +41,27 @@ public interface FacturaRepository extends JpaRepository<Factura, String> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select f from Factura f where f.id = :id and f.eliminado = false")
     Optional<Factura> buscarActivaParaActualizar(@Param("id") String id);
+
+    /** E5-03: ventas facturadas no anuladas, con los datos necesarios para el reporte. */
+    @EntityGraph(attributePaths = {"pedido", "pedido.puntoDeVenta", "pedido.puntoDeVenta.minorista",
+            "pedido.puntoDeVenta.direccion.localidad.departamento", "pedido.preventor"})
+    @Query("""
+            select f from Factura f
+            join f.pedido p
+            join p.puntoDeVenta pv
+            join pv.direccion d
+            join d.localidad l
+            where f.eliminado = false
+              and p.eliminado = false
+              and f.estado <> :facturaAnulada
+              and p.estado in :estadosVenta
+              and f.fechaFactura between :desde and :hasta
+              and (:departamentoId is null or l.departamento.id = :departamentoId)
+              and (:preventorId is null or p.preventor.id = :preventorId)
+            order by f.fechaFactura desc, f.numeroFactura desc
+            """)
+    List<Factura> listarVentasParaReporte(@Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta,
+            @Param("departamentoId") String departamentoId, @Param("preventorId") String preventorId,
+            @Param("facturaAnulada") EstadoFactura facturaAnulada,
+            @Param("estadosVenta") List<EstadoPedido> estadosVenta);
 }
