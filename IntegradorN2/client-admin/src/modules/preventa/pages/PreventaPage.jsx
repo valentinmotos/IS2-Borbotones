@@ -8,6 +8,7 @@ import {
 import { api } from "../../../lib/api.js";
 import PuntoVentaForm from "../../puntos-venta/components/PuntoVentaForm.jsx";
 import MinoristaForm from "../components/MinoristaForm.jsx";
+import MiRuta from "../components/MiRuta.jsx";
 import usePreventaResource from "../usePreventaResource.js";
 import "../styles.css";
 
@@ -170,6 +171,8 @@ export default function PreventaPage() {
   const [aviso, setAviso] = useState(null);
   const [errorPedido, setErrorPedido] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  // E5-01: cada pedido cerrado recarga la ruta para proponer el próximo punto.
+  const [ruta, setRuta] = useState({ version: 0, ultimoPuntoId: null });
   const intento = useRef(null);
 
   const vigentes = new Map(
@@ -245,12 +248,23 @@ export default function PreventaPage() {
         `Se cargó el pedido #${data.numeroPedido} por ${moneda.format(data.total)}.`,
       );
       void pedidos.reload();
+      setRuta(({ version }) => ({
+        version: version + 1,
+        ultimoPuntoId: pedido.puntoDeVentaId,
+      }));
     } catch (failure) {
       setErrorPedido(failure.message);
     } finally {
       setGuardando(false);
       void catalogo.reload();
     }
+  }
+
+  function elegirPunto(id) {
+    setPuntoId(id);
+    document
+      .getElementById("nuevo-pedido")
+      ?.scrollIntoView({ behavior: "smooth" });
   }
 
   function minoristaCreado(data) {
@@ -268,6 +282,7 @@ export default function PreventaPage() {
     setMinoristaId("");
     setAviso(`Se agregó ${data.nombreComercio} al pedido.`);
     void puntos.reload();
+    setRuta((previa) => ({ ...previa, version: previa.version + 1 }));
   }
 
   return (
@@ -282,12 +297,18 @@ export default function PreventaPage() {
         </div>
       </header>
       <nav className="preventa-nav" aria-label="Secciones de preventa">
+        <a href="#ruta-preventa">Mi ruta</a>
         <a href="#catalogo-preventa">Catálogo</a>
         <a href="#nuevo-pedido">
           Nuevo pedido{detalle.length > 0 && ` (${detalle.length})`}
         </a>
         <a href="#pedidos-preventa">Mis pedidos</a>
       </nav>
+      <MiRuta
+        version={ruta.version}
+        ultimoPuntoId={ruta.ultimoPuntoId}
+        onElegir={elegirPunto}
+      />
       <div className="preventa-grid">
         <Catalogo
           recurso={catalogo}

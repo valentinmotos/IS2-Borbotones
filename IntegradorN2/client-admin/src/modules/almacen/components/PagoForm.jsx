@@ -4,12 +4,12 @@ import {
   FormField,
 } from "../../../../../packages/design/components.jsx";
 import { formasPago } from "../formato.js";
-import useAlmacenResource from "../useAlmacenResource.js";
+import useApiResource from "../../../lib/useApiResource.js";
 
 export default function PagoForm({ saldo, ocupado, registrar }) {
   const [divisa, setDivisa] = useState("ARS");
   const [version, setVersion] = useState(0);
-  const recurso = useAlmacenResource("/formas-de-pago", version);
+  const recurso = useApiResource("/formas-de-pago", version);
   const formas = (recurso.data ?? []).filter(
     (forma) =>
       forma.activo && ["EFECTIVO", "TRANSFERENCIA"].includes(forma.tipoPago),

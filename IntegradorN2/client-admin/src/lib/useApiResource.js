@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { api } from "../../lib/api.js";
+import { api } from "./api.js";
 
-export default function useAlmacenResource(path, version = 0) {
+export default function useApiResource(path, version = 0) {
   const [resultado, setResultado] = useState(null);
 
   useEffect(() => {
