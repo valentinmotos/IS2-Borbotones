@@ -860,3 +860,34 @@ Tests: `CompraMinoristaServiceTest` (Mockito: listado con y sin factura, `puedeP
 - **UML:** `listarFacturaPorMinorista(idMinorista)` no se agregó a `FacturacionService`. La lectura del minorista vive en `CompraMinoristaService` y recibe el id del **usuario** del token, para que nadie pida las compras de otro pasando un id.
 - **E5-02 (entrega):** cuando el distribuidor marca EN_REPARTO o ENTREGADO, el historial de E4-01 registra el transportista y la línea de tiempo del minorista lo muestra sin cambios.
 - **E5-03 (reportes):** `PedidoRepository.findByPuntoDeVenta_Minorista_IdAndEliminadoFalseOrderByFechaHoraCargaDescIdDesc(minoristaId)` sirve para reportes por cliente.
+
+## Ruta del preventor con próximo punto más cercano · E5-01
+
+El portal de Preventa muestra **Mi ruta de hoy**: un mapa con todos los comercios del preventor, el próximo punto propuesto y el recorrido sugerido. Al cerrar (cargar) un pedido, ese comercio queda visitado y la pantalla propone el siguiente punto más cercano y vuelve a dibujar el recorrido.
+
+- **Ruta del día:** ningún issue da de alta rutas, así que `RutaService` la arma sola la primera vez que el preventor la consulta en el día. Hay una `Ruta` por preventor y por día, con una `ParadaRuta` por cada punto de venta activo que tiene asignado. Los comercios que se dan de alta durante el día se suman como paradas nuevas.
+- **Visita:** `PreventaService.cargarPedido` llama a `RutaService.registrarVisita(pedido)`, que asocia el pedido a la parada del comercio. Si es un segundo pedido al mismo comercio, se agrega otra parada visitada. Con todas las paradas visitadas, la ruta pasa a `REALIZADA`.
+- **Próximo punto:** es la parada pendiente más cercana a la posición actual, medida en línea recta con la fórmula de Haversine (`utils/DistanciaGeografica`). El **recorrido sugerido** aplica la heurística del vecino más cercano: desde la posición, siempre a la parada pendiente más próxima.
+- **Posición:** se toma del GPS del celular (`navigator.geolocation`, que solo funciona en `localhost` o con HTTPS). Sin GPS, se parte del último punto visitado. Si todavía no visitó ninguno, el recorrido empieza por la primera parada pendiente y no se informa distancia.
+- **Limitación conocida:** el recorrido son tramos en línea recta, no el camino por calle.
+- `ParadaRuta.orden` es el orden de alta de la parada. El orden de visita se calcula en cada consulta y no se guarda.
+
+### Endpoint
+
+- `GET /api/preventa/ruta?latitud=…&longitud=…` (solo PREVENTOR; los dos parámetros son opcionales) → `{id, fecha, estado, preventorId, distribuidorId, paradas[{id, orden, puntoDeVentaId, nombreComercio, calle, numeracion, localidad, latitud, longitud, visitada, pedidoId}], siguiente, distanciaKm, recorridoSugerido[idParada…]}`. La ruta sale del preventor del token. Una posición incompleta o fuera de rango responde `400` con "La posición actual no es válida.".
+
+### Cómo probarlo
+
+1. Ingresá como `preventor@dulcemayor.com.ar` y abrí [Preventa](http://localhost:5173/preventa). Los datos de demo traen 4 comercios en Capital, Godoy Cruz, Guaymallén y Las Heras. Si tu base ya tenía datos, vaciala para que el `DataSeeder` los cargue.
+2. En **Mi ruta de hoy** se ven los 4 puntos numerados según el recorrido, la línea punteada y la tarjeta **Próximo punto**.
+3. Tocá **Cargar pedido aquí**, agregá un producto del catálogo y tocá **Cargar pedido**.
+4. La tarjeta pasa a "Pedido cerrado. Próximo punto" con otro comercio y su distancia. El punto visitado aparece con ✓ en gris y el recorrido se vuelve a dibujar.
+
+Pruebas: `RutaServiceTest` (Mockito: armado de la ruta, punto más cercano, recorrido, visitas, ruta realizada, posición inválida), `DistanciaGeograficaTest` y `PreventaIntegrationTest.alCerrarUnPedidoLaRutaProponeElSiguientePuntoMasCercano` (criterio de aceptación de punta a punta, más `400`, `403` y `401`). Para ejecutarlas: `mvnw.cmd -Dtest=RutaServiceTest,DistanciaGeograficaTest,PreventaIntegrationTest test` desde `backend`.
+
+### Para otros issues
+
+- **Contrato del kickoff (E5-02):** `RutaService.siguientePunto(idRuta, latitud, longitud)` devuelve la `ParadaRutaResponse` pendiente más cercana, o `null` si no quedan pendientes. Hoy "pendiente" significa "sin pedido". Para el distribuidor, una parada pendiente es un pedido no entregado, así que E5-02 va a tener que parametrizar ese criterio.
+- E5-02 arma la ruta del distribuidor con `crearRuta(fecha, null, idDistribuidor)` + `agregarParada(idRuta, idPuntoDeVenta, idPedido, orden)` y la lista con `listarRutaPorDistribuidor`. El endpoint del distribuidor lo expone E5-02, no `/api/preventa`.
+- `client-admin/src/modules/preventa/components/RutaMap.jsx` recibe `{ruta, posicion, origen}` con la forma de `RutaResponse` y se puede reutilizar en el portal del distribuidor.
+- `DistanciaGeografica.kilometros(...)` y `coordenadasValidas(...)` sirven para cualquier cálculo de distancia.

@@ -25,14 +25,16 @@ public class PreventaService {
     private final ProductoRepository productos;
     private final PedidoRepository pedidos;
     private final PedidoService estados;
+    private final RutaService rutas;
 
     public PreventaService(PreventorService preventores, PuntoDeVentaRepository puntos,
-            ProductoRepository productos, PedidoRepository pedidos, PedidoService estados) {
+            ProductoRepository productos, PedidoRepository pedidos, PedidoService estados, RutaService rutas) {
         this.preventores = preventores;
         this.puntos = puntos;
         this.productos = productos;
         this.pedidos = pedidos;
         this.estados = estados;
+        this.rutas = rutas;
     }
 
     public List<PedidoPreventaResponse> listarPedidos(String usuarioId) {
@@ -97,7 +99,10 @@ public class PreventaService {
         pedido.setNumeroPedido(nuevoNumero());
         pedido.setSubtotal(subtotal.doubleValue());
         pedido.setTotal(subtotal.doubleValue());
-        return PedidoPreventaResponse.desde(estados.registrarCarga(pedido, usuarioId, null));
+        Pedido guardado = estados.registrarCarga(pedido, usuarioId, null);
+        // E5-01: cerrar el pedido marca como visitada la parada del punto en la ruta de hoy.
+        rutas.registrarVisita(guardado);
+        return PedidoPreventaResponse.desde(guardado);
     }
 
     private long nuevoNumero() {
