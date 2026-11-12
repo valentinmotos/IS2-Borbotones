@@ -3,6 +3,7 @@ package com.dulcemayor.repository;
 import com.dulcemayor.entity.Pedido;
 import com.dulcemayor.entity.enums.EstadoPedido;
 import jakarta.persistence.LockModeType;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -26,6 +27,9 @@ public interface PedidoRepository extends JpaRepository<Pedido, String> {
     List<Pedido> findByPreventor_IdAndEliminadoFalseOrderByFechaHoraCargaDescIdDesc(String preventorId);
 
     boolean existsByNumeroPedido(long numeroPedido);
+
+    /** E4-04: pedidos a procesar, en el orden en que se cargaron. */
+    List<Pedido> findByEstadoInAndEliminadoFalseOrderByFechaHoraCargaAscIdAsc(Collection<EstadoPedido> estados);
 
     Optional<Pedido> findByPreventor_IdAndClaveCarga(String preventorId, String claveCarga);
 }

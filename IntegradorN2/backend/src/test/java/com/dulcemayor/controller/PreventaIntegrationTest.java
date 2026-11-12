@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.dulcemayor.dto.PromocionRequest;
 import com.dulcemayor.entity.Preventor;
 import com.dulcemayor.entity.Usuario;
 import com.dulcemayor.entity.enums.EstadoPedido;
@@ -20,6 +21,7 @@ import com.dulcemayor.repository.UsuarioRepository;
 import com.dulcemayor.security.JwtService;
 import com.dulcemayor.service.CatalogoService;
 import com.dulcemayor.service.PedidoService;
+import com.dulcemayor.service.PromocionService;
 import com.dulcemayor.service.StockService;
 import com.dulcemayor.service.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,6 +54,7 @@ class PreventaIntegrationTest {
     @Autowired private PedidoRepository pedidos;
     @Autowired private DetallePedidoRepository detalles;
     @Autowired private HistorialEstadoPedidoRepository historial;
+    @Autowired private PromocionService promociones;
 
     @Test
     void registraMinoristaYPuntoYCargaPedidoConStockYPreciosDelServidor() throws Exception {
@@ -88,7 +91,12 @@ class PreventaIntegrationTest {
                 .andExpect(jsonPath("$.stock").value(producto.stock()));
         mvc.perform(get("/api/stock/" + producto.id()).header("Authorization", administrativo))
                 .andExpect(jsonPath("$.cantidadActual").value(producto.stock()));
-        var total = BigDecimal.valueOf(producto.precio()).multiply(BigDecimal.valueOf(2)).setScale(2, RoundingMode.HALF_UP);
+        // NOTA (E4-04): desde E4-03 el código se valida y aplica de verdad; antes este test mandaba
+        // PROMO-E4 sin crearla y el código se ignoraba. Se crea una promo por volumen del 10 %.
+        promociones.crear(new PromocionRequest("PROMO-E4", "Promo del test de preventa", 10.0, 1, null,
+                LocalDate.now().minusDays(1), LocalDate.now().plusDays(1)));
+        var subtotal = BigDecimal.valueOf(producto.precio()).multiply(BigDecimal.valueOf(2)).setScale(2, RoundingMode.HALF_UP);
+        var total = subtotal.subtract(subtotal.multiply(BigDecimal.TEN).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
         String solicitud = pedido(punto, producto.id(), 2, UUID.randomUUID());
         mvc.perform(post(PREVENTA + "/pedidos").header("Authorization", otro)
                         .contentType(MediaType.APPLICATION_JSON).content(solicitud))

@@ -719,3 +719,55 @@ Test: `CatalogoPublicoIntegrationTest` (sin token, solo con stock, búsqueda, ca
 
 - **E3-03 (detalle):** `GET /api/publico/catalogo/{id}` ya trae precio en pesos y `stock`; el precio en dólares se calcula con `GET /api/publico/cotizacion`.
 - **E4-02 (pedido del preventor):** `CatalogoService.buscar(nombre, categoriaId)` o el endpoint del listado; el `stock` sirve para avisar antes de cargar más de lo disponible.
+
+## Facturación automática · E4-04
+
+Procesar un pedido **CARGADO** o **SIN_STOCK** verifica el stock de todas sus líneas, todo en una sola transacción:
+
+- **Con stock suficiente:** descuenta el stock de cada producto (movimiento de egreso con la observación «Factura N° … · pedido N° …»), emite la `Factura` en `PENDIENTE_PAGO` con número secuencial y el detalle copiado del pedido, pasa el pedido a **FACTURADO** (con su registro en el historial de E4-01) y publica `FacturaEmitidaEvent`.
+- **Sin stock suficiente:** el pedido pasa a **SIN_STOCK** y la respuesta trae los faltantes (producto, cantidad pedida, stock disponible). No se toca el stock. Si ya estaba en SIN_STOCK, no se repite el registro del historial. Cuando se repone, se vuelve a procesar.
+
+Hay dos formas de procesar: un pedido (botón del panel de E4-06) o todos los pendientes en orden de carga (`POST /api/pedidos/procesar`, cada pedido en su propia transacción).
+
+La factura en PDF se arma **en memoria con OpenPDF** cada vez que se descarga y no se guarda. Contiene: empresa (razón social y CUIT del mayorista), número, fecha y estado; comercio, responsable, documento y dirección; número de pedido y preventor; renglones; subtotal, descuento con el código de promoción y total.
+
+- **Service:** `FacturacionService` (`facturarPedido`, `procesarPedidosPendientes`, `buscarFactura`, `buscarFacturaPorPedido`, `listarFactura`, `listarFacturaPorEstado`) y `FacturaPdfService` (`generarFacturaPdf`, `nombreArchivo`).
+- **Reutilizado de:** `IntegradorN1/.../VentaService` (revalidar stock por línea y descontarlo), TP2 Ej. 4e `FacturaReportService` (contenido de la factura y nombre `factura-00000012.pdf`) y TP2 Ej. 2d `ReporteService` (PDF en memoria; allí con iText, acá con OpenPDF).
+
+### Endpoints (JEFE y ADMINISTRATIVO)
+
+| Método | Ruta | Respuesta |
+|---|---|---|
+| POST | `/api/pedidos/{id}/facturar` | `ResultadoFacturacionResponse` · `200` con `estadoPedido` FACTURADO (y `factura`) o SIN_STOCK (y `faltantes`) · `400` si el pedido no está CARGADO ni SIN_STOCK o ya tiene factura · `404` si no existe · `409` si otra factura tomó el mismo número al mismo tiempo (reintentar) |
+| POST | `/api/pedidos/procesar` | `ResultadoFacturacionResponse[]`, uno por pedido pendiente; si uno falla, trae `estadoPedido = null` y el motivo en `mensaje` |
+| GET | `/api/pedidos/{id}/factura` | `FacturaResponse` · `404` si todavía no se facturó |
+| GET | `/api/facturas?estado=` | `FacturaResponse[]` de la más nueva a la más vieja (`estado` opcional: `PENDIENTE_PAGO`, `PAGADA`, `ANULADA`) |
+| GET | `/api/facturas/{id}` | `FacturaResponse` |
+| GET | `/api/facturas/{id}/pdf` | `application/pdf` con `Content-Disposition: attachment; filename="factura-00000012.pdf"` |
+
+`ResultadoFacturacionResponse(pedidoId, numeroPedido, estadoPedido, factura, faltantes[], mensaje)`.
+`FacturaResponse(id, numeroFactura, numeroVisible, fechaFactura, subtotal, descuento, total, estado, pedidoId, numeroPedido, comercio, detalles[])`.
+`FaltanteStockDTO(productoId, producto, cantidadPedida, stockDisponible)`.
+
+### Cómo probarlo
+
+Criterio: un pedido con stock se factura solo, descuenta el stock y deja la factura descargable.
+
+1. Como `preventor@dulcemayor.com.ar`, cargar un pedido desde el portal de preventa (E4-02) y anotar su id y las cantidades.
+2. Como `administrativo@dulcemayor.com.ar`, mirar el saldo del producto con `GET /api/stock/{productoId}`.
+3. `POST /api/pedidos/{id}/facturar` → `estadoPedido: "FACTURADO"` y la factura con su número.
+4. `GET /api/stock/{productoId}` → el saldo bajó en la cantidad del pedido. `GET /api/pedidos/{id}/historial` muestra CARGADO → FACTURADO.
+5. `GET /api/facturas/{facturaId}/pdf` descarga `factura-0000000N.pdf`.
+6. Sin stock: cargar un pedido con más bultos que el saldo → `SIN_STOCK` con los faltantes. Reponer (`Stock → ingreso`) y `POST /api/pedidos/procesar` → queda FACTURADO.
+
+Tests: `FacturacionServiceTest` (con stock, sin stock, SIN_STOCK repetido, producto dado de baja, estado inválido, factura ya emitida, 404, número en conflicto y procesamiento masivo), `FacturaPdfServiceTest` (contenido del PDF extraído como texto) y `FacturacionIntegrationTest` (criterio de punta a punta, numeración N y N+1, SIN_STOCK → reponer → procesar, 401/403/404).
+
+### Para otros issues
+
+- **Firma del contrato:** es `FacturacionService.facturarPedido(idPedido, idUsuario)`, no `facturarPedido(idPedido)`. Se agregó `idUsuario` porque E4-01 exige el responsable en el historial; se saca del token (`@AuthenticationPrincipal UsuarioAutenticado`). Está comentado en el código (`NOTA (E4-04)`).
+- **E4-06 (panel de almacén):** el botón «Procesar y facturar» llama a `POST /api/pedidos/{id}/facturar`; mostrar `mensaje` y, si vuelve `SIN_STOCK`, la tabla de `faltantes`. Hay un botón opcional para procesar todos con `POST /api/pedidos/procesar`. La descarga es `GET /api/facturas/{id}/pdf` (blob con el token).
+- **E4-07 (correo de factura):** no hace falta tocar la facturación. Escuchar `FacturaEmitidaEvent(facturaId, pedidoId)` con `@TransactionalEventListener(phase = AFTER_COMMIT)` y adjuntar `FacturaPdfService.generarFacturaPdf(facturaId)`. Si la facturación se deshace, el evento no llega.
+- **E4-05 (pagos):** la factura nace en `PENDIENTE_PAGO`; `PagoService.confirmar` la pasa a `PAGADA`.
+- **E4-08 (minorista):** no usar `/api/facturas/**` (solo gestión). Exponer las facturas bajo `/api/minorista/**`, validar que la factura sea de un punto de venta del minorista logueado (`FacturaRepository.findByPedido_PuntoDeVenta_Minorista_IdAndEliminadoFalse`) y recién ahí llamar a `FacturaPdfService`.
+- **E5-03 (reportes):** OpenPDF ya está en el `pom.xml` (`openpdf.version`).
+- **Numeración:** es el último número + 1, y la columna `numero_factura` es única. Si se necesitara más concurrencia, se reemplaza por una secuencia de la base sin cambiar la firma.
