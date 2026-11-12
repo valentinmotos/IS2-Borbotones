@@ -27,18 +27,21 @@ public class PedidoService {
     private final HistorialEstadoPedidoRepository historial;
     private final UsuarioRepository usuarios;
     private final DistribuidorRepository distribuidores;
+    private final PromocionService promociones;
 
     public PedidoService(PedidoRepository pedidos, HistorialEstadoPedidoRepository historial,
-            UsuarioRepository usuarios, DistribuidorRepository distribuidores) {
+            UsuarioRepository usuarios, DistribuidorRepository distribuidores, PromocionService promociones) {
         this.pedidos = pedidos;
         this.historial = historial;
         this.usuarios = usuarios;
         this.distribuidores = distribuidores;
+        this.promociones = promociones;
     }
 
     /** Persiste el pedido armado por el flujo de carga y su primer registro en la misma transacción. */
     @Transactional
     public Pedido registrarCarga(Pedido pedido, String usuarioId, String observacion) {
+        promociones.aplicarPromocion(pedido, pedido.getCodigoPromocion());
         HistorialEstadoPedido registro = pedido.registrarCarga(
                 buscarUsuario(usuarioId), LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS), observacion);
         Pedido guardado = pedidos.save(pedido);

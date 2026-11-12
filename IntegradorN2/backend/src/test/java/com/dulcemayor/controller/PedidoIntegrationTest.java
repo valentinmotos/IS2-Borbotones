@@ -7,8 +7,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.dulcemayor.dto.HistorialEstadoPedidoResponse;
+import com.dulcemayor.dto.PromocionRequest;
+import com.dulcemayor.entity.DetallePedido;
 import com.dulcemayor.entity.Distribuidor;
 import com.dulcemayor.entity.Pedido;
+import com.dulcemayor.entity.Producto;
 import com.dulcemayor.entity.Usuario;
 import com.dulcemayor.entity.enums.EstadoPedido;
 import com.dulcemayor.entity.enums.EventoPedido;
@@ -16,11 +19,13 @@ import com.dulcemayor.entity.enums.TipoDocumento;
 import com.dulcemayor.exception.ErrorServiceException;
 import com.dulcemayor.repository.DistribuidorRepository;
 import com.dulcemayor.repository.PedidoRepository;
+import com.dulcemayor.repository.ProductoRepository;
 import com.dulcemayor.repository.PreventorRepository;
 import com.dulcemayor.repository.PuntoDeVentaRepository;
 import com.dulcemayor.repository.UsuarioRepository;
 import com.dulcemayor.security.JwtService;
 import com.dulcemayor.service.PedidoService;
+import com.dulcemayor.service.PromocionService;
 import java.time.LocalDate;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -44,7 +49,9 @@ class PedidoIntegrationTest {
     @Autowired private PuntoDeVentaRepository puntosDeVenta;
     @Autowired private DistribuidorRepository distribuidores;
     @Autowired private PedidoRepository repositorio;
+    @Autowired private ProductoRepository productos;
     @Autowired private PedidoService pedidos;
+    @Autowired private PromocionService promociones;
 
     @Test
     void persisteElCicloCompletoYExponeElHistorialSoloAGestion() throws Exception {
@@ -107,6 +114,37 @@ class PedidoIntegrationTest {
                 .containsExactly(EstadoPedido.CARGADO, EstadoPedido.ANULADO);
         assertThatThrownBy(() -> pedidos.avanzar(id, EventoPedido.FACTURAR, usuarioId, null, null))
                 .isInstanceOf(ErrorServiceException.class).hasMessageContaining("ANULADO", "FACTURAR");
+    }
+
+    @Test
+    void unaPromocionVigenteReduceElTotalAlRegistrarLaCargaDelPedido() {
+        Usuario preventor = usuario("preventor");
+        Producto producto = productos.findByEliminadoFalse().getFirst();
+        promociones.crear(new PromocionRequest("PEDIDO-10", "Diez por ciento por volumen", 10.0,
+                10, null, LocalDate.now().minusDays(1), LocalDate.now().plusDays(1)));
+
+        var preventorEntidad = preventores.findByUsuario_IdAndEliminadoFalse(preventor.getId()).orElseThrow();
+        var punto = puntosDeVenta.findByPreventor_IdAndEliminadoFalseOrderByNombreComercioAsc(
+                preventorEntidad.getId()).getFirst();
+        Pedido pedido = new Pedido();
+        pedido.setNumeroPedido(4103);
+        pedido.setPreventor(preventorEntidad);
+        pedido.setPuntoDeVenta(punto);
+        pedido.setSubtotal(10000);
+        pedido.setCodigoPromocion("pedido-10");
+        DetallePedido detalle = new DetallePedido();
+        detalle.setProducto(producto);
+        detalle.setCantidad(10);
+        detalle.setPrecioUnitario(1000);
+        detalle.setSubtotal(10000);
+        pedido.agregarDetalle(detalle);
+
+        Pedido guardado = pedidos.registrarCarga(pedido, preventor.getId(), null);
+
+        assertThat(guardado.getCodigoPromocion()).isEqualTo("PEDIDO-10");
+        assertThat(guardado.getSubtotal()).isEqualTo(10000);
+        assertThat(guardado.getDescuento()).isEqualTo(1000);
+        assertThat(guardado.getTotal()).isEqualTo(9000);
     }
 
     private boolean anularAlIniciar(CountDownLatch inicio, String id, String usuarioId) throws InterruptedException {
