@@ -83,6 +83,9 @@ public class ProductoService extends AbstractCrudService<Producto, ProductoReque
         producto.setCodigo(codigoNormalizado(request));
         producto.setNombre(request.nombre().strip());
         producto.setPresentacion(request.presentacion().strip());
+        if (request.enOferta() != null) {
+            producto.setEnOferta(request.enOferta());
+        }
     }
 
     @Override

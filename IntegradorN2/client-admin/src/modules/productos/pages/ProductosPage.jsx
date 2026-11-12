@@ -74,6 +74,7 @@ function FormularioProducto({
       return;
     }
     const datos = new FormData(event.currentTarget);
+    datos.set("enOferta", String(datos.has("enOferta")));
     if (archivo) datos.set("imagen", archivo);
     setGuardando(true);
     setError(null);
@@ -119,6 +120,14 @@ function FormularioProducto({
             maxLength={1000}
             defaultValue={producto?.descripcion ?? ""}
           />
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            name="enOferta"
+            defaultChecked={producto?.enOferta}
+          />{" "}
+          En oferta para el newsletter
         </label>
         <div className="dm-field">
           <label htmlFor="producto-categoria">Categoría</label>

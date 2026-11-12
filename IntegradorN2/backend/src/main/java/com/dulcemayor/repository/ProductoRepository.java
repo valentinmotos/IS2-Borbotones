@@ -27,7 +27,7 @@ public interface ProductoRepository extends BaseRepository<Producto> {
 
     @Query("""
             select new com.dulcemayor.dto.ProductoResponse(p.id, p.codigo, p.nombre, p.descripcion,
-                p.presentacion, p.unidadesPorBulto, c.id, c.nombre, i.id)
+                p.presentacion, p.unidadesPorBulto, c.id, c.nombre, i.id, p.enOferta)
             from Producto p join p.categoria c left join p.imagen i
             where p.eliminado = false
               and (:categoria = '' or c.id = :categoria)
@@ -52,11 +52,17 @@ public interface ProductoRepository extends BaseRepository<Producto> {
                 and vp.fechaDesde <= :hoy and (vp.fechaHasta is null or vp.fechaHasta >= :hoy)
             where p.eliminado = false
               and (:id = '' or p.id = :id)
+              and (:soloOfertas = false or p.enOferta = true)
               and (:texto = '' or locate(lower(:texto), lower(p.nombre)) > 0)
               and (:categoria = '' or c.id = :categoria)
             order by p.nombre, p.codigo
             """)
-    List<ProductoCatalogoDTO> buscarCatalogo(String id, String texto, String categoria, LocalDate hoy);
+    List<ProductoCatalogoDTO> buscarCatalogo(String id, String texto, String categoria, LocalDate hoy,
+            boolean soloOfertas);
+
+    default List<ProductoCatalogoDTO> buscarCatalogo(String id, String texto, String categoria, LocalDate hoy) {
+        return buscarCatalogo(id, texto, categoria, hoy, false);
+    }
 
     /** E2-03: producto activo con bloqueo de escritura, para cambiar su precio sin carreras. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
