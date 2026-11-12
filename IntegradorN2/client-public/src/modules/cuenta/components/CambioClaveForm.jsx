@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { KeyRound } from "lucide-react";
 import {
   Alert,
   FormField,
@@ -52,11 +53,19 @@ export default function CambioClaveForm() {
 
   return (
     <form
-      className="cuenta-form"
+      className="panel cuenta-form cuenta-clave"
       onSubmit={guardar}
       aria-labelledby="cuenta-clave"
     >
-      <h2 id="cuenta-clave">Cambiar clave</h2>
+      <div className="cuenta-clave-head">
+        <span className="cuenta-clave-icon" aria-hidden="true">
+          <KeyRound size={18} />
+        </span>
+        <h2 id="cuenta-clave">Cambiar clave</h2>
+      </div>
+      <p className="cuenta-nota">
+        Después de cambiarla, usá la clave nueva cada vez que ingreses.
+      </p>
       {aviso && !aviso.campo && <Alert tone={aviso.tono}>{aviso.texto}</Alert>}
       <FormField
         label="Clave actual"
@@ -90,9 +99,9 @@ export default function CambioClaveForm() {
         onChange={(e) => cambiar("confirmarClave", e.target.value)}
         error={error("confirmarClave")}
       />
-      <div className="dm-actions">
+      <div className="form-actions">
         <button
-          className="dm-button dm-button-primary"
+          className="dm-button dm-button-block"
           type="submit"
           disabled={pendiente}
         >

@@ -44,12 +44,17 @@ export default function PagoForm({ saldo, ocupado, registrar }) {
     );
 
   return (
-    <form onSubmit={guardar}>
-      <fieldset className="almacen-pago" disabled={ocupado}>
+    <form className="almacen-pago" onSubmit={guardar}>
+      <fieldset className="form-grid" disabled={ocupado}>
         <legend>Registrar pago</legend>
         <label className="dm-field">
           <span>Forma de pago</span>
-          <select name="formaDePagoId" required defaultValue="">
+          <select
+            className="dm-input"
+            name="formaDePagoId"
+            required
+            defaultValue=""
+          >
             <option value="">Seleccioná una forma</option>
             {formas.map((forma) => (
               <option key={forma.id} value={forma.id}>
@@ -62,6 +67,7 @@ export default function PagoForm({ saldo, ocupado, registrar }) {
         <label className="dm-field">
           <span>Moneda</span>
           <select
+            className="dm-input"
             name="moneda"
             value={divisa}
             onChange={(event) => setDivisa(event.target.value)}
@@ -91,9 +97,11 @@ export default function PagoForm({ saldo, ocupado, registrar }) {
           name="observacion"
           maxLength={500}
         />
-        <button className="dm-button dm-button-primary" type="submit">
-          {ocupado ? "Procesando…" : "Registrar pago"}
-        </button>
+        <div className="form-actions">
+          <button className="dm-button dm-button-primary" type="submit">
+            {ocupado ? "Procesando…" : "Registrar pago"}
+          </button>
+        </div>
       </fieldset>
     </form>
   );

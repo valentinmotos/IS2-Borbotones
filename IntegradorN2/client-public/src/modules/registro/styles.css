@@ -1,0 +1,250 @@
+/* ================= Alta de cuenta minorista ================= */
+.registro-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  align-items: start;
+  gap: clamp(16px, 3vw, 32px);
+  max-width: 1040px;
+  margin-inline: auto;
+}
+.registro-main {
+  display: grid;
+  gap: var(--s-5);
+  padding: clamp(20px, 3.4vw, 36px);
+  border-top: 4px solid var(--c-red);
+}
+.registro-head {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+.registro-head h1,
+.registro-listo h1 {
+  font-size: clamp(1.5rem, 1.25rem + 0.9vw, 2rem);
+}
+.registro-head p:not(.eyebrow),
+.registro-listo p {
+  color: var(--muted);
+}
+.registro-head strong {
+  color: var(--c-ink);
+  overflow-wrap: anywhere;
+}
+.registro-icono {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 6px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--c-red), var(--c-amber));
+  border-radius: 50%;
+  box-shadow: var(--sh-red);
+}
+.registro-icono[data-tono="success"] {
+  color: var(--dm-success);
+  background: var(--dm-success-bg);
+  box-shadow: none;
+}
+
+/* Formulario en dos columnas, agrupado por tema */
+.registro-form {
+  display: grid;
+  gap: var(--s-5);
+}
+.registro-grupo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.registro-grupo legend {
+  float: left;
+  grid-column: 1 / -1;
+  width: 100%;
+  margin-bottom: var(--s-1);
+  padding: 0 0 8px;
+  color: var(--c-ink);
+  border-bottom: 1px solid var(--c-line);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.registro-ancho {
+  grid-column: 1 / -1;
+}
+.registro-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3) var(--s-5);
+}
+.registro-acciones p,
+.registro-reenviar {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+/* Activación: un solo campo junto al botón */
+.registro-codigo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+.registro-codigo .dm-field {
+  flex: 1 1 220px;
+  max-width: 280px;
+}
+.registro-codigo input {
+  min-height: 50px;
+  font-size: 1.375rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.4em;
+  text-align: center;
+}
+.registro-codigo .dm-button {
+  margin-top: 28px;
+}
+.registro-reenviar .dm-button {
+  vertical-align: baseline;
+  color: var(--c-red-strong);
+}
+
+/* Cuenta activada */
+.registro-listo {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  padding-block: var(--s-4);
+  text-align: center;
+}
+.registro-listo .dm-button {
+  margin-top: var(--s-2);
+}
+
+/* Columna lateral: los tres pasos */
+.registro-lado {
+  display: grid;
+  gap: var(--s-3);
+  padding: clamp(18px, 2.4vw, 26px);
+  background: var(--c-cream);
+  border-radius: var(--r-lg);
+}
+.registro-lado h2 {
+  font-size: var(--fs-lg);
+}
+.registro-pasos {
+  display: grid;
+  gap: 0;
+  margin: var(--s-2) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: paso;
+}
+.registro-pasos li {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 0 0 var(--s-5) 48px;
+  counter-increment: paso;
+}
+.registro-pasos li::before {
+  content: counter(paso);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--c-muted);
+  background: var(--c-white);
+  border: 2px solid var(--c-line-strong);
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-weight: 900;
+}
+.registro-pasos li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 38px;
+  bottom: 4px;
+  left: 16px;
+  width: 2px;
+  background: var(--c-line-strong);
+}
+.registro-pasos li:last-child {
+  padding-bottom: 0;
+}
+.registro-pasos li[data-estado="actual"]::before {
+  color: #fff;
+  background: linear-gradient(135deg, var(--c-red), var(--c-amber));
+  border-color: transparent;
+  box-shadow: var(--sh-red);
+}
+.registro-pasos li[data-estado="hecho"]::before {
+  content: "✓";
+  color: #fff;
+  background: var(--dm-success);
+  border-color: var(--dm-success);
+  font-family: var(--font-text);
+}
+.registro-pasos li[data-estado="hecho"]::after {
+  background: var(--dm-success);
+}
+.registro-pasos strong {
+  padding-top: 5px;
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.registro-pasos li[data-estado="pendiente"] strong {
+  color: var(--c-text);
+}
+.registro-pasos span {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.registro-login {
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--c-cream-2);
+  font-size: var(--fs-sm);
+}
+
+@media (max-width: 860px) {
+  .registro-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .registro-grupo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .registro-codigo .dm-field {
+    max-width: none;
+  }
+  .registro-codigo .dm-button {
+    width: 100%;
+    margin-top: 0;
+  }
+}
+
+/* Alternativas al formulario: Google y activación con un código ya recibido */
+.registro-alt {
+  display: grid;
+  gap: var(--s-2);
+  margin-top: var(--s-5);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--c-line);
+}
+.registro-alt .dm-button-ghost {
+  justify-self: center;
+}
+.registro-listo .google-button {
+  max-width: 320px;
+}

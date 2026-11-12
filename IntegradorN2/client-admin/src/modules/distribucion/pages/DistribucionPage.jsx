@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Check, LocateFixed, MapPin, PackageCheck } from "lucide-react";
 import {
   Alert,
   ConfirmDialog,
@@ -139,23 +140,25 @@ export default function DistribucionPage() {
 
   return (
     <div className="preventa distribucion">
-      <header className="preventa-encabezado">
+      <header className="page-head">
         <div>
           <h1>Distribución</h1>
-          {ruta && ruta.paradas.length > 0 && (
-            <p>
-              {entregados} de {ruta.paradas.length} pedidos entregados
-            </p>
-          )}
+          <p className="lead">
+            Tomá los pedidos listos, seguí la ruta y marcá cada entrega en el
+            comercio.
+          </p>
         </div>
-        <button
-          className="dm-button"
-          type="button"
-          disabled={ocupado}
-          onClick={recargar}
-        >
-          {ocupado ? "Actualizando…" : "Actualizar ubicación"}
-        </button>
+        <div className="page-head-actions">
+          <button
+            className="dm-button"
+            type="button"
+            disabled={ocupado}
+            onClick={recargar}
+          >
+            <LocateFixed size={16} aria-hidden="true" />
+            {ocupado ? "Actualizando…" : "Actualizar ubicación"}
+          </button>
+        </div>
       </header>
 
       {error && (
@@ -170,62 +173,105 @@ export default function DistribucionPage() {
       )}
 
       <section className="preventa-panel" aria-labelledby="titulo-ruta">
-        <h2 id="titulo-ruta">Mi ruta de hoy</h2>
-        {!ruta && !error && <p role="status">Cargando la ruta…</p>}
+        <div className="preventa-encabezado">
+          <div>
+            <h2 id="titulo-ruta">Mi ruta de hoy</h2>
+            {ruta && ruta.paradas.length > 0 && (
+              <p>
+                {entregados} de {ruta.paradas.length} pedidos entregados
+              </p>
+            )}
+          </div>
+        </div>
+        {ruta && ruta.paradas.length > 0 && (
+          <div className="ruta-progreso" aria-hidden="true">
+            <span
+              style={{ width: `${(entregados / ruta.paradas.length) * 100}%` }}
+            />
+          </div>
+        )}
+        {!ruta && !error && (
+          <p className="muted" role="status">
+            Cargando la ruta…
+          </p>
+        )}
         {ruta && ruta.paradas.length === 0 && (
-          <p>Todavía no tomaste pedidos para repartir.</p>
+          <p className="preventa-vacio">
+            Todavía no tomaste pedidos para repartir. Elegilos en «Listos para
+            reparto».
+          </p>
         )}
         {ruta && ruta.paradas.length > 0 && (
-          <>
-            {siguiente ? (
-              <div className="ruta-siguiente" aria-live="polite">
-                <div>
-                  <span>Próximo punto</span>
-                  <strong>{siguiente.nombreComercio}</strong>
-                  <span>
-                    {direccion(siguiente)}
-                    {ruta.distanciaKm != null &&
-                      ` · a ${kilometros.format(ruta.distanciaKm)} km`}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <Alert tone="success">
-                Entregaste todos los pedidos de la ruta de hoy.
-              </Alert>
-            )}
-            <RutaMap ruta={ruta} posicion={posicion} etiquetaHecha="Entregado" />
-            <ol className="distribucion-lista">
-              {pendientes.map((parada) => (
-                <li key={parada.id} className="distribucion-item">
+          <div className="ruta-cuerpo distribucion-ruta">
+            <div className="ruta-info">
+              {siguiente ? (
+                <div className="ruta-siguiente" aria-live="polite">
+                  <MapPin
+                    className="ruta-siguiente-icono"
+                    size={22}
+                    aria-hidden="true"
+                  />
                   <div>
-                    <strong>{parada.nombreComercio}</strong>
+                    <span>Próximo punto</span>
+                    <strong>{siguiente.nombreComercio}</strong>
                     <span>
-                      Pedido N° {parada.numeroPedido} · {direccion(parada)}
+                      {direccion(siguiente)}
+                      {ruta.distanciaKm != null &&
+                        ` · a ${kilometros.format(ruta.distanciaKm)} km`}
                     </span>
                   </div>
-                  <button
-                    className="dm-button dm-button-primary"
-                    type="button"
-                    disabled={ocupado}
-                    onClick={() => setAEntregar(parada)}
-                  >
-                    Entregado
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </>
+                </div>
+              ) : (
+                <Alert tone="success">
+                  Entregaste todos los pedidos de la ruta de hoy.
+                </Alert>
+              )}
+              <ol className="distribucion-lista distribucion-paradas">
+                {pendientes.map((parada) => (
+                  <li key={parada.id} className="distribucion-item">
+                    <div>
+                      <strong>{parada.nombreComercio}</strong>
+                      <span>
+                        Pedido N° {parada.numeroPedido} · {direccion(parada)}
+                      </span>
+                    </div>
+                    <button
+                      className="dm-button dm-button-primary"
+                      type="button"
+                      disabled={ocupado}
+                      onClick={() => setAEntregar(parada)}
+                    >
+                      <Check size={18} aria-hidden="true" />
+                      Entregado
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <RutaMap
+              ruta={ruta}
+              posicion={posicion}
+              etiquetaHecha="Entregado"
+            />
+          </div>
         )}
       </section>
 
       <section className="preventa-panel" aria-labelledby="titulo-listos">
-        <h2 id="titulo-listos">Listos para reparto</h2>
+        <div className="preventa-encabezado">
+          <div>
+            <h2 id="titulo-listos">Listos para reparto</h2>
+            <p>Marcá los pedidos que vas a llevar y tomalos para tu ruta.</p>
+          </div>
+        </div>
         {listos.length === 0 ? (
-          <p>No hay pedidos facturados y pagados esperando reparto.</p>
+          <p className="preventa-vacio">
+            <PackageCheck size={22} aria-hidden="true" />
+            No hay pedidos facturados y pagados esperando reparto.
+          </p>
         ) : (
           <>
-            <ul className="distribucion-lista">
+            <ul className="distribucion-lista distribucion-listos">
               {listos.map((pedido) => (
                 <li key={pedido.id} className="distribucion-item">
                   <label>
@@ -241,11 +287,13 @@ export default function DistribucionPage() {
                       </span>
                     </span>
                   </label>
-                  <span>{moneda.format(pedido.total)}</span>
+                  <span className="distribucion-monto">
+                    {moneda.format(pedido.total)}
+                  </span>
                 </li>
               ))}
             </ul>
-            <div className="dm-actions">
+            <div className="dm-actions distribucion-acciones">
               <button
                 className="dm-button"
                 type="button"

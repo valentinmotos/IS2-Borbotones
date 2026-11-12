@@ -1,5 +1,15 @@
 import { useRef, useState } from "react";
 import {
+  ClipboardList,
+  Package,
+  Plus,
+  RefreshCw,
+  Route,
+  ShoppingCart,
+  Store,
+  UserPlus,
+} from "lucide-react";
+import {
   Alert,
   FormField,
   Pagination,
@@ -63,8 +73,16 @@ function Catalogo({ recurso, lineas, agregar, guardando }) {
   return (
     <section id="catalogo-preventa" className="preventa-panel">
       <div className="preventa-encabezado">
-        <h2>Catálogo</h2>
-        <button className="dm-button" type="button" onClick={recurso.reload}>
+        <div>
+          <h2>Catálogo</h2>
+          <p>Stock del almacén al momento. Tocá «Agregar» para sumarlo.</p>
+        </div>
+        <button
+          className="dm-button dm-button-sm"
+          type="button"
+          onClick={recurso.reload}
+        >
+          <RefreshCw size={14} aria-hidden="true" />
           Actualizar stock
         </button>
       </div>
@@ -79,10 +97,14 @@ function Catalogo({ recurso, lineas, agregar, guardando }) {
       />
       {recurso.error && <Alert tone="danger">{recurso.error}</Alert>}
       {!recurso.data && !recurso.error && (
-        <p role="status">Cargando catálogo…</p>
+        <p className="muted" role="status">
+          Cargando catálogo…
+        </p>
       )}
       {recurso.data && !resultados.length && (
-        <p>No hay productos disponibles para esta búsqueda.</p>
+        <p className="preventa-vacio">
+          No hay productos disponibles para esta búsqueda.
+        </p>
       )}
       {productos.length > 0 && (
         <ul className="preventa-lista">
@@ -93,12 +115,16 @@ function Catalogo({ recurso, lineas, agregar, guardando }) {
                 <span>
                   {producto.codigo} · {producto.presentacion}
                 </span>
-                <span>{producto.stock} bultos disponibles</span>
+                <span className="preventa-stock">
+                  {producto.stock} bultos disponibles
+                </span>
               </div>
               <div className="preventa-producto-accion">
-                <strong>{moneda.format(producto.precio)}</strong>
+                <strong className="preventa-precio">
+                  {moneda.format(producto.precio)}
+                </strong>
                 <button
-                  className="dm-button"
+                  className="dm-button preventa-agregar"
                   type="button"
                   disabled={
                     guardando ||
@@ -112,6 +138,9 @@ function Catalogo({ recurso, lineas, agregar, guardando }) {
                   }
                   onClick={() => agregar(producto)}
                 >
+                  {!lineas[producto.id] && (
+                    <Plus size={16} aria-hidden="true" />
+                  )}
                   {lineas[producto.id] ? "Agregado" : "Agregar"}
                 </button>
               </div>
@@ -134,16 +163,31 @@ function MisPedidos({ recurso }) {
   return (
     <section id="pedidos-preventa" className="preventa-panel">
       <div className="preventa-encabezado">
-        <h2>Mis pedidos</h2>
-        <button className="dm-button" type="button" onClick={recurso.reload}>
+        <div>
+          <h2>Mis pedidos</h2>
+          <p>Seguí el estado de los pedidos que cargaste.</p>
+        </div>
+        <button
+          className="dm-button dm-button-sm"
+          type="button"
+          onClick={recurso.reload}
+        >
+          <RefreshCw size={14} aria-hidden="true" />
           Actualizar estados
         </button>
       </div>
       {recurso.error && <Alert tone="danger">{recurso.error}</Alert>}
       {!recurso.data && !recurso.error && (
-        <p role="status">Cargando pedidos…</p>
+        <p className="muted" role="status">
+          Cargando pedidos…
+        </p>
       )}
-      {recurso.data?.length === 0 && <p>Todavía no cargaste pedidos.</p>}
+      {recurso.data?.length === 0 && (
+        <p className="preventa-vacio">
+          Todavía no cargaste pedidos. Los vas a ver acá apenas cargues el
+          primero.
+        </p>
+      )}
       {recurso.data?.length > 0 && (
         <ul className="preventa-lista">
           {recurso.data.map((pedido) => {
@@ -168,7 +212,9 @@ function MisPedidos({ recurso }) {
                   )}
                 </div>
                 <StatusBadge tone={tono}>{estado}</StatusBadge>
-                <strong>{moneda.format(pedido.total)}</strong>
+                <strong className="preventa-precio">
+                  {moneda.format(pedido.total)}
+                </strong>
               </li>
             );
           })}
@@ -307,22 +353,38 @@ export default function PreventaPage() {
 
   return (
     <div className="preventa">
-      <header className="dm-page-header">
+      <header className="page-head preventa-head">
         <div>
           <h1>Preventa</h1>
-          <p>
-            Consultá el stock del almacén, registrá comercios y cargá sus
-            pedidos.
+          <p className="lead">
+            Seguí tu ruta, armá el pedido con el stock del almacén y cargalo en
+            cada comercio.
           </p>
         </div>
       </header>
       <nav className="preventa-nav" aria-label="Secciones de preventa">
-        <a href="#ruta-preventa">Mi ruta</a>
-        <a href="#catalogo-preventa">Catálogo</a>
-        <a href="#nuevo-pedido">
-          Nuevo pedido{detalle.length > 0 && ` (${detalle.length})`}
+        <a href="#ruta-preventa">
+          <Route size={18} aria-hidden="true" />
+          <span>Mi ruta</span>
         </a>
-        <a href="#pedidos-preventa">Mis pedidos</a>
+        <a href="#catalogo-preventa">
+          <Package size={18} aria-hidden="true" />
+          <span>Catálogo</span>
+        </a>
+        <a href="#nuevo-pedido">
+          <ShoppingCart size={18} aria-hidden="true" />
+          <span>Nuevo pedido</span>
+          {detalle.length > 0 && (
+            <span className="preventa-nav-cuenta">
+              {detalle.length}
+              <span className="visually-hidden"> productos</span>
+            </span>
+          )}
+        </a>
+        <a href="#pedidos-preventa">
+          <ClipboardList size={18} aria-hidden="true" />
+          <span>Mis pedidos</span>
+        </a>
       </nav>
       <MiRuta
         version={ruta.version}
@@ -342,29 +404,37 @@ export default function PreventaPage() {
           }
         />
         <section id="nuevo-pedido" className="preventa-panel">
-          <h2>Nuevo pedido</h2>
+          <div className="preventa-encabezado">
+            <div>
+              <h2>Nuevo pedido</h2>
+              <p>Elegí el comercio, ajustá los bultos y cargá el pedido.</p>
+            </div>
+          </div>
           {aviso && (
             <Alert tone="success" onDismiss={() => setAviso(null)}>
               {aviso}
             </Alert>
           )}
           <div className="preventa-altas">
+            <span>¿El comercio no está en la lista?</span>
             <button
-              className="dm-button"
+              className="dm-button dm-button-sm"
               type="button"
               aria-expanded={formAlta === "minorista"}
               onClick={() =>
                 setFormAlta(formAlta === "minorista" ? null : "minorista")
               }
             >
+              <UserPlus size={14} aria-hidden="true" />
               Nuevo minorista
             </button>
             <button
-              className="dm-button"
+              className="dm-button dm-button-sm"
               type="button"
               aria-expanded={formAlta === "punto"}
               onClick={() => setFormAlta(formAlta === "punto" ? null : "punto")}
             >
+              <Store size={14} aria-hidden="true" />
               Nuevo punto de venta
             </button>
           </div>
@@ -427,13 +497,18 @@ export default function PreventaPage() {
                 ))}
               </select>
             </label>
-            {!detalle.length && <p>Agregá productos desde el catálogo.</p>}
+            {!detalle.length && (
+              <p className="preventa-vacio">
+                <ShoppingCart size={20} aria-hidden="true" />
+                Agregá productos desde el catálogo.
+              </p>
+            )}
             {detalle.length > 0 && (
               <ul className="preventa-lista">
                 {detalle.map(({ producto, cantidad, stock }) => (
                   <li className="preventa-linea" key={producto.id}>
                     <strong>{producto.nombre}</strong>
-                    <span>
+                    <span className="preventa-stock">
                       {moneda.format(producto.precio)} por bulto · {stock}{" "}
                       disponibles
                     </span>
@@ -485,7 +560,7 @@ export default function PreventaPage() {
             </div>
             {errorPedido && <Alert tone="danger">{errorPedido}</Alert>}
             <button
-              className="dm-button dm-button-primary"
+              className="dm-button dm-button-primary dm-button-lg preventa-cargar"
               type="submit"
               disabled={
                 guardando ||

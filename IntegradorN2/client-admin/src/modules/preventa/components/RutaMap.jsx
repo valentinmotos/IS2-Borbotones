@@ -142,7 +142,11 @@ export default function RutaMap({
         role="region"
         aria-label="Mapa de la ruta del día"
       />
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="ruta-mapa-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

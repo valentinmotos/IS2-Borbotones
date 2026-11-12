@@ -1,0 +1,22 @@
+/* Acceso con Google (botón, página de retorno y vínculo en Mis datos). */
+.google-button {
+  min-height: 46px;
+  color: var(--c-ink);
+  background: var(--c-white);
+  border-color: var(--c-line-strong);
+}
+.google-button:hover:not(:disabled) {
+  color: var(--c-ink);
+  background: var(--c-light);
+  border-color: var(--c-muted);
+}
+.google-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.google-access > p {
+  font-size: var(--fs-sm);
+}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
 import {
   Alert,
   DataTable,
@@ -27,13 +28,21 @@ function formatoFecha(fecha) {
 }
 
 const columnas = [
-  { key: "fechaDesde", label: "Desde", render: (v) => formatoFecha(v.fechaDesde) },
+  {
+    key: "fechaDesde",
+    label: "Desde",
+    render: (v) => formatoFecha(v.fechaDesde),
+  },
   {
     key: "fechaHasta",
     label: "Hasta",
     render: (v) => (v.fechaHasta ? formatoFecha(v.fechaHasta) : "Sin cierre"),
   },
-  { key: "precio", label: "Precio", render: (v) => formatoPrecio.format(v.precio) },
+  {
+    key: "precio",
+    label: "Precio",
+    render: (v) => formatoPrecio.format(v.precio),
+  },
   {
     key: "estado",
     label: "Estado",
@@ -110,11 +119,12 @@ export default function PreciosProducto({ producto, onClose }) {
 
   return (
     <section
-      className="design-register precios-producto"
+      className="panel precios-producto"
       aria-labelledby="precios-producto-titulo"
     >
-      <header className="dm-page-header">
-        <div>
+      <div className="panel-head">
+        <div className="precios-producto-titulo">
+          <span className="eyebrow">Producto seleccionado</span>
           <h2 id="precios-producto-titulo" ref={titulo} tabIndex={-1}>
             Precios de {producto.nombre}
           </h2>
@@ -124,70 +134,85 @@ export default function PreciosProducto({ producto, onClose }) {
           </p>
         </div>
         <button className="dm-button" type="button" onClick={onClose}>
+          <X size={16} aria-hidden="true" />
           Cerrar precios
         </button>
-      </header>
-      <dl className="precios-producto-kpi">
-        <Kpi
-          label="Precio vigente"
-          value={vigente ? formatoPrecio.format(vigente.precio) : "Sin precio"}
-          detail={vigente ? `Desde el ${formatoFecha(vigente.fechaDesde)}` : undefined}
-        />
-      </dl>
+      </div>
       {aviso && (
         <Alert tone="success" onDismiss={() => setAviso(null)}>
           {aviso}
         </Alert>
       )}
       {actual?.error && <Alert tone="danger">{actual.error}</Alert>}
-      <DataTable
-        caption={`Historial de precios de ${producto.nombre}`}
-        columns={columnas}
-        rows={historial}
-        rowKey={(v) => v.id}
-        empty={
-          !actual
-            ? "Cargando precios…"
-            : actual.error
-              ? "Historial no disponible."
-              : "Este producto todavía no tiene precios."
-        }
-      />
-      <form
-        key={versionFormulario}
-        className="design-form precios-producto-form"
-        onSubmit={guardar}
-        aria-labelledby="precio-nuevo-titulo"
-      >
-        <h3 id="precio-nuevo-titulo">Nuevo precio</h3>
-        {error && <Alert tone="danger">{error.message}</Alert>}
-        <fieldset disabled={guardando}>
-          <FormField
-            name="fechaDesde"
-            type="date"
-            label="Vigente desde"
-            required
-            min={hoyLocal()}
-            defaultValue={hoyLocal()}
-            hint="El precio anterior se cierra el día antes."
-            error={error?.campo === "fechaDesde" ? error.message : undefined}
+      <div className="precios-producto-cuerpo">
+        <div className="precios-producto-historial">
+          <dl className="precios-producto-kpi">
+            <Kpi
+              label="Precio vigente"
+              value={
+                vigente ? formatoPrecio.format(vigente.precio) : "Sin precio"
+              }
+              detail={
+                vigente
+                  ? `Desde el ${formatoFecha(vigente.fechaDesde)}`
+                  : undefined
+              }
+            />
+          </dl>
+          <DataTable
+            caption={`Historial de precios de ${producto.nombre}`}
+            columns={columnas}
+            rows={historial}
+            rowKey={(v) => v.id}
+            empty={
+              !actual
+                ? "Cargando precios…"
+                : actual.error
+                  ? "Historial no disponible."
+                  : "Este producto todavía no tiene precios. Cargá el primero."
+            }
           />
-          <FormField
-            name="precio"
-            type="number"
-            label="Precio mayorista ($)"
-            required
-            min={0.01}
-            step={0.01}
-            error={error?.campo === "precio" ? error.message : undefined}
-          />
-          <div className="dm-actions">
-            <button className="dm-button dm-button-primary" type="submit">
-              {guardando ? "Guardando…" : "Guardar precio"}
-            </button>
-          </div>
-        </fieldset>
-      </form>
+        </div>
+        <form
+          key={versionFormulario}
+          className="precios-producto-form"
+          onSubmit={guardar}
+          aria-labelledby="precio-nuevo-titulo"
+        >
+          <h3 id="precio-nuevo-titulo">Nuevo precio</h3>
+          {error && <Alert tone="danger">{error.message}</Alert>}
+          <fieldset disabled={guardando}>
+            <div className="form-grid precios-producto-campos">
+              <FormField
+                name="fechaDesde"
+                type="date"
+                label="Vigente desde"
+                required
+                min={hoyLocal()}
+                defaultValue={hoyLocal()}
+                hint="El precio anterior se cierra el día antes."
+                error={
+                  error?.campo === "fechaDesde" ? error.message : undefined
+                }
+              />
+              <FormField
+                name="precio"
+                type="number"
+                label="Precio mayorista ($)"
+                required
+                min={0.01}
+                step={0.01}
+                error={error?.campo === "precio" ? error.message : undefined}
+              />
+              <div className="form-actions">
+                <button className="dm-button dm-button-primary" type="submit">
+                  {guardando ? "Guardando…" : "Guardar precio"}
+                </button>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+      </div>
     </section>
   );
 }

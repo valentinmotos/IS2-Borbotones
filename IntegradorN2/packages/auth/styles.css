@@ -1,69 +1,168 @@
+/*
+ * Pantallas de acceso (login, cambio de clave, acceso denegado, error de sesión) compartidas por
+ * el sitio público y el panel. Una sola tarjeta centrada, sin recuadros internos.
+ */
 .auth-panel {
-  width: min(100%, 30rem);
-  margin: clamp(2rem, 6vw, 4rem) auto;
-  padding: clamp(1.25rem, 4vw, 2rem);
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  display: grid;
+  gap: var(--s-4);
+  width: min(100% - 2 * var(--dm-gutter), 440px);
+  margin: clamp(28px, 6vw, 64px) auto;
+  padding: clamp(22px, 4vw, 34px);
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-top: 4px solid var(--c-red);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-md);
+}
+/* Dentro del panel de gestión el contenido ya tiene márgenes propios. */
+.role-content .auth-panel {
+  width: min(100%, 440px);
 }
 
+/* Encabezado: ícono, título y bajada */
+.auth-head {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+.auth-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 6px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--c-red), var(--c-amber));
+  border-radius: 50%;
+  box-shadow: var(--sh-red);
+}
+.auth-icon[data-tone="danger"] {
+  color: var(--dm-danger);
+  background: var(--dm-danger-bg);
+  box-shadow: none;
+}
 .auth-panel h1 {
-  font-size: clamp(1.8rem, 5vw, 2.6rem);
-  margin-top: 0;
+  font-size: clamp(1.5rem, 1.25rem + 0.9vw, 1.875rem);
+}
+.auth-panel h2 {
+  font-family: var(--font-text);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.auth-head p {
+  color: var(--muted);
+  font-size: var(--fs-sm);
 }
 
-.auth-panel form {
+/* Formulario */
+.auth-form {
   display: grid;
-  gap: 1rem;
-  margin-block: 1rem;
+  gap: var(--s-4);
+}
+/* Acciones sueltas (error de sesión, acceso denegado) */
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
 }
 
-.auth-panel form .dm-button {
-  justify-self: start;
-}
-
-.auth-panel > .dm-button + .dm-button {
-  margin-inline-start: 0.5rem;
-}
-
-.role-menu {
+/* Alta de cuenta: separada por una línea, bien visible debajo del ingreso */
+.auth-register {
   display: grid;
-  align-content: start;
-  gap: 0.75rem;
-  min-width: 0;
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-line);
+}
+.auth-register p {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.auth-register strong {
+  display: block;
+  color: var(--c-ink);
+  font-size: var(--fs-base);
+}
+.auth-register .dm-button {
+  min-height: 46px;
+  color: var(--c-red-strong);
+  border-color: var(--c-red);
+}
+.auth-register .dm-button:hover {
+  background: var(--dm-tint);
 }
 
-.role-menu nav {
-  display: grid;
-  gap: 0.5rem;
+/* Enlace al otro portal y cierre de sesión: terciarios */
+.auth-other,
+.auth-foot {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+.auth-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2) var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-line);
+}
+.auth-other a {
+  color: var(--muted);
+}
+.auth-other a:hover {
+  color: var(--c-red-strong);
 }
 
-.role-menu [aria-current="page"] {
-  color: var(--action);
-  font-weight: 700;
+/* Verificando o cerrando la sesión */
+.auth-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  margin: clamp(40px, 8vw, 80px) auto;
+  padding-inline: var(--dm-gutter);
+  color: var(--muted);
+  font-size: var(--fs-sm);
 }
-
-.role-menu span {
-  overflow-wrap: anywhere;
+.auth-spin {
+  color: var(--c-red);
 }
-
-.role-menu .dm-button {
-  justify-self: start;
-}
-
-.role-workspace {
-  display: grid;
-  grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr);
-  gap: clamp(1.5rem, 4vw, 3rem);
-}
-
-@media (max-width: 680px) {
-  .role-workspace {
-    grid-template-columns: minmax(0, 1fr);
+@media (prefers-reduced-motion: no-preference) {
+  .auth-spin {
+    animation: auth-spin 900ms linear infinite;
   }
-
-  .role-menu nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1rem;
+  @keyframes auth-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
+}
+
+/* Ingreso alternativo (Google): separador «o» y se oculta si no hay proveedor */
+.auth-alt {
+  display: grid;
+  gap: var(--s-3);
+}
+.auth-alt:empty {
+  display: none;
+}
+.auth-alt::before {
+  content: "o";
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.auth-alt::before {
+  background:
+    linear-gradient(var(--c-line-strong), var(--c-line-strong)) left center /
+      calc(50% - 16px) 1px no-repeat,
+    linear-gradient(var(--c-line-strong), var(--c-line-strong)) right center /
+      calc(50% - 16px) 1px no-repeat;
+  justify-content: center;
 }

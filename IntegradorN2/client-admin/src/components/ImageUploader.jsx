@@ -1,4 +1,6 @@
 import { useEffect, useId, useState } from "react";
+import { ImagePlus, Upload } from "lucide-react";
+import "./image-uploader.css";
 
 const MAX_BYTES = 2 * 1024 * 1024;
 const ACCEPTED_MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -51,35 +53,49 @@ export default function ImageUploader({
     onFileSelected?.(file);
   }
 
+  const imagen = vistaPrevia || imageUrl;
+
   return (
-    <section className="dm-image-uploader" aria-label={label}>
+    <div className="dm-image-uploader" role="group" aria-label={label}>
       <label className="dm-image-uploader__label" htmlFor={inputId}>
         {label}
       </label>
-      <input
-        id={inputId}
-        type="file"
-        accept={ACCEPT}
-        onChange={seleccionar}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${inputId}-error` : undefined}
-      />
-      <p className="dm-image-uploader__hint">
-        JPG, PNG o WEBP · hasta {maxBytes / (1024 * 1024)} MB.
-      </p>
-      {(vistaPrevia || imageUrl) && (
+      <div className="dm-image-uploader__box">
         <figure className="dm-image-uploader__preview">
-          <img
-            src={vistaPrevia || imageUrl}
-            alt={
-              vistaPrevia
-                ? "Vista previa de la imagen seleccionada"
-                : "Imagen guardada"
-            }
-          />
-          {archivo && <figcaption>{archivo.name}</figcaption>}
+          {imagen ? (
+            <img
+              src={imagen}
+              alt={
+                vistaPrevia
+                  ? "Vista previa de la imagen seleccionada"
+                  : "Imagen guardada"
+              }
+            />
+          ) : (
+            <ImagePlus size={28} aria-hidden="true" />
+          )}
         </figure>
-      )}
+        <div className="dm-image-uploader__body">
+          <div className="dm-file-control">
+            <span className="dm-button" aria-hidden="true">
+              <Upload size={16} />
+              {imagen ? "Cambiar imagen" : "Elegir imagen"}
+            </span>
+            <input
+              id={inputId}
+              type="file"
+              accept={ACCEPT}
+              onChange={seleccionar}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? `${inputId}-error` : undefined}
+            />
+          </div>
+          {archivo && <p className="dm-image-uploader__name">{archivo.name}</p>}
+          <p className="dm-image-uploader__hint">
+            JPG, PNG o WEBP · hasta {maxBytes / (1024 * 1024)} MB.
+          </p>
+        </div>
+      </div>
       {error && (
         <p
           id={`${inputId}-error`}
@@ -89,6 +105,6 @@ export default function ImageUploader({
           {error}
         </p>
       )}
-    </section>
+    </div>
   );
 }

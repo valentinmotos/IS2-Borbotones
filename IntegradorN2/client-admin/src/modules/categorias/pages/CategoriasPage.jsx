@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Plus } from "lucide-react";
 import {
   Alert,
   ConfirmDialog,
@@ -7,6 +8,7 @@ import {
   Pagination,
 } from "../../../../../packages/design/components.jsx";
 import { crearCrudApi } from "../../../lib/crudApi.js";
+import "../styles.css";
 
 /**
  * ABM de categorías (E0-08): pantalla de referencia para los demás ABM.
@@ -149,18 +151,37 @@ export default function CategoriasPage() {
 
   return (
     <>
-      <header className="dm-page-header">
+      <header className="page-head">
         <div>
+          <span className="eyebrow">Catálogo</span>
           <h1>Categorías</h1>
-          <p>
+          <p className="lead">
             Agrupan los productos del catálogo. No puede haber dos categorías
             activas con el mismo nombre.
           </p>
         </div>
+        <div className="page-head-actions">
+          <a
+            className="dm-button dm-button-primary"
+            href="#categoria-formulario"
+          >
+            <Plus size={16} aria-hidden="true" />
+            Nueva categoría
+          </a>
+        </div>
       </header>
       <div className="design-content">
         <section className="design-register" aria-labelledby="listado">
-          <h2 id="listado">Listado</h2>
+          <div className="panel-head">
+            <h2 id="listado">Categorías activas</h2>
+            {!cargando && (
+              <p>
+                {categorias.length === 1
+                  ? "1 categoría"
+                  : `${categorias.length} categorías`}
+              </p>
+            )}
+          </div>
           {aviso && (
             <Alert tone={aviso.tono} onDismiss={() => setAviso(null)}>
               {aviso.texto}
@@ -171,7 +192,11 @@ export default function CategoriasPage() {
             columns={columnas}
             rows={visibles}
             rowKey={(categoria) => categoria.id}
-            empty={cargando ? "Cargando categorías…" : "No hay categorías."}
+            empty={
+              cargando
+                ? "Cargando categorías…"
+                : "Todavía no hay categorías. Creá la primera con el formulario."
+            }
           />
           <Pagination
             page={paginaActual}
@@ -180,14 +205,22 @@ export default function CategoriasPage() {
           />
         </section>
         <form
+          id="categoria-formulario"
           className="design-form"
           onSubmit={guardar}
           aria-labelledby="formulario"
           noValidate
         >
-          <h2 id="formulario">
-            {editando ? "Editar categoría" : "Nueva categoría"}
-          </h2>
+          <div>
+            <h2 id="formulario">
+              {editando ? "Editar categoría" : "Nueva categoría"}
+            </h2>
+            <p className="muted small">
+              {editando
+                ? `Estás cambiando el nombre de «${editando.nombre}».`
+                : "Escribí el nombre y guardá para sumarla al catálogo."}
+            </p>
+          </div>
           <FormField
             ref={campoNombre}
             label="Nombre"

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { MapPin, Search } from "lucide-react";
 
 export default function AddressSearch({ api, query, onPick }) {
   const request = useRef(null);
@@ -39,6 +40,7 @@ export default function AddressSearch({ api, query, onPick }) {
         disabled={!query || pending}
         onClick={search}
       >
+        <Search size={16} aria-hidden="true" />
         {pending ? "Buscando…" : "Buscar dirección en el mapa"}
       </button>
       {error && (
@@ -47,22 +49,26 @@ export default function AddressSearch({ api, query, onPick }) {
         </p>
       )}
       {results?.length === 0 && (
-        <p role="status">
+        <p className="dm-address-empty" role="status">
           No encontramos coincidencias. Podés marcar el punto en el mapa.
         </p>
       )}
       {results?.length > 0 && (
-        <ul aria-label="Resultados de la búsqueda">
+        <ul
+          className="dm-address-results"
+          aria-label="Resultados de la búsqueda"
+        >
           {results.map(({ etiqueta, latitud, longitud }, index) => (
             <li key={index}>
               <button
                 type="button"
-                className="dm-button"
+                className="dm-address-result"
                 onClick={() => {
                   onPick({ latitud, longitud });
                   setResults(null);
                 }}
               >
+                <MapPin size={16} aria-hidden="true" />
                 {etiqueta}
               </button>
             </li>

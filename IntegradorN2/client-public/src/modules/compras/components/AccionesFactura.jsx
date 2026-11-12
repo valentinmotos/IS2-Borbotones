@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CreditCard, Download } from "lucide-react";
 import { api } from "../../../lib/api.js";
 
 // E4-08: acciones sobre la factura de una compra. Los errores se informan con onError(mensaje).
@@ -44,6 +45,7 @@ export function DescargarFacturaButton({ compra, onError }) {
       onClick={descargar}
       disabled={descargando}
     >
+      <Download size={15} aria-hidden="true" />
       {descargando ? "Descargando…" : "Descargar factura"}
     </button>
   );
@@ -76,6 +78,7 @@ export function PagarAhoraButton({ compra, onError }) {
       onClick={pagar}
       disabled={iniciando}
     >
+      <CreditCard size={15} aria-hidden="true" />
       {iniciando ? "Abriendo el pago…" : "Pagar ahora"}
     </button>
   );

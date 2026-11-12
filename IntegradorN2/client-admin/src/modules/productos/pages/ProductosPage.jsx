@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Plus, Search } from "lucide-react";
 import {
   Alert,
   ConfirmDialog,
@@ -11,6 +12,7 @@ import { api } from "../../../lib/api.js";
 import { crearCrudApi } from "../../../lib/crudApi.js";
 import { useProductoImagen } from "../useProductoImagen.js";
 import PreciosProducto from "../components/PreciosProducto.jsx";
+import "../styles.css";
 
 const productosApi = crearCrudApi("/productos");
 const categoriasApi = crearCrudApi("/categorias");
@@ -45,8 +47,8 @@ function FotoProducto({ producto }) {
       />
     );
   if (!producto.imagenId || imagen?.error)
-    return <span>Sin imagen disponible</span>;
-  return <span>Cargando imagen…</span>;
+    return <span className="producto-sin-imagen">Sin imagen disponible</span>;
+  return <span className="producto-sin-imagen">Cargando imagen…</span>;
 }
 
 function FormularioProducto({
@@ -92,73 +94,96 @@ function FormularioProducto({
 
   return (
     <form
-      className="design-form productos-form"
+      id="producto-editor"
+      className="panel productos-form"
       onSubmit={guardar}
       aria-labelledby="producto-formulario"
     >
-      <h2 id="producto-formulario">
-        {producto ? "Editar producto" : "Nuevo producto"}
-      </h2>
+      <div className="panel-head">
+        <div className="productos-form-titulo">
+          <span className="eyebrow">
+            {producto ? "Producto seleccionado" : "Alta"}
+          </span>
+          <h2 id="producto-formulario">
+            {producto ? `Editando: ${producto.nombre}` : "Nuevo producto"}
+          </h2>
+        </div>
+        <p>
+          {producto
+            ? "Modificá los datos y guardá los cambios."
+            : "Completá los datos y elegí una imagen. La descripción es opcional."}
+        </p>
+      </div>
       {error && <Alert tone="danger">{error.message}</Alert>}
       <fieldset disabled={guardando || bloqueado}>
-        {campos.map(({ name, ...props }) => (
-          <FormField
-            key={name}
-            name={name}
-            required
-            {...props}
-            defaultValue={producto?.[name] ?? ""}
-            error={error?.campo === name ? error.message : undefined}
-          />
-        ))}
-        <label className="dm-field">
-          <span>Descripción</span>
-          <textarea
-            className="dm-input"
-            name="descripcion"
-            rows={3}
-            maxLength={1000}
-            defaultValue={producto?.descripcion ?? ""}
-          />
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            name="enOferta"
-            defaultChecked={producto?.enOferta}
-          />{" "}
-          En oferta para el newsletter
-        </label>
-        <div className="dm-field">
-          <label htmlFor="producto-categoria">Categoría</label>
-          <select
-            id="producto-categoria"
-            className="dm-input"
-            name="categoriaId"
-            value={categoriaId}
-            onChange={(event) => setCategoriaId(event.target.value)}
-            required
-          >
-            <option value="">Seleccioná una categoría</option>
-            {categorias.map(({ id, nombre }) => (
-              <option key={id} value={id}>
-                {nombre}
-              </option>
+        <div className="productos-form-cuerpo">
+          <div className="form-grid productos-form-grid">
+            {campos.map(({ name, ...props }) => (
+              <FormField
+                key={name}
+                name={name}
+                required
+                {...props}
+                defaultValue={producto?.[name] ?? ""}
+                error={error?.campo === name ? error.message : undefined}
+              />
             ))}
-          </select>
+            <div className="dm-field">
+              <label htmlFor="producto-categoria">Categoría</label>
+              <select
+                id="producto-categoria"
+                className="dm-input"
+                name="categoriaId"
+                value={categoriaId}
+                onChange={(event) => setCategoriaId(event.target.value)}
+                required
+              >
+                <option value="">Seleccioná una categoría</option>
+                {categorias.map(({ id, nombre }) => (
+                  <option key={id} value={id}>
+                    {nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <label className="productos-check">
+              <input
+                type="checkbox"
+                name="enOferta"
+                defaultChecked={producto?.enOferta}
+              />{" "}
+              En oferta para el newsletter
+            </label>
+            <label className="dm-field span-all">
+              <span>Descripción</span>
+              <textarea
+                className="dm-input"
+                name="descripcion"
+                rows={3}
+                maxLength={1000}
+                defaultValue={producto?.descripcion ?? ""}
+              />
+            </label>
+          </div>
+          <div className="productos-form-imagen">
+            <ImageUploader
+              onFileSelected={setArchivo}
+              imageUrl={imagen?.url}
+              label="Imagen del producto"
+            />
+            {producto?.imagenId && (
+              <small className="muted">
+                Elegí un archivo solo si querés reemplazar la imagen.
+              </small>
+            )}
+          </div>
         </div>
-        <ImageUploader
-          onFileSelected={setArchivo}
-          imageUrl={imagen?.url}
-          label="Imagen del producto"
-        />
-        {producto?.imagenId && (
-          <small>Elegí un archivo solo si querés reemplazar la imagen.</small>
-        )}
         {!categorias.length && (
-          <p>Necesitás una categoría activa para guardar.</p>
+          <p className="productos-form-aviso">
+            Necesitás una categoría activa para guardar.
+          </p>
         )}
-        <div className="dm-actions">
+        <div className="form-actions productos-form-pie">
           <button
             className="dm-button dm-button-primary"
             type="submit"
@@ -287,7 +312,7 @@ export default function ProductosPage() {
       key: "acciones",
       label: "Acciones",
       render: (producto) => (
-        <div className="dm-actions">
+        <div className="abm-row-actions">
           <button
             className="dm-button"
             type="button"
@@ -318,11 +343,21 @@ export default function ProductosPage() {
   ];
 
   return (
-    <>
-      <header className="dm-page-header">
+    <div className="productos-page">
+      <header className="page-head">
         <div>
+          <span className="eyebrow">Catálogo</span>
           <h1>Productos</h1>
-          <p>Administrá el catálogo, sus presentaciones e imágenes.</p>
+          <p className="lead">
+            Administrá el catálogo: presentaciones, imágenes y precios
+            mayoristas de cada producto.
+          </p>
+        </div>
+        <div className="page-head-actions">
+          <a className="dm-button dm-button-primary" href="#producto-editor">
+            <Plus size={16} aria-hidden="true" />
+            Nuevo producto
+          </a>
         </div>
       </header>
       {aviso && (
@@ -330,10 +365,19 @@ export default function ProductosPage() {
           {aviso.texto}
         </Alert>
       )}
-      <section className="design-register" aria-labelledby="productos-listado">
-        <h2 id="productos-listado">Listado</h2>
+      <section className="panel" aria-labelledby="productos-listado">
+        <div className="panel-head">
+          <h2 id="productos-listado">Productos activos</h2>
+          {actual?.data && (
+            <p>
+              {productos.length === 1
+                ? "1 producto"
+                : `${productos.length} productos`}
+            </p>
+          )}
+        </div>
         <form
-          className="productos-filtros"
+          className="toolbar productos-filtros"
           onSubmit={aplicarFiltros}
           aria-label="Filtrar productos"
         >
@@ -360,6 +404,7 @@ export default function ProductosPage() {
             </select>
           </div>
           <button className="dm-button" type="submit">
+            <Search size={16} aria-hidden="true" />
             Buscar
           </button>
         </form>
@@ -374,7 +419,7 @@ export default function ProductosPage() {
               ? "Cargando productos…"
               : actual.error
                 ? "Listado no disponible."
-                : "No hay productos para esta búsqueda."
+                : "No hay productos para esta búsqueda. Probá con otro texto o categoría."
           }
         />
         <Pagination
@@ -409,6 +454,6 @@ export default function ProductosPage() {
       >
         <p>¿Querés dar de baja «{aEliminar?.nombre}»?</p>
       </ConfirmDialog>
-    </>
+    </div>
   );
 }

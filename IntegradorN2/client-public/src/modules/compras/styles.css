@@ -1,108 +1,357 @@
-/* E4-08: compras y facturas del minorista. */
+/* E4-08: compras y facturas del minorista (rediseño). */
 .compras {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--s-4);
   min-width: 0;
 }
-
-.compras h1,
-.compras h2 {
-  margin: 0;
+.compras > .page-head,
+.compras > .kpi-grid {
+  margin-bottom: 0;
 }
-
+.compras .panel > h2 {
+  margin-bottom: var(--s-4);
+}
+.compras-cargando {
+  color: var(--muted);
+}
+.compras-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-decoration: none;
+}
+.compras-volver:hover {
+  color: var(--c-red-strong);
+}
 .compras-subtitulo {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  color: var(--dm-muted);
+  gap: 6px 10px;
+  color: var(--muted);
 }
 
+/* Estado vacío */
+.compras-vacio-icono {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  color: var(--c-red);
+  background: var(--dm-tint);
+  border-radius: 50%;
+}
+.compras .empty-state p {
+  max-width: 44ch;
+}
+.compras .empty-state .dm-button {
+  margin-top: var(--s-2);
+}
+
+/* Acciones de cada fila: compactas y en una línea */
 .compras-acciones {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+}
+.dm-table td .compras-acciones .dm-button + .dm-button {
+  margin-left: 0;
+}
+.compras-acciones .dm-button-ghost {
+  padding-inline: 8px;
+  color: var(--c-red-strong);
 }
 
-.compras-importes {
+/* Lista de pedidos: en pantallas chicas cada fila pasa a ser un bloque apilado.
+ * Las etiquetas salen del orden de columnas de ComprasPage (Pedido, Fecha, Comercio, Total,
+ * Envío, Factura, Acciones): si cambia ese orden, actualizar los nth-child de abajo. */
+@media (max-width: 680px) {
+  .compras-lista .dm-table,
+  .compras-lista caption,
+  .compras-lista tbody {
+    display: block;
+    min-width: 0;
+  }
+  .compras-lista thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .compras-lista tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "pedido total"
+      "fecha fecha"
+      "comercio comercio"
+      "envio envio"
+      "factura factura"
+      "acciones acciones";
+    gap: 4px 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--c-line);
+  }
+  .compras-lista tbody tr:last-child {
+    border-bottom: 0;
+  }
+  .compras-lista tbody td {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+  }
+  .compras-lista td:nth-child(1) {
+    grid-area: pedido;
+    font-weight: 600;
+  }
+  .compras-lista td:nth-child(2) {
+    grid-area: fecha;
+    color: var(--muted);
+    font-size: var(--fs-xs);
+  }
+  .compras-lista td:nth-child(3) {
+    grid-area: comercio;
+    color: var(--muted);
+  }
+  .compras-lista td:nth-child(4) {
+    grid-area: total;
+    justify-content: flex-end;
+    color: var(--c-ink);
+    font-weight: 700;
+  }
+  .compras-lista td:nth-child(5) {
+    grid-area: envio;
+  }
+  .compras-lista td:nth-child(6) {
+    grid-area: factura;
+  }
+  .compras-lista td:nth-child(5)::before,
+  .compras-lista td:nth-child(6)::before {
+    min-width: 58px;
+    color: var(--muted);
+    font-size: var(--fs-xs);
+  }
+  .compras-lista td:nth-child(5)::before {
+    content: "Envío";
+  }
+  .compras-lista td:nth-child(6)::before {
+    content: "Factura";
+  }
+  .compras-lista td:nth-child(7) {
+    grid-area: acciones;
+    margin-top: 6px;
+  }
+  .compras-lista .compras-acciones {
+    flex-wrap: wrap;
+  }
+}
+
+/* Detalle: factura al costado de los productos (en el DOM va primero, para que en celular
+ * la acción de pago quede arriba). */
+.compras-detalle {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: 1rem;
-  margin: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  grid-template-areas: "productos factura";
+  align-items: start;
+  gap: clamp(16px, 2.5vw, 24px);
 }
-
+.compras-productos {
+  grid-area: productos;
+  min-width: 0;
+}
 .compras-factura {
+  grid-area: factura;
   display: grid;
-  gap: 0.75rem;
+  gap: var(--s-3);
+}
+.compras .compras-factura > h2 {
+  margin-bottom: 0;
+}
+.compras-factura[data-pendiente] {
+  border-top: 4px solid var(--c-amber);
+}
+.compras-factura-numero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: var(--fs-sm);
+}
+.compras-saldo {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  background: var(--c-amber-soft);
+  border-radius: var(--r-md);
+}
+.compras-saldo span {
+  color: var(--dm-warning);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.compras-saldo strong {
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.compras-factura-acciones {
+  display: grid;
+  gap: var(--s-2);
+}
+.compras-factura-acciones .dm-button {
+  width: 100%;
+  min-height: 44px;
+}
+.compras-factura-espera {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.compras-factura-espera svg {
+  margin-top: 2px;
+  color: var(--c-amber);
 }
 
-.compras-factura p {
-  margin: 0;
+@media (max-width: 960px) {
+  .compras-detalle {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "factura"
+      "productos";
+  }
 }
 
-/* Línea de tiempo vertical: un punto por estado unido por una línea. */
+/* ---------- Línea de tiempo del envío ----------
+ * Escritorio: stepper horizontal (un punto por estado unido por una línea).
+ * Celular: la misma lista en vertical. */
 .compras-tiempo {
-  list-style: none;
-  margin: 1rem 0 0;
+  --dot: 30px;
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  margin: 0;
   padding: 0;
+  list-style: none;
 }
-
 .compras-tiempo li {
+  --tono: var(--c-red-strong);
   position: relative;
   display: grid;
-  gap: 0.15rem;
-  padding: 0 0 1.25rem 1.75rem;
-  border-left: 2px solid var(--dm-line);
-  margin-left: 0.45rem;
+  align-content: start;
+  justify-items: center;
+  gap: 2px;
+  padding: calc(var(--dot) + 10px) 8px 0;
+  text-align: center;
 }
-
-.compras-tiempo li:last-child {
-  border-left-color: transparent;
-  padding-bottom: 0;
+.compras-tiempo li[data-tono="success"] {
+  --tono: var(--dm-success);
 }
-
+.compras-tiempo li[data-tono="warning"] {
+  --tono: #b87708;
+}
+.compras-tiempo li[data-tono="danger"] {
+  --tono: var(--dm-danger);
+}
+/* Punto */
 .compras-tiempo li::before {
+  content: "✓";
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: var(--dot);
+  height: var(--dot);
+  color: #fff;
+  background: var(--tono);
+  border: 2px solid var(--tono);
+  border-radius: 50%;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transform: translateX(-50%);
+}
+/* Tramo hacia el paso siguiente */
+.compras-tiempo li:not(:last-child)::after {
   content: "";
   position: absolute;
-  left: -0.55rem;
-  top: 0.15rem;
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
-  border: 2px solid var(--dm-accent);
-  background: var(--dm-accent);
+  top: calc(var(--dot) / 2 - 1.5px);
+  left: calc(50% + var(--dot) / 2 + 4px);
+  width: calc(100% - var(--dot) - 8px);
+  height: 3px;
+  border-radius: 3px;
+  background: var(--c-line-strong);
 }
-
-.compras-tiempo li[data-tono="success"]::before {
-  border-color: var(--dm-success);
-  background: var(--dm-success);
+.compras-tiempo li[data-paso="hecho"]:has(+ li[data-paso="hecho"])::after {
+  background: var(--tono);
 }
-
-.compras-tiempo li[data-tono="warning"]::before {
-  border-color: var(--dm-warning);
-  background: var(--dm-warning);
+.compras-tiempo li[aria-current="step"]::before {
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--tono) 18%, transparent);
 }
-
-.compras-tiempo li[data-tono="danger"]::before {
-  border-color: var(--dm-danger);
-  background: var(--dm-danger);
-}
-
-.compras-tiempo li[data-paso="pendiente"] {
-  color: var(--dm-muted);
-}
-
 .compras-tiempo li[data-paso="pendiente"]::before {
-  border-color: var(--dm-control-line);
-  background: var(--dm-surface);
+  content: "";
+  background: var(--c-white);
+  border-color: var(--c-line-strong);
 }
-
+.compras-tiempo strong {
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.compras-tiempo li[aria-current="step"] strong {
+  color: var(--tono);
+}
+.compras-tiempo li[data-paso="pendiente"] strong {
+  color: var(--muted);
+  font-weight: 500;
+}
 .compras-tiempo time,
 .compras-tiempo span {
-  font-size: 0.925rem;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
 }
 
-.compras-tiempo li[aria-current="step"] strong {
-  color: var(--dm-accent);
+@media (max-width: 720px) {
+  .compras-tiempo {
+    grid-auto-flow: row;
+  }
+  .compras-tiempo li {
+    justify-items: start;
+    padding: 4px 0 var(--s-5) calc(var(--dot) + 14px);
+    text-align: left;
+  }
+  .compras-tiempo li:last-child {
+    padding-bottom: 0;
+  }
+  .compras-tiempo li::before {
+    left: 0;
+    transform: none;
+  }
+  .compras-tiempo li:not(:last-child)::after {
+    top: calc(var(--dot) + 4px);
+    bottom: 4px;
+    left: calc(var(--dot) / 2 - 1.5px);
+    width: 3px;
+    height: auto;
+  }
 }

@@ -64,7 +64,11 @@ export default function BranchesMap({ branches }) {
         role="region"
         aria-label="Mapa de sucursales"
       />
-      {message && <p role="status">{message}</p>}
+      {message && (
+        <p className="shop-branch-map-note" role="status">
+          {message}
+        </p>
+      )}
     </>
   );
 }

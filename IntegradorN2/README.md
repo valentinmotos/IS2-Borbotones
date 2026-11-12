@@ -100,7 +100,7 @@ Las pruebas de integración levantan una API aislada para verificar el proxy y e
 
 ## Sistema de diseño · E0-03
 
-Abrí [Sistema de diseño](http://localhost:5173/componentes) desde el menú de administración tras ejecutar `npm run dev`. También está disponible con `npm run deploy:local`. La galería funciona con datos de ejemplo en memoria y se reinicia al salir de la página. El registro de categorías muestra los ocho componentes en un flujo de trabajo. La sección «Referencia de componentes» indica dónde probar cada uno. La ficha del informe documenta el rediseño con Taste Skill y el origen de las [plantillas y sus licencias](docs/E0-03.md).
+Abrí [Sistema de diseño](http://localhost:5173/componentes) desde el menú de administración tras ejecutar `npm run dev`. También está disponible con `npm run deploy:local`. La galería funciona con datos de ejemplo en memoria y se reinicia al salir de la página. El registro de categorías muestra los ocho componentes en un flujo de trabajo. La sección «Referencia de componentes» indica dónde probar cada uno. La ficha del informe documenta el rediseño basado en el template Sarab y el origen de las [plantillas y sus licencias](docs/E0-03.md).
 
 Los dos clientes cargan `packages/design/base.css` y `packages/design/components.css`. La base importa los tokens de `packages/design/tokens.css`, que definen la tipografía, la marca, el foco, los colores semánticos, el espaciado y el radio de los controles. Para reutilizar los componentes, importalos desde `packages/design/components.jsx`.
 

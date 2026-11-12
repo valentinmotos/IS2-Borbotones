@@ -1,350 +1,436 @@
-.quote-page {
-  padding-block: clamp(40px, 7vw, 96px);
-}
+/* ================= Presupuesto con asistente (rediseño Sarab) ================= */
 
-.quote-heading {
-  max-width: 760px;
-  margin-bottom: clamp(28px, 5vw, 56px);
-}
-
-.quote-kicker {
-  color: var(--action);
-  font-size: 0.78rem;
-  font-weight: 750;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.quote-heading h1 {
-  margin-block: 10px;
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
-  line-height: 0.98;
-}
-
-.quote-heading > p:last-child,
-.quote-aside p,
-.quote-fallback-heading > p:last-child {
-  color: var(--muted);
-  max-width: 62ch;
-}
-
-.quote-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(230px, 0.8fr);
-  gap: clamp(20px, 4vw, 48px);
-  align-items: start;
-}
-
-.quote-chat,
-.quote-aside,
-.quote-fallback {
-  padding: clamp(22px, 4vw, 40px);
-  background: var(--bg);
-  border: 1px solid var(--line);
+/* ---------- Panel del chat: cabecera, conversación y redacción ---------- */
+.quote-chat {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
+  box-shadow: var(--sh-md);
 }
-
-.quote-chat-heading > div {
+.quote-chat-head {
   display: flex;
   align-items: center;
-  gap: 9px;
-  color: var(--muted);
-  font-size: 0.9rem;
+  gap: var(--s-3);
+  padding: 14px clamp(16px, 2.4vw, 22px);
+  border-bottom: 1px solid var(--c-line);
 }
-
-.quote-status-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #47854b;
-}
-
-.quote-chat-heading h2,
-.quote-aside h2,
-.quote-fallback h2,
-.quote-result h2 {
-  margin-block: 12px 8px;
-}
-
-.quote-chat-heading p,
-.quote-aside p {
-  color: var(--muted);
-}
-
-.quote-composer {
+.quote-avatar {
   display: grid;
-  gap: 9px;
-  margin-top: 28px;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  color: #fff;
+  background: linear-gradient(135deg, var(--c-red), var(--c-amber));
+  border-radius: 50%;
+  box-shadow: var(--sh-red);
 }
-
-.quote-composer label,
-.quote-product-field,
-.quote-quantity-field {
-  font-weight: 650;
+.quote-chat-head h2 {
+  font-family: var(--font-text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: 0;
 }
-
-.quote-composer textarea,
-.quote-product-field select,
-.quote-quantity-field input {
-  width: 100%;
-  padding: 12px 14px;
-  color: var(--ink);
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  font: inherit;
-}
-
-.quote-composer textarea {
-  resize: vertical;
-}
-
-.quote-composer textarea:focus-visible,
-.quote-product-field select:focus-visible,
-.quote-quantity-field input:focus-visible,
-.quote-remove:focus-visible {
-  outline: 3px solid var(--focus, #b27a32);
-  outline-offset: 2px;
-}
-
-.quote-composer-footer {
+.quote-chat-head p {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.quote-composer-footer small,
-.quote-stock,
-.quote-table small,
-.quote-total small,
-.quote-manual-total small {
+  gap: 6px;
   color: var(--muted);
+  font-size: var(--fs-xs);
+}
+.quote-status-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--dm-success);
 }
 
+.quote-log {
+  display: grid;
+  align-content: start;
+  gap: var(--s-3);
+  min-height: 220px;
+  padding: clamp(16px, 2.4vw, 22px);
+  background: var(--c-light);
+}
+.quote-msg {
+  max-width: min(100%, 560px);
+  padding: 12px 16px;
+  border-radius: 4px var(--r-lg) var(--r-lg) var(--r-lg);
+  font-size: var(--fs-sm);
+}
+.quote-msg.is-bot {
+  justify-self: start;
+  background: var(--c-white);
+  box-shadow: var(--sh-sm);
+}
+.quote-msg.is-bot > p + p {
+  margin-top: 8px;
+}
+.quote-msg.is-error {
+  justify-self: start;
+  color: var(--dm-danger);
+  background: var(--dm-danger-bg);
+}
+.quote-suggestion-label {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+.quote-suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  margin-top: 6px;
+  padding: 6px 14px;
+  color: var(--c-red-strong);
+  background: var(--dm-tint);
+  border: 1.5px solid transparent;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-align: left;
+  transition:
+    border-color 150ms,
+    background-color 150ms;
+}
+.quote-suggestion:hover {
+  border-color: var(--c-red);
+  background: var(--c-white);
+}
 .quote-typing {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 20px;
   color: var(--muted);
 }
-
-.quote-typing span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--action);
-  animation: quote-pulse 1s ease-in-out infinite alternate;
-}
-
-@keyframes quote-pulse {
-  to { opacity: 0.35; transform: scale(0.75); }
-}
-
-.quote-alert {
-  margin-top: 18px;
-  padding: 12px 14px;
-  color: #7f2f1d;
-  background: #fff0e8;
-  border-left: 4px solid #b84a2e;
-  border-radius: 4px;
-}
-
-.quote-aside {
-  background: var(--surface, #f6f1e7);
-}
-
-.quote-aside .dm-button {
+.quote-dots {
   display: inline-flex;
-  margin-top: 8px;
-  text-decoration: none;
+  gap: 4px;
+}
+.quote-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-red);
 }
 
-.quote-note {
-  margin-top: 22px;
-  font-size: 0.88rem;
+.quote-composer {
+  display: grid;
+  gap: 8px;
+  padding: 14px clamp(16px, 2.4vw, 22px) clamp(16px, 2.4vw, 20px);
+  border-top: 1px solid var(--c-line);
+}
+.quote-composer label {
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.quote-composer textarea {
+  min-height: 84px;
+}
+.quote-composer-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+.quote-composer-footer small {
+  color: var(--muted);
+  font-size: var(--fs-xs);
 }
 
-.quote-result,
-.quote-fallback {
-  margin-top: 28px;
+/* ---------- Resultado (dentro de la conversación, sin recuadro propio) ---------- */
+.quote-result {
+  display: grid;
+  gap: var(--s-4);
+  padding: clamp(14px, 2vw, 20px);
+  background: var(--c-white);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-sm);
+}
+.quote-result-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-md);
+}
+.quote-result-title svg {
+  color: var(--c-red);
 }
 
-.quote-result-heading {
-  margin-bottom: 14px;
-}
-
-.quote-result-heading h2 {
-  margin-top: 4px;
-}
-
+/* ---------- Tabla de ítems (sin marco: solo líneas entre filas) ---------- */
 .quote-table-wrap {
   max-width: 100%;
   overflow-x: auto;
 }
-
 .quote-table {
   width: 100%;
+  min-width: 420px;
   border-collapse: collapse;
+  font-size: var(--fs-sm);
   text-align: left;
 }
-
 .quote-table caption {
-  padding: 8px 0;
+  padding-bottom: 8px;
+  color: var(--c-ink);
+  font-weight: 600;
   text-align: left;
-  font-weight: 700;
 }
-
 .quote-table th,
 .quote-table td {
-  padding: 12px 10px;
-  border-bottom: 1px solid var(--line);
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--c-line);
   vertical-align: top;
 }
-
-.quote-table th {
-  font-weight: 650;
+.quote-table thead th {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-
+.quote-table th:first-child,
+.quote-table td:first-child {
+  padding-left: 0;
+}
+.quote-table tbody th {
+  color: var(--c-ink);
+  font-weight: 600;
+}
+.quote-table td {
+  font-variant-numeric: tabular-nums;
+}
 .quote-table small {
   display: block;
-  margin-top: 3px;
+  margin-top: 2px;
+  color: var(--muted);
   font-weight: 400;
 }
 
 .quote-excluded {
-  margin-top: 24px;
-  padding: 16px;
-  background: #fff7eb;
-  border-radius: var(--r-md);
+  padding-left: 14px;
+  border-left: 3px solid var(--c-amber);
 }
-
-.quote-excluded h3 {
-  margin-bottom: 10px;
+.quote-excluded h4 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  color: var(--dm-warning);
 }
-
 .quote-excluded ul {
   display: grid;
-  gap: 8px;
-  padding-left: 20px;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: var(--fs-sm);
 }
-
 .quote-excluded li span {
+  display: block;
   color: var(--muted);
 }
 
-.quote-total,
-.quote-manual-total {
+.quote-total {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 8px 18px;
-  margin-top: 20px;
-  padding-top: 18px;
-  border-top: 2px solid var(--line);
+  align-items: baseline;
+  gap: 4px 18px;
+  padding-top: 14px;
+  border-top: 2px solid var(--c-line);
 }
-
-.quote-total strong,
-.quote-manual-total strong {
+.quote-total span {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.quote-total strong {
+  color: var(--c-ink);
+  font-size: var(--fs-md);
+  font-variant-numeric: tabular-nums;
   text-align: right;
-  font-size: 1.15rem;
 }
-
-.quote-total small,
-.quote-manual-total small {
+.quote-total strong:first-of-type {
+  color: var(--c-red);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+.quote-total small {
   grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: var(--fs-xs);
   text-align: right;
 }
-
-.quote-fallback-heading {
-  margin-bottom: 22px;
+.quote-disclaimer,
+.quote-empty {
+  color: var(--muted);
+  font-size: var(--fs-sm);
 }
 
+/* ---------- Próximos pasos ---------- */
+.quote-next {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  background: var(--c-cream);
+  border-radius: var(--r-md);
+}
+.quote-next h3 {
+  font-size: var(--fs-base);
+}
+.quote-next p {
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+}
+.quote-next-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 4px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+/* ---------- Columna lateral ---------- */
+.quote-aside {
+  display: grid;
+  gap: var(--s-4);
+}
+.quote-aside > h2 {
+  margin-bottom: 0;
+  font-size: var(--fs-md);
+}
+.quote-tips {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+}
+.quote-tips li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.quote-tips svg {
+  margin-top: 3px;
+  color: var(--dm-success);
+}
+.quote-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  color: var(--dm-warning);
+  background: var(--c-amber-soft);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+}
+.quote-note svg {
+  margin-top: 3px;
+}
+.quote-aside-more {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-cream-2);
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+/* ---------- Formulario alternativo ---------- */
+.quote-fallback {
+  display: grid;
+  gap: var(--s-4);
+  margin-top: clamp(20px, 3vw, 28px);
+}
+.quote-fallback-head {
+  display: grid;
+  gap: 4px;
+}
+.quote-fallback-head h2 {
+  font-family: var(--font-text);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.quote-fallback-head > p:last-child {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
 .quote-manual-form {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 100px auto;
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 110px auto;
   align-items: end;
+  gap: var(--s-2) var(--s-3);
 }
-
-.quote-product-field,
-.quote-quantity-field {
-  display: grid;
-  gap: 7px;
+.quote-manual-form .dm-button {
+  min-height: 42px;
 }
-
 .quote-stock {
-  grid-column: 1 / 3;
-  grid-row: 2;
-  margin-top: -8px;
-  font-size: 0.85rem;
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: var(--fs-xs);
 }
-
-.quote-manual-form button {
-  grid-column: 3;
-  grid-row: 1 / 3;
+.quote-alert {
+  justify-content: flex-start;
 }
-
 .quote-remove {
-  padding: 4px 7px;
+  padding: 4px 6px;
   color: var(--action);
   background: transparent;
   border: 0;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  font-weight: 600;
   text-decoration: underline;
-  cursor: pointer;
+  text-underline-offset: 3px;
+}
+.quote-remove:hover {
+  color: var(--c-red-deep);
 }
 
-.home-quote-link {
-  display: inline-flex;
-  margin: 20px 0 0 14px;
-  color: var(--action);
-  font-weight: 700;
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  clip-path: inset(50%);
-}
-
-@media (max-width: 760px) {
-  .quote-grid {
-    grid-template-columns: 1fr;
+@media (prefers-reduced-motion: no-preference) {
+  .quote-dots span {
+    animation: quote-pulse 900ms ease-in-out infinite alternate;
   }
-
+  .quote-dots span:nth-child(2) {
+    animation-delay: 150ms;
+  }
+  .quote-dots span:nth-child(3) {
+    animation-delay: 300ms;
+  }
+  @keyframes quote-pulse {
+    to {
+      opacity: 0.3;
+      transform: translateY(-3px);
+    }
+  }
+}
+@media (max-width: 960px) {
+  .quote-aside {
+    order: 2;
+  }
+}
+@media (max-width: 600px) {
   .quote-manual-form {
-    grid-template-columns: 1fr 100px;
+    grid-template-columns: minmax(0, 1fr) 96px;
   }
-
-  .quote-manual-form button {
+  .quote-manual-form .dm-button {
     grid-column: 1 / -1;
-    grid-row: auto;
+    width: 100%;
   }
-
-  .quote-stock {
-    grid-column: 1 / -1;
-    grid-row: auto;
-    margin: -6px 0 0;
-  }
-}
-
-@media (max-width: 520px) {
-  .home-quote-link {
-    margin: 18px 0 0;
-  }
-
-  .quote-composer-footer {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .quote-table th,
-  .quote-table td {
-    padding: 9px 7px;
-    font-size: 0.9rem;
+  .quote-composer-footer .dm-button {
+    width: 100%;
   }
 }

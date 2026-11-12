@@ -1,68 +1,222 @@
-.preventa,
+/* Preventa: pantalla principal del preventor, pensada primero para el celular.
+   También la importa distribución (paneles, mapa, marcadores y "próximo punto"). */
+.preventa {
+  --preventa-tabs: 60px;
+  display: grid;
+  gap: var(--s-4);
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.preventa > .page-head {
+  margin-bottom: 0;
+}
+
+/* ---------- Pestañas pegajosas bajo la barra superior ---------- */
+.preventa-nav {
+  position: sticky;
+  z-index: 30;
+  top: var(--nav, 64px);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  margin-inline: calc(-1 * clamp(16px, 3vw, 32px));
+  padding: 6px clamp(10px, 3vw, 32px);
+  background: rgb(249 245 240 / 94%);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--c-line);
+}
+
+.preventa-nav a {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 4px;
+  color: var(--c-text);
+  border-radius: var(--r-md);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    background-color 150ms,
+    color 150ms;
+}
+
+.preventa-nav a > span:not(.preventa-nav-cuenta) {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preventa-nav a svg {
+  color: var(--c-muted);
+}
+
+.preventa-nav a:hover {
+  color: var(--c-red-strong);
+  background: var(--c-white);
+}
+
+.preventa-nav a:hover svg {
+  color: var(--c-red);
+}
+
+/* La pestaña de la sección a la que se saltó queda resaltada (solo CSS, con :target). */
+.preventa:has(#ruta-preventa:target) .preventa-nav a[href="#ruta-preventa"],
+.preventa:has(#catalogo-preventa:target)
+  .preventa-nav
+  a[href="#catalogo-preventa"],
+.preventa:has(#nuevo-pedido:target) .preventa-nav a[href="#nuevo-pedido"],
+.preventa:has(#pedidos-preventa:target)
+  .preventa-nav
+  a[href="#pedidos-preventa"] {
+  color: #fff;
+  background: linear-gradient(135deg, var(--c-red), var(--c-red-strong));
+  box-shadow: var(--sh-red);
+}
+
+.preventa:has(#ruta-preventa:target) .preventa-nav a[href="#ruta-preventa"] svg,
+.preventa:has(#catalogo-preventa:target)
+  .preventa-nav
+  a[href="#catalogo-preventa"]
+  svg,
+.preventa:has(#nuevo-pedido:target) .preventa-nav a[href="#nuevo-pedido"] svg,
+.preventa:has(#pedidos-preventa:target)
+  .preventa-nav
+  a[href="#pedidos-preventa"]
+  svg {
+  color: #fff;
+}
+
+.preventa-nav-cuenta {
+  position: absolute;
+  top: 2px;
+  right: calc(50% - 26px);
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 5px;
+  color: var(--c-ink);
+  background: var(--c-amber);
+  border: 2px solid var(--c-white);
+  border-radius: var(--r-pill);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+/* ---------- Paneles ---------- */
 .preventa-grid,
 .preventa-panel,
-.preventa-form,
-.preventa-campos {
+.preventa-form {
   display: grid;
-  gap: 1rem;
+  gap: var(--s-4);
   min-width: 0;
 }
 
 .preventa-grid {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
 
 .preventa-panel {
-  background: var(--surface);
+  padding: clamp(16px, 2.4vw, 24px);
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
   border-radius: var(--r-lg);
-  padding: clamp(1rem, 2.5vw, 1.5rem);
-  scroll-margin-top: 1rem;
+  box-shadow: var(--sh-sm);
+  scroll-margin-top: calc(var(--nav, 64px) + var(--preventa-tabs) + 12px);
 }
 
-.preventa-panel h2,
+.preventa-panel > * {
+  min-width: 0;
+}
+
+.preventa-panel h2 {
+  font-family: var(--font-text);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
 .preventa-panel p {
   margin: 0;
 }
 
-.preventa-encabezado,
-.preventa-nav,
-.preventa-altas,
-.preventa-total {
+.preventa-encabezado {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.65rem;
-}
-
-.preventa-encabezado,
-.preventa-total {
   justify-content: space-between;
+  gap: var(--s-2) var(--s-3);
 }
 
-.preventa-nav a {
-  color: inherit;
-  padding: 0.6rem 0.85rem;
-  background: var(--surface);
-  border-radius: var(--r-lg);
-  font-weight: 650;
+.preventa-encabezado > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
 }
 
+.preventa-encabezado p {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.preventa-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: var(--s-5) var(--s-4);
+  color: var(--muted);
+  background: var(--c-cream);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+
+.preventa-vacio svg {
+  color: var(--c-red);
+}
+
+/* Botones y campos cómodos para el dedo */
+.preventa .dm-button,
+.preventa .dm-field :is(input, select) {
+  min-height: 44px;
+}
+
+/* ---------- Listas (catálogo, líneas del pedido, mis pedidos) ---------- */
 .preventa-lista {
   display: grid;
-  list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .preventa-producto,
 .preventa-linea,
 .preventa-pedido {
   display: grid;
-  gap: 0.35rem 0.75rem;
-  padding-block: 0.8rem;
-  border-block-end: 1px solid var(--line);
+  gap: 4px var(--s-3);
+  padding-block: var(--s-3);
+  border-bottom: 1px solid var(--c-line);
   overflow-wrap: anywhere;
+}
+
+.preventa-lista > li:last-child {
+  border-bottom: 0;
+}
+
+.preventa-lista > li:first-child {
+  padding-top: 0;
 }
 
 .preventa-producto,
@@ -72,103 +226,237 @@
 }
 
 .preventa-pedido {
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.preventa-pedido > div {
+  grid-column: 1 / -1;
 }
 
 .preventa-pedido .dm-badge {
   justify-self: start;
 }
 
+.preventa-producto strong,
+.preventa-pedido strong,
+.preventa-linea > strong {
+  color: var(--c-ink);
+}
+
 .preventa-producto span,
 .preventa-pedido span:not(.dm-badge) {
   display: block;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.preventa-producto .preventa-stock,
+.preventa-linea .preventa-stock {
+  color: var(--dm-success);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+
+.preventa-linea .preventa-stock {
+  color: var(--muted);
+}
+
+.preventa-lista .preventa-precio {
+  color: var(--c-red-strong);
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .preventa-producto-accion {
   display: grid;
-  gap: 0.35rem;
   justify-items: end;
+  gap: 6px;
+}
+
+.preventa-agregar:not(:disabled) {
+  color: var(--c-red-strong);
+  border-color: var(--c-red);
+}
+
+.preventa .preventa-agregar:not(:disabled):hover {
+  color: #fff;
+  background: var(--c-red-strong);
 }
 
 .preventa-linea > div {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  gap: 0.65rem;
+  gap: var(--s-2);
 }
 
 .preventa-linea button {
-  margin-top: 1.5rem;
+  margin-top: 28px;
 }
 
-.preventa-campos {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.preventa-panel .design-form {
-  max-width: none;
-  border: 1px solid var(--line);
-}
-
-.preventa .dm-button,
-.preventa .dm-field :is(input, select) {
-  min-height: 44px;
-}
-
-.preventa .dm-field select {
-  width: 100%;
-  min-width: 0;
-  padding: 6px var(--dm-2);
-  border: 1px solid var(--dm-control-line);
-  border-radius: var(--dm-radius);
-  background: var(--dm-surface);
-  color: var(--dm-ink);
-  font: inherit;
-}
-
-@media (max-width: 980px) {
-  .preventa-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-@media (max-width: 540px) {
-  .preventa-campos {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .preventa-pedido {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .preventa-pedido > div {
-    grid-column: 1 / -1;
-  }
-}
-
-/* E5-01: ruta del día */
-.ruta-siguiente {
+/* ---------- Nuevo pedido ---------- */
+.preventa-altas {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  gap: var(--s-2);
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.preventa-altas > span {
+  flex-basis: 100%;
+}
+
+.preventa-altas .dm-button[aria-expanded="true"] {
+  color: var(--c-red-strong);
+  background: var(--dm-tint);
+  border-color: var(--c-red);
+}
+
+/* Formularios de alta dentro del panel: planos, sin otro recuadro con borde. */
+.preventa-panel .design-form {
+  max-width: none;
+  padding: var(--s-4);
+  background: var(--c-cream);
+  border: 0;
+  border-radius: var(--r-md);
+  box-shadow: none;
+}
+
+.preventa-panel .design-form h2,
+.preventa-subform-head h3 {
+  font-family: var(--font-text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.preventa-subform-head {
+  display: grid;
+  gap: 2px;
+}
+
+.preventa-subform-head p {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.preventa-panel .design-form .dm-address {
+  padding: 0;
+  border: 0;
+}
+
+.preventa-form {
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-line);
+}
+
+.preventa-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.85rem 1rem;
-  border: 2px solid var(--accent);
-  border-radius: var(--r-lg);
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  background: var(--c-cream);
+  border-radius: var(--r-md);
+}
+
+.preventa-total span {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.preventa-total strong {
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.preventa-cargar {
+  width: 100%;
+}
+
+/* ---------- Ruta del día (E5-01) ---------- */
+.ruta-progreso {
+  height: 6px;
+  overflow: hidden;
+  background: var(--c-cream-2);
+  border-radius: var(--r-pill);
+}
+
+.ruta-progreso span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-red), var(--c-amber));
+  border-radius: inherit;
+}
+
+.ruta-cuerpo,
+.ruta-info {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.ruta-siguiente {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  background: var(--c-cream);
+  border-left: 4px solid var(--c-red);
+  border-radius: var(--r-md);
+}
+
+.ruta-siguiente-icono {
+  margin-top: 2px;
+  color: var(--c-red);
 }
 
 .ruta-siguiente > div {
   display: grid;
-  gap: 0.15rem;
+  gap: 2px;
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
+.ruta-siguiente > div > span:first-child {
+  color: var(--c-red-strong);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ruta-siguiente > div > span {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
 .ruta-siguiente strong {
-  font-size: 1.15rem;
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.ruta-siguiente .dm-button {
+  grid-column: 1 / -1;
+  width: 100%;
 }
 
 .ruta-nota {
   color: var(--muted);
+  font-size: var(--fs-sm);
 }
 
 .ruta-mapa-wrap {
@@ -176,38 +464,58 @@
 }
 
 .ruta-mapa {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
   width: 100%;
-  height: 22rem;
-  border-radius: 12px;
+  height: 17rem;
   overflow: hidden;
-  background: #eee9e2;
+  background: var(--c-cream-2);
+  border-radius: var(--r-md);
 }
 
+.ruta-mapa-error {
+  margin-top: var(--s-2);
+  color: var(--dm-danger);
+  font-size: var(--fs-sm);
+}
+
+/* Marcadores de Leaflet (clases puestas por RutaMap.jsx) */
 .ruta-marcador {
   display: grid;
   place-items: center;
-  border: 2px solid #fff;
+  color: var(--c-red-strong);
+  background: var(--c-white);
+  border: 2.5px solid var(--c-red);
   border-radius: 50%;
-  background: var(--muted);
-  color: #fff;
+  box-shadow: 0 2px 6px rgb(26 26 26 / 30%);
+  font-family: var(--font-text);
+  font-size: 0.8125rem;
   font-weight: 700;
-  font-size: 0.85rem;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
 }
 
 .ruta-marcador-siguiente {
-  background: var(--accent);
+  color: #fff;
+  background: linear-gradient(135deg, var(--c-red), var(--c-red-strong));
+  border-color: #fff;
+  box-shadow:
+    0 0 0 4px rgb(232 40 26 / 30%),
+    0 4px 12px rgb(232 40 26 / 45%);
   font-size: 1rem;
 }
 
 .ruta-marcador-visitado {
+  color: #fff;
   background: #9a948e;
+  border-color: #fff;
   opacity: 0.85;
 }
 
 .ruta-linea {
-  stroke: var(--accent);
-  stroke-dasharray: 8 6;
+  stroke: var(--c-red);
+  stroke-dasharray: 8 7;
+  stroke-linecap: round;
+  stroke-opacity: 0.85;
   fill: none;
 }
 
@@ -218,11 +526,69 @@
   fill-opacity: 1;
 }
 
-@media (max-width: 540px) {
-  .ruta-mapa {
-    height: 17rem;
+/* ---------- Pantallas más anchas ---------- */
+@media (min-width: 420px) {
+  .preventa-nav a {
+    font-size: var(--fs-xs);
+  }
+  .preventa-pedido {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+  .preventa-pedido > div {
+    grid-column: auto;
+  }
+}
+
+@container (min-width: 560px) {
+  .preventa-nav a {
+    flex-direction: row;
+    gap: 8px;
+    font-size: var(--fs-sm);
+  }
+  .preventa-nav-cuenta {
+    position: static;
+    border: 0;
+  }
+  .ruta-siguiente {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
   }
   .ruta-siguiente .dm-button {
+    grid-column: auto;
+    width: auto;
+  }
+  .ruta-mapa {
+    height: 20rem;
+  }
+  .preventa-altas > span {
+    flex-basis: auto;
+    margin-right: auto;
+  }
+}
+
+@container (min-width: 900px) {
+  .preventa-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .ruta-cuerpo {
+    grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+    align-items: start;
+  }
+  .ruta-siguiente {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+  .ruta-siguiente .dm-button {
+    grid-column: 1 / -1;
     width: 100%;
+  }
+  .ruta-mapa {
+    height: 22rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preventa-nav a {
+    transition: none;
   }
 }

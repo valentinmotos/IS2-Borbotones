@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import {
   Alert,
   DataTable,
@@ -7,6 +8,7 @@ import {
   StatusBadge,
 } from "../../../../../packages/design/components.jsx";
 import { api } from "../../../lib/api.js";
+import "../styles.css";
 
 // E2-02: stock actual por producto, alerta de stock cero, ingresos, ajustes e historial.
 
@@ -152,14 +154,21 @@ export default function StockPage() {
   }
 
   return (
-    <>
-      <header className="dm-page-header">
+    <div className="stock-page">
+      <header className="page-head">
         <div>
+          <span className="eyebrow">Catálogo</span>
           <h1>Stock y movimientos</h1>
-          <p>
+          <p className="lead">
             Controlá las existencias y registrá ingresos o correcciones de
             inventario.
           </p>
+        </div>
+        <div className="page-head-actions">
+          <a className="dm-button dm-button-primary" href="#stock-movimiento">
+            <Plus size={16} aria-hidden="true" />
+            Registrar movimiento
+          </a>
         </div>
       </header>
       {aviso && (
@@ -178,7 +187,7 @@ export default function StockPage() {
           catálogo hasta reponerlos.
         </Alert>
       )}
-      <dl className="stock-kpis">
+      <dl className="kpi-grid">
         <Kpi label="Productos controlados" value={productos.length} />
         <Kpi
           label="Sin stock"
@@ -190,8 +199,11 @@ export default function StockPage() {
           }
         />
       </dl>
-      <section className="design-register" aria-labelledby="stock-listado">
-        <h2 id="stock-listado">Existencias actuales</h2>
+      <section className="panel" aria-labelledby="stock-listado">
+        <div className="panel-head">
+          <h2 id="stock-listado">Existencias actuales</h2>
+          <p>Las cantidades se expresan en unidades.</p>
+        </div>
         <DataTable
           caption="Stock actual por producto"
           columns={columnasStock}
@@ -203,8 +215,11 @@ export default function StockPage() {
         />
       </section>
       <div className="stock-grid">
-        <section className="design-register" aria-labelledby="stock-movimiento">
-          <h2 id="stock-movimiento">Registrar movimiento</h2>
+        <section className="panel" aria-labelledby="stock-movimiento">
+          <div className="panel-head">
+            <h2 id="stock-movimiento">Registrar movimiento</h2>
+            <p>Sumá mercadería o corregí una diferencia de inventario.</p>
+          </div>
           <form className="stock-form" onSubmit={guardar}>
             <fieldset disabled={guardando || !productos.length}>
               <label className="dm-field">
@@ -223,41 +238,43 @@ export default function StockPage() {
                   ))}
                 </select>
               </label>
-              <label className="dm-field">
-                <span>Tipo</span>
-                <select
-                  className="dm-input"
-                  value={tipo}
-                  onChange={(e) => setTipo(e.target.value)}
-                >
-                  <option value="ingreso">Ingreso de mercadería</option>
-                  <option value="ajuste">Ajuste manual</option>
-                </select>
-              </label>
-              <FormField
-                name="cantidad"
-                label={
-                  tipo === "ingreso"
-                    ? "Unidades ingresadas"
-                    : "Diferencia de unidades"
-                }
-                type="number"
-                required
-                min={tipo === "ingreso" ? 1 : undefined}
-                step={1}
-                value={cantidad}
-                onChange={(e) => setCantidad(e.target.value)}
-                hint={
-                  tipo === "ajuste"
-                    ? "Usá un valor positivo para sumar o negativo para descontar."
-                    : undefined
-                }
-                error={
-                  ajusteNegativo
-                    ? "El ajuste no puede dejar el stock en negativo."
-                    : undefined
-                }
-              />
+              <div className="form-grid">
+                <label className="dm-field">
+                  <span>Tipo</span>
+                  <select
+                    className="dm-input"
+                    value={tipo}
+                    onChange={(e) => setTipo(e.target.value)}
+                  >
+                    <option value="ingreso">Ingreso de mercadería</option>
+                    <option value="ajuste">Ajuste manual</option>
+                  </select>
+                </label>
+                <FormField
+                  name="cantidad"
+                  label={
+                    tipo === "ingreso"
+                      ? "Unidades ingresadas"
+                      : "Diferencia de unidades"
+                  }
+                  type="number"
+                  required
+                  min={tipo === "ingreso" ? 1 : undefined}
+                  step={1}
+                  value={cantidad}
+                  onChange={(e) => setCantidad(e.target.value)}
+                  hint={
+                    tipo === "ajuste"
+                      ? "Usá un valor positivo para sumar o negativo para descontar."
+                      : undefined
+                  }
+                  error={
+                    ajusteNegativo
+                      ? "El ajuste no puede dejar el stock en negativo."
+                      : undefined
+                  }
+                />
+              </div>
               {saldoResultante !== null && cantidad !== "" && (
                 <p className="stock-preview">
                   Saldo resultante:{" "}
@@ -280,25 +297,30 @@ export default function StockPage() {
             </fieldset>
           </form>
         </section>
-        <section className="design-register" aria-labelledby="stock-historial">
-          <h2 id="stock-historial">Historial de movimientos</h2>
-          <label className="dm-field">
-            <span>Producto</span>
-            <select
-              className="dm-input"
-              value={historial?.productoId ?? ""}
-              onChange={(e) =>
-                e.target.value && cargarHistorial(e.target.value)
-              }
-            >
-              <option value="">Seleccioná un producto</option>
-              {productos.map((p) => (
-                <option key={p.productoId} value={p.productoId}>
-                  {p.codigo} · {p.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
+        <section className="panel" aria-labelledby="stock-historial">
+          <div className="panel-head">
+            <h2 id="stock-historial">Historial de movimientos</h2>
+            <p>Ingresos, ajustes y ventas de un producto.</p>
+          </div>
+          <div className="toolbar">
+            <label className="dm-field">
+              <span>Producto</span>
+              <select
+                className="dm-input"
+                value={historial?.productoId ?? ""}
+                onChange={(e) =>
+                  e.target.value && cargarHistorial(e.target.value)
+                }
+              >
+                <option value="">Seleccioná un producto</option>
+                {productos.map((p) => (
+                  <option key={p.productoId} value={p.productoId}>
+                    {p.codigo} · {p.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <DataTable
             caption="Movimientos de stock"
             columns={columnasMovimientos}
@@ -314,6 +336,6 @@ export default function StockPage() {
           />
         </section>
       </div>
-    </>
+    </div>
   );
 }

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { KeyRound, LoaderCircle } from "lucide-react";
 import { useSession } from "../../../../packages/auth/session.js";
 import { Alert } from "../../../../packages/design/components.jsx";
 import RegistroMinoristaPage from "../registro/pages/RegistroMinoristaPage.jsx";
 import GooglePasswordForm from "./GooglePasswordForm.jsx";
 import { googlePost, googleStart, googleStatus } from "./google.js";
+import "./styles.css";
 
 export default function GoogleAccessPage() {
   const { status, user, acceptLogin } = useSession();
@@ -57,8 +59,14 @@ export default function GoogleAccessPage() {
   }
 
   return (
-    <section className="auth-panel">
-      <h1>Acceso con Google</h1>
+    <section className="auth-panel google-access">
+      <header className="auth-head">
+        <span className="auth-icon" aria-hidden="true">
+          <KeyRound size={22} />
+        </span>
+        <h1>Acceso con Google</h1>
+        <p>Ingresá o vinculá tu cuenta de comercio con tu cuenta de Google.</p>
+      </header>
       {callbackError && (
         <Alert tone="warning">
           {callbackError === "correo"
@@ -68,7 +76,10 @@ export default function GoogleAccessPage() {
       )}
       {error && <Alert tone="danger">{error}</Alert>}
       {!callbackError && !error && (!result || status === "loading") && (
-        <p>Verificando el acceso…</p>
+        <p className="google-status" role="status">
+          <LoaderCircle className="auth-spin" size={18} aria-hidden="true" />
+          Verificando el acceso…
+        </p>
       )}
       {!callbackError && result && status !== "loading" && (
         <>
@@ -104,7 +115,7 @@ export default function GoogleAccessPage() {
           )}
           {status === "guest" && result.estado === "VINCULADA" && (
             <button
-              className="dm-button dm-button-primary"
+              className="dm-button dm-button-primary dm-button-lg dm-button-block"
               onClick={login}
               disabled={pending}
             >
@@ -113,12 +124,14 @@ export default function GoogleAccessPage() {
           )}
         </>
       )}
-      <Link to={canLink ? "/cuenta/datos" : "/login"}>
-        Volver {canLink ? "a Mis datos" : "al inicio de sesión"}
-      </Link>
-      {(callbackError || error || result?.estado === "SIN_FLUJO") && (
-        <a href={googleStart}>Volver a intentar con Google</a>
-      )}
+      <div className="auth-foot">
+        <Link to={canLink ? "/cuenta/datos" : "/login"}>
+          Volver {canLink ? "a Mis datos" : "al inicio de sesión"}
+        </Link>
+        {(callbackError || error || result?.estado === "SIN_FLUJO") && (
+          <a href={googleStart}>Volver a intentar con Google</a>
+        )}
+      </div>
     </section>
   );
 }

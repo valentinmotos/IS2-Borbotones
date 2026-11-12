@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Download, RefreshCw, Store } from "lucide-react";
 import {
   Alert,
   DataTable,
@@ -71,6 +72,9 @@ function VerificacionStock({ faltantes }) {
   return (
     <div className="almacen-bloque">
       <h3>Verificación de stock</h3>
+      <p className="muted small">
+        Antes de facturar, confirmá que el almacén tenga todo lo pedido.
+      </p>
       {faltantes.length ? (
         <DataTable
           caption="Productos con stock insuficiente"
@@ -100,16 +104,17 @@ function Factura({ factura, pagos, ocupado, descargar, registrar }) {
         <h3>Factura N° {factura.numeroVisible}</h3>
         <StatusBadge tone={tono}>{etiqueta}</StatusBadge>
         <button
-          className="dm-button"
+          className="dm-button dm-button-sm"
           type="button"
           onClick={descargar}
           disabled={ocupado}
         >
+          <Download size={14} aria-hidden="true" />
           Descargar PDF
         </button>
       </div>
       {factura.estado === "PENDIENTE_PAGO" && (
-        <p>
+        <p className="almacen-saldo">
           Saldo pendiente <strong>{moneda(saldo)}</strong>
         </p>
       )}
@@ -186,23 +191,27 @@ export default function DetallePedido({ pedidoId, version, refrescar }) {
     detalle && ["CARGADO", "SIN_STOCK"].includes(detalle.pedido.estado);
   return (
     <section
-      className="design-register almacen-panel"
+      className="panel almacen-detalle"
       aria-labelledby="almacen-detalle"
       tabIndex={-1}
       ref={panel}
     >
-      <div className="almacen-encabezado">
-        <h2 id="almacen-detalle">
-          {detalle
-            ? `Pedido #${detalle.pedido.numeroPedido}`
-            : "Detalle del pedido"}
-        </h2>
+      <div className="panel-head">
+        <div className="almacen-titulo">
+          <p className="eyebrow">Detalle del pedido</p>
+          <h2 id="almacen-detalle">
+            {detalle
+              ? `Pedido #${detalle.pedido.numeroPedido}`
+              : "Detalle del pedido"}
+          </h2>
+        </div>
         <button
           type="button"
-          className="dm-button"
+          className="dm-button dm-button-sm"
           onClick={refrescar}
           disabled={ocupado || recurso.cargando}
         >
+          <RefreshCw size={14} aria-hidden="true" />
           Actualizar detalle
         </button>
       </div>
@@ -211,12 +220,17 @@ export default function DetallePedido({ pedidoId, version, refrescar }) {
           {aviso.mensaje}
         </Alert>
       )}
-      {recurso.cargando && <p role="status">Cargando detalle…</p>}
+      {recurso.cargando && (
+        <p className="muted" role="status">
+          Cargando detalle…
+        </p>
+      )}
       {recurso.error && <Alert tone="danger">{recurso.error.message}</Alert>}
       {detalle && (
         <>
-          <p>
-            {detalle.pedido.comercio}{" "}
+          <p className="almacen-comercio">
+            <Store size={18} aria-hidden="true" />
+            <span>{detalle.pedido.comercio}</span>{" "}
             <StatusBadge tone={estadosPedido[detalle.pedido.estado][1]}>
               {estadosPedido[detalle.pedido.estado][0]}
             </StatusBadge>
@@ -236,13 +250,13 @@ export default function DetallePedido({ pedidoId, version, refrescar }) {
               <dt>Descuento</dt>
               <dd>{moneda(detalle.descuento)}</dd>
             </div>
-            <div>
+            <div className="almacen-total">
               <dt>Total</dt>
               <dd>{moneda(detalle.pedido.total)}</dd>
             </div>
           </dl>
           {procesable && (
-            <>
+            <div className="almacen-procesar">
               <VerificacionStock faltantes={detalle.faltantes} />
               <button
                 className="dm-button dm-button-primary"
@@ -252,7 +266,7 @@ export default function DetallePedido({ pedidoId, version, refrescar }) {
               >
                 {ocupado ? "Procesando…" : "Procesar y facturar"}
               </button>
-            </>
+            </div>
           )}
           {detalle.factura && (
             <Factura
