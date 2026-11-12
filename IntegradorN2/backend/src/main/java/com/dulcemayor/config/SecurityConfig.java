@@ -113,7 +113,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/puntos-de-venta/**").denyAll()
                         .requestMatchers("/api/empresas/**", "/api/sucursales/**", "/api/formas-de-pago/**")
                         .hasAnyRole("JEFE", "ADMINISTRATIVO")
-                        .requestMatchers("/api/usuarios/internos/**", "/api/estadisticas/**").hasRole("JEFE")
+                        .requestMatchers("/api/usuarios/internos/**", "/api/estadisticas/**", "/api/newsletter/**")
+                        .hasRole("JEFE")
                         // E1-05: suben imágenes quienes cargan productos, sucursales y la empresa
                         .requestMatchers(HttpMethod.POST, "/api/imagenes").hasAnyRole("JEFE", "ADMINISTRATIVO")
                         .requestMatchers("/api/minorista/**").hasRole("MINORISTA")

@@ -891,3 +891,9 @@ Pruebas: `RutaServiceTest` (Mockito: armado de la ruta, punto más cercano, reco
 - E5-02 arma la ruta del distribuidor con `crearRuta(fecha, null, idDistribuidor)` + `agregarParada(idRuta, idPuntoDeVenta, idPedido, orden)` y la lista con `listarRutaPorDistribuidor`. El endpoint del distribuidor lo expone E5-02, no `/api/preventa`.
 - `client-admin/src/modules/preventa/components/RutaMap.jsx` recibe `{ruta, posicion, origen}` con la forma de `RutaResponse` y se puede reutilizar en el portal del distribuidor.
 - `DistanciaGeografica.kilometros(...)` y `coordenadasValidas(...)` sirven para cualquier cálculo de distancia.
+
+## Newsletter mensual de ofertas · E5-05
+
+El día 5 de cada mes a las 09:00 de Mendoza se envía un correo HTML individual a cada minorista activo. El correo incluye productos marcados en oferta que tengan stock y precio mayorista vigente. Marcá **En oferta para el newsletter** al editar un producto. El precio se administra desde **Precios** del mismo producto.
+
+Para verificar el envío manual, configurá el [SMTP de desarrollo](#servicio-de-correo-asíncrono) y ejecutá `POST /api/newsletter/enviar` con un token del Jefe. Devuelve `202` con `{ofertas, destinatariosProgramados}`. El envío se ejecuta en segundo plano y el correo «Ofertas del mes · Dulce Mayor» aparece en la bandeja SMTP. Si no hay ofertas elegibles, no se encola ningún correo. `APP_URL_PUBLIC` configura el dominio del enlace al catálogo.

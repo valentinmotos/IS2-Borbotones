@@ -48,6 +48,7 @@ class ProductoIntegrationTest {
         var respuesta = mvc.perform(alta)
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.codigo").value(codigo.toUpperCase(java.util.Locale.ROOT)))
+                .andExpect(jsonPath("$.enOferta").value(false))
                 .andExpect(jsonPath("$.imagenId").isString())
                 .andReturn().getResponse().getContentAsString();
         var creado = json.readTree(respuesta);
@@ -69,13 +70,18 @@ class ProductoIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isEmpty());
 
-        mvc.perform(solicitud(HttpMethod.PUT, recurso, codigo, otraCategoria))
+        mvc.perform(solicitud(HttpMethod.PUT, recurso, codigo, otraCategoria).param("enOferta", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.imagenId").value(imagen))
+                .andExpect(jsonPath("$.enOferta").value(true))
                 .andExpect(jsonPath("$.categoriaId").value(otraCategoria));
         mvc.perform(solicitud(HttpMethod.PUT, recurso, codigo, otraCategoria).file(foto()))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.enOferta").value(true))
                 .andExpect(jsonPath("$.imagenId").value(org.hamcrest.Matchers.not(imagen)));
+        mvc.perform(solicitud(HttpMethod.PUT, recurso, codigo, otraCategoria).param("enOferta", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.enOferta").value(false));
 
         mvc.perform(delete(recurso)).andExpect(status().isNoContent());
         mvc.perform(get(recurso)).andExpect(status().isNotFound());
