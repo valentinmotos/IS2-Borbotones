@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.dulcemayor.entity.*;
 import com.dulcemayor.entity.enums.EstadoFactura;
 import com.dulcemayor.entity.enums.EstadoPedido;
+import com.dulcemayor.entity.enums.EventoPedido;
 import com.dulcemayor.entity.enums.MonedaPago;
 import com.dulcemayor.entity.enums.RolUsuario;
 import com.dulcemayor.entity.enums.RutaEstado;
@@ -39,10 +40,12 @@ class VentasRepositoryTest {
     @Autowired private CotizacionDolarRepository cotizaciones;
     @Autowired private RutaRepository rutas;
     @Autowired private ParadaRutaRepository paradas;
+    @Autowired private HistorialEstadoPedidoRepository historialPedidos;
 
     private PuntoDeVenta puntoDeVenta;
     private Preventor preventor;
     private Producto producto;
+    private Usuario usuario;
     private int documentos;
 
     @BeforeEach
@@ -68,6 +71,11 @@ class VentasRepositoryTest {
         Minorista minorista = persona(new Minorista());
         em.persist(preventor);
         em.persist(minorista);
+        usuario = new Usuario();
+        usuario.setNombreUsuario("preventor@dulcemayor.com");
+        usuario.setClave("hash");
+        usuario.setRol(RolUsuario.PREVENTOR);
+        em.persist(usuario);
 
         puntoDeVenta = new PuntoDeVenta();
         puntoDeVenta.setNombreComercio("Kiosco Centro");
@@ -201,20 +209,14 @@ class VentasRepositoryTest {
     @Test
     void historialRegistraEstadoYUsuario() {
         Pedido pedido = pedidos.save(pedido(30));
-        Usuario usuario = new Usuario();
-        usuario.setNombreUsuario("preventor@dulcemayor.com");
-        usuario.setClave("hash");
-        usuario.setRol(RolUsuario.PREVENTOR);
-        em.persist(usuario);
-        HistorialEstadoPedido historial = new HistorialEstadoPedido();
-        historial.setPedido(pedido);
-        historial.setEstado(EstadoPedido.CARGADO);
-        historial.setFechaHora(LocalDateTime.of(2026, 7, 1, 10, 0));
-        historial.setUsuario(usuario);
-        em.persist(historial);
+        HistorialEstadoPedido historial = pedido.avanzar(EventoPedido.MARCAR_SIN_STOCK,
+                usuario, LocalDateTime.of(2026, 7, 1, 10, 0), null, null);
+        historialPedidos.save(historial);
         em.flush();
 
-        assertThat(pedidos.findByEstadoAndEliminadoFalse(EstadoPedido.CARGADO)).contains(pedido);
+        assertThat(historialPedidos.findByPedido_IdOrderByFechaHoraAsc(pedido.getId()))
+                .singleElement().extracting(HistorialEstadoPedido::getUsuario).isEqualTo(usuario);
+        assertThat(pedidos.findByEstadoAndEliminadoFalse(EstadoPedido.SIN_STOCK)).contains(pedido);
         assertThat(pedidos.findByPuntoDeVenta_IdAndEliminadoFalse(puntoDeVenta.getId())).contains(pedido);
     }
 
@@ -232,10 +234,9 @@ class VentasRepositoryTest {
     private Pedido pedido(long numero) {
         Pedido pedido = new Pedido();
         pedido.setNumeroPedido(numero);
-        pedido.setFechaHoraCarga(LocalDateTime.of(2026, 7, 1, 9, 0));
+        pedido.registrarCarga(usuario, LocalDateTime.of(2026, 7, 1, 9, 0), null);
         pedido.setSubtotal(30000);
         pedido.setTotal(30000);
-        pedido.setEstado(EstadoPedido.CARGADO);
         pedido.setPuntoDeVenta(puntoDeVenta);
         pedido.setPreventor(preventor);
         return pedido;
