@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../../../lib/api.js";
-
-const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
+import { pesos } from "../precios.js";
 const apiUrl = import.meta.env.VITE_API_URL || "/api";
 
 /** E3-01: catálogo público. Solo llegan productos con stock y precio vigente. */
@@ -77,10 +77,10 @@ export default function CatalogoPage() {
             {producto.imagenId ? <img src={`${apiUrl}/imagenes/${producto.imagenId}`} alt={producto.nombre} loading="lazy" /> : <div className="catalog-card-placeholder" aria-hidden="true">Dulce Mayor</div>}
             <div className="catalog-card-body">
               <span className="catalog-category">{producto.categoriaNombre}</span>
-              <h3>{producto.nombre}</h3>
+              <h3><Link to={`/catalogo/${encodeURIComponent(producto.id)}`}>{producto.nombre}</Link></h3>
               {producto.descripcion && <p>{producto.descripcion}</p>}
               <p className="catalog-presentation">{producto.presentacion} · {producto.unidadesPorBulto} unidades por bulto</p>
-              <strong className="catalog-price">{money.format(producto.precio)} <small>por bulto</small></strong>
+              <strong className="catalog-price">{pesos.format(producto.precio)} <small>por bulto</small></strong>
             </div>
           </li>)}
         </ul>}
