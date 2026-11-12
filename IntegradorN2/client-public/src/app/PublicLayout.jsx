@@ -12,6 +12,13 @@ const sections = [
   { to: "/como-comprar", label: "Ver cómo comprar", title: "Cómo comprar" },
   { to: "/contacto", label: "Contacto", title: "Contacto" },
 ];
+const otrosTitulos = {
+  "/creditos": "Créditos de fotografía",
+  "/login": "Iniciar sesión",
+  "/registro": "Crear cuenta",
+  "/cambiar-clave": "Cambiar clave",
+  "/cuenta": "Mi cuenta",
+};
 
 export default function PublicLayout() {
   const { pathname, hash } = useLocation();
@@ -20,8 +27,13 @@ export default function PublicLayout() {
   useEffect(() => {
     const section = sections.find(({ to }) => to === pathname);
     const isProduct = matchPath("/catalogo/:productoId", pathname);
-    const title = section?.title ?? (isProduct ? "Detalle de producto" : null);
-    document.title = `${title ?? (pathname === "/creditos" ? "Créditos de fotografía" : "Página no encontrada")} · Dulce Mayor`;
+    // E6-01: rutas que no están en el menú (antes /cuenta quedaba como «Página no encontrada»).
+    // Las páginas que definen su propio título (compras, perfil, registro…) lo pisan después.
+    const title =
+      section?.title ??
+      (isProduct ? "Detalle de producto" : null) ??
+      otrosTitulos[pathname];
+    document.title = `${title ?? "Página no encontrada"} · Dulce Mayor`;
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
     else window.scrollTo(0, 0);
   }, [pathname, hash]);

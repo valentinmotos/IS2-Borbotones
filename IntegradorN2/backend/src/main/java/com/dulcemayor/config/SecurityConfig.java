@@ -47,6 +47,7 @@ import jakarta.servlet.DispatcherType;
  * /api/distribucion/**                    DISTRIBUIDOR (E5-02)
  * /api/minorista/**                       MINORISTA
  * GET departamentos, localidades, geocod.  personal interno y MINORISTA (E2-07)
+ * resto de departamentos y localidades     JEFE, ADMINISTRATIVO (E6-02)
  * /api/**                                 personal interno: JEFE, ADMINISTRATIVO, PREVENTOR, DISTRIBUIDOR
  * cualquier otra ruta                     denegada
  * </pre>
@@ -128,6 +129,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/departamentos", "/api/departamentos/**",
                                 "/api/localidades/**", "/api/geocodificacion")
                         .hasAnyRole("JEFE", "ADMINISTRATIVO", "PREVENTOR", "DISTRIBUIDOR", "MINORISTA")
+                        // NOTA (E6-02): el alta, la modificación y la baja de departamentos y localidades caían en
+                        // la regla general y las podían usar el preventor y el distribuidor. Son ABM de gestión.
+                        .requestMatchers("/api/departamentos", "/api/departamentos/**", "/api/localidades",
+                                "/api/localidades/**")
+                        .hasAnyRole("JEFE", "ADMINISTRATIVO")
                         // Por defecto, todo /api es interno
                         .requestMatchers("/api/**").hasAnyRole(PERSONAL_INTERNO)
                         .anyRequest().denyAll())

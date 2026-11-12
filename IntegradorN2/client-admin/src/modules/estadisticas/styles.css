@@ -85,3 +85,44 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* HU-01: leyenda de la torta con la proporción de cada producto */
+.estadisticas-torta {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .estadisticas-torta {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+  }
+}
+
+.estadisticas-leyenda {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.estadisticas-leyenda li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.estadisticas-color {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+}
+
+.estadisticas-actualizado {
+  margin: 0;
+  color: var(--dm-muted, inherit);
+  font-size: 0.85rem;
+}
