@@ -26,6 +26,16 @@ public interface PedidoRepository extends JpaRepository<Pedido, String> {
     @EntityGraph(attributePaths = "puntoDeVenta")
     List<Pedido> findByPreventor_IdAndEliminadoFalseOrderByFechaHoraCargaDescIdDesc(String preventorId);
 
+    @Query("""
+            select p from Pedido p join fetch p.puntoDeVenta
+            where p.eliminado = false and (:estado is null or p.estado = :estado)
+            order by p.fechaHoraCarga desc, p.id desc
+            """)
+    List<Pedido> listarParaAlmacen(EstadoPedido estado);
+
+    @EntityGraph(attributePaths = {"puntoDeVenta", "detalles.producto"})
+    Optional<Pedido> findDetalleByIdAndEliminadoFalse(String id);
+
     boolean existsByNumeroPedido(long numeroPedido);
 
     /** E4-04: pedidos a procesar, en el orden en que se cargaron. */

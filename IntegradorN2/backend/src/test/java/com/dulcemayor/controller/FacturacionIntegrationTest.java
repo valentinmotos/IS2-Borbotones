@@ -16,6 +16,7 @@ import com.dulcemayor.entity.Pedido;
 import com.dulcemayor.entity.Producto;
 import com.dulcemayor.entity.Usuario;
 import com.dulcemayor.entity.enums.EstadoPedido;
+import com.dulcemayor.repository.FormaDePagoRepository;
 import com.dulcemayor.repository.PedidoRepository;
 import com.dulcemayor.repository.PreventorRepository;
 import com.dulcemayor.repository.ProductoRepository;
@@ -63,6 +64,7 @@ class FacturacionIntegrationTest {
     @Autowired private PedidoRepository pedidoRepository;
     @Autowired private PedidoService pedidos;
     @Autowired private StockService stock;
+    @Autowired private FormaDePagoRepository formasDePago;
     @MockitoBean private JavaMailSender mailSender;
 
     private final ConcurrentMap<String, CompletableFuture<MimeMessage>> correos = new ConcurrentHashMap<>();
@@ -85,6 +87,17 @@ class FacturacionIntegrationTest {
         int saldoInicial = saldo(producto);
         String primero = cargar(4401, producto, 3).getId();
         String segundo = cargar(4402, producto, 2).getId();
+
+        mvc.perform(get("/api/pedidos").param("estado", "CARGADO")
+                        .header(HttpHeaders.AUTHORIZATION, administrativo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == '%s')].numeroPedido".formatted(primero)).value(4401));
+        mvc.perform(get("/api/pedidos/" + primero).header(HttpHeaders.AUTHORIZATION, administrativo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pedido.estado").value("CARGADO"))
+                .andExpect(jsonPath("$.detalles[0].cantidad").value(3))
+                .andExpect(jsonPath("$.faltantes").isEmpty())
+                .andExpect(jsonPath("$.factura").doesNotExist());
 
         JsonNode resultado = leer(mvc.perform(post("/api/pedidos/" + primero + "/facturar")
                         .header(HttpHeaders.AUTHORIZATION, administrativo))
@@ -123,6 +136,29 @@ class FacturacionIntegrationTest {
                         .header(HttpHeaders.AUTHORIZATION, administrativo))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.id == '%s')].numeroPedido".formatted(facturaId)).value(4401));
+
+        registrarPago(facturaId, "EFECTIVO", 1000, administrativo);
+        mvc.perform(get("/api/pedidos/" + primero).header(HttpHeaders.AUTHORIZATION, administrativo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.factura.estado").value("PENDIENTE_PAGO"))
+                .andExpect(jsonPath("$.pagos[0].formaDePago").value("EFECTIVO"));
+        registrarPago(facturaId, "TRANSFERENCIA", 2000, administrativo);
+        mvc.perform(get("/api/pedidos/" + primero).header(HttpHeaders.AUTHORIZATION, administrativo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.factura.estado").value("PAGADA"))
+                .andExpect(jsonPath("$.pagos.length()").value(2))
+                .andExpect(jsonPath("$.pagos[?(@.formaDePago == 'TRANSFERENCIA')].monto").value(2000.0));
+    }
+
+    private void registrarPago(String facturaId, String tipo, int monto, String autorizacion) throws Exception {
+        String forma = formasDePago.findByEliminadoFalse().stream()
+                .filter(pago -> pago.getTipoPago().name().equals(tipo)).findFirst().orElseThrow().getId();
+        mvc.perform(post("/api/pagos").header(HttpHeaders.AUTHORIZATION, autorizacion)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"facturaId":"%s","formaDePagoId":"%s","monto":%d,"moneda":"ARS"}
+                                """.formatted(facturaId, forma, monto)))
+                .andExpect(status().isOk());
     }
 
     private void verificarCorreo(long numero, String producto) throws Exception {
@@ -158,6 +194,10 @@ class FacturacionIntegrationTest {
         int pedida = saldoInicial + 7;
         String id = cargar(4403, producto, pedida).getId();
 
+        mvc.perform(get("/api/pedidos/" + id).header(HttpHeaders.AUTHORIZATION, jefe))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.faltantes[0].cantidadPedida").value(pedida))
+                .andExpect(jsonPath("$.faltantes[0].stockDisponible").value(saldoInicial));
         mvc.perform(post("/api/pedidos/" + id + "/facturar").header(HttpHeaders.AUTHORIZATION, jefe))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estadoPedido").value("SIN_STOCK"))
@@ -166,6 +206,9 @@ class FacturacionIntegrationTest {
                 .andExpect(jsonPath("$.faltantes[0].cantidadPedida").value(pedida))
                 .andExpect(jsonPath("$.faltantes[0].stockDisponible").value(saldoInicial));
         assertThat(saldo(producto)).isEqualTo(saldoInicial);
+        mvc.perform(get("/api/pedidos").param("estado", "SIN_STOCK").header(HttpHeaders.AUTHORIZATION, jefe))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == '%s')].estado".formatted(id)).value("SIN_STOCK"));
         mvc.perform(get("/api/pedidos/" + id + "/factura").header(HttpHeaders.AUTHORIZATION, jefe))
                 .andExpect(status().isNotFound());
 
@@ -180,6 +223,10 @@ class FacturacionIntegrationTest {
     @Test
     void soloGestionPuedeFacturarYDescargarFacturas() throws Exception {
         String preventor = bearer("preventor");
+        mvc.perform(get("/api/pedidos").header(HttpHeaders.AUTHORIZATION, preventor))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/pedidos/cualquiera").header(HttpHeaders.AUTHORIZATION, preventor))
+                .andExpect(status().isForbidden());
         mvc.perform(post("/api/pedidos/cualquiera/facturar").header(HttpHeaders.AUTHORIZATION, preventor))
                 .andExpect(status().isForbidden());
         mvc.perform(post("/api/pedidos/procesar").header(HttpHeaders.AUTHORIZATION, preventor))

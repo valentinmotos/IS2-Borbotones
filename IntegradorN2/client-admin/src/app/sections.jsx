@@ -1,4 +1,5 @@
 import HomePage from "../modules/home/pages/HomePage.jsx";
+import AlmacenPage from "../modules/almacen/pages/AlmacenPage.jsx";
 import GuidePage from "../modules/help/pages/GuidePage.jsx";
 import DesignPage from "../modules/design/DesignPage.jsx";
 import CategoriasPage from "../modules/categorias/pages/CategoriasPage.jsx";
@@ -49,6 +50,12 @@ export const sections = [
     label: "Stock y almacén",
     roles: gestion,
     element: <StockPage />,
+  },
+  {
+    to: "/almacen",
+    label: "Almacén y facturación",
+    roles: gestion,
+    element: <AlmacenPage />,
   },
   {
     to: "/categorias",
