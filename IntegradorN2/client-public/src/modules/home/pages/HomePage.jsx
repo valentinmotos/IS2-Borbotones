@@ -64,6 +64,9 @@ export default function HomePage() {
             >
               Ver cómo comprar <ArrowUpRight size={17} aria-hidden="true" />
             </Link>
+            <Link className="home-quote-link" to="/presupuesto">
+              Armá tu presupuesto en el chat
+            </Link>
             <Link className="shop-hero-company" to="/empresa">
               Conocé Dulce Mayor y sus sucursales
             </Link>

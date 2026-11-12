@@ -7,6 +7,7 @@ const adminUrl = import.meta.env.VITE_ADMIN_URL || "http://localhost:5173";
 const sections = [
   { to: "/", label: "Surtido", title: "Golosinas por mayor" },
   { to: "/catalogo", label: "Catálogo", title: "Catálogo" },
+  { to: "/presupuesto", label: "Armar presupuesto", title: "Presupuesto" },
   { to: "/empresa", label: "La empresa", title: "Nuestra empresa" },
   { to: "/como-comprar", label: "Ver cómo comprar", title: "Cómo comprar" },
   { to: "/contacto", label: "Contacto", title: "Contacto" },
