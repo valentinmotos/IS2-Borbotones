@@ -15,5 +15,6 @@ public record ProductoRequest(
         @NotNull(message = "Ingresá la cantidad de unidades.") @Positive(message = "La cantidad debe ser mayor que cero.")
         Integer unidadesPorBulto,
         @NotBlank(message = "Seleccioná una categoría.") String categoriaId,
-        MultipartFile imagen) {
+        MultipartFile imagen,
+        Boolean enOferta) {
 }

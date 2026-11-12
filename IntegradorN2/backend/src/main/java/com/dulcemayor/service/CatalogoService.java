@@ -46,6 +46,10 @@ public class CatalogoService {
         return categorias.listarCategoriaActivo();
     }
 
+    public List<ProductoCatalogoDTO> listarOfertasDisponibles() {
+        return productos.buscarCatalogo("", "", "", LocalDate.now(), true);
+    }
+
     private static String limpiar(String texto) {
         return texto == null ? "" : texto.strip();
     }

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ofertas del mes · Dulce Mayor</title>
+</head>
+<body style="margin:0;padding:20px;background:#f8f5ef;color:#1f1b18;font-family:Arial,Helvetica,sans-serif;">
+  <main style="max-width:640px;margin:auto;padding:24px;background:#fffdfa;border:1px solid #d9cec0;">
+    <p style="margin:0;color:#a9321c;font-weight:bold;">Dulce Mayor</p>
+    <h1 style="font-family:Georgia,serif;font-size:28px;">Ofertas del mes</h1>
+    <p>Estas ofertas mayoristas tienen stock disponible al momento del envío.</p>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;">
+      <thead style="background:#f5dfd4;">
+        <tr>
+          <th scope="col" style="padding:8px;text-align:left;">Producto</th>
+          <th scope="col" style="padding:8px;text-align:right;">Precio por bulto (ARS)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="oferta : ${ofertas}">
+          <td style="padding:8px;border-bottom:1px solid #d9cec0;">
+            <strong th:text="${oferta.nombre()}"></strong><br>
+            <span th:text="|${oferta.presentacion()} · ${oferta.unidadesPorBulto()} u.|"></span>
+          </td>
+          <td style="padding:8px;border-bottom:1px solid #d9cec0;text-align:right;">
+            $ <span th:text="${#numbers.formatDecimal(oferta.precio(), 1, 'POINT', 2, 'COMMA')}"></span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p><a th:href="${urlCatalogo}" style="color:#a9321c;font-weight:bold;">Ver catálogo mayorista</a></p>
+  </main>
+</body>
+</html>
