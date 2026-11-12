@@ -6,6 +6,7 @@ import EmpresaPage from "../modules/empresa/pages/EmpresaPage.jsx";
 import ProductosPage from "../modules/productos/pages/ProductosPage.jsx";
 import UbicacionPage from "../modules/ubicacion/pages/UbicacionPage.jsx";
 import PuntosVentaPage from "../modules/puntos-venta/pages/PuntosVentaPage.jsx";
+import PreventaPage from "../modules/preventa/pages/PreventaPage.jsx";
 import StockPage from "../modules/stock/pages/StockPage.jsx";
 import UsuariosPage from "../modules/usuarios/pages/UsuariosPage.jsx";
 import { homes } from "./access.js";
@@ -29,7 +30,7 @@ export const sections = [
     to: homes.PREVENTOR,
     label: "Preventa",
     roles: ["PREVENTOR"],
-    element: <HomePage title="Preventa" />,
+    element: <PreventaPage />,
   },
   {
     to: homes.DISTRIBUIDOR,

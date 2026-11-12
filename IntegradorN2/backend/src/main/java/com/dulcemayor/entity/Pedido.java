@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pedidos")
+@Table(name = "pedidos", uniqueConstraints = @UniqueConstraint(
+        name = "uk_pedidos_preventor_clave_carga", columnNames = {"preventor_id", "clave_carga"}))
 @Getter
 @Setter
 public class Pedido extends BaseEntity {
@@ -48,6 +50,9 @@ public class Pedido extends BaseEntity {
 
     @Column(name = "codigo_promocion", length = 50)
     private String codigoPromocion;
+
+    @Column(name = "clave_carga", length = 36, updatable = false)
+    private String claveCarga;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "punto_de_venta_id", nullable = false)

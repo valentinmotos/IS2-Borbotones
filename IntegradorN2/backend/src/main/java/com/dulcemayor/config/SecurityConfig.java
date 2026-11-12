@@ -101,6 +101,7 @@ public class SecurityConfig {
                         .hasAnyRole("JEFE", "ADMINISTRATIVO")
                         // E2-02: stock y movimientos de almacén
                         .requestMatchers("/api/stock/**").hasAnyRole("JEFE", "ADMINISTRATIVO")
+                        .requestMatchers("/api/preventa/**").hasRole("PREVENTOR")
                         // E2-06: el preventor da de alta comercios; gestión y preventa los consultan
                         .requestMatchers(HttpMethod.POST, "/api/puntos-de-venta").hasRole("PREVENTOR")
                         .requestMatchers(HttpMethod.GET, "/api/puntos-de-venta", "/api/puntos-de-venta/**")

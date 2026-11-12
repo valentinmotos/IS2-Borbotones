@@ -1,0 +1,145 @@
+.preventa,
+.preventa-grid,
+.preventa-panel,
+.preventa-form,
+.preventa-campos {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.preventa-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.preventa-panel {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  scroll-margin-top: 1rem;
+}
+
+.preventa-panel h2,
+.preventa-panel p {
+  margin: 0;
+}
+
+.preventa-encabezado,
+.preventa-nav,
+.preventa-altas,
+.preventa-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.preventa-encabezado,
+.preventa-total {
+  justify-content: space-between;
+}
+
+.preventa-nav a {
+  color: inherit;
+  padding: 0.6rem 0.85rem;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  font-weight: 650;
+}
+
+.preventa-lista {
+  display: grid;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.preventa-producto,
+.preventa-linea,
+.preventa-pedido {
+  display: grid;
+  gap: 0.35rem 0.75rem;
+  padding-block: 0.8rem;
+  border-block-end: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+
+.preventa-producto,
+.preventa-pedido {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.preventa-pedido {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.preventa-pedido .dm-badge {
+  justify-self: start;
+}
+
+.preventa-producto span,
+.preventa-pedido span:not(.dm-badge) {
+  display: block;
+}
+
+.preventa-producto-accion {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: end;
+}
+
+.preventa-linea > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.65rem;
+}
+
+.preventa-linea button {
+  margin-top: 1.5rem;
+}
+
+.preventa-campos {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.preventa-panel .design-form {
+  max-width: none;
+  border: 1px solid var(--line);
+}
+
+.preventa .dm-button,
+.preventa .dm-field :is(input, select) {
+  min-height: 44px;
+}
+
+.preventa .dm-field select {
+  width: 100%;
+  min-width: 0;
+  padding: 6px var(--dm-2);
+  border: 1px solid var(--dm-control-line);
+  border-radius: var(--dm-radius);
+  background: var(--dm-surface);
+  color: var(--dm-ink);
+  font: inherit;
+}
+
+@media (max-width: 980px) {
+  .preventa-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .preventa-campos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .preventa-pedido {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .preventa-pedido > div {
+    grid-column: 1 / -1;
+  }
+}
