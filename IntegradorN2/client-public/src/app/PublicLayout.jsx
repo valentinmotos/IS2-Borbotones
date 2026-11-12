@@ -10,6 +10,7 @@ const sections = [
   { to: "/presupuesto", label: "Armar presupuesto", title: "Presupuesto" },
   { to: "/empresa", label: "La empresa", title: "Nuestra empresa" },
   { to: "/como-comprar", label: "Ver cómo comprar", title: "Cómo comprar" },
+  { to: "/contacto", label: "Contacto", title: "Contacto" },
 ];
 
 export default function PublicLayout() {
@@ -62,6 +63,7 @@ export default function PublicLayout() {
           </div>
           <nav aria-label="Enlaces del pie">
             <Link to="/empresa">La empresa</Link>
+            <Link to="/contacto">Contacto</Link>
             <Link to="/como-comprar">Ver cómo comprar</Link>
             <a href={adminUrl} target="_blank" rel="noreferrer">
               Administración <ArrowUpRight size={16} aria-hidden="true" />

@@ -4,6 +4,7 @@ import { useTasteMoment } from "../../../../../packages/design/useTasteMoment.js
 import photoChapters, {
   phone,
 } from "../../../../../packages/design/taste/photo-chapters.mjs";
+import DollarQuote from "../../company/components/DollarQuote.jsx";
 
 const range = [
   {
@@ -54,8 +55,8 @@ export default function HomePage() {
           <div className="enter-copy shop-hero-copy">
             <h1>Golosinas por mayor en Mendoza</h1>
             <p>
-              Alfajores, chocolates y golosinas por bulto para kioscos,
-              almacenes y comercios minoristas.
+              Dulce Mayor distribuye alfajores, chocolates y golosinas por bulto
+              para kioscos, almacenes y comercios minoristas.
             </p>
             <Link
               className="btn btn--primary dm-button dm-button-primary"
@@ -66,9 +67,13 @@ export default function HomePage() {
             <Link className="home-quote-link" to="/presupuesto">
               Armá tu presupuesto en el chat
             </Link>
+            <Link className="shop-hero-company" to="/empresa">
+              Conocé Dulce Mayor y sus sucursales
+            </Link>
           </div>
         </div>
       </section>
+      <DollarQuote />
       <section
         ref={chapters}
         id="surtido"
