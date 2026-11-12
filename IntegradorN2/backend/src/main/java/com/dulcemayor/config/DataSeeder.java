@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Sort;
@@ -53,7 +54,11 @@ import com.dulcemayor.service.VigenciaPrecioService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 
-/** Carga los datos iniciales solo cuando la base está vacía y a través de los services. */
+/**
+ * Carga los datos iniciales solo cuando la base está vacía y a través de los services.
+ * E6-04: con {@code app.seeder.demo=true} (por defecto) suma {@link DatosDemostracion}; los tests lo apagan
+ * porque esperan solo estos datos base.
+ */
 @Component
 public class DataSeeder implements CommandLineRunner {
 
@@ -78,6 +83,8 @@ public class DataSeeder implements CommandLineRunner {
     private final VigenciaPrecioService vigenciaPrecioService;
     private final StockService stockService;
     private final DistribuidorRepository distribuidorRepository;
+    private final DatosDemostracion datosDemostracion;
+    private final boolean cargarDemo;
 
     public DataSeeder(EntityManager entityManager, CategoriaService categoriaService,
             UsuarioService usuarioService, ImagenService imagenService,
@@ -87,7 +94,8 @@ public class DataSeeder implements CommandLineRunner {
             PuntoDeVentaService puntoDeVentaService, PreventorRepository preventorRepository,
             MinoristaRepository minoristaRepository, MinoristaService minoristaService,
             ProductoRepository productoRepository, VigenciaPrecioService vigenciaPrecioService,
-            StockService stockService, DistribuidorRepository distribuidorRepository) {
+            StockService stockService, DistribuidorRepository distribuidorRepository,
+            DatosDemostracion datosDemostracion, @Value("${app.seeder.demo:true}") boolean cargarDemo) {
         this.entityManager = entityManager;
         this.categoriaService = categoriaService;
         this.usuarioService = usuarioService;
@@ -106,6 +114,8 @@ public class DataSeeder implements CommandLineRunner {
         this.vigenciaPrecioService = vigenciaPrecioService;
         this.stockService = stockService;
         this.distribuidorRepository = distribuidorRepository;
+        this.datosDemostracion = datosDemostracion;
+        this.cargarDemo = cargarDemo;
     }
 
     @Override
@@ -123,7 +133,9 @@ public class DataSeeder implements CommandLineRunner {
         cargarCatalogo();
         cargarPuntosDeVenta();
         cargarDistribuidor();
-        cargarPedidos();
+        if (cargarDemo) {
+            datosDemostracion.cargar();
+        }
     }
 
     /** E1-03: departamentos y localidades de Mendoza. */
@@ -147,7 +159,7 @@ public class DataSeeder implements CommandLineRunner {
     private void cargarEmpresa() {
         var empresa = mayoristaService.crearMayorista(new MayoristaRequest("Dulce Mayor S.A.", "30-70000000-8"));
         var localidad = localidadRepository.findByEliminadoFalse(Sort.by("nombre")).get(0);
-        String imagenId = cargarImagen("imagenes/imagen-prueba.png", TipoImagen.SUCURSAL);
+        String imagenId = cargarImagen("imagenes/demo/sucursal-1.png", TipoImagen.SUCURSAL);
         sucursalService.crearSucursal(new SucursalRequest("Casa Central", TipoEmpresa.SEDE_CENTRAL,
                 empresa.id(), localidad.getId(), "San Martín", "1234", "Centro", null, null,
                 "Sucursal de demostración", -32.8895, -68.8458, imagenId));
@@ -176,30 +188,36 @@ public class DataSeeder implements CommandLineRunner {
         for (String nombre : new String[] { "Alfajores", "Caramelos", "Chicles", "Chocolates", "Gomitas" }) {
             categorias.put(nombre, categoriaService.crearCategoria(new CategoriaRequest(nombre)).id());
         }
-        cargarImagen("imagenes/imagen-prueba.png", TipoImagen.PRODUCTO);
 
         // E3-04: productos de demo para el chatbot. El chupetín queda sin stock a propósito
         // («quiero 10 alfajores y 5 chupetines» lo excluye) y el chocolate con stock bajo.
-        cargarProducto("ALF-001", "Alfajor de chocolate", "Caja x 12", 12, categorias.get("Alfajores"), 6000, 50);
-        cargarProducto("CAR-001", "Chupetín frutal", "Bolsa x 50", 50, categorias.get("Caramelos"), 3500, 0);
-        cargarProducto("CHI-001", "Chicle de menta", "Caja x 20", 20, categorias.get("Chicles"), 2500, 30);
-        cargarProducto("CHO-001", "Chocolate con leche 25 g", "Caja x 24", 24, categorias.get("Chocolates"), 9000, 5);
-        cargarProducto("GOM-001", "Gomitas ácidas", "Bolsa x 1 kg", 1, categorias.get("Gomitas"), 4200, 40);
+        cargarProducto("ALF-001", "Alfajor de chocolate", "Relleno de dulce de leche, bañado en chocolate.",
+                "Caja x 12", 12, categorias.get("Alfajores"), 6000, 50);
+        cargarProducto("CAR-001", "Chupetín frutal", "Chupetines surtidos de frutilla, uva y naranja.",
+                "Bolsa x 50", 50, categorias.get("Caramelos"), 3500, 0);
+        cargarProducto("CHI-001", "Chicle de menta", "Chicle de menta en tiras, envuelto de a uno.",
+                "Caja x 20", 20, categorias.get("Chicles"), 2500, 30);
+        cargarProducto("CHO-001", "Chocolate con leche 25 g", "Barrita individual de chocolate con leche.",
+                "Caja x 24", 24, categorias.get("Chocolates"), 9000, 5);
+        cargarProducto("GOM-001", "Gomitas ácidas", "Gomitas frutales cubiertas de azúcar ácida.",
+                "Bolsa x 1 kg", 1, categorias.get("Gomitas"), 4200, 40);
     }
 
     /**
      * Producto con imagen propia, precio vigente desde hoy y stock inicial. Se guarda por repositorio
      * porque ProductoService.crear espera la imagen como archivo subido (MultipartFile).
      */
-    private void cargarProducto(String codigo, String nombre, String presentacion, int unidadesPorBulto,
-            String categoriaId, double precio, int stockInicial) {
+    private void cargarProducto(String codigo, String nombre, String descripcion, String presentacion,
+            int unidadesPorBulto, String categoriaId, double precio, int stockInicial) {
         Producto producto = new Producto();
         producto.setCodigo(codigo);
         producto.setNombre(nombre);
+        producto.setDescripcion(descripcion);
         producto.setPresentacion(presentacion);
         producto.setUnidadesPorBulto(unidadesPorBulto);
         producto.setCategoria(categoriaService.buscarEntidad(categoriaId));
-        producto.setImagen(imagenService.buscarEntidad(cargarImagen("imagenes/imagen-prueba.png", TipoImagen.PRODUCTO)));
+        producto.setImagen(imagenService.buscarEntidad(cargarImagen("imagenes/demo/" + codigo.toLowerCase() + ".png",
+                TipoImagen.PRODUCTO)));
         producto = productoRepository.save(producto);
         vigenciaPrecioService.crearVigenciaPrecio(producto.getId(), new VigenciaPrecioRequest(LocalDate.now(), precio));
         if (stockInicial > 0) {
@@ -276,8 +294,6 @@ public class DataSeeder implements CommandLineRunner {
         distribuidor.setUsuario(usuarioService.buscarUsuarioPorNombre("distribuidor@dulcemayor.com.ar"));
         distribuidorRepository.save(distribuidor);
     }
-
-    private void cargarPedidos() { /* E6-04. */ }
 
     private boolean baseVacia() {
         for (EntityType<?> entidad : entityManager.getMetamodel().getEntities()) {

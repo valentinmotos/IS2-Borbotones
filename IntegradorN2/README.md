@@ -587,8 +587,10 @@ Reglas de clave: al menos 8 caracteres, como máximo 72 bytes (límite de BCrypt
 | `distribuidor@dulcemayor.com.ar` | DISTRIBUIDOR | `Demo1234!` |
 | `minorista@dulcemayor.com.ar` | MINORISTA | `Demo1234!` |
 | `nuevo@dulcemayor.com.ar` | PREVENTOR | `dulcemayor` (temporal: obliga a cambiarla) |
+| `preventor2@dulcemayor.com.ar` | PREVENTOR (Lucía Ferreyra) | `Demo1234!` (E6-04) |
+| `preventor3@dulcemayor.com.ar` | PREVENTOR (Tomás Quiroga) | `Demo1234!` (E6-04) |
 
-Las claves de demo no son temporales, para no tener que cambiarlas en cada base nueva. Por ahora son solo cuentas de `Usuario`; los datos personales (`Persona`, `Empleado`, `Minorista`) los agregan E2-04 y E2-05. Si la base ya tenía datos de antes de E1-01, vaciarla (`docker compose down -v`) para que se carguen.
+Las claves de demo no son temporales, para no tener que cambiarlas en cada base nueva. Si la base ya tenía datos, vaciarla (`docker compose down -v`) para que se carguen. Ver también **E6-04 · Datos de demostración**.
 
 ### Cómo probarlo
 
@@ -953,3 +955,27 @@ Pruebas: `DistribucionServiceTest` (Mockito: tomar pedidos, pedido sin pagar o s
 El día 5 de cada mes a las 09:00 de Mendoza se envía un correo HTML individual a cada minorista activo. El correo incluye productos marcados en oferta que tengan stock y precio mayorista vigente. Marcá **En oferta para el newsletter** al editar un producto. El precio se administra desde **Precios** del mismo producto.
 
 Para verificar el envío manual, configurá el [SMTP de desarrollo](#servicio-de-correo-asíncrono) y ejecutá `POST /api/newsletter/enviar` con un token del Jefe. Devuelve `202` con `{ofertas, destinatariosProgramados}`. El envío se ejecuta en segundo plano y el correo «Ofertas del mes · Dulce Mayor» aparece en la bandeja SMTP. Si no hay ofertas elegibles, no se encola ningún correo. `APP_URL_PUBLIC` configura el dominio del enlace al catálogo.
+
+## Datos de demostración · E6-04
+
+Con la base **vacía**, `DataSeeder` carga los datos base (los que usan los tests) y, si `app.seeder.demo=true` (valor por defecto; variable `SEEDER_DEMO`), suma `DatosDemostracion`:
+
+- **20 productos** en 5 categorías, cada uno con su ilustración (`resources/imagenes/demo/`, PNG generados para el proyecto, sin licencias de terceros), descripción y **tres vigencias de precio** (80 % hasta hace 4 meses, 90 % hasta ayer y el precio actual). El chupetín `CAR-001` queda sin stock a propósito: no aparece en el catálogo y el chatbot lo excluye.
+- **4 sucursales** con foto: Casa Central, Godoy Cruz, Guaymallén y Maipú.
+- **3 preventores** (Pedro, Lucía y Tomás), el distribuidor Dante, la minorista de demo Marta y tres minoristas más con **10 comercios** en Capital, Godoy Cruz, Guaymallén, Las Heras, Luján y Maipú.
+- **Seis meses de ventas** (lunes a sábado, con más actividad cada mes): pedidos entregados con su factura y su pago, algunos anulados (a veces después de quedar sin stock) y facturas de la última semana pendientes de pago. Alimentan las estadísticas (HU-01) y los reportes.
+- **Pedidos de hoy en todos los estados**, cargados con los services reales: dos `CARGADO` para facturar en vivo, uno `SIN_STOCK`, uno `FACTURADO` con la factura pendiente (Marta puede usar «Pagar ahora»), uno `FACTURADO` y pagado listo para reparto y dos `EN_REPARTO` en la ruta de hoy del distribuidor.
+
+Usuarios: ver [Usuarios de demo](#usuarios-de-demo) (todos con clave `Demo1234!`).
+
+### Cómo probarlo
+
+1. Borrar la base (`docker compose down -v`) y levantar la aplicación.
+2. Entrar como `jefe@dulcemayor.com.ar` → **Estadísticas**: el mes actual y los anteriores muestran pedidos por preventor, la torta de stock y los más vendidos.
+3. Sitio público → **Catálogo** (19 productos con imagen), **Empresa** (4 sucursales con foto y mapa).
+4. `mvnw test -Dtest=DatosDemostracionIntegrationTest` verifica la carga completa sobre una base vacía.
+
+### Para otros issues
+
+- Los tests corren con `app.seeder.demo=false` (`application-test.properties`) porque varios esperan solo los cinco productos base. Un test nuevo que necesite datos de demo usa `@SpringBootTest(properties = "app.seeder.demo=true")`.
+- Las ventas históricas se guardan por repositorio (los services fechan "ahora") pero sus estados pasan por `Pedido.registrarCarga`/`avanzar`. No generan movimientos de stock: el stock es el saldo actual.
