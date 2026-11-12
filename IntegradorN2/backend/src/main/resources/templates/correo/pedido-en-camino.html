@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tu pedido está en camino · Dulce Mayor</title>
+</head>
+<body style="margin:0;padding:20px;background:#f8f5ef;color:#1f1b18;font-family:Arial,Helvetica,sans-serif;">
+  <main style="max-width:640px;margin:auto;padding:24px;background:#fffdfa;border:1px solid #d9cec0;">
+    <p style="margin:0;color:#8b1e3f;font-weight:bold;">Dulce Mayor</p>
+    <h1 style="font-family:Georgia,serif;font-size:26px;">Tu pedido está en camino</h1>
+    <p>Hola, <strong th:text="${comercio}">comercio</strong>.
+      Nuestro distribuidor<span th:if="${distribuidor != null and distribuidor != ''}">
+      <strong th:text="${distribuidor}"></strong></span> acaba de terminar la entrega anterior
+      y tu comercio es el próximo punto de su ruta.</p>
+
+    <table style="width:100%;border-collapse:collapse;font-size:14px;">
+      <tbody>
+        <tr>
+          <th scope="row" style="padding:8px;text-align:left;background:#f5dfd4;">Pedido</th>
+          <td style="padding:8px;border-bottom:1px solid #d9cec0;" th:text="|N° ${numeroPedido}|"></td>
+        </tr>
+        <tr>
+          <th scope="row" style="padding:8px;text-align:left;background:#f5dfd4;">Dirección de entrega</th>
+          <td style="padding:8px;border-bottom:1px solid #d9cec0;" th:text="${direccion}"></td>
+        </tr>
+        <tr>
+          <th scope="row" style="padding:8px;text-align:left;background:#f5dfd4;">Total (ARS)</th>
+          <td style="padding:8px;border-bottom:1px solid #d9cec0;"
+              th:text="|$ ${#numbers.formatDecimal(total, 1, 'POINT', 2, 'COMMA')}|"></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Tené a mano a alguien que pueda recibir la mercadería. ¡Gracias por elegirnos!</p>
+  </main>
+</body>
+</html>

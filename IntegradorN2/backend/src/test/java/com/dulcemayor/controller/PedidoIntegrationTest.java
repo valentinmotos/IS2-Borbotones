@@ -169,7 +169,12 @@ class PedidoIntegrationTest {
         return pedidos.registrarCarga(pedido, usuario.getId(), null);
     }
 
+    /** E5-02: el seeder ya crea el perfil del distribuidor de demo; si no existe, se crea acá. */
     private String crearTransportista(Usuario usuario) {
+        var existente = distribuidores.findByUsuario_IdAndEliminadoFalse(usuario.getId());
+        if (existente.isPresent()) {
+            return existente.get().getId();
+        }
         Distribuidor transportista = new Distribuidor();
         transportista.setNombre("Darío");
         transportista.setApellido("Distribuidor");

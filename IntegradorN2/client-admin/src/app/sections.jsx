@@ -9,6 +9,7 @@ import ProductosPage from "../modules/productos/pages/ProductosPage.jsx";
 import UbicacionPage from "../modules/ubicacion/pages/UbicacionPage.jsx";
 import PuntosVentaPage from "../modules/puntos-venta/pages/PuntosVentaPage.jsx";
 import PreventaPage from "../modules/preventa/pages/PreventaPage.jsx";
+import DistribucionPage from "../modules/distribucion/pages/DistribucionPage.jsx";
 import StockPage from "../modules/stock/pages/StockPage.jsx";
 import UsuariosPage from "../modules/usuarios/pages/UsuariosPage.jsx";
 import ReportesPage from "../modules/reportes/pages/ReportesPage.jsx";
@@ -45,7 +46,7 @@ export const sections = [
     to: homes.DISTRIBUIDOR,
     label: "Distribución",
     roles: ["DISTRIBUIDOR"],
-    element: <HomePage title="Distribución" />,
+    element: <DistribucionPage />,
   },
   {
     to: "/productos",
