@@ -1,0 +1,53 @@
+.reportes-panel {
+  display: grid;
+  gap: 1rem;
+  margin-block: 1.25rem;
+}
+
+.reportes-panel h2,
+.reportes-panel p {
+  margin-block: 0;
+}
+
+.reportes-filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  align-items: end;
+  gap: 1rem;
+}
+
+.reportes-filtros .dm-button {
+  justify-self: start;
+}
+
+.reportes-validacion {
+  color: var(--color-danger, #a12a35);
+}
+
+.reportes-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 1rem;
+  margin-block: 1.25rem;
+}
+
+.reportes-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.reportes-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .reportes-acciones,
+  .reportes-acciones .dm-button {
+    width: 100%;
+  }
+}
