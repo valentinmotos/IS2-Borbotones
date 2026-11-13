@@ -206,6 +206,8 @@ public class DataSeeder implements CommandLineRunner {
     /**
      * Producto con imagen propia, precio vigente desde hoy y stock inicial. Se guarda por repositorio
      * porque ProductoService.crear espera la imagen como archivo subido (MultipartFile).
+     * NOTA: las fotos de producto son de Unsplash (JPG 800x600); los créditos están en
+     * resources/imagenes/demo/CREDITOS.md.
      */
     private void cargarProducto(String codigo, String nombre, String descripcion, String presentacion,
             int unidadesPorBulto, String categoriaId, double precio, int stockInicial) {
@@ -216,7 +218,7 @@ public class DataSeeder implements CommandLineRunner {
         producto.setPresentacion(presentacion);
         producto.setUnidadesPorBulto(unidadesPorBulto);
         producto.setCategoria(categoriaService.buscarEntidad(categoriaId));
-        producto.setImagen(imagenService.buscarEntidad(cargarImagen("imagenes/demo/" + codigo.toLowerCase() + ".png",
+        producto.setImagen(imagenService.buscarEntidad(cargarImagen("imagenes/demo/" + codigo.toLowerCase() + ".jpg",
                 TipoImagen.PRODUCTO)));
         producto = productoRepository.save(producto);
         vigenciaPrecioService.crearVigenciaPrecio(producto.getId(), new VigenciaPrecioRequest(LocalDate.now(), precio));
