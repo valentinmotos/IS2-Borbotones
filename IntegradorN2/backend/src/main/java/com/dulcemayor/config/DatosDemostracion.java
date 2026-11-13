@@ -244,7 +244,7 @@ public class DatosDemostracion {
         producto.setCategoria(categoriaRepository.findAll().stream()
                 .filter(c -> !c.isEliminado() && c.getNombre().equals(categoria)).findFirst().orElseThrow());
         producto.setImagen(imagenes.buscarEntidad(
-                imagen("imagenes/demo/" + codigo.toLowerCase() + ".png", TipoImagen.PRODUCTO)));
+                imagen("imagenes/demo/" + codigo.toLowerCase() + ".jpg", TipoImagen.PRODUCTO)));
         producto = productoRepository.save(producto);
         vigenciaService.crearVigenciaPrecio(producto.getId(), new VigenciaPrecioRequest(LocalDate.now(), precio));
         stock.reponer(producto.getId(), stockInicial, "Stock inicial de demostración");
